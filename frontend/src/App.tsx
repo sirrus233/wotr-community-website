@@ -1,9 +1,8 @@
 import "@fontsource/inter";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CssVarsProvider, List, Typography } from "@mui/joy";
 import { CssBaseline } from "@mui/joy";
 import Sheet from "@mui/joy/Sheet";
-import FormControl from "@mui/joy/FormControl";
 import FormLabel from "@mui/joy/FormLabel";
 import Radio from "@mui/joy/Radio";
 import RadioGroup from "@mui/joy/RadioGroup";
@@ -76,6 +75,7 @@ interface FormData {
     victoryType: Victory | null;
     usedExpansions: boolean | null;
     expansions: Expansion[];
+    wasTreebeardMustered: boolean | null;
     usedHandicap: boolean | null;
     actionTokens: number;
     dwarvenRings: number;
@@ -87,7 +87,6 @@ interface FormData {
     initialEyes: number;
     wasAragornCrowned: boolean | null;
     aragornCrownedTurn: number;
-    wasTreebeardMustered: boolean | null;
     capturedStrongholds: Stronghold[];
 }
 
@@ -98,6 +97,7 @@ const initialFormData: FormData = {
     victoryType: null,
     usedExpansions: null,
     expansions: [],
+    wasTreebeardMustered: null,
     usedHandicap: null,
     actionTokens: 0,
     dwarvenRings: 0,
@@ -109,9 +109,10 @@ const initialFormData: FormData = {
     initialEyes: 0,
     wasAragornCrowned: null,
     aragornCrownedTurn: 0,
-    wasTreebeardMustered: null,
     capturedStrongholds: [],
 };
+
+type ValueOf<T> = T[keyof T];
 
 function GameReportForm() {
     const [formData, setFormData] = useState(initialFormData);
@@ -120,6 +121,42 @@ function GameReportForm() {
         return (value: FormData[K]) =>
             setFormData({ ...formData, [field]: value });
     };
+
+    const controlledClearEffect = <
+        K extends keyof FormData,
+        V extends ValueOf<FormData>
+    >(
+        controlField: V,
+        clearField: K,
+        controlCondition?: (value: V) => boolean
+    ) => {
+        const condition = controlCondition
+            ? controlCondition(controlField)
+            : controlField;
+        useEffect(() => {
+            if (!condition) {
+                setFormData((formData) => ({
+                    ...formData,
+                    [clearField]: initialFormData[clearField],
+                }));
+            }
+        }, [controlField]);
+    };
+
+    controlledClearEffect(formData.usedExpansions, "expansions");
+    controlledClearEffect(formData.usedExpansions, "wasTreebeardMustered");
+    controlledClearEffect(
+        formData.expansions,
+        "wasTreebeardMustered",
+        (expansions) => expansions.includes("Treebeard")
+    );
+    controlledClearEffect(formData.usedHandicap, "actionTokens");
+    controlledClearEffect(formData.usedHandicap, "dwarvenRings");
+    controlledClearEffect(formData.didFellowshipReachMordor, "mordorTrack");
+    controlledClearEffect(formData.wasAragornCrowned, "aragornCrownedTurn");
+
+    // wasTreebeardMustered: boolean | null;
+    // matchType: Match | null;
 
     return (
         <Sheet
@@ -139,12 +176,14 @@ function GameReportForm() {
             <h1>War of the Ring Game Report</h1>
             <GameReportFormElement label={"Who won?"}>
                 <TextInput
+                    value={formData.winner || ""}
                     placeholder="Player Name - Please check spelling!"
                     onChange={handleInputChange("winner")}
                 />
             </GameReportFormElement>
             <GameReportFormElement label={"Who lost?"}>
                 <TextInput
+                    value={formData.winner || ""}
                     placeholder="Player Name - Please check spelling!"
                     onChange={handleInputChange("loser")}
                 />
@@ -171,27 +210,26 @@ function GameReportForm() {
                     onChange={handleInputChange("usedExpansions")}
                 />
             </GameReportFormElement>
-            <GameReportFormElement
-                label={"What expansions did you use?"}
-                show={formData.usedExpansions === true}
-            >
-                <MultiOptionInput
-                    values={expansions.slice()}
-                    current={formData.expansions}
-                    onChange={handleInputChange("expansions")}
-                />
-            </GameReportFormElement>
-            <GameReportFormElement
-                label={"Was Treebeard mustered?"}
-                show={formData.expansions.includes("Treebeard")}
-            >
-                <SingleOptionInput
-                    values={[true, false]}
-                    current={formData.wasTreebeardMustered}
-                    getLabel={(v) => (v ? "Yes" : "No")}
-                    onChange={handleInputChange("wasTreebeardMustered")}
-                />
-            </GameReportFormElement>
+            {formData.usedExpansions && (
+                <GameReportFormElement label={"What expansions did you use?"}>
+                    <MultiOptionInput
+                        values={expansions.slice()}
+                        current={formData.expansions}
+                        onChange={handleInputChange("expansions")}
+                    />
+                </GameReportFormElement>
+            )}
+            {formData.usedExpansions &&
+                formData.expansions.includes("Treebeard") && (
+                    <GameReportFormElement label={"Was Treebeard mustered?"}>
+                        <SingleOptionInput
+                            values={[true, false]}
+                            current={formData.wasTreebeardMustered}
+                            getLabel={(v) => (v ? "Yes" : "No")}
+                            onChange={handleInputChange("wasTreebeardMustered")}
+                        />
+                    </GameReportFormElement>
+                )}
             <GameReportFormElement
                 label={"Did you use a handicap mechanism (e.g. Action Tokens)?"}
             >
@@ -202,26 +240,24 @@ function GameReportForm() {
                     onChange={handleInputChange("usedHandicap")}
                 />
             </GameReportFormElement>
-            <GameReportFormElement
-                label="Did you use any Action Tokens?"
-                show={formData.usedHandicap === true}
-            >
-                <SelectNumericOptionInput
-                    start={0}
-                    end={6}
-                    onChange={handleInputChange("actionTokens")}
-                />
-            </GameReportFormElement>
-            <GameReportFormElement
-                label="Did you use any Dwarven Rings?"
-                show={formData.usedHandicap === true}
-            >
-                <SelectNumericOptionInput
-                    start={0}
-                    end={6}
-                    onChange={handleInputChange("dwarvenRings")}
-                />
-            </GameReportFormElement>
+            {formData.usedHandicap && (
+                <>
+                    <GameReportFormElement label="Did you use any Action Tokens?">
+                        <SelectNumericOptionInput
+                            start={0}
+                            end={6}
+                            onChange={handleInputChange("actionTokens")}
+                        />
+                    </GameReportFormElement>
+                    <GameReportFormElement label="Did you use any Dwarven Rings?">
+                        <SelectNumericOptionInput
+                            start={0}
+                            end={6}
+                            onChange={handleInputChange("dwarvenRings")}
+                        />
+                    </GameReportFormElement>
+                </>
+            )}
             <GameReportFormElement label={"What type of game did you play?"}>
                 <SingleOptionInput
                     values={matchType.slice()}
@@ -251,16 +287,15 @@ function GameReportForm() {
                     onChange={handleInputChange("didFellowshipReachMordor")}
                 />
             </GameReportFormElement>
-            <GameReportFormElement
-                label="Where did the Fellowship reach on the Mordor track?"
-                show={formData.didFellowshipReachMordor === true}
-            >
-                <SelectNumericOptionInput
-                    start={0}
-                    end={5}
-                    onChange={handleInputChange("mordorTrack")}
-                />
-            </GameReportFormElement>
+            {formData.didFellowshipReachMordor && (
+                <GameReportFormElement label="Where did the Fellowship reach on the Mordor track?">
+                    <SelectNumericOptionInput
+                        start={0}
+                        end={5}
+                        onChange={handleInputChange("mordorTrack")}
+                    />
+                </GameReportFormElement>
+            )}
             <GameReportFormElement label="How many eyes did Shadow allocate on turn 1? (Before action dice were rolled)">
                 <SelectNumericOptionInput
                     start={0}
@@ -276,16 +311,15 @@ function GameReportForm() {
                     onChange={handleInputChange("wasAragornCrowned")}
                 />
             </GameReportFormElement>
-            <GameReportFormElement
-                label="On what turn was Aragorn crowned King?"
-                show={formData.wasAragornCrowned === true}
-            >
-                <SelectNumericOptionInput
-                    start={1}
-                    end={18}
-                    onChange={handleInputChange("aragornCrownedTurn")}
-                />
-            </GameReportFormElement>
+            {formData.wasAragornCrowned && (
+                <GameReportFormElement label="On what turn was Aragorn crowned King?">
+                    <SelectNumericOptionInput
+                        start={1}
+                        end={18}
+                        onChange={handleInputChange("aragornCrownedTurn")}
+                    />
+                </GameReportFormElement>
+            )}
             <GameReportFormElement
                 label={"What strongholds were captured by Shadow?"}
             >
@@ -308,32 +342,27 @@ function GameReportForm() {
 interface GameReportElementProps {
     children: React.ReactNode;
     label: string;
-    show?: boolean;
 }
 
-function GameReportFormElement({
-    children,
-    label,
-    show = true,
-}: GameReportElementProps) {
+function GameReportFormElement({ children, label }: GameReportElementProps) {
     return (
-        show && (
-            <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
-                <FormLabel sx={{ fontSize: 16, pb: 2 }}>{label}</FormLabel>
-                {children}
-            </Sheet>
-        )
+        <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
+            <FormLabel sx={{ fontSize: 16, pb: 2 }}>{label}</FormLabel>
+            {children}
+        </Sheet>
     );
 }
 
 interface TextInputProps {
+    value: string;
     placeholder: string;
     onChange: (value: string) => void;
 }
 
-function TextInput({ placeholder, onChange }: TextInputProps) {
+function TextInput({ value, placeholder, onChange }: TextInputProps) {
     return (
         <Input
+            value={value}
             placeholder={placeholder}
             onChange={(event) => onChange(event.target.value)}
         />
@@ -383,11 +412,13 @@ function SelectNumericOptionInput({
         values.push(i);
     }
 
-    return SelectOptionInput({
-        values: values,
-        current: start,
-        onChange: onChange,
-    });
+    return (
+        <SelectOptionInput
+            values={values}
+            current={start}
+            onChange={onChange}
+        />
+    );
 }
 
 interface SingleOptionInputProps<T> {
@@ -414,7 +445,7 @@ function SingleOptionInput<T>({
 
     return (
         <RadioGroup
-            defaultValue={current}
+            value={current}
             orientation="horizontal"
             onChange={handleChange}
         >
