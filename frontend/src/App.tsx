@@ -227,7 +227,9 @@ function GameReportForm() {
                 value={formData["capturedStrongholds"]}
                 onChange={handleInputChange("capturedStrongholds")}
             />
-            <Button onClick={(e) => console.log(formData)}>Print Form</Button>
+            <Button onClick={(e) => alert(JSON.stringify(formData, null, 4))}>
+                Print Form
+            </Button>
         </Sheet>
     );
 }
