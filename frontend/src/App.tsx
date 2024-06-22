@@ -1,6 +1,6 @@
 import "@fontsource/inter";
 import React, { useState } from "react";
-import { CssVarsProvider, List } from "@mui/joy";
+import { CssVarsProvider, List, Typography } from "@mui/joy";
 import { CssBaseline } from "@mui/joy";
 import Sheet from "@mui/joy/Sheet";
 import FormControl from "@mui/joy/FormControl";
@@ -23,11 +23,25 @@ export default function App() {
     );
 }
 
-const sides = ["Free", "Shadow"];
-const victoryTypes = ["Ring", "Military", "Concession"];
-const expansions = ["LoME", "WoME", "KoME"];
-const miniExpansions = ["Cities", "Fate of Erebor", "Treebeard"];
-const gameType = ["Ladder", "League", "Tournament", "Friendly"];
+const sides = ["Free", "Shadow"] as const;
+type Side = (typeof sides)[number];
+
+const victoryTypes = ["Ring", "Military", "Concession"] as const;
+type Victory = (typeof victoryTypes)[number];
+
+const expansions = [
+    "LoME",
+    "WoME",
+    "KoME",
+    "Cities",
+    "Fate of Erebor",
+    "Treebeard",
+] as const;
+type Expansion = (typeof expansions)[number];
+
+const matchType = ["Ladder", "League", "Tournament", "Friendly"] as const;
+type Match = (typeof matchType)[number];
+
 const strongholds = [
     "Rivendell",
     "Grey Havens",
@@ -37,8 +51,16 @@ const strongholds = [
     "Erebor",
     "Minas Tirith",
     "Dol Amroth",
-];
-const cities = [
+    "Shire",
+    "Edoras",
+    "Dale",
+    "Pelargir",
+    "Ered Luin (Cities expansion only)",
+    "Iron Hills (Fate of Erebor expansion only)",
+] as const;
+type Stronghold = (typeof strongholds)[number];
+
+const cities: Stronghold[] = [
     "Shire",
     "Edoras",
     "Dale",
@@ -48,46 +70,46 @@ const cities = [
 ];
 
 interface FormData {
-    winner: string;
-    loser: string;
-    side: string;
-    victoryType: string;
-    expansionsUsed: string;
-    expansions: string[];
-    handicapUsed: string;
-    actionTokens: string;
-    dwarvenRings: string;
-    gameType: string;
-    gameTurns: string;
-    corruption: string;
-    fellowshipReachMordor: string;
-    mordorTrack: string;
-    initialEyes: string;
-    aragornCrowned: string;
-    aragornCrownedTurn: string;
-    treebeardMustered: string;
-    capturedStrongholds: string[];
+    winner: string | null;
+    loser: string | null;
+    side: Side | null;
+    victoryType: Victory | null;
+    usedExpansions: boolean | null;
+    expansions: Expansion[];
+    usedHandicap: boolean | null;
+    actionTokens: number;
+    dwarvenRings: number;
+    matchType: Match | null;
+    gameTurns: number;
+    corruption: number;
+    didFellowshipReachMordor: boolean | null;
+    mordorTrack: number;
+    initialEyes: number;
+    wasAragornCrowned: boolean | null;
+    aragornCrownedTurn: number;
+    wasTreebeardMustered: boolean | null;
+    capturedStrongholds: Stronghold[];
 }
 
 const initialFormData: FormData = {
-    winner: "",
-    loser: "",
-    side: "",
-    victoryType: "",
-    expansionsUsed: "false",
+    winner: null,
+    loser: null,
+    side: null,
+    victoryType: null,
+    usedExpansions: null,
     expansions: [],
-    handicapUsed: "false",
-    actionTokens: "",
-    dwarvenRings: "",
-    gameType: "",
-    gameTurns: "",
-    corruption: "",
-    fellowshipReachMordor: "",
-    mordorTrack: "",
-    initialEyes: "",
-    aragornCrowned: "",
-    aragornCrownedTurn: "",
-    treebeardMustered: "",
+    usedHandicap: null,
+    actionTokens: 0,
+    dwarvenRings: 0,
+    matchType: null,
+    gameTurns: 1,
+    corruption: 0,
+    didFellowshipReachMordor: null,
+    mordorTrack: 0,
+    initialEyes: 0,
+    wasAragornCrowned: null,
+    aragornCrownedTurn: 0,
+    wasTreebeardMustered: null,
     capturedStrongholds: [],
 };
 
@@ -115,118 +137,167 @@ function GameReportForm() {
             }}
         >
             <h1>War of the Ring Game Report</h1>
-            <TextInput
-                label={"Who won?"}
-                placeholder="Player Name - Please check spelling!"
-                onChange={handleInputChange("winner")}
-            />
-            <TextInput
-                label={"Who lost?"}
-                placeholder="Player Name - Please check spelling!"
-                onChange={handleInputChange("loser")}
-            />
-            <SingleOptionInput
-                label={"What side did you play?"}
-                options={sides}
-                onChange={handleInputChange("side")}
-            />
-            <SingleOptionInput
-                label={"How did you win?"}
-                options={victoryTypes}
-                onChange={handleInputChange("victoryType")}
-            />
-            <SingleOptionInput
-                label={"Did you use any expansions?"}
-                options={["Yes", "No"]}
-                onChange={handleInputChange("expansionsUsed")}
-            />
-            <MultiOptionInput
-                label={"What (if any) expansions did you use?"}
-                options={expansions.concat(miniExpansions)}
-                value={formData["expansions"]}
-                onChange={handleInputChange("expansions")}
-                show={formData["expansionsUsed"] === "Yes"}
-            />
-            <SingleOptionInput
+            <GameReportFormElement label={"Who won?"}>
+                <TextInput
+                    placeholder="Player Name - Please check spelling!"
+                    onChange={handleInputChange("winner")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label={"Who lost?"}>
+                <TextInput
+                    placeholder="Player Name - Please check spelling!"
+                    onChange={handleInputChange("loser")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label={"What side did you play?"}>
+                <SingleOptionInput
+                    values={sides.slice()}
+                    current={formData.side}
+                    onChange={handleInputChange("side")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label={"How did you win?"}>
+                <SingleOptionInput
+                    values={victoryTypes.slice()}
+                    current={formData.victoryType}
+                    onChange={handleInputChange("victoryType")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label={"Did you use any expansions?"}>
+                <SingleOptionInput
+                    values={[true, false]}
+                    current={formData.usedExpansions}
+                    getLabel={(v) => (v ? "Yes" : "No")}
+                    onChange={handleInputChange("usedExpansions")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
+                label={"What expansions did you use?"}
+                show={formData.usedExpansions === true}
+            >
+                <MultiOptionInput
+                    values={expansions.slice()}
+                    current={formData.expansions}
+                    onChange={handleInputChange("expansions")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
                 label={"Was Treebeard mustered?"}
-                options={["Yes", "No"]}
-                onChange={handleInputChange("treebeardMustered")}
-                show={formData["expansions"].includes("Treebeard")}
-            />
-            <SingleOptionInput
+                show={formData.expansions.includes("Treebeard")}
+            >
+                <SingleOptionInput
+                    values={[true, false]}
+                    current={formData.wasTreebeardMustered}
+                    getLabel={(v) => (v ? "Yes" : "No")}
+                    onChange={handleInputChange("wasTreebeardMustered")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
                 label={"Did you use a handicap mechanism (e.g. Action Tokens)?"}
-                options={["Yes", "No"]}
-                onChange={handleInputChange("handicapUsed")}
-            />
-            <SelectNumericOptionInput
+            >
+                <SingleOptionInput
+                    values={[true, false]}
+                    current={formData.usedHandicap}
+                    getLabel={(v) => (v ? "Yes" : "No")}
+                    onChange={handleInputChange("usedHandicap")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
                 label="Did you use any Action Tokens?"
-                start={0}
-                end={6}
-                additional={["Unlimited!"]}
-                onChange={handleInputChange("actionTokens")}
-                show={formData["handicapUsed"] === "Yes"}
-            />
-            <SelectNumericOptionInput
+                show={formData.usedHandicap === true}
+            >
+                <SelectNumericOptionInput
+                    start={0}
+                    end={6}
+                    onChange={handleInputChange("actionTokens")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
                 label="Did you use any Dwarven Rings?"
-                start={0}
-                end={6}
-                additional={["Unlimited!"]}
-                onChange={handleInputChange("dwarvenRings")}
-                show={formData["handicapUsed"] === "Yes"}
-            />
-            <SingleOptionInput
-                label={"What type of game did you play?"}
-                options={gameType}
-                onChange={handleInputChange("gameType")}
-            />
-            <SelectNumericOptionInput
-                label="On what turn did the game end?"
-                start={1}
-                end={25}
-                onChange={handleInputChange("gameTurns")}
-            />
-            <SelectNumericOptionInput
-                label="How much corruption did the Fellowship have?"
-                start={0}
-                end={18}
-                onChange={handleInputChange("corruption")}
-            />
-            <SingleOptionInput
-                label={"Did the Fellowship reach Mordor?"}
-                options={["Yes", "No"]}
-                onChange={handleInputChange("fellowshipReachMordor")}
-            />
-            <SelectNumericOptionInput
+                show={formData.usedHandicap === true}
+            >
+                <SelectNumericOptionInput
+                    start={0}
+                    end={6}
+                    onChange={handleInputChange("dwarvenRings")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label={"What type of game did you play?"}>
+                <SingleOptionInput
+                    values={matchType.slice()}
+                    current={formData.matchType}
+                    onChange={handleInputChange("matchType")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label="On what turn did the game end?">
+                <SelectNumericOptionInput
+                    start={1}
+                    end={25}
+                    onChange={handleInputChange("gameTurns")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label="How much corruption did the Fellowship have?">
+                <SelectNumericOptionInput
+                    start={0}
+                    end={18}
+                    onChange={handleInputChange("corruption")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label={"Did the Fellowship reach Mordor?"}>
+                <SingleOptionInput
+                    values={[true, false]}
+                    current={formData.didFellowshipReachMordor}
+                    getLabel={(v) => (v ? "Yes" : "No")}
+                    onChange={handleInputChange("didFellowshipReachMordor")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
                 label="Where did the Fellowship reach on the Mordor track?"
-                start={0}
-                end={5}
-                onChange={handleInputChange("mordorTrack")}
-                show={formData["fellowshipReachMordor"] === "Yes"}
-            />
-            <SelectNumericOptionInput
-                label="How many eyes did Shadow allocate on turn 1? (Before action dice were rolled)"
-                start={0}
-                end={7}
-                onChange={handleInputChange("initialEyes")}
-            />
-            <SingleOptionInput
-                label={"Was Aragorn crowned King?"}
-                options={["Yes", "No"]}
-                onChange={handleInputChange("aragornCrowned")}
-            />
-            <SelectNumericOptionInput
+                show={formData.didFellowshipReachMordor === true}
+            >
+                <SelectNumericOptionInput
+                    start={0}
+                    end={5}
+                    onChange={handleInputChange("mordorTrack")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label="How many eyes did Shadow allocate on turn 1? (Before action dice were rolled)">
+                <SelectNumericOptionInput
+                    start={0}
+                    end={7}
+                    onChange={handleInputChange("initialEyes")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement label={"Was Aragorn crowned King?"}>
+                <SingleOptionInput
+                    values={[true, false]}
+                    current={formData.wasAragornCrowned}
+                    getLabel={(v) => (v ? "Yes" : "No")}
+                    onChange={handleInputChange("wasAragornCrowned")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
                 label="On what turn was Aragorn crowned King?"
-                start={1}
-                end={18}
-                onChange={handleInputChange("aragornCrownedTurn")}
-                show={formData["aragornCrowned"] === "Yes"}
-            />
-            <MultiOptionInput
+                show={formData.wasAragornCrowned === true}
+            >
+                <SelectNumericOptionInput
+                    start={1}
+                    end={18}
+                    onChange={handleInputChange("aragornCrownedTurn")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
                 label={"What strongholds were captured by Shadow?"}
-                options={strongholds.concat(cities)}
-                value={formData["capturedStrongholds"]}
-                onChange={handleInputChange("capturedStrongholds")}
-            />
+            >
+                <VictoryPoints
+                    strongholds={formData.capturedStrongholds}
+                ></VictoryPoints>
+                <MultiOptionInput
+                    values={strongholds.slice()}
+                    current={formData.capturedStrongholds}
+                    onChange={handleInputChange("capturedStrongholds")}
+                />
+            </GameReportFormElement>
             <Button onClick={(e) => alert(JSON.stringify(formData, null, 4))}>
                 Print Form
             </Button>
@@ -234,172 +305,188 @@ function GameReportForm() {
     );
 }
 
-function GameReportFormElement({ children }: { children: React.ReactNode }) {
+interface GameReportElementProps {
+    children: React.ReactNode;
+    label: string;
+    show?: boolean;
+}
+
+function GameReportFormElement({
+    children,
+    label,
+    show = true,
+}: GameReportElementProps) {
     return (
-        <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
-            {children}
-        </Sheet>
+        show && (
+            <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
+                <FormLabel sx={{ fontSize: 16, pb: 2 }}>{label}</FormLabel>
+                {children}
+            </Sheet>
+        )
     );
 }
 
 interface TextInputProps {
-    label: string;
     placeholder: string;
     onChange: (value: string) => void;
 }
 
-function TextInput({ label, placeholder, onChange }: TextInputProps) {
+function TextInput({ placeholder, onChange }: TextInputProps) {
     return (
-        <GameReportFormElement>
-            <FormLabel>{label}</FormLabel>
-            <Input
-                placeholder={placeholder}
-                onChange={(event) => onChange(event.target.value)}
-            />
-        </GameReportFormElement>
+        <Input
+            placeholder={placeholder}
+            onChange={(event) => onChange(event.target.value)}
+        />
     );
 }
 
-interface SelectOptionInputProps {
-    label: string;
-    options: string[];
-    onChange: (value: string) => void;
-    show?: boolean;
+interface SelectOptionInputProps<T> {
+    values: T[];
+    current: T;
+    getLabel?: (value: T) => string;
+    onChange: (value: T) => void;
 }
 
-function SelectOptionInput({
-    label,
-    options,
+function SelectOptionInput<T>({
+    values,
+    current,
+    getLabel = String,
     onChange,
-    show = true,
-}: SelectOptionInputProps) {
+}: SelectOptionInputProps<T>) {
     return (
-        show && (
-            <GameReportFormElement>
-                <FormLabel>{label}</FormLabel>
-                <Select
-                    defaultValue={options[0]}
-                    onChange={(_, value) => onChange(value || "")}
-                >
-                    {options.map((option) => (
-                        <Option key={option} value={option}>
-                            {option}
-                        </Option>
-                    ))}
-                </Select>
-            </GameReportFormElement>
-        )
+        <Select
+            defaultValue={current}
+            onChange={(_, value) => onChange(value as T)}
+        >
+            {values.map((value, i) => (
+                <Option key={i} value={value}>
+                    {getLabel(value)}
+                </Option>
+            ))}
+        </Select>
     );
 }
 
 interface SelectNumericOptionInputProps {
-    label: string;
     start: number;
     end: number;
-    additional?: string[];
-    onChange: (value: string) => void;
-    show?: boolean;
+    onChange: (value: number) => void;
 }
 
 function SelectNumericOptionInput({
-    label,
     start,
     end,
-    additional = [],
     onChange,
-    show = true,
 }: SelectNumericOptionInputProps) {
-    let options = [];
+    let values = [];
     for (let i = start; i <= end; i++) {
-        options.push(i.toString());
+        values.push(i);
     }
+
     return SelectOptionInput({
-        label: label,
-        options: options.concat(additional),
+        values: values,
+        current: start,
         onChange: onChange,
-        show: show,
     });
 }
 
-interface SingleOptionInputProps {
-    label: string;
-    options: string[];
-    onChange: (value: string) => void;
-    show?: boolean;
+interface SingleOptionInputProps<T> {
+    values: T[];
+    current: T;
+    getLabel?: (value: T) => string;
+    onChange: (value: T) => void;
 }
 
-function SingleOptionInput({
-    label,
-    options,
+function SingleOptionInput<T>({
+    values,
+    current,
+    getLabel = String,
     onChange,
-    show = true,
-}: SingleOptionInputProps) {
+}: SingleOptionInputProps<T>) {
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedValue = values.find(
+            (value) => String(value) === event.target.value
+        );
+        if (selectedValue !== undefined) {
+            onChange(selectedValue);
+        }
+    };
+
     return (
-        show && (
-            <GameReportFormElement>
-                <FormLabel>{label}</FormLabel>
-                <RadioGroup
-                    orientation="horizontal"
-                    onChange={(event) => onChange(event.target.value)}
-                >
-                    {options.map((option) => (
-                        <Radio key={option} value={option} label={option} />
-                    ))}
-                </RadioGroup>
-            </GameReportFormElement>
-        )
+        <RadioGroup
+            defaultValue={current}
+            orientation="horizontal"
+            onChange={handleChange}
+        >
+            {values.map((value, i) => (
+                <Radio key={i} value={value} label={getLabel(value)} />
+            ))}
+        </RadioGroup>
     );
 }
 
-interface MultiOptionInputProps {
-    label: string;
-    options: string[];
-    value: string[];
-    onChange: (value: string[]) => void;
-    show?: boolean;
+interface MultiOptionInputProps<T> {
+    values: T[];
+    current: T[];
+    getLabel?: (value: T) => string;
+    onChange: (value: T[]) => void;
 }
 
-function MultiOptionInput({
-    label,
-    options,
-    value,
+function MultiOptionInput<T>({
+    values,
+    current,
+    getLabel = String,
     onChange,
-    show = true,
-}: MultiOptionInputProps) {
+}: MultiOptionInputProps<T>) {
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedValue = values.find(
+            (value) => String(value) === event.target.value
+        );
+        if (selectedValue !== undefined) {
+            if (event.target.checked) {
+                onChange(current.concat(selectedValue));
+            } else {
+                onChange(current.filter((value) => value !== selectedValue));
+            }
+        }
+    };
+
     return (
-        show && (
-            <GameReportFormElement>
-                <FormLabel sx={{ py: 1 }}>{label}</FormLabel>
-                <List
-                    orientation="horizontal"
-                    wrap
-                    sx={{
-                        "--List-gap": "10px",
-                        "--ListItem-radius": "30px",
-                        "--ListItem-minHeight": "32px",
-                    }}
-                >
-                    {options.map((option) => (
-                        <ListItem key={option}>
-                            <Checkbox
-                                size="sm"
-                                disableIcon
-                                overlay
-                                label={option}
-                                onChange={(event) =>
-                                    event.target.checked
-                                        ? onChange(value.concat(option))
-                                        : onChange(
-                                              value.filter(
-                                                  (item) => item !== option
-                                              )
-                                          )
-                                }
-                            />
-                        </ListItem>
-                    ))}
-                </List>
-            </GameReportFormElement>
-        )
+        <List
+            orientation="horizontal"
+            wrap
+            sx={{
+                "--List-gap": "10px",
+                "--ListItem-radius": "30px",
+                "--ListItem-minHeight": "32px",
+            }}
+        >
+            {values.map((value, i) => (
+                <ListItem key={i}>
+                    <Checkbox
+                        checked={current.includes(value)}
+                        size="sm"
+                        disableIcon
+                        overlay
+                        value={getLabel(value)}
+                        label={getLabel(value)}
+                        onChange={handleChange}
+                    />
+                </ListItem>
+            ))}
+        </List>
+    );
+}
+
+interface VictoryPointsProps {
+    strongholds: Stronghold[];
+}
+
+function VictoryPoints({ strongholds }: VictoryPointsProps) {
+    const points = strongholds
+        .map((stronghold) => (cities.includes(stronghold) ? 1 : 2))
+        .reduce((sum, current) => sum + current, 0);
+    return (
+        <Typography sx={{ fontWeight: "bold", pb: 2 }}>VP: {points}</Typography>
     );
 }
