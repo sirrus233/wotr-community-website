@@ -38,8 +38,14 @@ const expansions = [
 ] as const;
 type Expansion = (typeof expansions)[number];
 
-const matchType = ["Ladder", "League", "Tournament", "Friendly"] as const;
+const matchType = ["Ranked", "Unranked"] as const;
 type Match = (typeof matchType)[number];
+
+const competitiveType = ["League", "Tournament"] as const;
+type Competitive = (typeof competitiveType)[number];
+
+const leagues = ["General", "LoME", "WoME", "Super", "TTS"] as const;
+type League = (typeof leagues)[number];
 
 const strongholds = [
     "Rivendell",
@@ -73,13 +79,15 @@ interface FormData {
     loser: string | null;
     side: Side | null;
     victoryType: Victory | null;
+    matchType: Match | null;
+    competitionTypes: Competitive[];
+    league: League | null;
     usedExpansions: boolean | null;
     expansions: Expansion[];
     wasTreebeardMustered: boolean | null;
     usedHandicap: boolean | null;
     actionTokens: number;
     dwarvenRings: number;
-    matchType: Match | null;
     gameTurns: number;
     corruption: number;
     didFellowshipReachMordor: boolean | null;
@@ -98,13 +106,15 @@ const initialFormData: FormData = {
     loser: null,
     side: null,
     victoryType: null,
+    matchType: null,
+    competitionTypes: [],
+    league: null,
     usedExpansions: null,
     expansions: [],
     wasTreebeardMustered: null,
     usedHandicap: null,
     actionTokens: 0,
     dwarvenRings: 0,
-    matchType: null,
     gameTurns: UNINITIALIZED,
     corruption: UNINITIALIZED,
     didFellowshipReachMordor: null,
@@ -146,6 +156,26 @@ function GameReportForm() {
         }, [controlField]);
     };
 
+    controlledClearEffect(
+        formData.matchType,
+        "competitionTypes",
+        (matchType) => matchType === "Ranked"
+    );
+    controlledClearEffect(
+        formData.matchType,
+        "league",
+        (matchType) => matchType === "Ranked"
+    );
+    controlledClearEffect(
+        formData.competitionTypes,
+        "league",
+        (competitionTypes) => competitionTypes.includes("League")
+    );
+    controlledClearEffect(
+        formData.expansions,
+        "wasTreebeardMustered",
+        (expansions) => expansions.includes("Treebeard")
+    );
     controlledClearEffect(formData.usedExpansions, "expansions");
     controlledClearEffect(formData.usedExpansions, "wasTreebeardMustered");
     controlledClearEffect(
@@ -205,6 +235,34 @@ function GameReportForm() {
                     onChange={handleInputChange("victoryType")}
                 />
             </GameReportFormElement>
+            <GameReportFormElement label={"What type of game did you play?"}>
+                <SingleOptionInput
+                    values={matchType.slice()}
+                    current={formData.matchType}
+                    onChange={handleInputChange("matchType")}
+                />
+            </GameReportFormElement>
+            {formData.matchType === "Ranked" && (
+                <GameReportFormElement
+                    label={"Was this for a specific competition?"}
+                >
+                    <MultiOptionInput
+                        values={competitiveType.slice()}
+                        current={formData.competitionTypes}
+                        onChange={handleInputChange("competitionTypes")}
+                    />
+                </GameReportFormElement>
+            )}
+            {formData.matchType === "Ranked" &&
+                formData.competitionTypes.includes("League") && (
+                    <GameReportFormElement label={"Which League?"}>
+                        <SingleOptionInput
+                            values={leagues.slice()}
+                            current={formData.league}
+                            onChange={handleInputChange("league")}
+                        />
+                    </GameReportFormElement>
+                )}
             <GameReportFormElement label={"Did you use any expansions?"}>
                 <SingleOptionInput
                     values={[true, false]}
@@ -265,13 +323,6 @@ function GameReportForm() {
                     </GameReportFormElement>
                 </>
             )}
-            <GameReportFormElement label={"What type of game did you play?"}>
-                <SingleOptionInput
-                    values={matchType.slice()}
-                    current={formData.matchType}
-                    onChange={handleInputChange("matchType")}
-                />
-            </GameReportFormElement>
             <GameReportFormElement label="On what turn did the game end?">
                 <SelectNumericOptionInput
                     start={1}
