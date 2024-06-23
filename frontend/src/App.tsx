@@ -90,6 +90,9 @@ interface FormData {
     capturedStrongholds: Stronghold[];
 }
 
+const UNINITIALIZED = -1;
+const INFINITE = 100;
+
 const initialFormData: FormData = {
     winner: null,
     loser: null,
@@ -102,13 +105,13 @@ const initialFormData: FormData = {
     actionTokens: 0,
     dwarvenRings: 0,
     matchType: null,
-    gameTurns: 1,
-    corruption: 0,
+    gameTurns: UNINITIALIZED,
+    corruption: UNINITIALIZED,
     didFellowshipReachMordor: null,
-    mordorTrack: 0,
-    initialEyes: 0,
+    mordorTrack: UNINITIALIZED,
+    initialEyes: UNINITIALIZED,
     wasAragornCrowned: null,
-    aragornCrownedTurn: 0,
+    aragornCrownedTurn: UNINITIALIZED,
     capturedStrongholds: [],
 };
 
@@ -183,7 +186,7 @@ function GameReportForm() {
             </GameReportFormElement>
             <GameReportFormElement label={"Who lost?"}>
                 <TextInput
-                    value={formData.winner || ""}
+                    value={formData.loser || ""}
                     placeholder="Player Name - Please check spelling!"
                     onChange={handleInputChange("loser")}
                 />
@@ -242,17 +245,21 @@ function GameReportForm() {
             </GameReportFormElement>
             {formData.usedHandicap && (
                 <>
-                    <GameReportFormElement label="Did you use any Action Tokens?">
+                    <GameReportFormElement label="How many Action Tokens?">
                         <SelectNumericOptionInput
                             start={0}
-                            end={6}
+                            end={8}
+                            initializeEmpty={false}
+                            allowInfinite={true}
                             onChange={handleInputChange("actionTokens")}
                         />
                     </GameReportFormElement>
-                    <GameReportFormElement label="Did you use any Dwarven Rings?">
+                    <GameReportFormElement label="How many Dwarven Rings?">
                         <SelectNumericOptionInput
                             start={0}
-                            end={6}
+                            end={8}
+                            initializeEmpty={false}
+                            allowInfinite={true}
                             onChange={handleInputChange("dwarvenRings")}
                         />
                     </GameReportFormElement>
@@ -384,7 +391,7 @@ function SelectOptionInput<T>({
 }: SelectOptionInputProps<T>) {
     return (
         <Select
-            defaultValue={current}
+            defaultValue={values[0]}
             onChange={(_, value) => onChange(value as T)}
         >
             {values.map((value, i) => (
@@ -399,23 +406,39 @@ function SelectOptionInput<T>({
 interface SelectNumericOptionInputProps {
     start: number;
     end: number;
+    initializeEmpty?: boolean;
+    allowInfinite?: boolean;
     onChange: (value: number) => void;
 }
 
 function SelectNumericOptionInput({
     start,
     end,
+    initializeEmpty = true,
+    allowInfinite = false,
     onChange,
 }: SelectNumericOptionInputProps) {
-    let values = [];
+    let values = initializeEmpty ? [UNINITIALIZED] : [];
     for (let i = start; i <= end; i++) {
         values.push(i);
+    }
+    if (allowInfinite) {
+        values.push(INFINITE);
     }
 
     return (
         <SelectOptionInput
             values={values}
             current={start}
+            getLabel={(value) => {
+                if (value === UNINITIALIZED) {
+                    return "";
+                } else if (value === INFINITE) {
+                    return "Unlimited!";
+                } else {
+                    return String(value);
+                }
+            }}
             onChange={onChange}
         />
     );
