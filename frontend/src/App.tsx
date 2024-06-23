@@ -96,6 +96,8 @@ interface FormData {
     wasAragornCrowned: boolean | null;
     aragornCrownedTurn: number;
     capturedStrongholds: Stronghold[];
+    interestRating: number;
+    comment: string;
 }
 
 const UNINITIALIZED = -1;
@@ -123,6 +125,8 @@ const initialFormData: FormData = {
     wasAragornCrowned: null,
     aragornCrownedTurn: UNINITIALIZED,
     capturedStrongholds: [],
+    interestRating: -1,
+    comment: "",
 };
 
 type ValueOf<T> = T[keyof T];
@@ -187,9 +191,6 @@ function GameReportForm() {
     controlledClearEffect(formData.usedHandicap, "dwarvenRings");
     controlledClearEffect(formData.didFellowshipReachMordor, "mordorTrack");
     controlledClearEffect(formData.wasAragornCrowned, "aragornCrownedTurn");
-
-    // wasTreebeardMustered: boolean | null;
-    // matchType: Match | null;
 
     return (
         <Sheet
@@ -388,6 +389,26 @@ function GameReportForm() {
                     values={strongholds.slice()}
                     current={formData.capturedStrongholds}
                     onChange={handleInputChange("capturedStrongholds")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
+                label={
+                    "On a scale from 1-10, how interesting did you find this game?"
+                }
+            >
+                <SelectNumericOptionInput
+                    start={1}
+                    end={10}
+                    onChange={handleInputChange("interestRating")}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
+                label={"Do you have any comments or questions?"}
+            >
+                <TextInput
+                    value={formData.comment || ""}
+                    placeholder=""
+                    onChange={handleInputChange("comment")}
                 />
             </GameReportFormElement>
             <Button onClick={(e) => alert(JSON.stringify(formData, null, 4))}>
