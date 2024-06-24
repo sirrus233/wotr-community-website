@@ -2,6 +2,7 @@
     "cSpell.words": [
         "Amroth",
         "aragorn",
+        "certificatemanager",
         "Dwarven",
         "Edoras",
         "Erebor",
@@ -15,6 +16,8 @@
         "Rivendell",
         "Tirith",
         "Treebeard",
-        "Unranked"
-    ]
+        "Unranked",
+        "waroftheringcommunity"
+    ],
+    "material-icon-theme.folders.associations": { "infrastructure": "Aws" }
 }
