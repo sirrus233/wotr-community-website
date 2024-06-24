@@ -12,6 +12,7 @@ import ListItem from "@mui/joy/ListItem";
 import Select from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
 import Button from "@mui/joy/Button";
+import axios from "axios";
 
 export default function App() {
     return (
@@ -137,6 +138,25 @@ function GameReportForm() {
     const handleInputChange = <K extends keyof FormData>(field: K) => {
         return (value: FormData[K]) =>
             setFormData({ ...formData, [field]: value });
+    };
+
+    const handleSubmit = async () => {
+        try {
+            const response = await axios.post(
+                "http://localhost:3001/submit-report",
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            console.log("Form submitted successfully:", response);
+            // Handle the response data as needed
+        } catch (error) {
+            console.error("Error submitting form:", error);
+        }
     };
 
     const controlledClearEffect = <
@@ -411,9 +431,7 @@ function GameReportForm() {
                     onChange={handleInputChange("comment")}
                 />
             </GameReportFormElement>
-            <Button onClick={(e) => alert(JSON.stringify(formData, null, 4))}>
-                Print Form
-            </Button>
+            <Button onClick={handleSubmit}>Submit</Button>
         </Sheet>
     );
 }
