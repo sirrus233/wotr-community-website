@@ -2,6 +2,7 @@ import { CssVarsProvider } from "@mui/joy";
 import CssBaseline from "@mui/joy/CssBaseline";
 import React from "react";
 import GameReportForm from "./GameReportForm";
+import Rankings from "./Rankings";
 import IconButton from "@mui/joy/IconButton";
 import Drawer from "@mui/joy/Drawer";
 import List from "@mui/joy/List";
@@ -26,10 +27,6 @@ export default function App() {
 
 function Home() {
     return <div>Welcome to the Home Page</div>;
-}
-
-function Rankings() {
-    return <div>Rankings Page</div>;
 }
 
 function DrawerNavigation() {
