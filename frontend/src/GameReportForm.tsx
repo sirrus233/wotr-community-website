@@ -232,7 +232,7 @@ function GameReportForm() {
                     onChange={handleInputChange("loser")}
                 />
             </GameReportFormElement>
-            <GameReportFormElement label={"What side did you play?"}>
+            <GameReportFormElement label={"What side did the winner play?"}>
                 <SingleOptionInput
                     values={sides.slice()}
                     current={formData.side}
