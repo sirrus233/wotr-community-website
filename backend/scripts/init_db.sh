@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sqlite3 database.sqlite <<END_SQL
+sqlite3 $(dirname "$0")/../database/database.sqlite <<END_SQL
 
 CREATE TABLE IF NOT EXISTS players (
     id INTEGER PRIMARY KEY,
