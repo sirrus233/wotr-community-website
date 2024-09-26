@@ -1,4 +1,4 @@
-use rusqlite::{types::ToSqlOutput, ToSql};
+use rusqlite::ToSql;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -7,27 +7,11 @@ pub enum Side {
     Shadow,
 }
 
-impl ToSql for Side {
-    fn to_sql(&self) -> Result<ToSqlOutput, rusqlite::Error> {
-        Ok(ToSqlOutput::from(serde_json::to_string(self).map_err(
-            |err| rusqlite::Error::ToSqlConversionFailure(Box::new(err)),
-        )?))
-    }
-}
-
 #[derive(Serialize, Deserialize)]
 pub enum Victory {
     Ring,
     Military,
     Concession,
-}
-
-impl ToSql for Victory {
-    fn to_sql(&self) -> Result<ToSqlOutput, rusqlite::Error> {
-        Ok(ToSqlOutput::from(serde_json::to_string(self).map_err(
-            |err| rusqlite::Error::ToSqlConversionFailure(Box::new(err)),
-        )?))
-    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -41,26 +25,10 @@ pub enum Expansion {
     Treebeard,
 }
 
-impl ToSql for Expansion {
-    fn to_sql(&self) -> Result<ToSqlOutput, rusqlite::Error> {
-        Ok(ToSqlOutput::from(serde_json::to_string(self).map_err(
-            |err| rusqlite::Error::ToSqlConversionFailure(Box::new(err)),
-        )?))
-    }
-}
-
 #[derive(Serialize, Deserialize, PartialEq)]
 pub enum Match {
     Ranked,
     Unranked,
-}
-
-impl ToSql for Match {
-    fn to_sql(&self) -> Result<ToSqlOutput, rusqlite::Error> {
-        Ok(ToSqlOutput::from(serde_json::to_string(self).map_err(
-            |err| rusqlite::Error::ToSqlConversionFailure(Box::new(err)),
-        )?))
-    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -69,29 +37,13 @@ pub enum Competition {
     Tournament,
 }
 
-impl ToSql for Competition {
-    fn to_sql(&self) -> Result<ToSqlOutput, rusqlite::Error> {
-        Ok(ToSqlOutput::from(serde_json::to_string(self).map_err(
-            |err| rusqlite::Error::ToSqlConversionFailure(Box::new(err)),
-        )?))
-    }
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum League {
     General,
     LoME,
     WoME,
     Super,
     TTS,
-}
-
-impl ToSql for League {
-    fn to_sql(&self) -> Result<ToSqlOutput, rusqlite::Error> {
-        Ok(ToSqlOutput::from(serde_json::to_string(self).map_err(
-            |err| rusqlite::Error::ToSqlConversionFailure(Box::new(err)),
-        )?))
-    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -117,14 +69,6 @@ pub enum Stronghold {
     EredLuin,
     #[serde(rename = "Iron Hills (Fate of Erebor expansion only)")]
     IronHills,
-}
-
-impl ToSql for Stronghold {
-    fn to_sql(&self) -> Result<ToSqlOutput, rusqlite::Error> {
-        Ok(ToSqlOutput::from(serde_json::to_string(self).map_err(
-            |err| rusqlite::Error::ToSqlConversionFailure(Box::new(err)),
-        )?))
-    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -174,5 +118,95 @@ impl GameReportForm {
 
     pub fn validate(&self) -> Result<(), String> {
         return Ok(());
+    }
+}
+
+pub struct GameReportFormToSql {
+    pub winner: String,
+    pub loser: String,
+    side: String,
+    victory_type: String,
+    match_type: String,
+    competition_types: String,
+    league: Option<String>,
+    used_expansions: bool,
+    expansions: String,
+    was_treebeard_mustered: Option<bool>,
+    used_handicap: bool,
+    action_tokens: i32,
+    dwarven_rings: i32,
+    game_turns: i32,
+    corruption: i32,
+    did_fellowship_reach_mordor: bool,
+    mordor_track: i32,
+    initial_eyes: i32,
+    was_aragorn_crowned: bool,
+    aragorn_crowned_turn: i32,
+    captured_strongholds: String,
+    interest_rating: i32,
+    comment: String,
+}
+
+impl GameReportFormToSql {
+    pub fn from_game_report_form(report: &GameReportForm) -> Result<Self, serde_json::Error> {
+        Ok(GameReportFormToSql {
+            winner: report.winner.clone(),
+            loser: report.loser.clone(),
+            side: serde_json::to_string(&report.side)?,
+            victory_type: serde_json::to_string(&report.victory_type)?,
+            match_type: serde_json::to_string(&report.match_type)?,
+            competition_types: serde_json::to_string(&report.competition_types)?,
+            league: match report.league {
+                None => None,
+                Some(a) => Some(serde_json::to_string(&a)?),
+            },
+            used_expansions: report.used_expansions,
+            expansions: serde_json::to_string(&report.expansions)?,
+            was_treebeard_mustered: report.was_treebeard_mustered,
+            used_handicap: report.used_handicap,
+            action_tokens: report.action_tokens,
+            dwarven_rings: report.dwarven_rings,
+            game_turns: report.game_turns,
+            corruption: report.corruption,
+            did_fellowship_reach_mordor: report.did_fellowship_reach_mordor,
+            mordor_track: report.mordor_track,
+            initial_eyes: report.initial_eyes,
+            was_aragorn_crowned: report.was_aragorn_crowned,
+            aragorn_crowned_turn: report.aragorn_crowned_turn,
+            captured_strongholds: serde_json::to_string(&report.captured_strongholds)?,
+            interest_rating: report.interest_rating,
+            comment: report.comment.clone(),
+        })
+    }
+
+    pub fn as_named_params(&self) -> Result<[(&'static str, &dyn ToSql); 23], serde_json::Error> {
+        Ok([
+            (":winner", &self.winner),
+            (":loser", &self.loser),
+            (":side", &self.side),
+            (":victory_type", &self.victory_type),
+            (":match_type", &self.match_type),
+            (":competition_types", &self.competition_types),
+            (":league", &self.league),
+            (":used_expansions", &self.used_expansions),
+            (":expansions", &self.expansions),
+            (":was_treebeard_mustered", &self.was_treebeard_mustered),
+            (":used_handicap", &self.used_handicap),
+            (":action_tokens", &self.action_tokens),
+            (":dwarven_rings", &self.dwarven_rings),
+            (":game_turns", &self.game_turns),
+            (":corruption", &self.corruption),
+            (
+                ":did_fellowship_reach_mordor",
+                &self.did_fellowship_reach_mordor,
+            ),
+            (":mordor_track", &self.mordor_track),
+            (":initial_eyes", &self.initial_eyes),
+            (":was_aragorn_crowned", &self.was_aragorn_crowned),
+            (":aragorn_crowned_turn", &self.aragorn_crowned_turn),
+            (":captured_strongholds", &self.captured_strongholds),
+            (":interest_rating", &self.interest_rating),
+            (":comment", &self.comment),
+        ])
     }
 }
