@@ -257,10 +257,12 @@ function GameReportForm() {
         return () => {
             setFormData((prevData) => {
                 const error = prevData[field].validate();
-                return {
-                    ...prevData,
-                    [field]: { ...prevData[field], error },
-                };
+                return error
+                    ? {
+                          ...prevData,
+                          [field]: { ...prevData[field], error },
+                      }
+                    : prevData;
             });
         };
     };
