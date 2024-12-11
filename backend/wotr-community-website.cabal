@@ -1,0 +1,53 @@
+cabal-version:      3.4
+name:               wotr-community-website
+version:            0.1.0.0
+homepage:           https://waroftheringcommunity.net
+license:            MIT
+license-file:       LICENSE
+author:             Bradley Sherman
+maintainer:         sirrus233@gmail.com
+category:           Web
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+
+common warnings
+    ghc-options: -Wall
+
+common extensions
+    default-extensions:
+        OverloadedStrings
+
+common dependencies
+    build-depends:    
+        base ^>=4.20.0.0,
+        relude ^>=1.2.2.0,
+
+library
+    import:           warnings,
+                      extensions,
+                      dependencies
+    exposed-modules:  MyLib
+    build-depends:    
+    hs-source-dirs:   src
+    default-language: GHC2024
+
+executable wotr-community-website
+    import:           warnings,
+                      extensions,
+                      dependencies
+    main-is:          Main.hs
+    build-depends:
+        wotr-community-website
+    hs-source-dirs:   app
+    default-language: GHC2024
+
+test-suite wotr-community-website-test
+    import:           warnings,
+                      extensions,
+                      dependencies
+    default-language: GHC2024
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Main.hs
+    build-depends:
+        wotr-community-website
