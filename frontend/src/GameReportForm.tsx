@@ -12,97 +12,18 @@ import Select from "@mui/joy/Select";
 import Option from "@mui/joy/Option";
 import Button from "@mui/joy/Button";
 import axios from "axios";
-
-const sides = ["Free", "Shadow"] as const;
-type Side = (typeof sides)[number];
-
-const victoryTypes = ["Ring", "Military", "Concession"] as const;
-type Victory = (typeof victoryTypes)[number];
-
-const expansions = [
-    "LoME",
-    "WoME",
-    "KoME",
-    "Cities",
-    "Fate of Erebor",
-    "Treebeard",
-] as const;
-type Expansion = (typeof expansions)[number];
-
-const matchType = ["Ranked", "Unranked"] as const;
-type Match = (typeof matchType)[number];
-
-const competitiveType = ["League", "Tournament"] as const;
-type Competitive = (typeof competitiveType)[number];
-
-const leagues = ["General", "LoME", "WoME", "Super", "TTS"] as const;
-type League = (typeof leagues)[number];
-
-const strongholds = [
-    "Rivendell",
-    "Grey Havens",
-    "Helm's Deep",
-    "Lorien",
-    "Woodland Realm",
-    "Erebor",
-    "Minas Tirith",
-    "Dol Amroth",
-    "Shire",
-    "Edoras",
-    "Dale",
-    "Pelargir",
-    "Ered Luin (Cities expansion only)",
-    "Iron Hills (Fate of Erebor expansion only)",
-] as const;
-type Stronghold = (typeof strongholds)[number];
-
-const cities: Stronghold[] = [
-    "Shire",
-    "Edoras",
-    "Dale",
-    "Pelargir",
-    "Ered Luin (Cities expansion only)",
-    "Iron Hills (Fate of Erebor expansion only)",
-];
-
-enum ErrorMessage {
-    Required = "Required",
-    OnSubmit = "Could not submit, please resolve errors",
-}
-
-export type FieldError = string | null;
-
-interface FieldData<T> {
-    value: T;
-    error: FieldError;
-    validate: () => FieldError;
-}
-
-export interface FormData {
-    winner: FieldData<string | null>;
-    loser: FieldData<string | null>;
-    side: FieldData<Side | null>;
-    victoryType: FieldData<Victory | null>;
-    matchType: FieldData<Match | null>;
-    competitionTypes: FieldData<Competitive[]>;
-    league: FieldData<League | null>;
-    usedExpansions: FieldData<boolean | null>;
-    expansions: FieldData<Expansion[]>;
-    wasTreebeardMustered: FieldData<boolean | null>;
-    usedHandicap: FieldData<boolean | null>;
-    actionTokens: FieldData<number>;
-    dwarvenRings: FieldData<number>;
-    gameTurns: FieldData<number>;
-    corruption: FieldData<number>;
-    didFellowshipReachMordor: FieldData<boolean | null>;
-    mordorTrack: FieldData<number>;
-    initialEyes: FieldData<number>;
-    wasAragornCrowned: FieldData<boolean | null>;
-    aragornCrownedTurn: FieldData<number>;
-    capturedStrongholds: FieldData<Stronghold[]>;
-    interestRating: FieldData<number>;
-    comment: FieldData<string | null>;
-}
+import { FieldError, FormData, Stronghold, ValueOf } from "./types";
+import {
+    cities,
+    competitiveType,
+    ErrorMessage,
+    expansions,
+    leagues,
+    matchType,
+    sides,
+    strongholds,
+    victoryTypes,
+} from "./constants";
 
 const UNINITIALIZED = -1;
 const INFINITE = 100;
@@ -238,8 +159,6 @@ const initialFormData: FormData = {
     },
     comment: { value: "", error: null, validate: alwaysValid },
 };
-
-type ValueOf<T> = T[keyof T];
 
 function GameReportForm() {
     const [formData, setFormData] = useState(initialFormData);
