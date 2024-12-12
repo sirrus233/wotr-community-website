@@ -268,20 +268,28 @@ function GameReportForm() {
     };
 
     const validateForm = () => {
-        const formError = detectFormErrors(formData);
-        if (formError) {
-            objectKeys(formData).forEach((field) => {
+        const stateUpdates = objectKeys(formData).reduce<(() => void)[]>(
+            (updates, field) => {
                 const fieldError = formData[field].validate();
                 if (fieldError) {
-                    setFormData((prevData) => ({
-                        ...prevData,
-                        [field]: { ...prevData[field], error: fieldError },
-                    }));
+                    updates.push(() =>
+                        setFormData((prevData) => ({
+                            ...prevData,
+                            [field]: { ...prevData[field], error: fieldError },
+                        }))
+                    );
                 }
-            });
-            return formError;
+                return updates;
+            },
+            []
+        );
+
+        if (stateUpdates.length) {
+            stateUpdates.forEach((update) => update());
+            return ErrorMessage.OnSubmit;
+        } else {
+            return null;
         }
-        return null;
     };
 
     const toPayload = (formData: FormData) =>
@@ -918,17 +926,6 @@ function detectMissingInput(value: unknown): FieldError {
         (typeof value === "number" ? value >= 0 : true)
         ? null
         : ErrorMessage.Required;
-}
-
-function detectFormErrors(formData: FormData): FieldError {
-    if (
-        Object.entries(formData).some(
-            ([, fieldData]) => fieldData.error || fieldData.validate()
-        )
-    ) {
-        return ErrorMessage.OnSubmit;
-    }
-    return null;
 }
 
 function objectKeys<T extends object>(obj: T): Array<keyof T> {
