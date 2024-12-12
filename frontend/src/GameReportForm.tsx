@@ -257,7 +257,7 @@ function GameReportForm() {
         return () => {
             setFormData((prevData) => {
                 const error = prevData[field].validate();
-                return error
+                return error || prevData[field].error
                     ? {
                           ...prevData,
                           [field]: { ...prevData[field], error },
