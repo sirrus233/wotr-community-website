@@ -1,5 +1,5 @@
 import "@fontsource/inter";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { FormControl, FormHelperText, List, Typography } from "@mui/joy";
 import Sheet from "@mui/joy/Sheet";
 import FormLabel from "@mui/joy/FormLabel";
@@ -16,7 +16,6 @@ import { FieldError, FormData, Stronghold, ValueOf } from "./types";
 import {
     cities,
     competitiveType,
-    ErrorMessage,
     expansions,
     INFINITE,
     leagues,
@@ -25,286 +24,14 @@ import {
     strongholds,
     victoryTypes,
 } from "./constants";
-
-const initialFormData: FormData = {
-    winner: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    loser: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    side: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    victoryType: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    matchType: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    competitionTypes: {
-        value: [],
-        error: null,
-        validate: alwaysValid,
-    },
-    league: {
-        value: null,
-        error: null,
-        validate: alwaysValid,
-    },
-    usedExpansions: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    expansions: {
-        value: [],
-        error: null,
-        validate: alwaysValid,
-    },
-    wasTreebeardMustered: {
-        value: null,
-        error: null,
-        validate: alwaysValid,
-    },
-    usedHandicap: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    actionTokens: { value: 0, error: null, validate: alwaysValid },
-    dwarvenRings: { value: 0, error: null, validate: alwaysValid },
-    gameTurns: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    corruption: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    didFellowshipReachMordor: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    mordorTrack: {
-        value: null,
-        error: null,
-        validate: alwaysValid,
-    },
-    initialEyes: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    wasAragornCrowned: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    aragornCrownedTurn: {
-        value: null,
-        error: null,
-        validate: alwaysValid,
-    },
-    capturedStrongholds: {
-        value: [],
-        error: null,
-        validate: alwaysValid,
-    },
-    interestRating: {
-        value: null,
-        error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
-    },
-    comment: { value: null, error: null, validate: alwaysValid },
-};
+import useFormData from "./hooks/useFormData";
 
 function GameReportForm() {
-    const [formData, setFormData] = useState(initialFormData);
-    const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
-
-    const handleInputChange = <K extends keyof FormData>(field: K) => {
-        return (value: FormData[K]["value"]) =>
-            setFormData((prevData) => ({
-                ...prevData,
-                [field]: { ...prevData[field], value },
-            }));
-    };
-
-    const validateField = <K extends keyof FormData>(field: K) => {
-        return () => {
-            setFormData((prevData) => {
-                const error = prevData[field].validate();
-                return error || prevData[field].error
-                    ? {
-                          ...prevData,
-                          [field]: { ...prevData[field], error },
-                      }
-                    : prevData;
-            });
-        };
-    };
-
-    const validateForm = () => {
-        const stateUpdates = objectKeys(formData).reduce<(() => void)[]>(
-            (updates, field) => {
-                const fieldError = formData[field].validate();
-                if (fieldError) {
-                    updates.push(() =>
-                        setFormData((prevData) => ({
-                            ...prevData,
-                            [field]: { ...prevData[field], error: fieldError },
-                        }))
-                    );
-                }
-                return updates;
-            },
-            []
-        );
-
-        if (stateUpdates.length) {
-            stateUpdates.forEach((update) => update());
-            return ErrorMessage.OnSubmit;
-        } else {
-            return null;
-        }
-    };
-
-    const toPayload = (formData: FormData) =>
-        Object.fromEntries(
-            Object.entries(formData).map(([field, fieldData]) => [
-                field,
-                fieldData.value,
-            ])
-        );
-
-    const handleSubmit = async () => {
-        try {
-            const formError = validateForm();
-
-            if (formError) {
-                setErrorOnSubmit(formError);
-            } else {
-                setErrorOnSubmit(null);
-
-                const response = await axios.post(
-                    "http://localhost:3001/submit-report",
-                    toPayload(formData),
-                    {
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
-
-                console.log("Form submitted successfully:", response);
-                // Handle the response data as needed
-            }
-        } catch (error) {
-            console.error("Error submitting form:", error);
-        }
-    };
-
-    const controlledClearEffect = <
-        K extends keyof FormData,
-        V extends ValueOf<FormData>["value"]
-    >(
-        controlField: V,
-        clearField: K,
-        controlCondition?: (value: V) => boolean
-    ) => {
-        const condition = controlCondition
-            ? controlCondition(controlField)
-            : controlField;
-        useEffect(() => {
-            if (!condition) {
-                setFormData((formData) => ({
-                    ...formData,
-                    [clearField]: initialFormData[clearField],
-                }));
-            }
-        }, [controlField]);
-    };
-
-    controlledClearEffect(
-        formData.matchType.value,
-        "competitionTypes",
-        (matchType) => matchType === "Ranked"
-    );
-    controlledClearEffect(
-        formData.matchType.value,
-        "league",
-        (matchType) => matchType === "Ranked"
-    );
-    controlledClearEffect(
-        formData.competitionTypes.value,
-        "league",
-        (competitionTypes) => competitionTypes.includes("League")
-    );
-    controlledClearEffect(
-        formData.expansions.value,
-        "wasTreebeardMustered",
-        (expansions) => expansions.includes("Treebeard")
-    );
-    controlledClearEffect(formData.usedExpansions.value, "expansions");
-    controlledClearEffect(
-        formData.usedExpansions.value,
-        "wasTreebeardMustered"
-    );
-    controlledClearEffect(
-        formData.expansions.value,
-        "wasTreebeardMustered",
-        (expansions) => expansions.includes("Treebeard")
-    );
-    controlledClearEffect(formData.usedHandicap.value, "actionTokens");
-    controlledClearEffect(formData.usedHandicap.value, "dwarvenRings");
-    controlledClearEffect(
-        formData.didFellowshipReachMordor.value,
-        "mordorTrack"
-    );
-    controlledClearEffect(
-        formData.wasAragornCrowned.value,
-        "aragornCrownedTurn"
-    );
+    const [
+        formData,
+        { errorOnSubmit },
+        { handleInputChange, validateField, handleSubmit },
+    ] = useFormData();
 
     return (
         <Sheet
@@ -834,20 +561,6 @@ function VictoryPoints({ strongholds }: VictoryPointsProps) {
     return (
         <Typography sx={{ fontWeight: "bold", pb: 2 }}>VP: {points}</Typography>
     );
-}
-
-function detectMissingInput(value: unknown): FieldError {
-    return value !== null && value !== undefined && value !== ""
-        ? null
-        : ErrorMessage.Required;
-}
-
-function alwaysValid() {
-    return null;
-}
-
-function objectKeys<T extends object>(obj: T): Array<keyof T> {
-    return Object.keys(obj) as Array<keyof T>;
 }
 
 export default GameReportForm;
