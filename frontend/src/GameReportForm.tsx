@@ -146,12 +146,12 @@ const initialFormData: FormData = {
     competitionTypes: {
         value: [],
         error: null,
-        validate: () => null,
+        validate: alwaysValid,
     },
     league: {
         value: null,
         error: null,
-        validate: () => null,
+        validate: alwaysValid,
     },
     usedExpansions: {
         value: null,
@@ -163,12 +163,12 @@ const initialFormData: FormData = {
     expansions: {
         value: [],
         error: null,
-        validate: () => null,
+        validate: alwaysValid,
     },
     wasTreebeardMustered: {
         value: null,
         error: null,
-        validate: () => null,
+        validate: alwaysValid,
     },
     usedHandicap: {
         value: null,
@@ -177,8 +177,8 @@ const initialFormData: FormData = {
             return detectMissingInput(this.value);
         },
     },
-    actionTokens: { value: 0, error: null, validate: () => null },
-    dwarvenRings: { value: 0, error: null, validate: () => null },
+    actionTokens: { value: 0, error: null, validate: alwaysValid },
+    dwarvenRings: { value: 0, error: null, validate: alwaysValid },
     gameTurns: {
         value: UNINITIALIZED,
         error: null,
@@ -203,7 +203,7 @@ const initialFormData: FormData = {
     mordorTrack: {
         value: UNINITIALIZED,
         error: null,
-        validate: () => null,
+        validate: alwaysValid,
     },
     initialEyes: {
         value: UNINITIALIZED,
@@ -222,12 +222,12 @@ const initialFormData: FormData = {
     aragornCrownedTurn: {
         value: UNINITIALIZED,
         error: null,
-        validate: () => null,
+        validate: alwaysValid,
     },
     capturedStrongholds: {
         value: [],
         error: null,
-        validate: () => null,
+        validate: alwaysValid,
     },
     interestRating: {
         value: -1,
@@ -236,7 +236,7 @@ const initialFormData: FormData = {
             return detectMissingInput(this.value);
         },
     },
-    comment: { value: "", error: null, validate: () => null },
+    comment: { value: "", error: null, validate: alwaysValid },
 };
 
 type ValueOf<T> = T[keyof T];
@@ -926,6 +926,10 @@ function detectMissingInput(value: unknown): FieldError {
         (typeof value === "number" ? value >= 0 : true)
         ? null
         : ErrorMessage.Required;
+}
+
+function alwaysValid() {
+    return null;
 }
 
 function objectKeys<T extends object>(obj: T): Array<keyof T> {
