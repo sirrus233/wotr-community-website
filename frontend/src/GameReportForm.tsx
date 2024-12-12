@@ -18,15 +18,13 @@ import {
     competitiveType,
     ErrorMessage,
     expansions,
+    INFINITE,
     leagues,
     matchType,
     sides,
     strongholds,
     victoryTypes,
 } from "./constants";
-
-const UNINITIALIZED = -1;
-const INFINITE = 100;
 
 const initialFormData: FormData = {
     winner: {
@@ -101,14 +99,14 @@ const initialFormData: FormData = {
     actionTokens: { value: 0, error: null, validate: alwaysValid },
     dwarvenRings: { value: 0, error: null, validate: alwaysValid },
     gameTurns: {
-        value: UNINITIALIZED,
+        value: null,
         error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     corruption: {
-        value: UNINITIALIZED,
+        value: null,
         error: null,
         validate: function _() {
             return detectMissingInput(this.value);
@@ -122,12 +120,12 @@ const initialFormData: FormData = {
         },
     },
     mordorTrack: {
-        value: UNINITIALIZED,
+        value: null,
         error: null,
         validate: alwaysValid,
     },
     initialEyes: {
-        value: UNINITIALIZED,
+        value: null,
         error: null,
         validate: function _() {
             return detectMissingInput(this.value);
@@ -141,7 +139,7 @@ const initialFormData: FormData = {
         },
     },
     aragornCrownedTurn: {
-        value: UNINITIALIZED,
+        value: null,
         error: null,
         validate: alwaysValid,
     },
@@ -151,13 +149,13 @@ const initialFormData: FormData = {
         validate: alwaysValid,
     },
     interestRating: {
-        value: -1,
+        value: null,
         error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
-    comment: { value: "", error: null, validate: alwaysValid },
+    comment: { value: null, error: null, validate: alwaysValid },
 };
 
 function GameReportForm() {
@@ -692,7 +690,7 @@ interface SelectNumericOptionInputProps {
     end: number;
     initializeEmpty?: boolean;
     allowInfinite?: boolean;
-    onChange: (value: number) => void;
+    onChange: (value: number | null) => void;
     validate: () => void;
 }
 
@@ -704,7 +702,7 @@ function SelectNumericOptionInput({
     onChange,
     validate,
 }: SelectNumericOptionInputProps) {
-    let values = initializeEmpty ? [UNINITIALIZED] : [];
+    const values: (number | null)[] = initializeEmpty ? [null] : [];
     for (let i = start; i <= end; i++) {
         values.push(i);
     }
@@ -717,7 +715,7 @@ function SelectNumericOptionInput({
             values={values}
             current={start}
             getLabel={(value) => {
-                if (value === UNINITIALIZED) {
+                if (value === null) {
                     return "";
                 } else if (value === INFINITE) {
                     return "Unlimited!";
@@ -839,10 +837,7 @@ function VictoryPoints({ strongholds }: VictoryPointsProps) {
 }
 
 function detectMissingInput(value: unknown): FieldError {
-    return value !== null &&
-        value !== undefined &&
-        value !== "" &&
-        (typeof value === "number" ? value >= 0 : true)
+    return value !== null && value !== undefined && value !== ""
         ? null
         : ErrorMessage.Required;
 }

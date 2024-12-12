@@ -47,3 +47,5 @@ export enum ErrorMessage {
     Required = "Required",
     OnSubmit = "Could not submit, please resolve errors",
 }
+
+export const INFINITE = 100;

@@ -42,17 +42,17 @@ export interface FormData {
     expansions: FieldData<Expansion[]>;
     wasTreebeardMustered: FieldData<boolean | null>;
     usedHandicap: FieldData<boolean | null>;
-    actionTokens: FieldData<number>;
-    dwarvenRings: FieldData<number>;
-    gameTurns: FieldData<number>;
-    corruption: FieldData<number>;
+    actionTokens: FieldData<number | null>;
+    dwarvenRings: FieldData<number | null>;
+    gameTurns: FieldData<number | null>;
+    corruption: FieldData<number | null>;
     didFellowshipReachMordor: FieldData<boolean | null>;
-    mordorTrack: FieldData<number>;
-    initialEyes: FieldData<number>;
+    mordorTrack: FieldData<number | null>;
+    initialEyes: FieldData<number | null>;
     wasAragornCrowned: FieldData<boolean | null>;
-    aragornCrownedTurn: FieldData<number>;
+    aragornCrownedTurn: FieldData<number | null>;
     capturedStrongholds: FieldData<Stronghold[]>;
-    interestRating: FieldData<number>;
+    interestRating: FieldData<number | null>;
     comment: FieldData<string | null>;
 }
 
