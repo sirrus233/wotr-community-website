@@ -110,133 +110,133 @@ const INFINITE = 100;
 const initialFormData: FormData = {
     winner: {
         value: null,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     loser: {
         value: null,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     side: {
         value: null,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     victoryType: {
         value: null,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     matchType: {
         value: null,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     competitionTypes: {
         value: [],
-        error: "",
+        error: null,
         validate: () => null,
     },
     league: {
         value: null,
-        error: "",
+        error: null,
         validate: () => null,
     },
     usedExpansions: {
         value: null,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     expansions: {
         value: [],
-        error: "",
+        error: null,
         validate: () => null,
     },
     wasTreebeardMustered: {
         value: null,
-        error: "",
+        error: null,
         validate: () => null,
     },
     usedHandicap: {
         value: null,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
-    actionTokens: { value: 0, error: "", validate: () => null },
-    dwarvenRings: { value: 0, error: "", validate: () => null },
+    actionTokens: { value: 0, error: null, validate: () => null },
+    dwarvenRings: { value: 0, error: null, validate: () => null },
     gameTurns: {
         value: UNINITIALIZED,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     corruption: {
         value: UNINITIALIZED,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     didFellowshipReachMordor: {
         value: null,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     mordorTrack: {
         value: UNINITIALIZED,
-        error: "",
+        error: null,
         validate: () => null,
     },
     initialEyes: {
         value: UNINITIALIZED,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     wasAragornCrowned: {
         value: null,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
     aragornCrownedTurn: {
         value: UNINITIALIZED,
-        error: "",
+        error: null,
         validate: () => null,
     },
     capturedStrongholds: {
         value: [],
-        error: "",
+        error: null,
         validate: () => null,
     },
     interestRating: {
         value: -1,
-        error: "",
+        error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
-    comment: { value: "", error: "", validate: () => null },
+    comment: { value: "", error: null, validate: () => null },
 };
 
 type ValueOf<T> = T[keyof T];
