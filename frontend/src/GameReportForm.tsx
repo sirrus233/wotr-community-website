@@ -243,7 +243,7 @@ type ValueOf<T> = T[keyof T];
 
 function GameReportForm() {
     const [formData, setFormData] = useState(initialFormData);
-    const [errorOnSubmit, setErrorOnSubmit] = useState<string | null>(null);
+    const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
 
     const handleInputChange = <K extends keyof FormData>(field: K) => {
         return (value: FormData[K]["value"]) =>
