@@ -16,7 +16,7 @@ export type Expansion = (typeof expansions)[number];
 
 export type Match = (typeof matchType)[number];
 
-export type Competitive = (typeof competitiveType)[number];
+export type Competition = (typeof competitiveType)[number];
 
 export type League = (typeof leagues)[number];
 
@@ -36,7 +36,7 @@ export interface FormData {
     side: FieldData<Side | null>;
     victoryType: FieldData<Victory | null>;
     matchType: FieldData<Match | null>;
-    competitionTypes: FieldData<Competitive[]>;
+    competitionTypes: FieldData<Competition[]>;
     league: FieldData<League | null>;
     usedExpansions: FieldData<boolean | null>;
     expansions: FieldData<Expansion[]>;
@@ -54,6 +54,28 @@ export interface FormData {
     capturedStrongholds: FieldData<Stronghold[]>;
     interestRating: FieldData<number | null>;
     comment: FieldData<string | null>;
+}
+
+export interface GameReportPayload {
+    winner: string;
+    loser: string;
+    side: Side;
+    victory: Victory;
+    match: Match;
+    competition: Competition[];
+    league: League | null;
+    expansions: Expansion[];
+    treebeard: boolean | null;
+    actionTokens: number | null;
+    dwarvenRings: number | null;
+    turns: number;
+    corruption: number;
+    mordor: number | null;
+    initialEyes: number;
+    aragornTurn: number | null;
+    strongholds: Stronghold[];
+    interestRating: number;
+    comment: string | null;
 }
 
 export type ValueOf<T> = T[keyof T];
