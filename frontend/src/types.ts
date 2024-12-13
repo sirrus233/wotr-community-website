@@ -16,7 +16,7 @@ export type Expansion = (typeof expansions)[number];
 
 export type Match = (typeof matchType)[number];
 
-export type Competitive = (typeof competitiveType)[number];
+export type Competition = (typeof competitiveType)[number];
 
 export type League = (typeof leagues)[number];
 
@@ -36,7 +36,7 @@ export interface FormData {
     side: FieldData<Side | null>;
     victoryType: FieldData<Victory | null>;
     matchType: FieldData<Match | null>;
-    competitionTypes: FieldData<Competitive[]>;
+    competitionTypes: FieldData<Competition[]>;
     league: FieldData<League | null>;
     usedExpansions: FieldData<boolean | null>;
     expansions: FieldData<Expansion[]>;
@@ -60,20 +60,20 @@ export interface GameReportPayload {
     winner: string;
     loser: string;
     side: Side;
-    victoryType: Victory;
-    matchType: Match;
-    competitionTypes: Competitive[];
+    victory: Victory;
+    match: Match;
+    competition: Competition[];
     league: League | null;
     expansions: Expansion[];
-    wasTreebeardMustered: boolean | null;
+    treebeard: boolean | null;
     actionTokens: number | null;
     dwarvenRings: number | null;
-    gameTurns: number;
+    turns: number;
     corruption: number;
-    mordorTrack: number | null;
+    mordor: number | null;
     initialEyes: number;
-    aragornCrownedTurn: number | null;
-    capturedStrongholds: Stronghold[];
+    aragornTurn: number | null;
+    strongholds: Stronghold[];
     interestRating: number;
     comment: string | null;
 }
