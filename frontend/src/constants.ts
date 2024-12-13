@@ -2,9 +2,9 @@ export const sides = ["Free", "Shadow"] as const;
 
 export const victoryTypes = ["Ring", "Military", "Concession"] as const;
 
-export const matchType = ["Ranked", "Unranked"] as const;
+export const matchTypes = ["Ranked", "Unranked"] as const;
 
-export const competitiveType = ["League", "Tournament"] as const;
+export const competitionTypes = ["League", "Tournament"] as const;
 
 export const leagues = ["General", "LoME", "WoME", "Super", "TTS"] as const;
 

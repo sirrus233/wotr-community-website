@@ -15,11 +15,11 @@ import axios from "axios";
 import { FieldError, FormData, Stronghold, ValueOf } from "./types";
 import {
     cities,
-    competitiveType,
+    competitionTypes,
     expansions,
     INFINITE,
     leagues,
-    matchType,
+    matchTypes,
     sides,
     strongholds,
     victoryTypes,
@@ -84,41 +84,41 @@ function GameReportForm() {
             </GameReportFormElement>
             <GameReportFormElement
                 label={"How did you win?"}
-                error={formData.victoryType.error}
+                error={formData.victory.error}
             >
                 <SingleOptionInput
                     values={victoryTypes.slice()}
-                    current={formData.victoryType.value}
-                    onChange={handleInputChange("victoryType")}
-                    validate={validateField("victoryType")}
+                    current={formData.victory.value}
+                    onChange={handleInputChange("victory")}
+                    validate={validateField("victory")}
                 />
             </GameReportFormElement>
             <GameReportFormElement
                 label={"What type of game did you play?"}
-                error={formData.matchType.error}
+                error={formData.match.error}
             >
                 <SingleOptionInput
-                    values={matchType.slice()}
-                    current={formData.matchType.value}
-                    onChange={handleInputChange("matchType")}
-                    validate={validateField("matchType")}
+                    values={matchTypes.slice()}
+                    current={formData.match.value}
+                    onChange={handleInputChange("match")}
+                    validate={validateField("match")}
                 />
             </GameReportFormElement>
-            {formData.matchType.value === "Ranked" && (
+            {formData.match.value === "Ranked" && (
                 <GameReportFormElement
                     label={"Was this for a specific competition?"}
-                    error={formData.competitionTypes.error}
+                    error={formData.competition.error}
                 >
                     <MultiOptionInput
-                        values={competitiveType.slice()}
-                        current={formData.competitionTypes.value}
-                        onChange={handleInputChange("competitionTypes")}
-                        validate={validateField("competitionTypes")}
+                        values={competitionTypes.slice()}
+                        current={formData.competition.value}
+                        onChange={handleInputChange("competition")}
+                        validate={validateField("competition")}
                     />
                 </GameReportFormElement>
             )}
-            {formData.matchType.value === "Ranked" &&
-                formData.competitionTypes.value.includes("League") && (
+            {formData.match.value === "Ranked" &&
+                formData.competition.value.includes("League") && (
                     <GameReportFormElement
                         label={"Which League?"}
                         error={formData.league.error}
@@ -160,14 +160,14 @@ function GameReportForm() {
                 formData.expansions.value.includes("Treebeard") && (
                     <GameReportFormElement
                         label={"Was Treebeard mustered?"}
-                        error={formData.wasTreebeardMustered.error}
+                        error={formData.treebeard.error}
                     >
                         <SingleOptionInput
                             values={[true, false]}
-                            current={formData.wasTreebeardMustered.value}
+                            current={formData.treebeard.value}
                             getLabel={(v) => (v ? "Yes" : "No")}
-                            onChange={handleInputChange("wasTreebeardMustered")}
-                            validate={validateField("wasTreebeardMustered")}
+                            onChange={handleInputChange("treebeard")}
+                            validate={validateField("treebeard")}
                         />
                     </GameReportFormElement>
                 )}
@@ -215,13 +215,13 @@ function GameReportForm() {
             )}
             <GameReportFormElement
                 label="On what turn did the game end?"
-                error={formData.gameTurns.error}
+                error={formData.turns.error}
             >
                 <SelectNumericOptionInput
                     start={1}
                     end={25}
-                    onChange={handleInputChange("gameTurns")}
-                    validate={validateField("gameTurns")}
+                    onChange={handleInputChange("turns")}
+                    validate={validateField("turns")}
                 />
             </GameReportFormElement>
             <GameReportFormElement
@@ -250,13 +250,13 @@ function GameReportForm() {
             {formData.didFellowshipReachMordor.value && (
                 <GameReportFormElement
                     label="Where did the Fellowship reach on the Mordor track?"
-                    error={formData.mordorTrack.error}
+                    error={formData.mordor.error}
                 >
                     <SelectNumericOptionInput
                         start={0}
                         end={5}
-                        onChange={handleInputChange("mordorTrack")}
-                        validate={validateField("mordorTrack")}
+                        onChange={handleInputChange("mordor")}
+                        validate={validateField("mordor")}
                     />
                 </GameReportFormElement>
             )}
@@ -286,28 +286,28 @@ function GameReportForm() {
             {formData.wasAragornCrowned.value && (
                 <GameReportFormElement
                     label="On what turn was Aragorn crowned King?"
-                    error={formData.aragornCrownedTurn.error}
+                    error={formData.aragornTurn.error}
                 >
                     <SelectNumericOptionInput
                         start={1}
                         end={18}
-                        onChange={handleInputChange("aragornCrownedTurn")}
-                        validate={validateField("aragornCrownedTurn")}
+                        onChange={handleInputChange("aragornTurn")}
+                        validate={validateField("aragornTurn")}
                     />
                 </GameReportFormElement>
             )}
             <GameReportFormElement
                 label={"What strongholds were captured by Shadow?"}
-                error={formData.capturedStrongholds.error}
+                error={formData.strongholds.error}
             >
                 <VictoryPoints
-                    strongholds={formData.capturedStrongholds.value}
+                    strongholds={formData.strongholds.value}
                 ></VictoryPoints>
                 <MultiOptionInput
                     values={strongholds.slice()}
-                    current={formData.capturedStrongholds.value}
-                    onChange={handleInputChange("capturedStrongholds")}
-                    validate={validateField("capturedStrongholds")}
+                    current={formData.strongholds.value}
+                    onChange={handleInputChange("strongholds")}
+                    validate={validateField("strongholds")}
                 />
             </GameReportFormElement>
             <GameReportFormElement

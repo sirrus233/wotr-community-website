@@ -1,8 +1,8 @@
 import {
-    competitiveType,
+    competitionTypes,
     expansions,
     leagues,
-    matchType,
+    matchTypes,
     sides,
     strongholds,
     victoryTypes,
@@ -14,9 +14,9 @@ export type Victory = (typeof victoryTypes)[number];
 
 export type Expansion = (typeof expansions)[number];
 
-export type Match = (typeof matchType)[number];
+export type Match = (typeof matchTypes)[number];
 
-export type Competition = (typeof competitiveType)[number];
+export type Competition = (typeof competitionTypes)[number];
 
 export type League = (typeof leagues)[number];
 
@@ -34,24 +34,24 @@ export interface FormData {
     winner: FieldData<string | null>;
     loser: FieldData<string | null>;
     side: FieldData<Side | null>;
-    victoryType: FieldData<Victory | null>;
-    matchType: FieldData<Match | null>;
-    competitionTypes: FieldData<Competition[]>;
+    victory: FieldData<Victory | null>;
+    match: FieldData<Match | null>;
+    competition: FieldData<Competition[]>;
     league: FieldData<League | null>;
     usedExpansions: FieldData<boolean | null>;
     expansions: FieldData<Expansion[]>;
-    wasTreebeardMustered: FieldData<boolean | null>;
+    treebeard: FieldData<boolean | null>;
     usedHandicap: FieldData<boolean | null>;
     actionTokens: FieldData<number | null>;
     dwarvenRings: FieldData<number | null>;
-    gameTurns: FieldData<number | null>;
+    turns: FieldData<number | null>;
     corruption: FieldData<number | null>;
     didFellowshipReachMordor: FieldData<boolean | null>;
-    mordorTrack: FieldData<number | null>;
+    mordor: FieldData<number | null>;
     initialEyes: FieldData<number | null>;
     wasAragornCrowned: FieldData<boolean | null>;
-    aragornCrownedTurn: FieldData<number | null>;
-    capturedStrongholds: FieldData<Stronghold[]>;
+    aragornTurn: FieldData<number | null>;
+    strongholds: FieldData<Stronghold[]>;
     interestRating: FieldData<number | null>;
     comment: FieldData<string | null>;
 }

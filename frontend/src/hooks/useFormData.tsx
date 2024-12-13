@@ -25,21 +25,21 @@ const initialFormData: FormData = {
             return detectMissingInput(this.value);
         },
     },
-    victoryType: {
+    victory: {
         value: null,
         error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
-    matchType: {
+    match: {
         value: null,
         error: null,
         validate: function _() {
             return detectMissingInput(this.value);
         },
     },
-    competitionTypes: {
+    competition: {
         value: [],
         error: null,
         validate: alwaysValid,
@@ -61,7 +61,7 @@ const initialFormData: FormData = {
         error: null,
         validate: alwaysValid,
     },
-    wasTreebeardMustered: {
+    treebeard: {
         value: null,
         error: null,
         validate: alwaysValid,
@@ -75,7 +75,7 @@ const initialFormData: FormData = {
     },
     actionTokens: { value: 0, error: null, validate: alwaysValid },
     dwarvenRings: { value: 0, error: null, validate: alwaysValid },
-    gameTurns: {
+    turns: {
         value: null,
         error: null,
         validate: function _() {
@@ -96,7 +96,7 @@ const initialFormData: FormData = {
             return detectMissingInput(this.value);
         },
     },
-    mordorTrack: {
+    mordor: {
         value: null,
         error: null,
         validate: alwaysValid,
@@ -115,12 +115,12 @@ const initialFormData: FormData = {
             return detectMissingInput(this.value);
         },
     },
-    aragornCrownedTurn: {
+    aragornTurn: {
         value: null,
         error: null,
         validate: alwaysValid,
     },
-    capturedStrongholds: {
+    strongholds: {
         value: [],
         error: null,
         validate: alwaysValid,
@@ -248,45 +248,36 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     };
 
     useControlledClearEffect(
-        formData.matchType.value,
-        "competitionTypes",
-        (matchType) => matchType === "Ranked"
+        formData.match.value,
+        "competition",
+        (match) => match === "Ranked"
     );
     useControlledClearEffect(
-        formData.matchType.value,
+        formData.match.value,
         "league",
-        (matchType) => matchType === "Ranked"
+        (match) => match === "Ranked"
     );
     useControlledClearEffect(
-        formData.competitionTypes.value,
+        formData.competition.value,
         "league",
-        (competitionTypes) => competitionTypes.includes("League")
+        (competition) => competition.includes("League")
     );
     useControlledClearEffect(
         formData.expansions.value,
-        "wasTreebeardMustered",
+        "treebeard",
         (expansions) => expansions.includes("Treebeard")
     );
     useControlledClearEffect(formData.usedExpansions.value, "expansions");
-    useControlledClearEffect(
-        formData.usedExpansions.value,
-        "wasTreebeardMustered"
-    );
+    useControlledClearEffect(formData.usedExpansions.value, "treebeard");
     useControlledClearEffect(
         formData.expansions.value,
-        "wasTreebeardMustered",
+        "treebeard",
         (expansions) => expansions.includes("Treebeard")
     );
     useControlledClearEffect(formData.usedHandicap.value, "actionTokens");
     useControlledClearEffect(formData.usedHandicap.value, "dwarvenRings");
-    useControlledClearEffect(
-        formData.didFellowshipReachMordor.value,
-        "mordorTrack"
-    );
-    useControlledClearEffect(
-        formData.wasAragornCrowned.value,
-        "aragornCrownedTurn"
-    );
+    useControlledClearEffect(formData.didFellowshipReachMordor.value, "mordor");
+    useControlledClearEffect(formData.wasAragornCrowned.value, "aragornTurn");
 
     return [
         formData,
