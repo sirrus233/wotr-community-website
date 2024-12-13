@@ -18,7 +18,9 @@
         "Tirith",
         "Treebeard",
         "Unranked",
-        "waroftheringcommunity"
+        "waroftheringcommunity",
+        "wotr",
     ],
+    "editor.tabSize": 4,
     "material-icon-theme.folders.associations": { "infrastructure": "Aws" }
 }
