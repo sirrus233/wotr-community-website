@@ -56,4 +56,26 @@ export interface FormData {
     comment: FieldData<string | null>;
 }
 
+export interface GameReportPayload {
+    winner: string;
+    loser: string;
+    side: Side;
+    victoryType: Victory;
+    matchType: Match;
+    competitionTypes: Competitive[];
+    league: League | null;
+    expansions: Expansion[];
+    wasTreebeardMustered: boolean | null;
+    actionTokens: number | null;
+    dwarvenRings: number | null;
+    gameTurns: number;
+    corruption: number;
+    mordorTrack: number | null;
+    initialEyes: number;
+    aragornCrownedTurn: number | null;
+    capturedStrongholds: Stronghold[];
+    interestRating: number;
+    comment: string | null;
+}
+
 export type ValueOf<T> = T[keyof T];
