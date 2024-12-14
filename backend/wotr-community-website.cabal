@@ -15,6 +15,8 @@ common warnings
 
 common extensions
     default-extensions:
+        DuplicateRecordFields,
+        OverloadedRecordDot,
         OverloadedStrings
     
     mixins:
@@ -26,16 +28,31 @@ common dependencies
     build-depends:    
         base            ^>=4.20.0.0,
         relude          ^>=1.2.2.0,
+        filepath        ^>=1.5.4.0,
+        directory       ^>=1.3.9.0,
+        time            ^>=1.12.2,
         aeson           ^>=2.2.3.0,
         servant         ^>=0.20.2,
         servant-server  ^>=0.20.2,
-        warp            ^>=3.4.7
+        warp            ^>=3.4.7,
+        resource-pool   ^>=0.4.0.0,
+        sqlite-simple   ^>=0.4.19.0,
+        fast-logger     ^>=3.2.5,
+        hedis           ^>=0.15.2,
+        validation      ^>=1.1.3,
 
 library
     import:           warnings,
                       extensions,
                       dependencies
-    exposed-modules:  MyLib
+    exposed-modules:  Api,
+                      AppServer,
+                      Database,
+                      Types.Api,
+                      Types.App,
+                      Types.Database,
+                      Types.DataField,
+                      Validation
     hs-source-dirs:   src
     default-language: GHC2024
 
