@@ -21,6 +21,7 @@ data ReportError
   | InitialEyesOutOfRange
   | InterestRatingOutOfRange
   | InvalidStronghold
+  deriving (Show)
 
 vpValue :: Side -> Stronghold -> Int
 vpValue Shadow Rivendell = 2
@@ -75,7 +76,7 @@ validateLeague report = case report.league of
 
 validateTreebeard :: GameReport -> Validation [ReportError] GameReport
 validateTreebeard report
-  | isJust report.treebeard && Treebeard `elem` report.expansions = Success report
+  | isJust report.treebeard == Treebeard `elem` report.expansions = Success report
   | otherwise = Failure [TreebeardExpansionMismatch]
 
 validateTurns :: GameReport -> Validation [ReportError] GameReport
