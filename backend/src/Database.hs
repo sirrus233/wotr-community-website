@@ -3,7 +3,8 @@ module Database where
 import Control.Exception (throwIO)
 import Data.Pool (withResource)
 import Database.SQLite.Simple (Only (..), execute_, query, query_)
-import Types.App (AppM, Env (..), log)
+import Database.SQLite.Simple qualified as SQL
+import Types.App (Env (..), log)
 import Types.DataField (PlayerId, PlayerName)
 import Types.Database (ReadPlayer (..), ReadProcessedGameReport (..), WritePlayer (..), WriteProcessedGameReport (..))
 
@@ -68,86 +69,80 @@ initializeDatabase = do
         execute_ conn "CREATE INDEX idx_players_name ON Players (name);"
       _ -> log env.logger "Database already initialized"
 
-getPlayerByName :: PlayerName -> AppM (Maybe ReadPlayer)
-getPlayerByName name = do
-  env <- ask
-  liftIO . withResource env.dbPool $ \conn -> do
-    result <- query conn "SELECT * FROM Players WHERE name = ?" (Only name)
-    case result of
-      [] -> pure Nothing
-      [player] -> pure (Just player)
-      _ -> throwIO UnexpectedResultException
+getPlayerByName :: SQL.Connection -> PlayerName -> IO (Maybe ReadPlayer)
+getPlayerByName conn name = do
+  result <- query conn "SELECT * FROM Players WHERE name = ?" (Only name)
+  case result of
+    [] -> pure Nothing
+    [player] -> pure (Just player)
+    _ -> throwIO UnexpectedResultException
 
-insertPlayerIfNotExists :: PlayerName -> AppM PlayerId
-insertPlayerIfNotExists name = do
-  env <- ask
-  player <- getPlayerByName name
-  liftIO . withResource env.dbPool $ \conn -> do
-    case player of
-      Nothing -> do
-        let insertPlayerQuery = "INSERT INTO Players (name, country) VALUES (?, ?) RETURNING id"
-        readSingle $ query conn insertPlayerQuery (WritePlayer {name, country = Nothing})
-      Just (ReadPlayer {pid}) -> pure pid
+insertPlayerIfNotExists :: SQL.Connection -> PlayerName -> IO PlayerId
+insertPlayerIfNotExists conn name = do
+  player <- getPlayerByName conn name
+  case player of
+    Nothing -> do
+      let insertPlayerQuery = "INSERT INTO Players (name, country) VALUES (?, ?) RETURNING id"
+      readSingle $ query conn insertPlayerQuery (WritePlayer {name, country = Nothing})
+    Just (ReadPlayer {pid}) -> pure pid
 
-insertGameReport :: WriteProcessedGameReport -> AppM ReadProcessedGameReport
-insertGameReport report = do
-  env <- ask
-  liftIO . withResource env.dbPool $ \conn -> do
-    let insertReportQuery =
-          "INSERT INTO GameReports (\
-          \timestamp,\
-          \winner,\
-          \loser,\
-          \side,\
-          \victory,\
-          \match,\
-          \competition,\
-          \league,\
-          \expansions,\
-          \treebeard,\
-          \actionTokens,\
-          \dwarvenRings,\
-          \turns,\
-          \corruption,\
-          \mordor,\
-          \initialEyes,\
-          \aragornTurn,\
-          \strongholds,\
-          \interestRating,\
-          \comments,\
-          \winnerRatingAfter,\
-          \loserRatingAfter\
-          \) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\
-          \RETURNING id"
-    rid <- readSingle $ query conn insertReportQuery report
+insertGameReport :: SQL.Connection -> WriteProcessedGameReport -> IO ReadProcessedGameReport
+insertGameReport conn report = do
+  let insertReportQuery =
+        "INSERT INTO GameReports (\
+        \timestamp,\
+        \winner,\
+        \loser,\
+        \side,\
+        \victory,\
+        \match,\
+        \competition,\
+        \league,\
+        \expansions,\
+        \treebeard,\
+        \actionTokens,\
+        \dwarvenRings,\
+        \turns,\
+        \corruption,\
+        \mordor,\
+        \initialEyes,\
+        \aragornTurn,\
+        \strongholds,\
+        \interestRating,\
+        \comments,\
+        \winnerRatingAfter,\
+        \loserRatingAfter\
+        \) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\
+        \RETURNING id"
+  rid <- readSingle $ query conn insertReportQuery report
 
-    let nameQuery = "SELECT name FROM Players WHERE id = ?"
-    winner <- readSingle $ query conn nameQuery (Only report.winner)
-    loser <- readSingle $ query conn nameQuery (Only report.loser)
+  let nameQuery = "SELECT name FROM Players WHERE id = ?"
+  winner <- readSingle $ query conn nameQuery (Only report.winner)
+  loser <- readSingle $ query conn nameQuery (Only report.loser)
 
-    pure
-      ReadProcessedGameReport
-        { rid,
-          timestamp = report.timestamp,
-          winner,
-          loser,
-          side = report.side,
-          victory = report.victory,
-          match = report.match,
-          competition = report.competition,
-          league = report.league,
-          expansions = report.expansions,
-          treebeard = report.treebeard,
-          actionTokens = report.actionTokens,
-          dwarvenRings = report.dwarvenRings,
-          turns = report.turns,
-          corruption = report.corruption,
-          mordor = report.mordor,
-          initialEyes = report.initialEyes,
-          aragornTurn = report.aragornTurn,
-          strongholds = report.strongholds,
-          interestRating = report.interestRating,
-          comments = report.comments,
-          winnerRatingAfter = report.winnerRatingAfter,
-          loserRatingAfter = report.loserRatingAfter
-        }
+  pure
+    ReadProcessedGameReport
+      { rid,
+        timestamp = report.timestamp,
+        winner,
+        loser,
+        side = report.side,
+        victory = report.victory,
+        match = report.match,
+        competition = report.competition,
+        league = report.league,
+        expansions = report.expansions,
+        treebeard = report.treebeard,
+        actionTokens = report.actionTokens,
+        dwarvenRings = report.dwarvenRings,
+        turns = report.turns,
+        corruption = report.corruption,
+        mordor = report.mordor,
+        initialEyes = report.initialEyes,
+        aragornTurn = report.aragornTurn,
+        strongholds = report.strongholds,
+        interestRating = report.interestRating,
+        comments = report.comments,
+        winnerRatingAfter = report.winnerRatingAfter,
+        loserRatingAfter = report.loserRatingAfter
+      }
