@@ -19,9 +19,9 @@ initializeDatabase = do
   env <- ask
   liftIO . withResource env.dbPool $ \conn -> do
     log env.logger "Initializing database"
-    tableCount <- query_ conn "SELECT COUNT(*) FROM sqlite_master WHERE type='table';" :: IO [Only Int]
+    tableCount <- readSingle $ query_ conn "SELECT COUNT(*) FROM sqlite_master WHERE type='table';" :: IO Int
     case tableCount of
-      [Only 0] -> do
+      0 -> do
         log env.logger "Creating tables"
         execute_ conn "PRAGMA foreign_keys = ON;"
         execute_
