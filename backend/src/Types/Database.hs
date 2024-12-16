@@ -34,7 +34,7 @@ data WriteProcessedGameReport = WriteProcessedGameReport
 instance ToRow WriteProcessedGameReport
 
 data ReadProcessedGameReport = ReadProcessedGameReport
-  { id :: Int,
+  { rid :: Int,
     timestamp :: UTCTime,
     winner :: PlayerName,
     loser :: PlayerName,
@@ -66,16 +66,16 @@ instance ToJSON ReadProcessedGameReport
 
 data WritePlayer = WritePlayer
   { name :: PlayerName,
-    country :: Text
+    country :: Maybe Text
   }
   deriving (Generic)
 
 instance ToRow WritePlayer
 
 data ReadPlayer = ReadPlayer
-  { id :: PlayerId,
+  { pid :: PlayerId,
     name :: PlayerName,
-    country :: Text
+    country :: Maybe Text
   }
   deriving (Generic)
 

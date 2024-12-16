@@ -27,7 +27,7 @@ defaultListFromField f = case fieldData f of
     Nothing -> returnError ConversionFailed f "Unreadable value in semantic list text field."
   _ -> returnError ConversionFailed f "Unexpected non-text SQL value."
 
-type PlayerName = String
+type PlayerName = Text
 
 type PlayerId = Int
 
