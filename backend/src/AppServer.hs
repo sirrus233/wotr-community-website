@@ -10,7 +10,7 @@ import Servant.Server (err422)
 import Types.Api (GameReport (..))
 import Types.App (AppM)
 import Types.DataField (PlayerId)
-import Types.Database (WriteProcessedGameReport (..))
+import Types.Database (ReadProcessedGameReport (..), WriteProcessedGameReport (..))
 import Validation (validateReport)
 
 processReport :: UTCTime -> PlayerId -> PlayerId -> GameReport -> WriteProcessedGameReport
@@ -40,14 +40,14 @@ processReport timestamp winner loser report =
       loserRatingAfter = 0 -- TODO
     }
 
-submitReportHandler :: GameReport -> AppM ()
+submitReportHandler :: GameReport -> AppM ReadProcessedGameReport
 submitReportHandler r = case validateReport r of
   Failure errors -> throwError $ err422 {errBody = show errors}
   Success report -> do
     winnerId <- insertPlayerIfNotExists report.winner
     loserId <- insertPlayerIfNotExists report.loser
     now <- liftIO getCurrentTime
-    insertGameReport . processReport now winnerId loserId $ report
+    insertGameReport $ processReport now winnerId loserId report
 
 server :: ServerT Api AppM
 server = submitReportHandler

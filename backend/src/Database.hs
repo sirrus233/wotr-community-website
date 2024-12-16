@@ -1,10 +1,18 @@
 module Database where
 
+import Control.Exception (throwIO)
 import Data.Pool (withResource)
-import Database.SQLite.Simple (Only (..), execute, execute_, query, query_)
+import Database.SQLite.Simple (Only (..), execute_, query, query_)
 import Types.App (AppM, Env (..), log)
 import Types.DataField (PlayerId, PlayerName)
-import Types.Database (ReadPlayer (..), WritePlayer (..), WriteProcessedGameReport)
+import Types.Database (ReadPlayer (..), ReadProcessedGameReport (..), WritePlayer (..), WriteProcessedGameReport (..))
+
+data UnexpectedResultException = UnexpectedResultException deriving (Show)
+
+instance Exception UnexpectedResultException
+
+readSingle :: IO [Only r] -> IO r
+readSingle rs = rs >>= \case [Only r] -> pure r; _ -> throwIO UnexpectedResultException
 
 initializeDatabase :: ReaderT Env IO ()
 initializeDatabase = do
@@ -64,10 +72,11 @@ getPlayerByName :: PlayerName -> AppM (Maybe ReadPlayer)
 getPlayerByName name = do
   env <- ask
   liftIO . withResource env.dbPool $ \conn -> do
-    player <- query conn "SELECT * FROM Players WHERE name=(?)" (Only name)
-    case player of
-      [p] -> pure (Just p)
-      _ -> pure Nothing
+    result <- query conn "SELECT * FROM Players WHERE name = ?" (Only name)
+    case result of
+      [] -> pure Nothing
+      [player] -> pure (Just player)
+      _ -> throwIO UnexpectedResultException
 
 insertPlayerIfNotExists :: PlayerName -> AppM PlayerId
 insertPlayerIfNotExists name = do
@@ -76,41 +85,69 @@ insertPlayerIfNotExists name = do
   liftIO . withResource env.dbPool $ \conn -> do
     case player of
       Nothing -> do
-        execute conn "INSERT INTO Players (name, country) VALUES (?, ?)" (WritePlayer {name, country = Nothing})
-        rowId <- query_ conn "SELECT last_insert_rowid();"
-        case rowId of
-          [Only pid] -> pure pid
-          _ -> pure 0
-      Just p -> pure p.pid
+        let insertPlayerQuery = "INSERT INTO Players (name, country) VALUES (?, ?) RETURNING id"
+        readSingle $ query conn insertPlayerQuery (WritePlayer {name, country = Nothing})
+      Just (ReadPlayer {pid}) -> pure pid
 
-insertGameReport :: WriteProcessedGameReport -> AppM ()
+insertGameReport :: WriteProcessedGameReport -> AppM ReadProcessedGameReport
 insertGameReport report = do
   env <- ask
   liftIO . withResource env.dbPool $ \conn -> do
-    execute
-      conn
-      "INSERT INTO GameReports (\
-      \timestamp,\
-      \winner,\
-      \loser,\
-      \side,\
-      \victory,\
-      \match,\
-      \competition,\
-      \league,\
-      \expansions,\
-      \treebeard,\
-      \actionTokens,\
-      \dwarvenRings,\
-      \turns,\
-      \corruption,\
-      \mordor,\
-      \initialEyes,\
-      \aragornTurn,\
-      \strongholds,\
-      \interestRating,\
-      \comments,\
-      \winnerRatingAfter,\
-      \loserRatingAfter\
-      \) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      report
+    let insertReportQuery =
+          "INSERT INTO GameReports (\
+          \timestamp,\
+          \winner,\
+          \loser,\
+          \side,\
+          \victory,\
+          \match,\
+          \competition,\
+          \league,\
+          \expansions,\
+          \treebeard,\
+          \actionTokens,\
+          \dwarvenRings,\
+          \turns,\
+          \corruption,\
+          \mordor,\
+          \initialEyes,\
+          \aragornTurn,\
+          \strongholds,\
+          \interestRating,\
+          \comments,\
+          \winnerRatingAfter,\
+          \loserRatingAfter\
+          \) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\
+          \RETURNING id"
+    rid <- readSingle $ query conn insertReportQuery report
+
+    let nameQuery = "SELECT name FROM Players WHERE id = ?"
+    winner <- readSingle $ query conn nameQuery (Only report.winner)
+    loser <- readSingle $ query conn nameQuery (Only report.loser)
+
+    pure
+      ReadProcessedGameReport
+        { rid,
+          timestamp = report.timestamp,
+          winner,
+          loser,
+          side = report.side,
+          victory = report.victory,
+          match = report.match,
+          competition = report.competition,
+          league = report.league,
+          expansions = report.expansions,
+          treebeard = report.treebeard,
+          actionTokens = report.actionTokens,
+          dwarvenRings = report.dwarvenRings,
+          turns = report.turns,
+          corruption = report.corruption,
+          mordor = report.mordor,
+          initialEyes = report.initialEyes,
+          aragornTurn = report.aragornTurn,
+          strongholds = report.strongholds,
+          interestRating = report.interestRating,
+          comments = report.comments,
+          winnerRatingAfter = report.winnerRatingAfter,
+          loserRatingAfter = report.loserRatingAfter
+        }

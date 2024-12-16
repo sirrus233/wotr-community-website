@@ -113,8 +113,7 @@ validateStrongholds report
 
 validateReport :: GameReport -> Validation [ReportError] GameReport
 validateReport report =
-  report
-    <$ validateVictory report
+  validateVictory report
     <* validateCompetition report
     <* validateLeague report
     <* validateTreebeard report
