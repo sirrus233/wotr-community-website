@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "esnext",
-        "module": "esnext",
+        "module": "nodenext",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "strict": true,
@@ -9,7 +9,7 @@
         "jsx": "react",
         "allowJs": false,
         "outDir": "./dist",
-        "moduleResolution": "bundler"
+        "moduleResolution": "nodenext"
     },
     "include": ["src/**/*"]
 }
