@@ -3,7 +3,20 @@ module Types.Database where
 import Data.Aeson (ToJSON)
 import Data.Time (UTCTime)
 import Database.SQLite.Simple (FromRow, ToRow)
-import Types.DataField (Competition, Expansion, League, Match, PlayerId, PlayerName, Side, Stronghold, Victory)
+import Types.DataField
+  ( Competition,
+    EloId,
+    Expansion,
+    League,
+    Match,
+    PlayerId,
+    PlayerName,
+    Rating,
+    ReportId,
+    Side,
+    Stronghold,
+    Victory,
+  )
 
 data WriteProcessedGameReport = WriteProcessedGameReport
   { timestamp :: UTCTime,
@@ -25,9 +38,7 @@ data WriteProcessedGameReport = WriteProcessedGameReport
     aragornTurn :: Maybe Int,
     strongholds :: [Stronghold],
     interestRating :: Int,
-    comments :: Maybe Text,
-    winnerRatingAfter :: Int,
-    loserRatingAfter :: Int
+    comments :: Maybe Text
   }
   deriving (Generic)
 
@@ -54,9 +65,7 @@ data ReadProcessedGameReport = ReadProcessedGameReport
     aragornTurn :: Maybe Int,
     strongholds :: [Stronghold],
     interestRating :: Int,
-    comments :: Maybe Text,
-    winnerRatingAfter :: Int,
-    loserRatingAfter :: Int
+    comments :: Maybe Text
   }
   deriving (Generic)
 
@@ -82,3 +91,27 @@ data ReadPlayer = ReadPlayer
 instance FromRow ReadPlayer
 
 instance ToJSON ReadPlayer
+
+data WriteRatingChange = WriteRatingChange
+  { pid :: PlayerId,
+    side :: Side,
+    timestamp :: UTCTime,
+    rid :: ReportId,
+    ratingBefore :: Rating,
+    ratingAfter :: Rating
+  }
+  deriving (Generic)
+
+instance ToRow WriteRatingChange
+
+data ReadRatingChange = ReadRatingChange
+  { eid :: EloId,
+    side :: Side,
+    timestamp :: UTCTime,
+    rid :: ReportId,
+    ratingBefore :: Rating,
+    ratingAfter :: Rating
+  }
+  deriving (Generic)
+
+instance FromRow ReadRatingChange

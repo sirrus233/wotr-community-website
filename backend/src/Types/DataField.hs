@@ -31,6 +31,12 @@ type PlayerName = Text
 
 type PlayerId = Int
 
+type ReportId = Int
+
+type EloId = Int
+
+type Rating = Int
+
 data Side = Free | Shadow deriving (Eq, Generic, Read, Show)
 
 instance ToField Side where

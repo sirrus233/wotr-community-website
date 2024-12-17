@@ -1,10 +1,9 @@
 module Api where
 
 import Servant (JSON, Post, ReqBody, (:>))
-import Types.Api (GameReport)
-import Types.Database (ReadProcessedGameReport)
+import Types.Api (GameReport, SubmitGameReportResponse)
 
-type SubmitReportAPI = "submitReport" :> ReqBody '[JSON] GameReport :> Post '[JSON] ReadProcessedGameReport
+type SubmitReportAPI = "submitReport" :> ReqBody '[JSON] GameReport :> Post '[JSON] SubmitGameReportResponse
 
 submitReportAPI :: Proxy SubmitReportAPI
 submitReportAPI = Proxy
