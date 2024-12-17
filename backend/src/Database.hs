@@ -117,7 +117,7 @@ insertGameReport conn report@(WriteProcessedGameReport {..}) = do
   rid <- readSingle $ query conn insertReportQuery report
 
   let nameQuery = "SELECT name FROM Players WHERE id = ?"
-  winner <- readSingle $ query conn nameQuery (Only report.winnerId)
-  loser <- readSingle $ query conn nameQuery (Only report.loserId)
+  winner <- readSingle $ query conn nameQuery (Only winnerId)
+  loser <- readSingle $ query conn nameQuery (Only loserId)
 
   pure ReadProcessedGameReport {..}
