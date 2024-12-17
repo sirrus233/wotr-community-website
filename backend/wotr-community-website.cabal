@@ -17,7 +17,8 @@ common extensions
     default-extensions:
         DuplicateRecordFields,
         OverloadedRecordDot,
-        OverloadedStrings
+        OverloadedStrings,
+        RecordWildCards
     
     mixins:
         base hiding (Prelude),
