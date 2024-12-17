@@ -1,23 +1,11 @@
 import "@fontsource/inter";
 import React from "react";
-import { FormControl, FormHelperText, List, Typography } from "@mui/joy";
+import { Typography } from "@mui/joy";
 import Sheet from "@mui/joy/Sheet";
-import FormLabel from "@mui/joy/FormLabel";
-import Radio from "@mui/joy/Radio";
-import RadioGroup from "@mui/joy/RadioGroup";
-import Checkbox from "@mui/joy/Checkbox";
-import Input from "@mui/joy/Input";
-import ListItem from "@mui/joy/ListItem";
-import Select from "@mui/joy/Select";
-import Option from "@mui/joy/Option";
 import Button from "@mui/joy/Button";
-import axios from "axios";
-import { FieldError, FormData, Stronghold, ValueOf } from "./types";
 import {
-    cities,
     competitionTypes,
     expansions,
-    INFINITE,
     leagues,
     matchTypes,
     sides,
@@ -25,6 +13,12 @@ import {
     victoryTypes,
 } from "./constants";
 import useFormData from "./hooks/useFormData";
+import GameReportFormElement from "./GameReportFormElement";
+import MultiOptionInput from "./MultiOptionInput";
+import SelectNumericOptionInput from "./SelectNumericOptionInput";
+import SingleOptionInput from "./SingleOptionInput";
+import TextInput from "./TextInput";
+import VictoryPoints from "./VictoryPoints";
 
 function GameReportForm() {
     const [
@@ -339,227 +333,6 @@ function GameReportForm() {
                 <Typography color="danger">{errorOnSubmit}</Typography>
             )}
         </Sheet>
-    );
-}
-
-interface GameReportElementProps {
-    children: React.ReactNode;
-    label: string;
-    error?: FieldError;
-}
-
-function GameReportFormElement({
-    children,
-    label,
-    error,
-}: GameReportElementProps) {
-    return (
-        <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
-            <FormControl error={!!error}>
-                <FormLabel sx={{ fontSize: 16, pb: 2 }}>{label}</FormLabel>
-                {children}
-                {error && <FormHelperText>{error}</FormHelperText>}
-            </FormControl>
-        </Sheet>
-    );
-}
-
-interface TextInputProps {
-    value: string;
-    placeholder: string;
-    onChange: (value: string) => void;
-    validate: () => void;
-}
-
-function TextInput({ value, placeholder, onChange, validate }: TextInputProps) {
-    return (
-        <Input
-            value={value}
-            placeholder={placeholder}
-            onChange={(event) => onChange(event.target.value)}
-            onBlur={validate}
-        />
-    );
-}
-
-interface SelectOptionInputProps<T> {
-    values: T[];
-    current: T;
-    getLabel?: (value: T) => string;
-    onChange: (value: T) => void;
-    validate: () => void;
-}
-
-function SelectOptionInput<T>({
-    values,
-    current,
-    getLabel = String,
-    onChange,
-    validate,
-}: SelectOptionInputProps<T>) {
-    return (
-        <Select
-            defaultValue={values[0]}
-            onChange={(_, value) => onChange(value as T)}
-            onClose={validate}
-        >
-            {values.map((value, i) => (
-                <Option key={i} value={value}>
-                    {getLabel(value)}
-                </Option>
-            ))}
-        </Select>
-    );
-}
-
-interface SelectNumericOptionInputProps {
-    start: number;
-    end: number;
-    initializeEmpty?: boolean;
-    allowInfinite?: boolean;
-    onChange: (value: number | null) => void;
-    validate: () => void;
-}
-
-function SelectNumericOptionInput({
-    start,
-    end,
-    initializeEmpty = true,
-    allowInfinite = false,
-    onChange,
-    validate,
-}: SelectNumericOptionInputProps) {
-    const values: (number | null)[] = initializeEmpty ? [null] : [];
-    for (let i = start; i <= end; i++) {
-        values.push(i);
-    }
-    if (allowInfinite) {
-        values.push(INFINITE);
-    }
-
-    return (
-        <SelectOptionInput
-            values={values}
-            current={start}
-            getLabel={(value) => {
-                if (value === null) {
-                    return "";
-                } else if (value === INFINITE) {
-                    return "Unlimited!";
-                } else {
-                    return String(value);
-                }
-            }}
-            onChange={onChange}
-            validate={validate}
-        />
-    );
-}
-
-interface SingleOptionInputProps<T> {
-    values: T[];
-    current: T;
-    getLabel?: (value: T) => string;
-    onChange: (value: T) => void;
-    validate: () => void;
-}
-
-function SingleOptionInput<T>({
-    values,
-    current,
-    getLabel = String,
-    onChange,
-    validate,
-}: SingleOptionInputProps<T>) {
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedValue = values.find(
-            (value) => String(value) === event.target.value
-        );
-        if (selectedValue !== undefined) {
-            onChange(selectedValue);
-            validate();
-        }
-    };
-
-    return (
-        <RadioGroup
-            value={current}
-            orientation="horizontal"
-            onChange={handleChange}
-        >
-            {values.map((value, i) => (
-                <Radio key={i} value={value} label={getLabel(value)} />
-            ))}
-        </RadioGroup>
-    );
-}
-
-interface MultiOptionInputProps<T> {
-    values: T[];
-    current: T[];
-    getLabel?: (value: T) => string;
-    onChange: (value: T[]) => void;
-    validate: () => void;
-}
-
-function MultiOptionInput<T>({
-    values,
-    current,
-    getLabel = String,
-    onChange,
-    validate,
-}: MultiOptionInputProps<T>) {
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedValue = values.find(
-            (value) => String(value) === event.target.value
-        );
-        if (selectedValue !== undefined) {
-            if (event.target.checked) {
-                onChange(current.concat(selectedValue));
-            } else {
-                onChange(current.filter((value) => value !== selectedValue));
-            }
-            validate();
-        }
-    };
-
-    return (
-        <List
-            orientation="horizontal"
-            wrap
-            sx={{
-                "--List-gap": "10px",
-                "--ListItem-radius": "30px",
-                "--ListItem-minHeight": "32px",
-            }}
-        >
-            {values.map((value, i) => (
-                <ListItem key={i}>
-                    <Checkbox
-                        checked={current.includes(value)}
-                        size="sm"
-                        disableIcon
-                        overlay
-                        value={getLabel(value)}
-                        label={getLabel(value)}
-                        onChange={handleChange}
-                    />
-                </ListItem>
-            ))}
-        </List>
-    );
-}
-
-interface VictoryPointsProps {
-    strongholds: Stronghold[];
-}
-
-function VictoryPoints({ strongholds }: VictoryPointsProps) {
-    const points = strongholds
-        .map((stronghold) => (cities.includes(stronghold) ? 1 : 2))
-        .reduce((sum, current) => sum + current, 0);
-    return (
-        <Typography sx={{ fontWeight: "bold", pb: 2 }}>VP: {points}</Typography>
     );
 }
 
