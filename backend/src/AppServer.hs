@@ -16,30 +16,11 @@ import Types.Database (ReadProcessedGameReport (..), WriteProcessedGameReport (.
 import Validation (validateReport)
 
 processReport :: UTCTime -> PlayerId -> PlayerId -> GameReport -> WriteProcessedGameReport
-processReport timestamp winner loser report =
+processReport timestamp winnerId loserId (GameReport {..}) =
   WriteProcessedGameReport
-    { timestamp,
-      winner,
-      loser,
-      side = report.side,
-      victory = report.victory,
-      match = report.match,
-      competition = report.competition,
-      league = report.league,
-      expansions = report.expansions,
-      treebeard = report.treebeard,
-      actionTokens = report.actionTokens,
-      dwarvenRings = report.dwarvenRings,
-      turns = report.turns,
-      corruption = report.corruption,
-      mordor = report.mordor,
-      initialEyes = report.initialEyes,
-      aragornTurn = report.aragornTurn,
-      strongholds = report.strongholds,
-      interestRating = report.interestRating,
-      comments = report.comments,
-      winnerRatingAfter = 0, -- TODO
-      loserRatingAfter = 0 -- TODO
+    { winnerRatingAfter = 0, -- TODO
+      loserRatingAfter = 0, -- TODO
+      ..
     }
 
 submitReportHandler :: GameReport -> AppM ReadProcessedGameReport

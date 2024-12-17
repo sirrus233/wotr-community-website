@@ -87,7 +87,7 @@ insertPlayerIfNotExists conn name = do
     Just (ReadPlayer {pid}) -> pure pid
 
 insertGameReport :: SQL.Connection -> WriteProcessedGameReport -> IO ReadProcessedGameReport
-insertGameReport conn report = do
+insertGameReport conn report@(WriteProcessedGameReport {..}) = do
   let insertReportQuery =
         "INSERT INTO GameReports (\
         \timestamp,\
@@ -117,32 +117,7 @@ insertGameReport conn report = do
   rid <- readSingle $ query conn insertReportQuery report
 
   let nameQuery = "SELECT name FROM Players WHERE id = ?"
-  winner <- readSingle $ query conn nameQuery (Only report.winner)
-  loser <- readSingle $ query conn nameQuery (Only report.loser)
+  winner <- readSingle $ query conn nameQuery (Only winnerId)
+  loser <- readSingle $ query conn nameQuery (Only loserId)
 
-  pure
-    ReadProcessedGameReport
-      { rid,
-        timestamp = report.timestamp,
-        winner,
-        loser,
-        side = report.side,
-        victory = report.victory,
-        match = report.match,
-        competition = report.competition,
-        league = report.league,
-        expansions = report.expansions,
-        treebeard = report.treebeard,
-        actionTokens = report.actionTokens,
-        dwarvenRings = report.dwarvenRings,
-        turns = report.turns,
-        corruption = report.corruption,
-        mordor = report.mordor,
-        initialEyes = report.initialEyes,
-        aragornTurn = report.aragornTurn,
-        strongholds = report.strongholds,
-        interestRating = report.interestRating,
-        comments = report.comments,
-        winnerRatingAfter = report.winnerRatingAfter,
-        loserRatingAfter = report.loserRatingAfter
-      }
+  pure ReadProcessedGameReport {..}

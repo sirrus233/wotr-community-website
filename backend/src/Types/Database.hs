@@ -7,8 +7,8 @@ import Types.DataField (Competition, Expansion, League, Match, PlayerId, PlayerN
 
 data WriteProcessedGameReport = WriteProcessedGameReport
   { timestamp :: UTCTime,
-    winner :: PlayerId,
-    loser :: PlayerId,
+    winnerId :: PlayerId,
+    loserId :: PlayerId,
     side :: Side,
     victory :: Victory,
     match :: Match,
