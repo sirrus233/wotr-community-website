@@ -2,6 +2,8 @@ import React from "react";
 import SelectOptionInput from "./SelectOptionInput";
 import { INFINITE } from "./constants";
 
+const NULL_MASK = -1;
+
 interface SelectNumericOptionInputProps {
     start: number;
     end: number;
@@ -19,7 +21,7 @@ export default function SelectNumericOptionInput({
     onChange,
     validate,
 }: SelectNumericOptionInputProps) {
-    const values: (number | null)[] = initializeEmpty ? [null] : [];
+    const values: number[] = initializeEmpty ? [NULL_MASK] : [];
     for (let i = start; i <= end; i++) {
         values.push(i);
     }
@@ -32,7 +34,7 @@ export default function SelectNumericOptionInput({
             values={values}
             current={start}
             getLabel={(value) => {
-                if (value === null) {
+                if (value === NULL_MASK) {
                     return "";
                 } else if (value === INFINITE) {
                     return "Unlimited!";
@@ -40,8 +42,12 @@ export default function SelectNumericOptionInput({
                     return String(value);
                 }
             }}
-            onChange={onChange}
+            onChange={(val) => onChange(unmaskNull(val))}
             validate={validate}
         />
     );
+}
+
+function unmaskNull(value: number) {
+    return value === NULL_MASK ? null : value;
 }
