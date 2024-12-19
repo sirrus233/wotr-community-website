@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography } from "@mui/joy";
+import Typography from "@mui/joy/Typography";
 import { Stronghold } from "./types";
 import { cities } from "./constants";
 

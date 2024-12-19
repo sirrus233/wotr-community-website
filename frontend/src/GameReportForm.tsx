@@ -1,6 +1,6 @@
 import "@fontsource/inter";
 import React from "react";
-import { Typography } from "@mui/joy";
+import Typography from "@mui/joy/Typography";
 import Sheet from "@mui/joy/Sheet";
 import Button from "@mui/joy/Button";
 import {

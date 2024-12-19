@@ -1,7 +1,8 @@
 import React from "react";
-import { FormControl, FormHelperText } from "@mui/joy";
-import Sheet from "@mui/joy/Sheet";
+import FormControl from "@mui/joy/FormControl";
+import FormHelperText from "@mui/joy/FormHelperText";
 import FormLabel from "@mui/joy/FormLabel";
+import Sheet from "@mui/joy/Sheet";
 import { FieldError } from "./types";
 
 interface GameReportElementProps {

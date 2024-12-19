@@ -1,4 +1,4 @@
-import { CssVarsProvider } from "@mui/joy";
+import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
 import React from "react";
 import GameReportForm from "./GameReportForm";
