@@ -293,10 +293,9 @@ function GameReportForm() {
             <GameReportFormElement
                 label={"What strongholds were captured by Shadow?"}
                 error={formData.strongholds.error}
+                hasSingleControl={false}
             >
-                <VictoryPoints
-                    strongholds={formData.strongholds.value}
-                ></VictoryPoints>
+                <VictoryPoints strongholds={formData.strongholds.value} />
                 <MultiOptionInput
                     values={strongholds.slice()}
                     current={formData.strongholds.value}
