@@ -1,7 +1,8 @@
 module Types.Api where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Types.DataField (Competition, Expansion, League, Match, PlayerName, Side, Stronghold, Victory)
+import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
+import Types.Database (ReadProcessedGameReport)
 
 data GameReport = GameReport
   { winner :: PlayerName,
@@ -26,8 +27,15 @@ data GameReport = GameReport
   }
   deriving (Generic)
 
-instance ToJSON GameReport
-
 instance FromJSON GameReport
+
+data SubmitGameReportResponse = SubmitGameReportResponse
+  { report :: ReadProcessedGameReport,
+    winnerRating :: Rating,
+    loserRating :: Rating
+  }
+  deriving (Generic)
+
+instance ToJSON SubmitGameReportResponse
 
 -- TODO Game Logs
