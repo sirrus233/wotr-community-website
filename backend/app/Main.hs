@@ -13,6 +13,7 @@ import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 import System.Log.FastLogger (LogType, LogType' (..), defaultBufSize, newTimeCache, newTimedFastLogger, simpleTimeFormat)
 import Types.App (Env (..), log, nt)
+import Network.Wai.Middleware.Cors (cors, CorsResourcePolicy (..))
 
 databaseFile :: FilePath
 databaseFile = "data/db.sqlite"
@@ -24,7 +25,16 @@ logType :: LogType
 logType = LogStdout defaultBufSize
 
 app :: Env -> Application
-app env = serve api . hoistServer api (nt env) $ server
+app env = cors (const $ Just CorsResourcePolicy {
+  corsOrigins = Just (["http://127.0.0.1:3000"], True),
+  corsMethods = ["POST"],
+  corsRequestHeaders = ["content-type"],
+  corsExposedHeaders = Nothing,
+  corsMaxAge = Nothing,
+  corsVaryOrigin = True,
+  corsRequireOrigin = False,
+  corsIgnoreFailures = True
+  }) . serve api . hoistServer api (nt env) $ server
 
 main :: IO ()
 main = do
