@@ -1,41 +1,30 @@
-import { ErrorMessage } from "../../constants";
-import { FieldError, FormData } from "../../types";
+import { FormData } from "../../types";
 
 const initialFormData: FormData = {
     winner: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     loser: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     side: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     victory: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     match: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     competition: {
         value: [],
@@ -50,9 +39,7 @@ const initialFormData: FormData = {
     usedExpansions: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     expansions: {
         value: [],
@@ -67,32 +54,24 @@ const initialFormData: FormData = {
     usedHandicap: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     actionTokens: { value: 0, error: null, validate: alwaysValid },
     dwarvenRings: { value: 0, error: null, validate: alwaysValid },
     turns: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     corruption: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     didFellowshipReachMordor: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     mordor: {
         value: null,
@@ -102,16 +81,12 @@ const initialFormData: FormData = {
     initialEyes: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     wasAragornCrowned: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     aragornTurn: {
         value: null,
@@ -126,20 +101,12 @@ const initialFormData: FormData = {
     interestRating: {
         value: null,
         error: null,
-        validate: function _() {
-            return detectMissingInput(this.value);
-        },
+        validate: alwaysValid,
     },
     comment: { value: null, error: null, validate: alwaysValid },
 };
 
 export default initialFormData;
-
-function detectMissingInput(value: unknown): FieldError {
-    return value !== null && value !== undefined && value !== ""
-        ? null
-        : ErrorMessage.Required;
-}
 
 function alwaysValid() {
     return null;

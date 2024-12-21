@@ -3,6 +3,7 @@ import {
     expansions,
     leagues,
     matchTypes,
+    optionalFields,
     sides,
     strongholds,
     victoryTypes,
@@ -21,6 +22,8 @@ export type Competition = (typeof competitionTypes)[number];
 export type League = (typeof leagues)[number];
 
 export type Stronghold = (typeof strongholds)[number];
+
+export type OptionalFields = (typeof optionalFields)[number];
 
 export type FieldError = string | null;
 
@@ -55,6 +58,12 @@ export interface FormData {
     interestRating: FieldData<number | null>;
     comment: FieldData<string | null>;
 }
+
+export type ValidFormData = {
+    [K in keyof FormData]: K extends OptionalFields
+        ? FormData[K]
+        : { [J in keyof FormData[K]]: Exclude<FormData[K][J], null> };
+};
 
 export interface GameReportPayload {
     winner: string;
