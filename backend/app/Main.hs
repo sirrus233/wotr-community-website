@@ -7,13 +7,13 @@ import Database (initializeDatabase)
 import Database.Redis (ConnectInfo, connect, defaultConnectInfo, disconnect)
 import Database.SQLite.Simple (close, open)
 import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Servant (Application, hoistServer)
 import Servant.Server (serve)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 import System.Log.FastLogger (LogType, LogType' (..), defaultBufSize, newTimeCache, newTimedFastLogger, simpleTimeFormat)
 import Types.App (Env (..), log, nt)
-import Network.Wai.Middleware.Cors (cors, CorsResourcePolicy (..))
 
 databaseFile :: FilePath
 databaseFile = "data/db.sqlite"
@@ -24,17 +24,23 @@ redisConfig = defaultConnectInfo
 logType :: LogType
 logType = LogStdout defaultBufSize
 
+corsMiddleware :: Application -> Application
+corsMiddleware = cors . const $ Just policy
+  where
+    policy =
+      CorsResourcePolicy
+        { corsOrigins = Just (["http://127.0.0.1:3000"], True),
+          corsMethods = ["POST"],
+          corsRequestHeaders = ["content-type"],
+          corsExposedHeaders = Nothing,
+          corsMaxAge = Nothing,
+          corsVaryOrigin = True,
+          corsRequireOrigin = False,
+          corsIgnoreFailures = True
+        }
+
 app :: Env -> Application
-app env = cors (const $ Just CorsResourcePolicy {
-  corsOrigins = Just (["http://127.0.0.1:3000"], True),
-  corsMethods = ["POST"],
-  corsRequestHeaders = ["content-type"],
-  corsExposedHeaders = Nothing,
-  corsMaxAge = Nothing,
-  corsVaryOrigin = True,
-  corsRequireOrigin = False,
-  corsIgnoreFailures = True
-  }) . serve api . hoistServer api (nt env) $ server
+app env = corsMiddleware . serve api . hoistServer api (nt env) $ server
 
 main :: IO ()
 main = do
