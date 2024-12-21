@@ -1,7 +1,13 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FieldError, FormData, ValueOf } from "../../types";
-import { ErrorMessage } from "../../constants";
+import {
+    FieldError,
+    FormData,
+    GameReportPayload,
+    ValidFormData,
+    ValueOf,
+} from "../../types";
+import { ErrorMessage, optionalFields } from "../../constants";
 import initialFormData from "./initialFormData";
 
 type Helpers = {
@@ -9,7 +15,6 @@ type Helpers = {
         field: K
     ) => (value: FormData[K]["value"]) => void;
     validateField: <K extends keyof FormData>(field: K) => () => void;
-    validateForm: () => FieldError;
     handleSubmit: () => Promise<void>;
 };
 
@@ -32,8 +37,12 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     const validateField = <K extends keyof FormData>(field: K) => {
         return () => {
             setFormData((prevData) => {
-                const error = prevData[field].validate();
-                return error || prevData[field].error
+                const fieldError = prevData[field].validate();
+                const isMissing = isFieldMissing(field, prevData);
+                const error: FieldError =
+                    fieldError || (isMissing && ErrorMessage.Required) || null;
+
+                return fieldError || prevData[field].error || isMissing
                     ? {
                           ...prevData,
                           [field]: { ...prevData[field], error },
@@ -43,43 +52,48 @@ const useFormData = (): [FormData, Meta, Helpers] => {
         };
     };
 
-    const validateForm = () => {
+    const validateForm = (): ValidFormData | ErrorMessage.OnSubmit => {
         const stateUpdates = objectKeys(formData).reduce<(() => void)[]>(
             (updates, field) => {
                 const fieldError = formData[field].validate();
-                if (fieldError) {
+                const isMissing = isFieldMissing(field, formData);
+                const error: FieldError =
+                    fieldError || (isMissing && ErrorMessage.Required) || null;
+
+                if (fieldError || isMissing) {
                     updates.push(() =>
                         setFormData((prevData) => ({
                             ...prevData,
-                            [field]: { ...prevData[field], error: fieldError },
+                            [field]: { ...prevData[field], error },
                         }))
                     );
                 }
+
                 return updates;
             },
             []
         );
 
-        if (stateUpdates.length) {
+        if (noErrorsDetected(stateUpdates, formData)) {
+            return formData;
+        } else {
             stateUpdates.forEach((update) => update());
             return ErrorMessage.OnSubmit;
-        } else {
-            return null;
         }
     };
 
     const handleSubmit = async () => {
         try {
-            const formError = validateForm();
+            const validatedResult = validateForm();
 
-            if (formError) {
-                setErrorOnSubmit(formError);
+            if (validatedResult === ErrorMessage.OnSubmit) {
+                setErrorOnSubmit(validatedResult);
             } else {
                 setErrorOnSubmit(null);
 
                 const response = await axios.post(
                     "http://localhost:8081/submitReport",
-                    toPayload(formData),
+                    toPayload(validatedResult),
                     {
                         headers: {
                             "Content-Type": "application/json",
@@ -151,19 +165,48 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     return [
         formData,
         { errorOnSubmit },
-        { handleInputChange, validateField, validateForm, handleSubmit },
+        { handleInputChange, validateField, handleSubmit },
     ];
 };
 
 export default useFormData;
 
-function toPayload(formData: FormData) {
-    return Object.fromEntries(
-        Object.entries(formData).map(([field, fieldData]) => [
-            field,
-            fieldData.value,
-        ])
+function isFieldMissing(field: keyof FormData, formData: FormData) {
+    return (
+        formData[field].value === null &&
+        optionalFields.every((opF) => opF !== field)
     );
+}
+
+function noErrorsDetected(
+    errorActions: (() => void)[],
+    formData: FormData
+): formData is ValidFormData {
+    return !errorActions.length;
+}
+
+function toPayload(formData: ValidFormData): GameReportPayload {
+    return {
+        winner: formData.winner.value,
+        loser: formData.loser.value,
+        side: formData.side.value,
+        victory: formData.victory.value,
+        match: formData.match.value,
+        competition: formData.competition.value,
+        league: formData.league.value,
+        expansions: formData.expansions.value,
+        treebeard: formData.treebeard.value,
+        actionTokens: formData.actionTokens.value,
+        dwarvenRings: formData.dwarvenRings.value,
+        turns: formData.turns.value,
+        corruption: formData.corruption.value,
+        mordor: formData.mordor.value,
+        initialEyes: formData.initialEyes.value,
+        aragornTurn: formData.aragornTurn.value,
+        strongholds: formData.strongholds.value,
+        interestRating: formData.interestRating.value,
+        comment: formData.comment.value,
+    };
 }
 
 function objectKeys<T extends object>(obj: T): Array<keyof T> {
