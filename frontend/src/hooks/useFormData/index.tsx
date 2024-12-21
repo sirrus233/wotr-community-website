@@ -172,10 +172,14 @@ const useFormData = (): [FormData, Meta, Helpers] => {
 export default useFormData;
 
 function isFieldMissing(field: keyof FormData, formData: FormData) {
-    return (
-        formData[field].value === null &&
-        optionalFields.every((opF) => opF !== field)
-    );
+    const { value } = formData[field];
+    const isRequired = optionalFields.every((opF) => opF !== field);
+    const isEmpty =
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        (Array.isArray(value) && !value.length);
+    return isEmpty && isRequired;
 }
 
 function noErrorsDetected(

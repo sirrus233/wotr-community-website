@@ -50,12 +50,15 @@ export const cities: (typeof strongholds)[number][] = [
 ];
 
 export const optionalFields = [
+    "competition",
     "league",
+    "expansions",
     "treebeard",
     "actionTokens",
     "dwarvenRings",
     "mordor",
     "aragornTurn",
+    "strongholds",
     "comment",
 ] as const;
 
