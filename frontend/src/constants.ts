@@ -43,6 +43,16 @@ export const cities: (typeof strongholds)[number][] = [
     "Iron Hills (Fate of Erebor expansion only)",
 ];
 
+export const optionalFields = [
+    "league",
+    "treebeard",
+    "actionTokens",
+    "dwarvenRings",
+    "mordor",
+    "aragornTurn",
+    "comment",
+] as const;
+
 export enum ErrorMessage {
     Required = "Required",
     OnSubmit = "Could not submit, please resolve errors",
