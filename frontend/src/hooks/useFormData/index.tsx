@@ -60,7 +60,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
                 const error: FieldError =
                     fieldError || (isMissing && ErrorMessage.Required) || null;
 
-                if (fieldError || isMissing) {
+                if (error) {
                     updates.push(() =>
                         setFormData((prevData) => ({
                             ...prevData,
