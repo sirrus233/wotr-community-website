@@ -71,7 +71,7 @@ export type ValidFormData = {
 export type GameReportPayload = {
     [K in keyof Pick<ValidFormData, PayloadFields>]: Pick<
         ValidFormData,
-        (typeof payloadFields)[number]
+        PayloadFields
     >[K]["value"];
 };
 
