@@ -4,6 +4,7 @@ import {
     leagues,
     matchTypes,
     optionalFields,
+    payloadFields,
     sides,
     strongholds,
     victoryTypes,
@@ -65,26 +66,11 @@ export type ValidFormData = {
         : { [J in keyof FormData[K]]: Exclude<FormData[K][J], null> };
 };
 
-export interface GameReportPayload {
-    winner: string;
-    loser: string;
-    side: Side;
-    victory: Victory;
-    match: Match;
-    competition: Competition[];
-    league: League | null;
-    expansions: Expansion[];
-    treebeard: boolean | null;
-    actionTokens: number | null;
-    dwarvenRings: number | null;
-    turns: number;
-    corruption: number;
-    mordor: number | null;
-    initialEyes: number;
-    aragornTurn: number | null;
-    strongholds: Stronghold[];
-    interestRating: number;
-    comment: string | null;
-}
+export type GameReportPayload = {
+    [K in keyof Pick<ValidFormData, (typeof payloadFields)[number]>]: Pick<
+        ValidFormData,
+        (typeof payloadFields)[number]
+    >[K]["value"];
+};
 
 export type ValueOf<T> = T[keyof T];

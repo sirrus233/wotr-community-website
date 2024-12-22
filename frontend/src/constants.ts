@@ -62,6 +62,28 @@ export const optionalFields = [
     "comment",
 ] as const;
 
+export const payloadFields = [
+    "winner",
+    "loser",
+    "side",
+    "victory",
+    "match",
+    "competition",
+    "league",
+    "expansions",
+    "treebeard",
+    "actionTokens",
+    "dwarvenRings",
+    "turns",
+    "corruption",
+    "mordor",
+    "initialEyes",
+    "aragornTurn",
+    "strongholds",
+    "interestRating",
+    "comment",
+] as const;
+
 export enum ErrorMessage {
     Required = "Required",
     OnSubmit = "Could not submit, please resolve errors",
