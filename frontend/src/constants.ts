@@ -6,32 +6,38 @@ export const matchTypes = ["Ranked", "Unranked"] as const;
 
 export const competitionTypes = ["League", "Tournament"] as const;
 
-export const leagues = ["General", "LoME", "WoME", "Super", "TTS"] as const;
+export const leagues = [
+    "GeneralLeague",
+    "LoMELeague",
+    "WoMELeague",
+    "SuperLeague",
+    "TTSLeague",
+] as const;
 
 export const expansions = [
     "LoME",
     "WoME",
     "KoME",
     "Cities",
-    "Fate of Erebor",
+    "FateOfErebor",
     "Treebeard",
 ] as const;
 
 export const strongholds = [
     "Rivendell",
-    "Grey Havens",
-    "Helm's Deep",
+    "GreyHavens",
+    "HelmsDeep",
     "Lorien",
-    "Woodland Realm",
+    "WoodlandRealm",
     "Erebor",
-    "Minas Tirith",
-    "Dol Amroth",
+    "MinasTirith",
+    "DolAmroth",
     "Shire",
     "Edoras",
     "Dale",
     "Pelargir",
-    "Ered Luin (Cities expansion only)",
-    "Iron Hills (Fate of Erebor expansion only)",
+    "EredLuin",
+    "IronHills",
 ] as const;
 
 export const cities: (typeof strongholds)[number][] = [
@@ -39,8 +45,8 @@ export const cities: (typeof strongholds)[number][] = [
     "Edoras",
     "Dale",
     "Pelargir",
-    "Ered Luin (Cities expansion only)",
-    "Iron Hills (Fate of Erebor expansion only)",
+    "EredLuin",
+    "IronHills",
 ];
 
 export enum ErrorMessage {

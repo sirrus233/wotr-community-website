@@ -49,7 +49,7 @@ export default function MultiOptionInput<T>({
                         size="sm"
                         disableIcon
                         overlay
-                        value={getLabel(value)}
+                        value={String(value)}
                         label={getLabel(value)}
                         onChange={handleChange}
                     />

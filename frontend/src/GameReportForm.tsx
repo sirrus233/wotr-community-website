@@ -12,6 +12,7 @@ import {
     strongholds,
     victoryTypes,
 } from "./constants";
+import { Expansion, League, Stronghold } from "./types";
 import useFormData from "./hooks/useFormData";
 import GameReportFormElement from "./GameReportFormElement";
 import MultiOptionInput from "./MultiOptionInput";
@@ -122,6 +123,7 @@ function GameReportForm() {
                             current={formData.league.value}
                             onChange={handleInputChange("league")}
                             validate={validateField("league")}
+                            getLabel={getLeagueLabel}
                         />
                     </GameReportFormElement>
                 )}
@@ -147,6 +149,7 @@ function GameReportForm() {
                         current={formData.expansions.value}
                         onChange={handleInputChange("expansions")}
                         validate={validateField("expansions")}
+                        getLabel={getExpansionLabel}
                     />
                 </GameReportFormElement>
             )}
@@ -301,6 +304,7 @@ function GameReportForm() {
                     current={formData.strongholds.value}
                     onChange={handleInputChange("strongholds")}
                     validate={validateField("strongholds")}
+                    getLabel={getStrongholdLabel}
                 />
             </GameReportFormElement>
             <GameReportFormElement
@@ -336,3 +340,58 @@ function GameReportForm() {
 }
 
 export default GameReportForm;
+
+function getStrongholdLabel(stronghold: Stronghold): string {
+    switch (stronghold) {
+        case "Rivendell":
+        case "Lorien":
+        case "Erebor":
+        case "Shire":
+        case "Edoras":
+        case "Dale":
+        case "Pelargir":
+            return stronghold;
+        case "GreyHavens":
+            return "Grey Havens";
+        case "HelmsDeep":
+            return "Helm's Deep";
+        case "WoodlandRealm":
+            return "Woodland Realm";
+        case "MinasTirith":
+            return "Minas Tirith";
+        case "DolAmroth":
+            return "Dol Amroth";
+        case "EredLuin":
+            return "Ered Luin (Cities expansion only)";
+        case "IronHills":
+            return "Iron Hills (Fate of Erebor expansion only)";
+    }
+}
+
+function getExpansionLabel(expansion: Expansion): string {
+    switch (expansion) {
+        case "LoME":
+        case "WoME":
+        case "KoME":
+        case "Cities":
+        case "Treebeard":
+            return expansion;
+        case "FateOfErebor":
+            return "Fate of Erebor";
+    }
+}
+
+function getLeagueLabel(league: League): string {
+    switch (league) {
+        case "GeneralLeague":
+            return "General";
+        case "LoMELeague":
+            return "LoME";
+        case "WoMELeague":
+            return "WoME";
+        case "SuperLeague":
+            return "Super";
+        case "TTSLeague":
+            return "TTS";
+    }
+}
