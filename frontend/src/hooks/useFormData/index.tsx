@@ -74,8 +74,8 @@ const useFormData = (): [FormData, Meta, Helpers] => {
             []
         );
 
-        if (noErrorsDetected(stateUpdates, formData)) {
-            return formData;
+        if (!stateUpdates.length) {
+            return formData as ValidFormData;
         } else {
             stateUpdates.forEach((update) => update());
             return ErrorMessage.OnSubmit;
@@ -180,13 +180,6 @@ function isFieldMissing(field: keyof FormData, formData: FormData) {
         value === "" ||
         (Array.isArray(value) && !value.length);
     return isEmpty && isRequired;
-}
-
-function noErrorsDetected(
-    errorActions: (() => void)[],
-    formData: FormData
-): formData is ValidFormData {
-    return !errorActions.length;
 }
 
 function toPayload(formData: ValidFormData): GameReportPayload {
