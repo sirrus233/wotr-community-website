@@ -37,12 +37,13 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     const validateField = <K extends keyof FormData>(field: K) => {
         return () => {
             setFormData((prevData) => {
-                const fieldError = prevData[field].validate();
-                const isMissing = isFieldMissing(field, prevData);
                 const error: FieldError =
-                    fieldError || (isMissing && ErrorMessage.Required) || null;
+                    prevData[field].validate() ||
+                    (isFieldMissing(field, prevData) &&
+                        ErrorMessage.Required) ||
+                    null;
 
-                return fieldError || prevData[field].error || isMissing
+                return error || prevData[field].error
                     ? {
                           ...prevData,
                           [field]: { ...prevData[field], error },
@@ -55,10 +56,11 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     const validateForm = (): ValidFormData | ErrorMessage.OnSubmit => {
         const stateUpdates = objectKeys(formData).reduce<(() => void)[]>(
             (updates, field) => {
-                const fieldError = formData[field].validate();
-                const isMissing = isFieldMissing(field, formData);
                 const error: FieldError =
-                    fieldError || (isMissing && ErrorMessage.Required) || null;
+                    formData[field].validate() ||
+                    (isFieldMissing(field, formData) &&
+                        ErrorMessage.Required) ||
+                    null;
 
                 if (error) {
                     updates.push(() =>
