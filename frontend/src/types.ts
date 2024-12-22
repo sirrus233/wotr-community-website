@@ -26,6 +26,8 @@ export type Stronghold = (typeof strongholds)[number];
 
 export type OptionalFields = (typeof optionalFields)[number];
 
+export type PayloadFields = (typeof payloadFields)[number];
+
 export type FieldError = string | null;
 
 export interface FieldData<T> {
@@ -67,7 +69,7 @@ export type ValidFormData = {
 };
 
 export type GameReportPayload = {
-    [K in keyof Pick<ValidFormData, (typeof payloadFields)[number]>]: Pick<
+    [K in keyof Pick<ValidFormData, PayloadFields>]: Pick<
         ValidFormData,
         (typeof payloadFields)[number]
     >[K]["value"];
