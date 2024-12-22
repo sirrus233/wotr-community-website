@@ -3,9 +3,9 @@ import Radio from "@mui/joy/Radio";
 import RadioGroup from "@mui/joy/RadioGroup";
 
 interface SingleOptionInputProps<T> {
-    values: T[];
+    values: Exclude<T, null>[];
     current: T;
-    getLabel?: (value: T) => string;
+    getLabel?: (value: Exclude<T, null>) => string;
     onChange: (value: T) => void;
     validate: () => void;
 }

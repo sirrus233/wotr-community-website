@@ -12,7 +12,7 @@ import {
     strongholds,
     victoryTypes,
 } from "./constants";
-import { Expansion, Stronghold } from "./types";
+import { Expansion, League, Stronghold } from "./types";
 import useFormData from "./hooks/useFormData";
 import GameReportFormElement from "./GameReportFormElement";
 import MultiOptionInput from "./MultiOptionInput";
@@ -123,6 +123,7 @@ function GameReportForm() {
                             current={formData.league.value}
                             onChange={handleInputChange("league")}
                             validate={validateField("league")}
+                            getLabel={getLeagueLabel}
                         />
                     </GameReportFormElement>
                 )}
@@ -377,5 +378,20 @@ function getExpansionLabel(expansion: Expansion): string {
             return expansion;
         case "FateOfErebor":
             return "Fate of Erebor";
+    }
+}
+
+function getLeagueLabel(league: League): string {
+    switch (league) {
+        case "GeneralLeague":
+            return "General";
+        case "LoMELeague":
+            return "LoME";
+        case "WoMELeague":
+            return "WoME";
+        case "SuperLeague":
+            return "Super";
+        case "TTSLeague":
+            return "TTS";
     }
 }
