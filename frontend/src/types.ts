@@ -24,9 +24,9 @@ export type League = (typeof leagues)[number];
 
 export type Stronghold = (typeof strongholds)[number];
 
-export type OptionalFields = (typeof optionalFields)[number];
+export type OptionalField = (typeof optionalFields)[number];
 
-export type PayloadFields = (typeof payloadFields)[number];
+export type PayloadField = (typeof payloadFields)[number];
 
 export type FieldError = string | null;
 
@@ -63,15 +63,15 @@ export interface FormData {
 }
 
 export type ValidFormData = {
-    [K in keyof FormData]: K extends OptionalFields
+    [K in keyof FormData]: K extends OptionalField
         ? FormData[K]
         : { [J in keyof FormData[K]]: Exclude<FormData[K][J], null> };
 };
 
 export type GameReportPayload = {
-    [K in keyof Pick<ValidFormData, PayloadFields>]: Pick<
+    [K in keyof Pick<ValidFormData, PayloadField>]: Pick<
         ValidFormData,
-        PayloadFields
+        PayloadField
     >[K]["value"];
 };
 
