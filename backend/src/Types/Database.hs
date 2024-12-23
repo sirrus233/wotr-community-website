@@ -6,7 +6,7 @@ module Types.Database where
 import Data.Time (UTCTime (utctDay), Year, toGregorian)
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
-import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
+import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side (..), Stronghold, Victory)
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
@@ -87,18 +87,47 @@ defaultPlayerStats pid year =
     }
 
 rolloverPlayerStats :: PlayerId -> Year -> PlayerStats -> PlayerStats
-rolloverPlayerStats pid year oldStats =
+rolloverPlayerStats pid year (PlayerStats {..}) =
   PlayerStats
     { playerStatsPlayerId = pid,
       playerStatsYear = fromIntegral year,
-      playerStatsCurrentRatingFree = oldStats.playerStatsCurrentRatingFree,
-      playerStatsCurrentRatingShadow = oldStats.playerStatsCurrentRatingShadow,
-      playerStatsTotalWinsFree = oldStats.playerStatsTotalWinsFree,
-      playerStatsTotalWinsShadow = oldStats.playerStatsTotalWinsShadow,
-      playerStatsTotalLossesFree = oldStats.playerStatsTotalLossesFree,
-      playerStatsTotalLossesShadow = oldStats.playerStatsTotalLossesShadow,
       playerStatsYearlyWinsFree = 0,
       playerStatsYearlyWinsShadow = 0,
       playerStatsYearlyLossesFree = 0,
-      playerStatsYearlyLossesShadow = 0
+      playerStatsYearlyLossesShadow = 0,
+      ..
     }
+
+updatePlayerStatsWin :: Side -> Rating -> PlayerStats -> PlayerStats
+updatePlayerStatsWin side rating (PlayerStats {..}) = case side of
+  Free ->
+    PlayerStats
+      { playerStatsCurrentRatingFree = rating,
+        playerStatsTotalWinsFree = playerStatsTotalWinsFree + 1,
+        playerStatsYearlyWinsFree = playerStatsYearlyWinsFree + 1,
+        ..
+      }
+  Shadow ->
+    PlayerStats
+      { playerStatsCurrentRatingShadow = rating,
+        playerStatsTotalWinsShadow = playerStatsTotalWinsShadow + 1,
+        playerStatsYearlyWinsShadow = playerStatsYearlyWinsShadow + 1,
+        ..
+      }
+
+updatePlayerStatsLose :: Side -> Rating -> PlayerStats -> PlayerStats
+updatePlayerStatsLose side rating (PlayerStats {..}) = case side of
+  Free ->
+    PlayerStats
+      { playerStatsCurrentRatingFree = rating,
+        playerStatsTotalLossesFree = playerStatsTotalLossesFree + 1,
+        playerStatsYearlyLossesFree = playerStatsYearlyLossesFree + 1,
+        ..
+      }
+  Shadow ->
+    PlayerStats
+      { playerStatsCurrentRatingShadow = rating,
+        playerStatsTotalLossesShadow = playerStatsTotalLossesShadow + 1,
+        playerStatsYearlyLossesShadow = playerStatsYearlyLossesShadow + 1,
+        ..
+      }

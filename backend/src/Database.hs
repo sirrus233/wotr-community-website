@@ -58,6 +58,9 @@ getMostRecentStats pid =
       orderBy [desc (stats ^. PlayerStatsYear)]
       pure stats
 
+replacePlayerStats :: (MonadIO m) => PlayerStats -> SqlPersistT m ()
+replacePlayerStats stats@(PlayerStats {..}) = SQL.replace (PlayerStatsKey playerStatsPlayerId playerStatsYear) stats
+
 insertRatingChange :: (MonadIO m) => RatingDiff -> SqlPersistT m ()
 insertRatingChange = SQL.insert_
 

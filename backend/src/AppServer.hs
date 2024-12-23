@@ -4,12 +4,12 @@ import Api (Api)
 import Data.IntMap.Strict qualified as Map
 import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
-import Database (getMostRecentStats, insertGameReport, insertPlayerIfNotExists, insertRatingChange)
+import Database (getMostRecentStats, insertGameReport, insertPlayerIfNotExists, insertRatingChange, replacePlayerStats)
 import Servant (ServerError (errBody), ServerT, err422, throwError)
 import Types.Api (RawGameReport (..), SubmitGameReportResponse (..), toGameReport)
 import Types.App (AppM, runDb)
 import Types.DataField (Match (..), Rating, Side (..))
-import Types.Database (PlayerStats (..), RatingDiff (..))
+import Types.Database (PlayerStats (..), RatingDiff (..), updatePlayerStatsLose, updatePlayerStatsWin)
 import Validation (validateReport)
 
 defaultRating :: Rating
@@ -51,24 +51,25 @@ submitReportHandler report = case validateReport report of
   Failure errors -> throwError $ err422 {errBody = show errors}
   Success (RawGameReport {..}) -> do
     response <- runDb $ do
+      -- TODO Reduce code duplication
       timestamp <- liftIO getCurrentTime
       winnerId <- insertPlayerIfNotExists winner
       loserId <- insertPlayerIfNotExists loser
       reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
+      winnerStats <- getMostRecentStats winnerId
+      loserStats <- getMostRecentStats loserId
 
       let winnerSide = side
-      let loserSide = case winnerSide of
-            Free -> Shadow
-            Shadow -> Free
-
-      winnerRatingOld <- getRating winnerId winnerSide
-      loserRatingOld <- getRating loserId loserSide
-
+      let loserSide = case winnerSide of Free -> Shadow; Shadow -> Free
+      let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStats, getRating loserSide loserStats)
       let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
       let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
 
       insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRatingOld winnerRating
       insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRatingOld loserRating
+
+      replacePlayerStats . updatePlayerStatsWin winnerSide winnerRating $ winnerStats
+      replacePlayerStats . updatePlayerStatsLose loserSide loserRating $ loserStats
 
       pure $ Right SubmitGameReportResponse {report, winnerRating, loserRating}
 
@@ -76,8 +77,9 @@ submitReportHandler report = case validateReport report of
       Left e -> throwError e
       Right res -> pure res
   where
-    getRating pid side =
-      getMostRecentStats pid <&> if side == Free then playerStatsCurrentRatingFree else playerStatsCurrentRatingShadow
+    getRating side (PlayerStats {..}) = case side of
+      Free -> playerStatsCurrentRatingFree
+      Shadow -> playerStatsCurrentRatingShadow
 
 server :: ServerT Api AppM
 server = submitReportHandler
