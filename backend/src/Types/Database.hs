@@ -3,7 +3,8 @@
 
 module Types.Database where
 
-import Data.Time (UTCTime, Year)
+import Data.Time (UTCTime (utctDay), Year, toGregorian)
+import Data.Time.Clock (getCurrentTime)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
 
@@ -65,5 +66,39 @@ share
     deriving Show
 |]
 
+currentYear :: (MonadIO m) => m Year
+currentYear = (\(year, _, _) -> pure year) . toGregorian . utctDay =<< liftIO getCurrentTime
+
 defaultPlayerStats :: PlayerId -> Year -> PlayerStats
-defaultPlayerStats pid year = PlayerStats pid (fromIntegral year) 500 500 0 0 0 0 0 0 0 0
+defaultPlayerStats pid year =
+  PlayerStats
+    { playerStatsPlayerId = pid,
+      playerStatsYear = fromIntegral year,
+      playerStatsCurrentRatingFree = 500,
+      playerStatsCurrentRatingShadow = 500,
+      playerStatsTotalWinsFree = 0,
+      playerStatsTotalWinsShadow = 0,
+      playerStatsTotalLossesFree = 0,
+      playerStatsTotalLossesShadow = 0,
+      playerStatsYearlyWinsFree = 0,
+      playerStatsYearlyWinsShadow = 0,
+      playerStatsYearlyLossesFree = 0,
+      playerStatsYearlyLossesShadow = 0
+    }
+
+rolloverPlayerStats :: PlayerId -> Year -> PlayerStats -> PlayerStats
+rolloverPlayerStats pid year oldStats =
+  PlayerStats
+    { playerStatsPlayerId = pid,
+      playerStatsYear = fromIntegral year,
+      playerStatsCurrentRatingFree = oldStats.playerStatsCurrentRatingFree,
+      playerStatsCurrentRatingShadow = oldStats.playerStatsCurrentRatingShadow,
+      playerStatsTotalWinsFree = oldStats.playerStatsTotalWinsFree,
+      playerStatsTotalWinsShadow = oldStats.playerStatsTotalWinsShadow,
+      playerStatsTotalLossesFree = oldStats.playerStatsTotalLossesFree,
+      playerStatsTotalLossesShadow = oldStats.playerStatsTotalLossesShadow,
+      playerStatsYearlyWinsFree = 0,
+      playerStatsYearlyWinsShadow = 0,
+      playerStatsYearlyLossesFree = 0,
+      playerStatsYearlyLossesShadow = 0
+    }

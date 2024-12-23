@@ -1,11 +1,12 @@
 module Database where
 
-import Data.Time (UTCTime (..), getCurrentTime, toGregorian)
-import Database.Esqueleto.Experimental (Entity, Key, SqlPersistT, entityKey)
+import Data.Time (Year)
+import Database.Esqueleto.Experimental (Entity (..), Key, SqlPersistT, desc, from, orderBy, table, val, where_, (==.), (^.))
 import Database.Esqueleto.Experimental qualified as SQL
 import Types.DataField (PlayerName)
 import Types.Database
-  ( GameReport,
+  ( EntityField (..),
+    GameReport,
     GameReportId,
     Key (..),
     Player (..),
@@ -13,7 +14,9 @@ import Types.Database
     PlayerStats (..),
     RatingDiff,
     Unique (..),
+    currentYear,
     defaultPlayerStats,
+    rolloverPlayerStats,
   )
 
 getPlayerByName :: (MonadIO m) => PlayerName -> SqlPersistT m (Maybe (Entity Player))
@@ -22,17 +25,38 @@ getPlayerByName name = SQL.getBy $ UniquePlayerName name
 insertPlayerIfNotExists :: (MonadIO m) => PlayerName -> SqlPersistT m (Key Player)
 insertPlayerIfNotExists name =
   getPlayerByName name >>= \case
-    Just player -> pure $ entityKey player
+    Just (Entity playerKey _) -> pure playerKey
     Nothing -> do
       playerKey <- SQL.insert $ Player name Nothing
-      (year, _, _) <- liftIO $ toGregorian . utctDay <$> getCurrentTime
+      year <- currentYear
       SQL.insert_ $ defaultPlayerStats playerKey year
       pure playerKey
 
-getCurrentStats :: (MonadIO m) => PlayerId -> SqlPersistT m (Maybe PlayerStats)
-getCurrentStats pid = do
-  (year, _, _) <- liftIO $ toGregorian . utctDay <$> getCurrentTime
-  SQL.get $ PlayerStatsKey pid (fromIntegral year)
+getStats :: (MonadIO m) => PlayerId -> Year -> SqlPersistT m PlayerStats
+getStats pid year =
+  SQL.get (PlayerStatsKey pid (fromIntegral year)) >>= \case
+    Just stats -> pure stats
+    Nothing -> do
+      priorStats <- getMostRecentStats pid
+      let stats = rolloverPlayerStats pid year priorStats
+      SQL.insert_ stats
+      pure stats
+
+getMostRecentStats :: (MonadIO m) => PlayerId -> SqlPersistT m PlayerStats
+getMostRecentStats pid =
+  recentStats >>= \case
+    Just (Entity _ stats) -> pure stats
+    Nothing -> do
+      year <- currentYear
+      let stats = defaultPlayerStats pid year
+      SQL.insert_ stats
+      pure stats
+  where
+    recentStats = SQL.selectOne $ do
+      stats <- from $ table @PlayerStats
+      where_ (stats ^. PlayerStatsPlayerId ==. val pid)
+      orderBy [desc (stats ^. PlayerStatsYear)]
+      pure stats
 
 insertRatingChange :: (MonadIO m) => RatingDiff -> SqlPersistT m ()
 insertRatingChange = SQL.insert_
