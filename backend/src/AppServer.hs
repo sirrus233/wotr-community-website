@@ -49,34 +49,29 @@ ratingAdjustment winner loser
 submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
 submitReportHandler report = case validateReport report of
   Failure errors -> throwError $ err422 {errBody = show errors}
-  Success (RawGameReport {..}) -> do
+  Success (RawGameReport {..}) -> runDb $ do
     -- TODO Logging in this stupid monad
-    response <- runDb $ do
-      -- TODO Reduce code duplication
-      timestamp <- liftIO getCurrentTime
-      winnerId <- insertPlayerIfNotExists winner
-      loserId <- insertPlayerIfNotExists loser
-      reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
-      winnerStats <- getMostRecentStats winnerId -- TODO Wrong, should be for current year specifically
-      loserStats <- getMostRecentStats loserId
+    -- TODO Reduce code duplication
+    timestamp <- liftIO getCurrentTime
+    winnerId <- insertPlayerIfNotExists winner
+    loserId <- insertPlayerIfNotExists loser
+    reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
+    winnerStats <- getMostRecentStats winnerId -- TODO Wrong, should be for current year specifically
+    loserStats <- getMostRecentStats loserId
 
-      let winnerSide = side
-      let loserSide = case winnerSide of Free -> Shadow; Shadow -> Free
-      let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStats, getRating loserSide loserStats)
-      let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
-      let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
+    let winnerSide = side
+    let loserSide = case winnerSide of Free -> Shadow; Shadow -> Free
+    let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStats, getRating loserSide loserStats)
+    let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
+    let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
 
-      insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRatingOld winnerRating
-      insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRatingOld loserRating
+    insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRatingOld winnerRating
+    insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRatingOld loserRating
 
-      replacePlayerStats . updatePlayerStatsWin winnerSide winnerRating $ winnerStats
-      replacePlayerStats . updatePlayerStatsLose loserSide loserRating $ loserStats
+    replacePlayerStats . updatePlayerStatsWin winnerSide winnerRating $ winnerStats
+    replacePlayerStats . updatePlayerStatsLose loserSide loserRating $ loserStats
 
-      pure $ Right SubmitGameReportResponse {report, winnerRating, loserRating}
-
-    case response of
-      Left e -> throwError e
-      Right res -> pure res
+    pure SubmitGameReportResponse {report, winnerRating, loserRating}
   where
     getRating side (PlayerStats {..}) = case side of
       Free -> playerStatsCurrentRatingFree
