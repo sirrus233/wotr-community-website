@@ -2,17 +2,14 @@ module AppServer where
 
 import Api (Api)
 import Data.IntMap.Strict qualified as Map
-import Data.Pool (withResource)
 import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
-import Database (getLatestRating, insertGameReport, insertPlayerIfNotExists, insertRatingChange)
-import Database.SQLite.Simple (withTransaction)
-import Servant (ServerError (errBody), ServerT, throwError)
-import Servant.Server (err422)
-import Types.Api (GameReport (..), SubmitGameReportResponse (..))
-import Types.App (AppM, Env (..))
+import Database (getCurrentStats, insertGameReport, insertPlayerIfNotExists, insertRatingChange)
+import Servant (ServerError (errBody), ServerT, err422, err500, throwError)
+import Types.Api (RawGameReport (..), SubmitGameReportResponse (..), toGameReport)
+import Types.App (AppM, runDb)
 import Types.DataField (Rating, Side (..))
-import Types.Database (ReadProcessedGameReport (..), WriteProcessedGameReport (..), WriteRatingChange (..))
+import Types.Database (PlayerStats (..), RatingDiff (..))
 import Validation (validateReport)
 
 defaultRating :: Rating
@@ -49,50 +46,39 @@ ratingAdjustment winner loser
     diff = abs (winner - loser)
     (smallAdjust, bigAdjust) = maybe maxThreshold snd (Map.lookupGE diff ratingThresholds)
 
-submitReportHandler :: GameReport -> AppM SubmitGameReportResponse
-submitReportHandler r = case validateReport r of
+submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
+submitReportHandler report = case validateReport report of
   Failure errors -> throwError $ err422 {errBody = show errors}
-  Success (GameReport {..}) -> do
-    env <- ask
-    liftIO . withResource env.dbPool $ \conn -> withTransaction conn $ do
+  Success (RawGameReport {..}) -> do
+    response <- runDb $ do
       timestamp <- liftIO getCurrentTime
-      winnerId <- insertPlayerIfNotExists conn winner
-      loserId <- insertPlayerIfNotExists conn loser
-      report <- insertGameReport conn WriteProcessedGameReport {..}
+      winnerId <- insertPlayerIfNotExists winner
+      loserId <- insertPlayerIfNotExists loser
+      reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
 
-      let winnerSide = report.side
+      let winnerSide = side
       let loserSide = case winnerSide of
             Free -> Shadow
             Shadow -> Free
 
-      winnerRatingBefore <- getLatestRating conn defaultRating winnerId winnerSide
-      loserRatingBefore <- getLatestRating conn defaultRating loserId loserSide
-      let adjustment = ratingAdjustment winnerRatingBefore loserRatingBefore
+      winnerRatingBefore <- getRating winnerId winnerSide
+      loserRatingBefore <- getRating loserId loserSide
 
-      winnerRating <-
-        insertRatingChange
-          conn
-          WriteRatingChange
-            { pid = winnerId,
-              side = winnerSide,
-              timestamp,
-              rid = report.rid,
-              ratingBefore = winnerRatingBefore,
-              ratingAfter = winnerRatingBefore + adjustment
-            }
-      loserRating <-
-        insertRatingChange
-          conn
-          WriteRatingChange
-            { pid = loserId,
-              side = loserSide,
-              timestamp,
-              rid = report.rid,
-              ratingBefore = loserRatingBefore,
-              ratingAfter = loserRatingBefore - adjustment
-            }
+      case (winnerRatingBefore, loserRatingBefore) of
+        (Nothing, _) -> pure $ Left err500 {errBody = "bad winner"}
+        (_, Nothing) -> pure $ Left err500 {errBody = "bad loser"}
+        (Just winnerRating, Just loserRating) -> do
+          let adjustment = ratingAdjustment winnerRating loserRating
+          insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRating (winnerRating + adjustment)
+          insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRating (loserRating - adjustment)
+          pure $ Right SubmitGameReportResponse {report, winnerRating, loserRating}
 
-      pure $ SubmitGameReportResponse {..}
+    case response of
+      Left e -> throwError e
+      Right res -> pure res
+  where
+    getRating pid side =
+      getCurrentStats pid <&> fmap (if side == Free then playerStatsCurrentRatingFree else playerStatsCurrentRatingShadow)
 
 server :: ServerT Api AppM
 server = submitReportHandler

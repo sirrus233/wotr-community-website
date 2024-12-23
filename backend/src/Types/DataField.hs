@@ -2,48 +2,38 @@ module Types.DataField where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Text qualified as T
-import Database.SQLite.Simple (ResultError (..), SQLData (..))
-import Database.SQLite.Simple.FromField (FieldParser, FromField (..), fieldData, returnError)
-import Database.SQLite.Simple.Ok (Ok (..))
-import Database.SQLite.Simple.ToField (ToField (..))
+import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlType (..))
+import Database.Persist.Sql (PersistFieldSql (..))
 
-defaultToField :: (Show a) => a -> SQLData
-defaultToField a = SQLText (show a)
+defaultToPersistValue :: (Show a) => a -> PersistValue
+defaultToPersistValue a = PersistText (show a)
 
-defaultListToField :: (Show a) => [a] -> SQLData
-defaultListToField as = SQLText (T.intercalate "," . map show $ as)
+defaultListToPersistValue :: (Show a) => [a] -> PersistValue
+defaultListToPersistValue as = PersistText (T.intercalate "," . map show $ as)
 
-defaultFromField :: (Read a, Typeable a) => FieldParser a
-defaultFromField f = case fieldData f of
-  SQLText t -> case readMaybe . toString $ t of
-    Just a -> Ok a
-    Nothing -> returnError ConversionFailed f "Unreadable text field."
-  _ -> returnError ConversionFailed f "Unexpected non-text SQL value."
+defaultFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text a
+defaultFromPersistValue v = case v of
+  PersistText t -> maybeToRight "Unreadable text field." (readMaybe . toString $ t)
+  _ -> Left "Unexpected non-text SQL value."
 
-defaultListFromField :: (Read a, Typeable a) => FieldParser [a]
-defaultListFromField f = case fieldData f of
-  SQLText t -> case traverse (readMaybe . toString) . T.splitOn "," $ t of
-    Just a -> Ok a
-    Nothing -> returnError ConversionFailed f "Unreadable value in semantic list text field."
-  _ -> returnError ConversionFailed f "Unexpected non-text SQL value."
+defaultListFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text [a]
+defaultListFromPersistValue v = case v of
+  PersistText t ->
+    maybeToRight "Unreadable value in semantic list text field." (traverse (readMaybe . toString) . T.splitOn "," $ t)
+  _ -> Left "Unexpected non-text SQL value."
 
 type PlayerName = Text
-
-type PlayerId = Int
-
-type ReportId = Int
-
-type EloId = Int
 
 type Rating = Int
 
 data Side = Free | Shadow deriving (Eq, Generic, Read, Show)
 
-instance ToField Side where
-  toField = defaultToField
+instance PersistField Side where
+  toPersistValue = defaultToPersistValue
+  fromPersistValue = defaultFromPersistValue
 
-instance FromField Side where
-  fromField = defaultFromField
+instance PersistFieldSql Side where
+  sqlType _ = SqlString
 
 instance ToJSON Side
 
@@ -51,11 +41,12 @@ instance FromJSON Side
 
 data Victory = Ring | Military | Concession deriving (Eq, Generic, Read, Show)
 
-instance ToField Victory where
-  toField = defaultToField
+instance PersistField Victory where
+  toPersistValue = defaultToPersistValue
+  fromPersistValue = defaultFromPersistValue
 
-instance FromField Victory where
-  fromField = defaultFromField
+instance PersistFieldSql Victory where
+  sqlType _ = SqlString
 
 instance ToJSON Victory
 
@@ -63,11 +54,12 @@ instance FromJSON Victory
 
 data Match = Ranked | Unranked deriving (Eq, Generic, Read, Show)
 
-instance ToField Match where
-  toField = defaultToField
+instance PersistField Match where
+  toPersistValue = defaultToPersistValue
+  fromPersistValue = defaultFromPersistValue
 
-instance FromField Match where
-  fromField = defaultFromField
+instance PersistFieldSql Match where
+  sqlType _ = SqlString
 
 instance ToJSON Match
 
@@ -75,11 +67,12 @@ instance FromJSON Match
 
 data Competition = League | Tournament deriving (Eq, Generic, Read, Show)
 
-instance ToField [Competition] where
-  toField = defaultListToField
+instance PersistField [Competition] where
+  toPersistValue = defaultListToPersistValue
+  fromPersistValue = defaultListFromPersistValue
 
-instance FromField [Competition] where
-  fromField = defaultListFromField
+instance PersistFieldSql [Competition] where
+  sqlType _ = SqlString
 
 instance ToJSON Competition
 
@@ -87,11 +80,12 @@ instance FromJSON Competition
 
 data League = GeneralLeague | LoMELeague | WoMELeague | SuperLeague | TTSLeague deriving (Eq, Generic, Read, Show)
 
-instance ToField League where
-  toField = defaultToField
+instance PersistField League where
+  toPersistValue = defaultToPersistValue
+  fromPersistValue = defaultFromPersistValue
 
-instance FromField League where
-  fromField = defaultFromField
+instance PersistFieldSql League where
+  sqlType _ = SqlString
 
 instance ToJSON League
 
@@ -99,11 +93,12 @@ instance FromJSON League
 
 data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | Treebeard deriving (Eq, Generic, Read, Show)
 
-instance ToField [Expansion] where
-  toField = defaultListToField
+instance PersistField [Expansion] where
+  toPersistValue = defaultListToPersistValue
+  fromPersistValue = defaultListFromPersistValue
 
-instance FromField [Expansion] where
-  fromField = defaultListFromField
+instance PersistFieldSql [Expansion] where
+  sqlType _ = SqlString
 
 instance ToJSON Expansion
 
@@ -127,11 +122,12 @@ data Stronghold
   | IronHills
   deriving (Eq, Generic, Read, Show)
 
-instance ToField [Stronghold] where
-  toField = defaultListToField
+instance PersistField [Stronghold] where
+  toPersistValue = defaultListToPersistValue
+  fromPersistValue = defaultListFromPersistValue
 
-instance FromField [Stronghold] where
-  fromField = defaultListFromField
+instance PersistFieldSql [Stronghold] where
+  sqlType _ = SqlString
 
 instance ToJSON Stronghold
 

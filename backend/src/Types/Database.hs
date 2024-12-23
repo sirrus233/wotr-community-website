@@ -1,117 +1,69 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Types.Database where
 
-import Data.Aeson (ToJSON)
-import Data.Time (UTCTime)
-import Database.SQLite.Simple (FromRow, ToRow)
-import Types.DataField
-  ( Competition,
-    EloId,
-    Expansion,
-    League,
-    Match,
-    PlayerId,
-    PlayerName,
-    Rating,
-    ReportId,
-    Side,
-    Stronghold,
-    Victory,
-  )
+import Data.Time (UTCTime, Year)
+import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
+import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
 
-data WriteProcessedGameReport = WriteProcessedGameReport
-  { timestamp :: UTCTime,
-    winnerId :: PlayerId,
-    loserId :: PlayerId,
-    side :: Side,
-    victory :: Victory,
-    match :: Match,
-    competition :: [Competition],
-    league :: Maybe League,
-    expansions :: [Expansion],
-    treebeard :: Maybe Bool,
-    actionTokens :: Int,
-    dwarvenRings :: Int,
-    turns :: Int,
-    corruption :: Int,
-    mordor :: Maybe Int,
-    initialEyes :: Int,
-    aragornTurn :: Maybe Int,
-    strongholds :: [Stronghold],
-    interestRating :: Int,
-    comments :: Maybe Text
-  }
-  deriving (Generic)
+share
+  [mkPersist sqlSettings, mkMigrate "migrateAll"]
+  [persistLowerCase|
+   Player
+    name PlayerName
+    country Text Maybe
+    UniquePlayerName name
+    deriving Show
 
-instance ToRow WriteProcessedGameReport
+   GameReport
+    timestamp UTCTime
+    winnerId PlayerId
+    loserId PlayerId
+    side Side
+    victory Victory
+    match Match
+    competition [Competition]
+    league League Maybe
+    expansions [Expansion]
+    treebeard Bool Maybe
+    actionTokens Int
+    dwarvenRings Int
+    turns Int
+    corruption Int
+    mordor Int Maybe
+    initialEyes Int
+    aragornTurn Int Maybe
+    strongholds [Stronghold]
+    interestRating Int
+    comments Text Maybe
+    deriving Show
 
-data ReadProcessedGameReport = ReadProcessedGameReport
-  { rid :: Int,
-    timestamp :: UTCTime,
-    winner :: PlayerName,
-    loser :: PlayerName,
-    side :: Side,
-    victory :: Victory,
-    match :: Match,
-    competition :: [Competition],
-    league :: Maybe League,
-    expansions :: [Expansion],
-    treebeard :: Maybe Bool,
-    actionTokens :: Int,
-    dwarvenRings :: Int,
-    turns :: Int,
-    corruption :: Int,
-    mordor :: Maybe Int,
-    initialEyes :: Int,
-    aragornTurn :: Maybe Int,
-    strongholds :: [Stronghold],
-    interestRating :: Int,
-    comments :: Maybe Text
-  }
-  deriving (Generic)
+   RatingDiff
+    timestamp UTCTime
+    playerId PlayerId
+    reportId GameReportId
+    side Side
+    ratingBefore Rating
+    ratingAfter Rating
+    deriving Show
 
-instance FromRow ReadProcessedGameReport
+   PlayerStats
+    playerId PlayerId
+    year Int
+    currentRatingFree Rating
+    currentRatingShadow Rating
+    totalWinsFree Int
+    totalWinsShadow Int
+    totalLossesFree Int
+    totalLossesShadow Int
+    yearlyWinsFree Int
+    yearlyWinsShadow Int
+    yearlyLossesFree Int
+    yearlyLossesShadow Int
+    Primary playerId year
+    deriving Show
+|]
 
-instance ToJSON ReadProcessedGameReport
-
-data WritePlayer = WritePlayer
-  { name :: PlayerName,
-    country :: Maybe Text
-  }
-  deriving (Generic)
-
-instance ToRow WritePlayer
-
-data ReadPlayer = ReadPlayer
-  { pid :: PlayerId,
-    name :: PlayerName,
-    country :: Maybe Text
-  }
-  deriving (Generic)
-
-instance FromRow ReadPlayer
-
-instance ToJSON ReadPlayer
-
-data WriteRatingChange = WriteRatingChange
-  { pid :: PlayerId,
-    side :: Side,
-    timestamp :: UTCTime,
-    rid :: ReportId,
-    ratingBefore :: Rating,
-    ratingAfter :: Rating
-  }
-  deriving (Generic)
-
-instance ToRow WriteRatingChange
-
-data ReadRatingChange = ReadRatingChange
-  { eid :: EloId,
-    side :: Side,
-    timestamp :: UTCTime,
-    rid :: ReportId,
-    ratingBefore :: Rating,
-    ratingAfter :: Rating
-  }
-  deriving (Generic)
-
-instance FromRow ReadRatingChange
+defaultPlayerStats :: PlayerId -> Year -> PlayerStats
+defaultPlayerStats pid year = PlayerStats pid (fromIntegral year) 500 500 0 0 0 0 0 0 0 0
