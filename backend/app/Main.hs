@@ -47,6 +47,7 @@ main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
+  -- TODO Fix up debug logging
   dbPool <- runStdoutLoggingT $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
   timeCache <- newTimeCache simpleTimeFormat
@@ -54,6 +55,7 @@ main = do
 
   let env = Env {dbPool, redisPool, logger}
 
+  -- TODO Disable/handle auto-migration
   runSqlPool (runMigration migrateAll) dbPool
 
   log logger "Starting server"
