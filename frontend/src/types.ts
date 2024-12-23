@@ -3,6 +3,8 @@ import {
     expansions,
     leagues,
     matchTypes,
+    optionalFields,
+    payloadFields,
     sides,
     strongholds,
     victoryTypes,
@@ -21,6 +23,10 @@ export type Competition = (typeof competitionTypes)[number];
 export type League = (typeof leagues)[number];
 
 export type Stronghold = (typeof strongholds)[number];
+
+export type OptionalField = (typeof optionalFields)[number];
+
+export type PayloadField = (typeof payloadFields)[number];
 
 export type FieldError = string | null;
 
@@ -56,26 +62,17 @@ export interface FormData {
     comment: FieldData<string | null>;
 }
 
-export interface GameReportPayload {
-    winner: string;
-    loser: string;
-    side: Side;
-    victory: Victory;
-    match: Match;
-    competition: Competition[];
-    league: League | null;
-    expansions: Expansion[];
-    treebeard: boolean | null;
-    actionTokens: number | null;
-    dwarvenRings: number | null;
-    turns: number;
-    corruption: number;
-    mordor: number | null;
-    initialEyes: number;
-    aragornTurn: number | null;
-    strongholds: Stronghold[];
-    interestRating: number;
-    comment: string | null;
-}
+export type ValidFormData = {
+    [K in keyof FormData]: K extends OptionalField
+        ? FormData[K]
+        : { [J in keyof FormData[K]]: Exclude<FormData[K][J], null> };
+};
+
+export type GameReportPayload = {
+    [K in keyof Pick<ValidFormData, PayloadField>]: Pick<
+        ValidFormData,
+        PayloadField
+    >[K]["value"];
+};
 
 export type ValueOf<T> = T[keyof T];

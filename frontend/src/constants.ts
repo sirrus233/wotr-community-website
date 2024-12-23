@@ -49,6 +49,32 @@ export const cities: (typeof strongholds)[number][] = [
     "IronHills",
 ];
 
+export const optionalFields = [
+    "competition",
+    "league",
+    "expansions",
+    "treebeard",
+    "actionTokens",
+    "dwarvenRings",
+    "mordor",
+    "aragornTurn",
+    "strongholds",
+    "comment",
+] as const;
+
+export const payloadFields = [
+    ...optionalFields,
+    "winner",
+    "loser",
+    "side",
+    "victory",
+    "match",
+    "turns",
+    "corruption",
+    "initialEyes",
+    "interestRating",
+] as const;
+
 export enum ErrorMessage {
     Required = "Required",
     OnSubmit = "Could not submit, please resolve errors",
