@@ -63,25 +63,16 @@ export const optionalFields = [
 ] as const;
 
 export const payloadFields = [
+    ...optionalFields,
     "winner",
     "loser",
     "side",
     "victory",
     "match",
-    "competition",
-    "league",
-    "expansions",
-    "treebeard",
-    "actionTokens",
-    "dwarvenRings",
     "turns",
     "corruption",
-    "mordor",
     "initialEyes",
-    "aragornTurn",
-    "strongholds",
     "interestRating",
-    "comment",
 ] as const;
 
 export enum ErrorMessage {
