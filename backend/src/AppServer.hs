@@ -8,7 +8,7 @@ import Database (getCurrentStats, insertGameReport, insertPlayerIfNotExists, ins
 import Servant (ServerError (errBody), ServerT, err422, err500, throwError)
 import Types.Api (RawGameReport (..), SubmitGameReportResponse (..), toGameReport)
 import Types.App (AppM, runDb)
-import Types.DataField (Rating, Side (..))
+import Types.DataField (Match (..), Rating, Side (..))
 import Types.Database (PlayerStats (..), RatingDiff (..))
 import Validation (validateReport)
 
@@ -61,16 +61,15 @@ submitReportHandler report = case validateReport report of
             Free -> Shadow
             Shadow -> Free
 
-      winnerRatingBefore <- getRating winnerId winnerSide
-      loserRatingBefore <- getRating loserId loserSide
-
-      case (winnerRatingBefore, loserRatingBefore) of
+      (,) <$> getRating winnerId winnerSide <*> getRating loserId loserSide >>= \case
         (Nothing, _) -> pure $ Left err500 {errBody = "bad winner"}
         (_, Nothing) -> pure $ Left err500 {errBody = "bad loser"}
-        (Just winnerRating, Just loserRating) -> do
-          let adjustment = ratingAdjustment winnerRating loserRating
-          insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRating (winnerRating + adjustment)
-          insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRating (loserRating - adjustment)
+        (Just winnerRatingOld, Just loserRatingOld) -> do
+          let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
+          let winnerRating = winnerRatingOld + adjustment
+          let loserRating = loserRatingOld - adjustment
+          insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRatingOld winnerRating
+          insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRatingOld loserRating
           pure $ Right SubmitGameReportResponse {report, winnerRating, loserRating}
 
     case response of
