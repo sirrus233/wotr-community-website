@@ -56,7 +56,7 @@ submitReportHandler report = case validateReport report of
       winnerId <- insertPlayerIfNotExists winner
       loserId <- insertPlayerIfNotExists loser
       reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
-      winnerStats <- getMostRecentStats winnerId
+      winnerStats <- getMostRecentStats winnerId -- TODO Wrong, should be for current year specifically
       loserStats <- getMostRecentStats loserId
 
       let winnerSide = side

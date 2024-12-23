@@ -1,13 +1,24 @@
 module Database where
 
 import Data.Time (Year)
-import Database.Esqueleto.Experimental (Entity (..), Key, SqlPersistT, desc, from, orderBy, table, val, where_, (==.), (^.))
+import Database.Esqueleto.Experimental
+  ( Entity (..),
+    Key,
+    SqlPersistT,
+    desc,
+    from,
+    orderBy,
+    table,
+    val,
+    where_,
+    (==.),
+    (^.),
+  )
 import Database.Esqueleto.Experimental qualified as SQL
 import Types.DataField (PlayerName)
 import Types.Database
   ( EntityField (..),
     GameReport,
-    GameReportId,
     Key (..),
     Player (..),
     PlayerId,
@@ -64,5 +75,5 @@ replacePlayerStats stats@(PlayerStats {..}) = SQL.replace (PlayerStatsKey player
 insertRatingChange :: (MonadIO m) => RatingDiff -> SqlPersistT m ()
 insertRatingChange = SQL.insert_
 
-insertGameReport :: (MonadIO m) => GameReport -> SqlPersistT m GameReportId
+insertGameReport :: (MonadIO m) => GameReport -> SqlPersistT m (Key GameReport)
 insertGameReport = SQL.insert

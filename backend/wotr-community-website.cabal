@@ -41,7 +41,6 @@ common dependencies
         servant-server      ^>=0.20.2,
         monad-logger        ^>=0.3.40,
         warp                ^>=3.4.7,
-        resource-pool       ^>=0.4.0.0,
         persistent          ^>=2.14.6.3,
         persistent-sqlite   ^>=2.13.3.0,
         esqueleto           ^>=3.5.13.1,

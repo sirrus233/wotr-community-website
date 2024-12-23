@@ -3,10 +3,9 @@ module Main where
 import Api (api)
 import AppServer (server)
 import Control.Monad.Logger (runStdoutLoggingT)
-import Data.Pool (destroyAllResources)
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
-import Database.Redis (ConnectInfo, connect, defaultConnectInfo, disconnect)
+import Database.Redis (ConnectInfo, connect, defaultConnectInfo)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Servant (Application, hoistServer)
@@ -51,7 +50,7 @@ main = do
   dbPool <- runStdoutLoggingT $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
   timeCache <- newTimeCache simpleTimeFormat
-  (logger, rmLogger) <- newTimedFastLogger timeCache logType
+  (logger, _) <- newTimedFastLogger timeCache logType
 
   let env = Env {dbPool, redisPool, logger}
 
@@ -59,8 +58,3 @@ main = do
 
   log logger "Starting server"
   run 8081 . app $ env
-
-  log logger "Shutting down server"
-  destroyAllResources dbPool
-  disconnect redisPool
-  rmLogger
