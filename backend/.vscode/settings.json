@@ -7,6 +7,7 @@
         "Edoras",
         "Erebor",
         "Ered",
+        "Esqueleto",
         "fmap",
         "fpmv",
         "fprv",
@@ -20,6 +21,7 @@
         "sprv",
         "Tirith",
         "Treebeard",
-        "Unranked"
+        "Unranked",
+        "utct"
     ]
 }

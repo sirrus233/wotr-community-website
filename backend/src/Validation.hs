@@ -1,7 +1,7 @@
 module Validation where
 
 import Data.Validation (Validation (..))
-import Types.Api (GameReport (..))
+import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Side (..), Stronghold (..), Victory (..))
 
 data ReportError
@@ -40,10 +40,10 @@ vpValue Shadow EredLuin = 1
 vpValue Shadow IronHills = 1
 vpValue _ _ = 0
 
-victoryPoints :: GameReport -> Int
+victoryPoints :: RawGameReport -> Int
 victoryPoints report = sum . map (vpValue report.side) $ report.strongholds
 
-validateVictory :: GameReport -> Validation [ReportError] GameReport
+validateVictory :: RawGameReport -> Validation [ReportError] RawGameReport
 validateVictory report
   | report.corruption >= 12 && not sprv = Failure [VictoryConditionConflictSPRV]
   | report.mordor == Just 5 && not fprv = Failure [VictoryConditionConflictFPRV]
@@ -59,12 +59,12 @@ validateVictory report
     spmv = report.side == Shadow && report.victory == Military
     fpmv = report.side == Free && report.victory == Military
 
-validateCompetition :: GameReport -> Validation [ReportError] GameReport
+validateCompetition :: RawGameReport -> Validation [ReportError] RawGameReport
 validateCompetition report
   | isJust report.league == League `elem` report.competition = Success report
   | otherwise = Failure [CompetitionMismatch]
 
-validateLeague :: GameReport -> Validation [ReportError] GameReport
+validateLeague :: RawGameReport -> Validation [ReportError] RawGameReport
 validateLeague report = case report.league of
   Nothing -> Success report
   Just TTSLeague -> Success report
@@ -74,44 +74,44 @@ validateLeague report = case report.league of
   Just SuperLeague | LoME `elem` report.expansions && WoME `elem` report.expansions -> Success report
   _ -> Failure [LeagueExpansionMismatch]
 
-validateTreebeard :: GameReport -> Validation [ReportError] GameReport
+validateTreebeard :: RawGameReport -> Validation [ReportError] RawGameReport
 validateTreebeard report
   | isJust report.treebeard == Treebeard `elem` report.expansions = Success report
   | otherwise = Failure [TreebeardExpansionMismatch]
 
-validateTurns :: GameReport -> Validation [ReportError] GameReport
+validateTurns :: RawGameReport -> Validation [ReportError] RawGameReport
 validateTurns report
   | report.turns >= 1 = Success report
   | otherwise = Failure [TurnsOutOfRange]
 
-validateCorruption :: GameReport -> Validation [ReportError] GameReport
+validateCorruption :: RawGameReport -> Validation [ReportError] RawGameReport
 validateCorruption report
   | report.corruption >= 0 = Success report
   | otherwise = Failure [CorruptionOutOfRange]
 
-validateMordor :: GameReport -> Validation [ReportError] GameReport
+validateMordor :: RawGameReport -> Validation [ReportError] RawGameReport
 validateMordor report = case report.mordor of
   Nothing -> Success report
   Just step | step >= 0 && step <= 5 -> Success report
   _ -> Failure [MordorOutOfRange]
 
-validateInitialEyes :: GameReport -> Validation [ReportError] GameReport
+validateInitialEyes :: RawGameReport -> Validation [ReportError] RawGameReport
 validateInitialEyes report
   | report.initialEyes >= 0 && report.initialEyes <= 7 = Success report
   | otherwise = Failure [InitialEyesOutOfRange]
 
-validateInterestRating :: GameReport -> Validation [ReportError] GameReport
+validateInterestRating :: RawGameReport -> Validation [ReportError] RawGameReport
 validateInterestRating report
   | report.interestRating >= 1 && report.interestRating <= 10 = Success report
   | otherwise = Failure [InterestRatingOutOfRange]
 
-validateStrongholds :: GameReport -> Validation [ReportError] GameReport
+validateStrongholds :: RawGameReport -> Validation [ReportError] RawGameReport
 validateStrongholds report
   | EredLuin `elem` report.strongholds && Cities `notElem` report.expansions = Failure [InvalidStronghold]
   | IronHills `elem` report.strongholds && FateOfErebor `notElem` report.expansions = Failure [InvalidStronghold]
   | otherwise = Success report
 
-validateReport :: GameReport -> Validation [ReportError] GameReport
+validateReport :: RawGameReport -> Validation [ReportError] RawGameReport
 validateReport report =
   validateVictory report
     <* validateCompetition report
