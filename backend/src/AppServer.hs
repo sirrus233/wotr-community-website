@@ -4,12 +4,12 @@ import Api (Api)
 import Data.IntMap.Strict qualified as Map
 import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
-import Database (getMostRecentStats, insertGameReport, insertPlayerIfNotExists, insertRatingChange, replacePlayerStats)
+import Database (getStats, insertGameReport, insertPlayerIfNotExists, insertRatingChange, replacePlayerStats)
 import Servant (ServerError (errBody), ServerT, err422, throwError)
 import Types.Api (RawGameReport (..), SubmitGameReportResponse (..), toGameReport)
 import Types.App (AppM, runDb)
 import Types.DataField (Match (..), Rating, Side (..))
-import Types.Database (PlayerStats (..), RatingDiff (..), updatePlayerStatsLose, updatePlayerStatsWin)
+import Types.Database (PlayerStats (..), RatingDiff (..), currentYear, updatePlayerStatsLose, updatePlayerStatsWin)
 import Validation (validateReport)
 
 defaultRating :: Rating
@@ -53,11 +53,12 @@ submitReportHandler report = case validateReport report of
     -- TODO Logging in this stupid monad
     -- TODO Reduce code duplication
     timestamp <- liftIO getCurrentTime
+    year <- currentYear
     winnerId <- insertPlayerIfNotExists winner
     loserId <- insertPlayerIfNotExists loser
     reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
-    winnerStats <- getMostRecentStats winnerId -- TODO Wrong, should be for current year specifically
-    loserStats <- getMostRecentStats loserId
+    winnerStats <- getStats winnerId year
+    loserStats <- getStats loserId year
 
     let winnerSide = side
     let loserSide = case winnerSide of Free -> Shadow; Shadow -> Free
