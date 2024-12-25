@@ -104,7 +104,6 @@ instance ToJSON Expansion
 
 instance FromJSON Expansion
 
--- TODO Shadow Strongholds (for FPMV)
 data Stronghold
   = Rivendell
   | GreyHavens
@@ -120,6 +119,17 @@ data Stronghold
   | Pelargir
   | EredLuin
   | IronHills
+  | MountGundabad
+  | Angmar
+  | Moria
+  | DolGoldur
+  | Orthanc
+  | Morannon
+  | BaradDur
+  | MinasMorgul
+  | Umbar
+  | FarHarad
+  | SouthRhun
   deriving (Eq, Generic, Read, Show)
 
 instance PersistField [Stronghold] where
