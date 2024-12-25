@@ -2,7 +2,7 @@ module Main where
 
 import Api (api)
 import AppServer (server)
-import Control.Monad.Logger (runStdoutLoggingT)
+import Control.Monad.Logger (LogLevel (..))
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (ConnectInfo, connect, defaultConnectInfo)
@@ -12,8 +12,8 @@ import Servant (Application, hoistServer)
 import Servant.Server (serve)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
-import System.Log.FastLogger (LogType, LogType' (..), defaultBufSize, newTimeCache, newTimedFastLogger, simpleTimeFormat)
-import Types.App (Env (..), log, nt)
+import System.Log.FastLogger (LogType, LogType' (..), TimedFastLogger, defaultBufSize, newTimeCache, newTimedFastLogger, simpleTimeFormat)
+import Types.App (Env (..), log', nt, runAppLogger)
 import Types.Database (migrateAll)
 
 databaseFile :: FilePath
@@ -40,23 +40,23 @@ corsMiddleware = cors $ const $ Just policy
           corsIgnoreFailures = True
         }
 
-app :: Env -> Application
-app env = corsMiddleware . serve api . hoistServer api (nt env) $ server
+app :: Env -> TimedFastLogger -> Application
+app env logger = corsMiddleware . serve api . hoistServer api (nt env logger) $ server
 
 main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
   -- TODO Fix up debug logging
-  dbPool <- runStdoutLoggingT $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
-  redisPool <- connect redisConfig
   timeCache <- newTimeCache simpleTimeFormat
   (logger, _) <- newTimedFastLogger timeCache logType
+  dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
+  redisPool <- connect redisConfig
 
   let env = Env {dbPool, redisPool, logger}
 
   -- TODO Disable/handle auto-migration
   runSqlPool (runMigration migrateAll) dbPool
 
-  log logger "Starting server"
-  run 8081 . app $ env
+  log' logger LevelInfo "Starting server"
+  run 8081 $ app env logger

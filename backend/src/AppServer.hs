@@ -50,7 +50,6 @@ submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
 submitReportHandler report = case validateReport report of
   Failure errors -> throwError $ err422 {errBody = show errors}
   Success (RawGameReport {..}) -> runDb $ do
-    -- TODO Logging in this stupid monad
     timestamp <- liftIO getCurrentTime
     year <- currentYear
 
