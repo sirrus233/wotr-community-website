@@ -2,10 +2,12 @@ module AppServer where
 
 import Api (Api)
 import App (AppM, runDb)
+import Control.Monad.Logger (logInfoN)
 import Data.IntMap.Strict qualified as Map
 import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database (getStats, insertGameReport, insertPlayerIfNotExists, insertRatingChange, replacePlayerStats)
+import Logging ((<>:))
 import Servant (ServerError (errBody), ServerT, err422, throwError)
 import Types.Api (RawGameReport (..), SubmitGameReportResponse (..), toGameReport)
 import Types.DataField (Match (..), Rating, Side (..))
@@ -50,9 +52,12 @@ submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
 submitReportHandler report = case validateReport report of
   Failure errors -> throwError $ err422 {errBody = show errors}
   Success (RawGameReport {..}) -> runDb $ do
+    logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
+
     timestamp <- liftIO getCurrentTime
     year <- currentYear
 
+    -- TODO Normalize spelling/caps
     winnerId <- insertPlayerIfNotExists winner
     loserId <- insertPlayerIfNotExists loser
 
@@ -65,6 +70,9 @@ submitReportHandler report = case validateReport report of
     let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStats, getRating loserSide loserStats)
     let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
     let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
+    logInfoN $ "Rating diff: " <>: adjustment
+    logInfoN $ "Adjustment for " <> winner <> ": " <>: winnerRatingOld <> " -> " <>: winnerRating
+    logInfoN $ "Adjustment for " <> loser <> ": " <>: loserRatingOld <> " -> " <>: loserRating
 
     insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRatingOld winnerRating
     insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRatingOld loserRating

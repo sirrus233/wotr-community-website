@@ -1,6 +1,6 @@
 module Database where
 
-import Control.Monad.Logger (MonadLogger)
+import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.Time (Year)
 import Database.Esqueleto.Experimental
   ( Entity (..),
@@ -16,6 +16,7 @@ import Database.Esqueleto.Experimental
     (^.),
   )
 import Database.Esqueleto.Experimental qualified as SQL
+import Logging ((<>:))
 import Types.DataField (PlayerName)
 import Types.Database
   ( EntityField (..),
@@ -39,6 +40,7 @@ insertPlayerIfNotExists name =
   getPlayerByName name >>= \case
     Just (Entity playerKey _) -> pure playerKey
     Nothing -> do
+      logInfoN $ "Adding new player " <> name <> " to database."
       playerKey <- SQL.insert $ Player name Nothing
       year <- currentYear
       SQL.insert_ $ defaultPlayerStats playerKey year
@@ -50,6 +52,8 @@ getStats pid year =
     Just stats -> pure stats
     Nothing -> do
       priorStats <- getMostRecentStats pid -- TODO Buggy sadness https://github.com/sirrus233/wotr-community-website/pull/31#discussion_r1897581825
+      let priorYear = priorStats.playerStatsYear
+      logInfoN $ "No stats for PID " <>: pid <> " in year " <>: year <> ". Rolling over from " <>: priorYear <> "."
       let stats = rolloverPlayerStats pid year priorStats
       SQL.insert_ stats
       pure stats
@@ -59,6 +63,7 @@ getMostRecentStats pid =
   recentStats >>= \case
     Just (Entity _ stats) -> pure stats
     Nothing -> do
+      logErrorN $ "Missing stats for PID " <>: pid <> ". Inserting defaults."
       year <- currentYear
       let stats = defaultPlayerStats pid year
       SQL.insert_ stats

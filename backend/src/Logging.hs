@@ -41,3 +41,6 @@ stdoutLogger = do
 
 log :: Logger -> LogLevel -> LogStr -> IO ()
 log logger = logger defaultLoc ""
+
+(<>:) :: (Semigroup a, IsString a, Show b) => a -> b -> a
+(<>:) a b = a <> show b
