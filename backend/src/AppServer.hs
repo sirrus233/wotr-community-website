@@ -1,13 +1,13 @@
 module AppServer where
 
 import Api (Api)
+import App (AppM, runDb)
 import Data.IntMap.Strict qualified as Map
 import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database (getStats, insertGameReport, insertPlayerIfNotExists, insertRatingChange, replacePlayerStats)
 import Servant (ServerError (errBody), ServerT, err422, throwError)
 import Types.Api (RawGameReport (..), SubmitGameReportResponse (..), toGameReport)
-import Types.App (AppM, runDb)
 import Types.DataField (Match (..), Rating, Side (..))
 import Types.Database (PlayerStats (..), RatingDiff (..), currentYear, updatePlayerStatsLose, updatePlayerStatsWin)
 import Validation (validateReport)

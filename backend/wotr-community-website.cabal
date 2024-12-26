@@ -54,10 +54,11 @@ library
                       extensions,
                       dependencies
     exposed-modules:  Api,
+                      App,
                       AppServer,
                       Database,
+                      Logging,
                       Types.Api,
-                      Types.App,
                       Types.Database,
                       Types.DataField,
                       Validation
