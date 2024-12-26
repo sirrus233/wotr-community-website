@@ -15,10 +15,10 @@ log :: TimedFastLogger -> Loc -> LogSource -> LogLevel -> LogStr -> IO ()
 log logger _ _ level msg = logger (\time -> "[" <> levelStr level <> "] " <> toLogStr time <> ": " <> msg <> "\n")
   where
     levelStr :: LogLevel -> LogStr
-    levelStr LevelDebug = toLogStr ("DEBUG" :: Text)
-    levelStr LevelInfo = toLogStr ("INFO" :: Text)
-    levelStr LevelWarn = toLogStr ("WARN" :: Text)
-    levelStr LevelError = toLogStr ("ERROR" :: Text)
+    levelStr LevelDebug = "DEBUG"
+    levelStr LevelInfo = "INFO"
+    levelStr LevelWarn = "WARN"
+    levelStr LevelError = "ERROR"
     levelStr (LevelOther l) = toLogStr l
 
 log' :: TimedFastLogger -> LogLevel -> LogStr -> IO ()
