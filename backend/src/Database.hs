@@ -49,7 +49,7 @@ getStats pid year =
   SQL.get (PlayerStatsKey pid (fromIntegral year)) >>= \case
     Just stats -> pure stats
     Nothing -> do
-      priorStats <- getMostRecentStats pid
+      priorStats <- getMostRecentStats pid -- TODO Buggy sadness https://github.com/sirrus233/wotr-community-website/pull/31#discussion_r1897581825
       let stats = rolloverPlayerStats pid year priorStats
       SQL.insert_ stats
       pure stats
