@@ -8,19 +8,25 @@ import Database.Esqueleto.Experimental
     SqlPersistT,
     desc,
     from,
+    just,
+    leftJoin,
+    on,
     orderBy,
+    select,
     table,
     val,
     where_,
     (==.),
+    (?.),
     (^.),
+    type (:&) (..),
   )
 import Database.Esqueleto.Experimental qualified as SQL
 import Logging ((<>:))
 import Types.DataField (PlayerName)
 import Types.Database
   ( EntityField (..),
-    GameReport,
+    GameReport (..),
     Key (..),
     Player (..),
     PlayerId,
@@ -31,6 +37,7 @@ import Types.Database
     defaultPlayerStats,
     rolloverPlayerStats,
   )
+import Prelude hiding (on)
 
 getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> SqlPersistT m (Maybe (Entity Player))
 getPlayerByName name = SQL.getBy $ UniquePlayerName name
@@ -83,3 +90,38 @@ insertRatingChange = SQL.insert_
 
 insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> SqlPersistT m (Key GameReport)
 insertGameReport = SQL.insert
+
+-- getGameReports :: (MonadIO m, MonadLogger m) => GameReport -> SqlPersistT m [(GameReport, Player)]
+getGameReports =
+  select $ do
+    (reports :& players) <-
+      from $
+        table @GameReport
+          `leftJoin` table @Player
+            `on` ( \(reports :& players) ->
+                     just (reports ^. GameReportWinnerId) ==. players ?. PlayerId
+                 )
+    pure (reports, players)
+
+-- (reports :& players) <- from joinedTable
+-- pure (reports, players)
+-- where
+--   joinedTable =
+--     ((table @GameReport) `innerJoin` (table @Player)) `on` (\(reports :& winners) -> reports ^. GameReportWinnerId ==. winners ^. PlayerId)
+
+-- pure (reports, winners, losers)
+
+-- SQL.select $
+--   from (\(reports `SQL.LeftOuterJoin` winner `SQL.LeftOuterJoin` loser) -> do
+--     on (just (reports ^. GameReportLoserId) ==. loser ?. PlayerId)
+--     on (just (reports ^. GameReportWinnerId) ==. winner ?. PlayerId)
+--     pure (reports, winner, loser))
+
+-- select $ do
+-- (people :& blogPosts) <-
+--     from $ table @Person
+--     `leftJoin` table @BlogPost
+--     `on` (\(people :& blogPosts) ->
+--             just (people ^. PersonId) ==. blogPosts ?. BlogPostAuthorId)
+-- where_ (people ^. PersonAge >. just (val 18))
+-- pure (people, blogPosts)
