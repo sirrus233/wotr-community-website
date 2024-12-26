@@ -103,6 +103,7 @@ function GameReportForm() {
                 <GameReportFormElement
                     label={"Was this for a specific competition?"}
                     error={formData.competition.error}
+                    hasSingleControl={false}
                 >
                     <MultiOptionInput
                         values={competitionTypes.slice()}
@@ -143,6 +144,7 @@ function GameReportForm() {
                 <GameReportFormElement
                     label={"What expansions did you use?"}
                     error={formData.expansions.error}
+                    hasSingleControl={false}
                 >
                     <MultiOptionInput
                         values={expansions.slice()}
