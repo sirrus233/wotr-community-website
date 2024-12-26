@@ -51,17 +51,18 @@ submitReportHandler report = case validateReport report of
   Failure errors -> throwError $ err422 {errBody = show errors}
   Success (RawGameReport {..}) -> runDb $ do
     -- TODO Logging in this stupid monad
-    -- TODO Reduce code duplication
     timestamp <- liftIO getCurrentTime
     year <- currentYear
+
     winnerId <- insertPlayerIfNotExists winner
     loserId <- insertPlayerIfNotExists loser
-    reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
+
     winnerStats <- getStats winnerId year
     loserStats <- getStats loserId year
 
-    let winnerSide = side
-    let loserSide = case winnerSide of Free -> Shadow; Shadow -> Free
+    reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
+
+    let (winnerSide, loserSide) = (side, other side)
     let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStats, getRating loserSide loserStats)
     let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
     let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
@@ -74,6 +75,8 @@ submitReportHandler report = case validateReport report of
 
     pure SubmitGameReportResponse {report, winnerRating, loserRating}
   where
+    other side = case side of Free -> Shadow; Shadow -> Free
+
     getRating side (PlayerStats {..}) = case side of
       Free -> playerStatsCurrentRatingFree
       Shadow -> playerStatsCurrentRatingShadow
