@@ -2,8 +2,9 @@ module Types.Api where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Time (UTCTime)
+import Database.Esqueleto.Experimental (Entity (..))
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
-import Types.Database (GameReport (..), GameReportId, PlayerId)
+import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId)
 
 data RawGameReport = RawGameReport
   { winner :: PlayerName,
@@ -94,6 +95,36 @@ data ProcessedGameReport = ProcessedGameReport
   deriving (Generic)
 
 instance ToJSON ProcessedGameReport
+
+fromGameReport :: (Entity GameReport, Entity Player, Entity Player) -> ProcessedGameReport
+fromGameReport (report, winner, loser) =
+  ProcessedGameReport
+    { rid = entityKey report,
+      timestamp = r.gameReportTimestamp,
+      winnerId = r.gameReportWinnerId,
+      winner = playerName . entityVal $ winner,
+      loserId = r.gameReportLoserId,
+      loser = playerName . entityVal $ loser,
+      side = r.gameReportSide,
+      victory = r.gameReportVictory,
+      match = r.gameReportMatch,
+      competition = r.gameReportCompetition,
+      league = r.gameReportLeague,
+      expansions = r.gameReportExpansions,
+      treebeard = r.gameReportTreebeard,
+      actionTokens = r.gameReportActionTokens,
+      dwarvenRings = r.gameReportDwarvenRings,
+      turns = r.gameReportTurns,
+      corruption = r.gameReportCorruption,
+      mordor = r.gameReportMordor,
+      initialEyes = r.gameReportInitialEyes,
+      aragornTurn = r.gameReportAragornTurn,
+      strongholds = r.gameReportStrongholds,
+      interestRating = r.gameReportInterestRating,
+      comments = r.gameReportComments
+    }
+  where
+    r = entityVal report
 
 newtype GetReportsResponse = GetReportsResponse {reports :: [ProcessedGameReport]} deriving (Generic)
 
