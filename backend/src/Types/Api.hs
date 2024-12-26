@@ -3,7 +3,7 @@ module Types.Api where
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Time (UTCTime)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
-import Types.Database (GameReport (..), PlayerId)
+import Types.Database (GameReport (..), GameReportId, PlayerId)
 
 data RawGameReport = RawGameReport
   { winner :: PlayerName,
@@ -65,5 +65,38 @@ data SubmitGameReportResponse = SubmitGameReportResponse
   deriving (Generic)
 
 instance ToJSON SubmitGameReportResponse
+
+data ProcessedGameReport = ProcessedGameReport
+  { rid :: GameReportId,
+    timestamp :: UTCTime,
+    winnerId :: PlayerId,
+    winner :: PlayerName,
+    loserId :: PlayerId,
+    loser :: PlayerName,
+    side :: Side,
+    victory :: Victory,
+    match :: Match,
+    competition :: [Competition],
+    league :: Maybe League,
+    expansions :: [Expansion],
+    treebeard :: Maybe Bool,
+    actionTokens :: Int,
+    dwarvenRings :: Int,
+    turns :: Int,
+    corruption :: Int,
+    mordor :: Maybe Int,
+    initialEyes :: Int,
+    aragornTurn :: Maybe Int,
+    strongholds :: [Stronghold],
+    interestRating :: Int,
+    comments :: Maybe Text
+  }
+  deriving (Generic)
+
+instance ToJSON ProcessedGameReport
+
+newtype GetReportsResponse = GetReportsResponse {reports :: [ProcessedGameReport]} deriving (Generic)
+
+instance ToJSON GetReportsResponse
 
 -- TODO Game Logs

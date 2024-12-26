@@ -8,8 +8,8 @@ import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database (getStats, insertGameReport, insertPlayerIfNotExists, insertRatingChange, replacePlayerStats)
 import Logging ((<>:))
-import Servant (ServerError (errBody), ServerT, err422, throwError)
-import Types.Api (RawGameReport (..), SubmitGameReportResponse (..), toGameReport)
+import Servant (ServerError (errBody), ServerT, err422, throwError, type (:<|>) (..))
+import Types.Api (GetReportsResponse, RawGameReport (..), SubmitGameReportResponse (..), toGameReport)
 import Types.DataField (Match (..), Rating, Side (..))
 import Types.Database (PlayerStats (..), RatingDiff (..), currentYear, updatePlayerStatsLose, updatePlayerStatsWin)
 import Validation (validateReport)
@@ -88,5 +88,8 @@ submitReportHandler report = case validateReport report of
       Free -> playerStatsCurrentRatingFree
       Shadow -> playerStatsCurrentRatingShadow
 
+getReportsHandler :: AppM GetReportsResponse
+getReportsHandler = undefined
+
 server :: ServerT Api AppM
-server = submitReportHandler
+server = submitReportHandler :<|> getReportsHandler
