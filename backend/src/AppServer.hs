@@ -71,8 +71,8 @@ submitReportHandler report = case validateReport report of
     let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
     let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
     logInfoN $ "Rating diff: " <>: adjustment
-    logInfoN $ "Adjustment for " <> winner <> ": " <>: winnerRatingOld <> " -> " <>: winnerRating
-    logInfoN $ "Adjustment for " <> loser <> ": " <>: loserRatingOld <> " -> " <>: loserRating
+    logInfoN $ "Adjustment for " <> winner <> " (" <>: side <> "): " <>: winnerRatingOld <> " -> " <>: winnerRating
+    logInfoN $ "Adjustment for " <> loser <> " (" <>: other side <> "): " <>: loserRatingOld <> " -> " <>: loserRating
 
     insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRatingOld winnerRating
     insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRatingOld loserRating

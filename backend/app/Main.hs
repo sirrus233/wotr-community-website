@@ -56,5 +56,5 @@ main = do
   unless (null migrations) (log logger LevelWarn "Database schema changed. Running migrations.")
   mapM_ (log logger LevelInfo . toLogStr) migrations
 
-  log logger LevelInfo "Starting server"
+  log logger LevelInfo "Starting server."
   run 8081 $ app env
