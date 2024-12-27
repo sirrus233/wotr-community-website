@@ -8,6 +8,8 @@ data ReportError
   = VictoryConditionConflictSPRV
   | VictoryConditionConflictFPRV
   | VictoryConditionConflictSPMV
+  | VictoryConditionConflictFPMV
+  | VictoryConditionConflictConcession
   | InvalidSPMV
   | InvalidFPMV
   | InvalidSPRV
@@ -88,9 +90,12 @@ victoryPoints (RawGameReport {strongholds, expansions}) side =
 
 validateVictory :: RawGameReport -> Validation [ReportError] RawGameReport
 validateVictory report
-  | report.corruption >= 12 && not sprv = Failure [VictoryConditionConflictSPRV]
-  | report.mordor == Just 5 && not fprv = Failure [VictoryConditionConflictFPRV]
-  | victoryPoints report Shadow >= 10 && not spmv = Failure [VictoryConditionConflictSPMV]
+  | victory /= correctVictory = case correctVictory of
+      (Shadow, Ring) -> Failure [VictoryConditionConflictSPRV]
+      (Free, Ring) -> Failure [VictoryConditionConflictFPRV]
+      (Shadow, Military) -> Failure [VictoryConditionConflictSPMV]
+      (Free, Military) -> Failure [VictoryConditionConflictFPMV]
+      (_, Concession) -> Failure [VictoryConditionConflictConcession]
   | spmv && victoryPoints report Shadow < 10 = Failure [InvalidSPMV]
   | fpmv && victoryPoints report Free < 4 = Failure [InvalidFPMV]
   | sprv && report.corruption < 12 = Failure [InvalidSPRV]
@@ -101,6 +106,14 @@ validateVictory report
     fprv = report.side == Free && report.victory == Ring
     spmv = report.side == Shadow && report.victory == Military
     fpmv = report.side == Free && report.victory == Military
+    victory = (report.side, report.victory)
+    correctVictory
+      | report.corruption >= 12 = (Shadow, Ring)
+      | report.mordor == Just 5 = (Free, Ring)
+      | report.side == Free && report.victory == Concession = (Free, Concession)
+      | report.side == Shadow && report.victory == Concession = (Shadow, Concession)
+      | victoryPoints report Shadow >= 10 = (Shadow, Military)
+      | otherwise = (Free, Military)
 
 validateCompetition :: RawGameReport -> Validation [ReportError] RawGameReport
 validateCompetition report
