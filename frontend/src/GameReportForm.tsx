@@ -431,9 +431,9 @@ function getStrongholdLabel(stronghold: Stronghold): string {
         case "DolAmroth":
             return "Dol Amroth";
         case "EredLuin":
-            return "Ered Luin (Cities expansion only)";
+            return "Ered Luin";
         case "IronHills":
-            return "Iron Hills (Fate of Erebor expansion only)";
+            return "Iron Hills";
         case "MountGundabad":
             return "Mount Gundabad";
         case "DolGuldur":
