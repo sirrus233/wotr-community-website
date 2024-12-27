@@ -11,8 +11,9 @@ import {
     expansions,
     leagues,
     matchTypes,
+    shadowStrongholds,
     sides,
-    strongholds,
+    staticFreeStrongholds,
     victoryTypes,
 } from "./constants";
 import { Expansion, League, Stronghold } from "./types";
@@ -27,9 +28,28 @@ import VictoryPoints from "./VictoryPoints";
 function GameReportForm() {
     const [
         formData,
-        { errorOnSubmit, successMessage },
+        {
+            errorOnSubmit,
+            successMessage,
+            isFateOfEreborSelected,
+            isCitiesSelected,
+        },
         { handleInputChange, validateField, handleSubmit, setSuccessMessage },
     ] = useFormData();
+
+    const freeStrongholdOptions: Stronghold[] = staticFreeStrongholds.slice();
+    const shadowStrongholdOptions: Stronghold[] = shadowStrongholds.slice();
+
+    if (isFateOfEreborSelected) {
+        shadowStrongholdOptions.push("Erebor");
+        freeStrongholdOptions.push("IronHills");
+    } else {
+        freeStrongholdOptions.push("Erebor");
+    }
+
+    if (isCitiesSelected) {
+        freeStrongholdOptions.push("EredLuin");
+    }
 
     return (
         <Sheet
@@ -321,9 +341,29 @@ function GameReportForm() {
                 error={formData.strongholds.error}
                 hasSingleControl={false}
             >
-                <VictoryPoints strongholds={formData.strongholds.value} />
+                <VictoryPoints
+                    strongholds={formData.strongholds.value}
+                    strongholdOptions={freeStrongholdOptions}
+                />
                 <MultiOptionInput
-                    values={strongholds.slice()}
+                    values={freeStrongholdOptions}
+                    current={formData.strongholds.value}
+                    onChange={handleInputChange("strongholds")}
+                    validate={validateField("strongholds")}
+                    getLabel={getStrongholdLabel}
+                />
+            </GameReportFormElement>
+            <GameReportFormElement
+                label={"What strongholds were captured by FP?"}
+                error={formData.strongholds.error}
+                hasSingleControl={false}
+            >
+                <VictoryPoints
+                    strongholds={formData.strongholds.value}
+                    strongholdOptions={shadowStrongholdOptions}
+                />
+                <MultiOptionInput
+                    values={shadowStrongholdOptions}
                     current={formData.strongholds.value}
                     onChange={handleInputChange("strongholds")}
                     validate={validateField("strongholds")}
@@ -374,6 +414,11 @@ function getStrongholdLabel(stronghold: Stronghold): string {
         case "Edoras":
         case "Dale":
         case "Pelargir":
+        case "Angmar":
+        case "Moria":
+        case "Orthanc":
+        case "Morannon":
+        case "Umbar":
             return stronghold;
         case "GreyHavens":
             return "Grey Havens";
@@ -389,6 +434,18 @@ function getStrongholdLabel(stronghold: Stronghold): string {
             return "Ered Luin (Cities expansion only)";
         case "IronHills":
             return "Iron Hills (Fate of Erebor expansion only)";
+        case "MountGundabad":
+            return "Mount Gundabad";
+        case "DolGuldur":
+            return "Dol Guldur";
+        case "BaradDur":
+            return "Barad-dûr";
+        case "MinasMorgul":
+            return "Minas Morgul";
+        case "FarHarad":
+            return "Far Harad";
+        case "SouthRhun":
+            return "South Rhun";
     }
 }
 

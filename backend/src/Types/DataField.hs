@@ -123,7 +123,7 @@ data Stronghold
   | MountGundabad
   | Angmar
   | Moria
-  | DolGoldur
+  | DolGuldur
   | Orthanc
   | Morannon
   | BaradDur

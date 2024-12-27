@@ -4,6 +4,7 @@ import {
     FieldError,
     FormData,
     GameReportPayload,
+    Stronghold,
     SuccessMessage,
     ValidFormData,
     ValueOf,
@@ -23,12 +24,18 @@ type Helpers = {
 type Meta = {
     errorOnSubmit: FieldError;
     successMessage: SuccessMessage;
+    isFateOfEreborSelected: boolean;
+    isCitiesSelected: boolean;
 };
 
 const useFormData = (): [FormData, Meta, Helpers] => {
     const [formData, setFormData] = useState(initialFormData);
     const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
     const [successMessage, setSuccessMessage] = useState<SuccessMessage>(null);
+
+    const isFateOfEreborSelected =
+        formData.expansions.value.includes("FateOfErebor");
+    const isCitiesSelected = formData.expansions.value.includes("Cities");
 
     const handleInputChange = <K extends keyof FormData>(field: K) => {
         return (value: FormData[K]["value"]) =>
@@ -144,6 +151,24 @@ const useFormData = (): [FormData, Meta, Helpers] => {
         },
         [successMessage]
     );
+    const useStrongholdDeselectEffect = (
+        deselectValues: Stronghold[],
+        controlCondition: boolean
+    ) => {
+        useEffect(() => {
+            if (!controlCondition) {
+                setFormData((formData) => ({
+                    ...formData,
+                    strongholds: {
+                        ...formData.strongholds,
+                        value: formData.strongholds.value.filter(
+                            (stronghold) => !deselectValues.includes(stronghold)
+                        ),
+                    },
+                }));
+            }
+        }, [controlCondition]);
+    };
 
     useControlledClearEffect(
         formData.match.value,
@@ -172,9 +197,21 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     useControlledClearEffect(formData.didFellowshipReachMordor.value, "mordor");
     useControlledClearEffect(formData.wasAragornCrowned.value, "aragornTurn");
 
+    useStrongholdDeselectEffect(
+        ["IronHills", "Erebor"],
+        isFateOfEreborSelected
+    );
+    useStrongholdDeselectEffect(["Erebor"], !isFateOfEreborSelected);
+    useStrongholdDeselectEffect(["EredLuin"], isCitiesSelected);
+
     return [
         formData,
-        { errorOnSubmit, successMessage },
+        {
+            errorOnSubmit,
+            successMessage,
+            isFateOfEreborSelected,
+            isCitiesSelected,
+        },
         { handleInputChange, validateField, handleSubmit, setSuccessMessage },
     ];
 };
