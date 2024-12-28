@@ -27,9 +27,12 @@ type PlayerName = Text
 
 type Rating = Int
 
+type Year = Int
+
 data Side = Free | Shadow deriving (Eq, Generic, Read, Show)
 
 instance PersistField Side where
+  toPersistValue :: Side -> PersistValue
   toPersistValue = defaultToPersistValue
   fromPersistValue = defaultFromPersistValue
 
