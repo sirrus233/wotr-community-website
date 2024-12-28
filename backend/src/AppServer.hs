@@ -24,6 +24,7 @@ import Servant (ServerError (errBody), ServerT, err422, err500, throwError, type
 import Types.Api
   ( GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
+    LeaderboardEntry (averageRating),
     RawGameReport (..),
     SubmitGameReportResponse (..),
     fromGameReport,
@@ -122,7 +123,7 @@ getReportsHandler :: AppM GetReportsResponse
 getReportsHandler = runDb getGameReports <&> GetReportsResponse . map fromGameReport
 
 getLeaderboardHandler :: AppM GetLeaderboardResponse
-getLeaderboardHandler = runDb getAllStats <&> GetLeaderboardResponse . map fromPlayerStats
+getLeaderboardHandler = runDb getAllStats <&> GetLeaderboardResponse . sortOn (Down . averageRating) . map fromPlayerStats
 
 server :: ServerT Api AppM
 server = submitReportHandler :<|> getReportsHandler :<|> getLeaderboardHandler
