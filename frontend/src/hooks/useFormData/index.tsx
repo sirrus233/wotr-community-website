@@ -202,7 +202,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
         isFateOfEreborSelected
     );
     useStrongholdDeselectEffect(["Erebor"], !isFateOfEreborSelected);
-    useStrongholdDeselectEffect(["EredLuin"], isCitiesSelected);
+    useStrongholdDeselectEffect(["EredLuin", "SouthRhun"], isCitiesSelected);
 
     return [
         formData,

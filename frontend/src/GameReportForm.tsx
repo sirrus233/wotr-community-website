@@ -11,9 +11,9 @@ import {
     expansions,
     leagues,
     matchTypes,
-    shadowStrongholds,
     sides,
     staticFreeStrongholds,
+    staticShadowStrongholds,
     victoryTypes,
 } from "./constants";
 import { Expansion, League, Stronghold } from "./types";
@@ -38,7 +38,8 @@ function GameReportForm() {
     ] = useFormData();
 
     const freeStrongholdOptions: Stronghold[] = staticFreeStrongholds.slice();
-    const shadowStrongholdOptions: Stronghold[] = shadowStrongholds.slice();
+    const shadowStrongholdOptions: Stronghold[] =
+        staticShadowStrongholds.slice();
 
     if (isFateOfEreborSelected) {
         shadowStrongholdOptions.push("Erebor");
@@ -49,6 +50,7 @@ function GameReportForm() {
 
     if (isCitiesSelected) {
         freeStrongholdOptions.push("EredLuin");
+        shadowStrongholdOptions.push("SouthRhun");
     }
 
     return (
@@ -445,7 +447,7 @@ function getStrongholdLabel(stronghold: Stronghold): string {
         case "FarHarad":
             return "Far Harad";
         case "SouthRhun":
-            return "South Rhun";
+            return "South Rhûn";
     }
 }
 
