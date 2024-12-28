@@ -356,7 +356,7 @@ function GameReportForm() {
                 />
             </GameReportFormElement>
             <GameReportFormElement
-                label={"What strongholds were captured by FP?"}
+                label={"What strongholds were captured by Free?"}
                 error={formData.strongholds.error}
                 hasSingleControl={false}
             >
