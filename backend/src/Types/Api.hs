@@ -130,4 +130,35 @@ newtype GetReportsResponse = GetReportsResponse {reports :: [ProcessedGameReport
 
 instance ToJSON GetReportsResponse
 
+data LeaderboardEntry = LeaderboardEntry
+  { pid :: PlayerId,
+    name :: PlayerName,
+    country :: Maybe Text,
+    currentRatingFree :: Rating,
+    currentRatingShadow :: Rating,
+    averageRating :: Rating,
+    totalGames :: Int,
+    totalWinsFree :: Int,
+    totalWinsShadow :: Int,
+    totalLossesFree :: Int,
+    totalLossesShadow :: Int,
+    totalWinRateFree :: Double,
+    totalWinRateShadow :: Double,
+    year :: Int,
+    yearlyGames :: Int,
+    yearlyWinsFree :: Int,
+    yearlyWinsShadow :: Int,
+    yearlyLossesFree :: Int,
+    yearlyLossesShadow :: Int,
+    yearlyWinRateFree :: Double,
+    yearlyWinRateShadow :: Double
+  }
+  deriving (Generic)
+
+instance ToJSON LeaderboardEntry
+
+newtype GetLeaderboardResponse = GetLeaderboardResponse {entries :: [LeaderboardEntry]} deriving (Generic)
+
+instance ToJSON GetLeaderboardResponse
+
 -- TODO Game Logs

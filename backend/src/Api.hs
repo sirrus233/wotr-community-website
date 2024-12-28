@@ -1,11 +1,13 @@
 module Api where
 
 import Servant (Get, JSON, Post, ReqBody, (:<|>), (:>))
-import Types.Api (GetReportsResponse, RawGameReport, SubmitGameReportResponse)
+import Types.Api (GetLeaderboardResponse, GetReportsResponse, RawGameReport, SubmitGameReportResponse)
 
 type SubmitReportAPI = "submitReport" :> ReqBody '[JSON] RawGameReport :> Post '[JSON] SubmitGameReportResponse
 
 type GetReportsAPI = "reports" :> Get '[JSON] GetReportsResponse
+
+type GetLeaderboardAPI = "leaderboard" :> Get '[JSON] GetLeaderboardResponse
 
 submitReportAPI :: Proxy SubmitReportAPI
 submitReportAPI = Proxy
@@ -13,7 +15,10 @@ submitReportAPI = Proxy
 getReportsAPI :: Proxy GetReportsAPI
 getReportsAPI = Proxy
 
-type Api = SubmitReportAPI :<|> GetReportsAPI
+getLeaderboardAPI :: Proxy GetLeaderboardAPI
+getLeaderboardAPI = Proxy
+
+type Api = SubmitReportAPI :<|> GetReportsAPI :<|> GetLeaderboardAPI
 
 api :: Proxy Api
 api = Proxy
