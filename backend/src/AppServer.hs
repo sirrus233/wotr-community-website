@@ -8,6 +8,7 @@ import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
+    getAllStats,
     getGameReports,
     getPlayerStats,
     insertGameReport,
@@ -21,11 +22,12 @@ import Logging ((<>:))
 import Relude.Extra (bimapF)
 import Servant (ServerError (errBody), ServerT, err422, err500, throwError, type (:<|>) (..))
 import Types.Api
-  ( GetLeaderboardResponse,
+  ( GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     RawGameReport (..),
     SubmitGameReportResponse (..),
     fromGameReport,
+    fromPlayerStats,
     toGameReport,
   )
 import Types.DataField (Match (..), Rating, Side (..))
@@ -120,7 +122,7 @@ getReportsHandler :: AppM GetReportsResponse
 getReportsHandler = runDb getGameReports <&> GetReportsResponse . map fromGameReport
 
 getLeaderboardHandler :: AppM GetLeaderboardResponse
-getLeaderboardHandler = undefined
+getLeaderboardHandler = runDb getAllStats <&> GetLeaderboardResponse . map fromPlayerStats
 
 server :: ServerT Api AppM
 server = submitReportHandler :<|> getReportsHandler :<|> getLeaderboardHandler

@@ -4,7 +4,9 @@ import AppConfig (AppM, Env (..), runAppLogger)
 import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
 import Database.Esqueleto.Experimental
   ( Entity (..),
+    From,
     Key,
+    SqlExpr,
     SqlPersistT,
     desc,
     from,
@@ -27,7 +29,7 @@ import Database.Esqueleto.Experimental
     type (:&) (..),
   )
 import Servant (ServerError, throwError)
-import Types.DataField (PlayerName)
+import Types.DataField (PlayerName, Year)
 import Types.Database
   ( EntityField (..),
     GameReport (..),
@@ -70,22 +72,31 @@ insertPlayerIfNotExists name = do
       insert_ yearStats
       pure playerKey
 
+joinedPlayerStats :: Year -> From (SqlExpr (Entity Player) :& SqlExpr (Entity PlayerStatsTotal) :& SqlExpr (Entity PlayerStatsYear))
+joinedPlayerStats year =
+  table @Player
+    `innerJoin` table @PlayerStatsTotal
+      `on` (\(player :& totalStats) -> player ^. PlayerId ==. totalStats ^. PlayerStatsTotalPlayerId)
+    `innerJoin` table @PlayerStatsYear
+      `on` ( \(player :& _ :& yearStats) ->
+               (player ^. PlayerId ==. yearStats ^. PlayerStatsYearPlayerId)
+                 &&. (yearStats ^. PlayerStatsYearYear ==. val year)
+           )
+
 getPlayerStats :: (MonadIO m, MonadLogger m) => PlayerId -> DBAction m (Maybe (Entity PlayerStatsTotal, Entity PlayerStatsYear))
 getPlayerStats pid = do
   year <- currentYear
   lift . selectOne $ do
-    (player :& totalStats :& yearStats) <-
-      from $
-        table @Player
-          `innerJoin` table @PlayerStatsTotal
-            `on` (\(player :& totalStats) -> player ^. PlayerId ==. totalStats ^. PlayerStatsTotalPlayerId)
-          `innerJoin` table @PlayerStatsYear
-            `on` ( \(player :& _ :& yearStats) ->
-                     (player ^. PlayerId ==. yearStats ^. PlayerStatsYearPlayerId)
-                       &&. (yearStats ^. PlayerStatsYearYear ==. val year)
-                 )
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats year
     where_ (player ^. PlayerId ==. val pid)
     pure (totalStats, yearStats)
+
+getAllStats :: (MonadIO m, MonadLogger m) => DBAction m [(Entity Player, Entity PlayerStatsTotal, Entity PlayerStatsYear)]
+getAllStats = do
+  year <- currentYear
+  lift . select $ do
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats year
+    pure (player, totalStats, yearStats)
 
 replacePlayerStats :: (MonadIO m, MonadLogger m) => PlayerStatsTotal -> PlayerStatsYear -> DBAction m ()
 replacePlayerStats totalStats@(PlayerStatsTotal {..}) yearStats@(PlayerStatsYear {..}) = lift $ do
