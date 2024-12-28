@@ -47,7 +47,7 @@ main = do
   -- TODO Disable/handle auto-migration
   migrations <- runSqlPool (runMigrationQuiet migrateAll) dbPool
   unless (null migrations) (log logger LevelWarn "Database schema changed. Running migrations.")
-  mapM_ (log logger LevelInfo . toLogStr) migrations
+  mapM_ (log logger LevelDebug . toLogStr) migrations
 
   log logger LevelInfo "Starting server."
   run 8081 $ app env
