@@ -27,6 +27,7 @@
         "Pelargir",
         "Rhun",
         "Rivendell",
+        "Semigroup",
         "spmv",
         "sprv",
         "Tirith",
@@ -34,5 +35,6 @@
         "Umbar",
         "Unranked",
         "utct"
-    ]
+    ],
+    "cSpell.ignorePaths": [".vscode", "wotr-community-website.cabal"]
 }
