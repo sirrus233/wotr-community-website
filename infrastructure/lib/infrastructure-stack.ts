@@ -17,14 +17,35 @@ export class InfrastructureStack extends cdk.Stack {
             "arn:aws:acm:us-east-1:533267266440:certificate/801c9745-2fd1-4737-8e6c-3b341a3934e2"
         );
 
+        const cloudfrontBehavior = {
+            origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
+                websiteBucket,
+                { originAccessLevels: [cloudfront.AccessLevel.READ] }
+            ),
+            viewerProtocolPolicy:
+                cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        };
+
         const distribution = new cloudfront.Distribution(this, "Distribution", {
             defaultRootObject: "index.html",
-            defaultBehavior: {
-                origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
-                    websiteBucket,
-                    { originAccessLevels: [cloudfront.AccessLevel.READ] }
-                ),
+            defaultBehavior: cloudfrontBehavior,
+            additionalBehaviors: {
+                "/*": cloudfrontBehavior,
             },
+            errorResponses: [
+                {
+                    httpStatus: 403,
+                    responseHttpStatus: 200,
+                    responsePagePath: "/index.html",
+                    ttl: cdk.Duration.minutes(5),
+                },
+                {
+                    httpStatus: 404,
+                    responseHttpStatus: 200,
+                    responsePagePath: "/index.html",
+                    ttl: cdk.Duration.minutes(5),
+                },
+            ],
             certificate: certificate,
             domainNames: [
                 "*.waroftheringcommunity.net",
