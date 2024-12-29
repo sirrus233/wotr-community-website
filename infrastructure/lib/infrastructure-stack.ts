@@ -9,7 +9,7 @@ export class InfrastructureStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        const bucket = new s3.Bucket(this, "Bucket");
+        const websiteBucket = new s3.Bucket(this, "WebsiteBucket");
 
         const certificate = certificatemanager.Certificate.fromCertificateArn(
             this,
@@ -21,7 +21,7 @@ export class InfrastructureStack extends cdk.Stack {
             defaultRootObject: "index.html",
             defaultBehavior: {
                 origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
-                    bucket,
+                    websiteBucket,
                     { originAccessLevels: [cloudfront.AccessLevel.READ] }
                 ),
             },
