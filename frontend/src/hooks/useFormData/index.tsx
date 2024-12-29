@@ -4,6 +4,7 @@ import {
     FieldError,
     FormData,
     GameReportPayload,
+    SuccessMessage,
     ValidFormData,
     ValueOf,
 } from "../../types";
@@ -16,15 +17,18 @@ type Helpers = {
     ) => (value: FormData[K]["value"]) => void;
     validateField: <K extends keyof FormData>(field: K) => () => void;
     handleSubmit: () => Promise<void>;
+    setSuccessMessage: (message: SuccessMessage) => void;
 };
 
 type Meta = {
     errorOnSubmit: FieldError;
+    successMessage: SuccessMessage;
 };
 
 const useFormData = (): [FormData, Meta, Helpers] => {
     const [formData, setFormData] = useState(initialFormData);
     const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
+    const [successMessage, setSuccessMessage] = useState<SuccessMessage>(null);
 
     const handleInputChange = <K extends keyof FormData>(field: K) => {
         return (value: FormData[K]["value"]) =>
@@ -105,6 +109,8 @@ const useFormData = (): [FormData, Meta, Helpers] => {
 
                 console.log("Form submitted successfully:", response);
                 // Handle the response data as needed
+
+                setSuccessMessage("Report submitted. Thank you!");
             }
         } catch (error) {
             console.error("Error submitting form:", error);
@@ -131,6 +137,13 @@ const useFormData = (): [FormData, Meta, Helpers] => {
             }
         }, [controlField]);
     };
+
+    useEffect(
+        function resetForm() {
+            if (successMessage) setFormData(initialFormData);
+        },
+        [successMessage]
+    );
 
     useControlledClearEffect(
         formData.match.value,
@@ -161,8 +174,8 @@ const useFormData = (): [FormData, Meta, Helpers] => {
 
     return [
         formData,
-        { errorOnSubmit },
-        { handleInputChange, validateField, handleSubmit },
+        { errorOnSubmit, successMessage },
+        { handleInputChange, validateField, handleSubmit, setSuccessMessage },
     ];
 };
 

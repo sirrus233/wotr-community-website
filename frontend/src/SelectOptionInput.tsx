@@ -22,6 +22,7 @@ export default function SelectOptionInput<T>({
             defaultValue={values[0]}
             onChange={(_, value) => onChange(value as T)}
             onClose={validate}
+            value={current}
         >
             {values.map((value, i) => (
                 <Option key={i} value={value}>
