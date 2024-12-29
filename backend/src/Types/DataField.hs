@@ -18,6 +18,7 @@ defaultFromPersistValue v = case v of
 
 defaultListFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text [a]
 defaultListFromPersistValue v = case v of
+  PersistText "" -> Right []
   PersistText t ->
     maybeToRight "Unreadable value in semantic list text field." (traverse (readMaybe . toString) . T.splitOn "," $ t)
   _ -> Left "Unexpected non-text SQL value."
