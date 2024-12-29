@@ -67,11 +67,20 @@ library
     hs-source-dirs:   src
     default-language: GHC2024
 
-executable wotr-community-website
+executable server
     import:           warnings,
                       extensions,
                       dependencies
-    main-is:          Main.hs
+    main-is:          Server.hs
+    build-depends:    wotr-community-website
+    hs-source-dirs:   app
+    default-language: GHC2024
+
+executable migration
+    import:           warnings,
+                      extensions,
+                      dependencies
+    main-is:          Migration.hs
     build-depends:    wotr-community-website
     hs-source-dirs:   app
     default-language: GHC2024
