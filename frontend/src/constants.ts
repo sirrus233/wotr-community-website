@@ -43,9 +43,9 @@ export const defaultFreeStrongholds = [
     "HelmsDeep",
     "Lorien",
     "WoodlandRealm",
+    "Erebor",
     "MinasTirith",
     "DolAmroth",
-    "Erebor",
 ] as const;
 
 export const defaultShadowStrongholds = [
