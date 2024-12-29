@@ -154,11 +154,6 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     );
     useControlledClearEffect(formData.usedExpansions.value, "expansions");
     useControlledClearEffect(formData.usedExpansions.value, "treebeard");
-    useControlledClearEffect(
-        formData.expansions.value,
-        "treebeard",
-        (expansions) => expansions.includes("Treebeard")
-    );
     useControlledClearEffect(formData.usedHandicap.value, "actionTokens");
     useControlledClearEffect(formData.usedHandicap.value, "dwarvenRings");
     useControlledClearEffect(formData.didFellowshipReachMordor.value, "mordor");
