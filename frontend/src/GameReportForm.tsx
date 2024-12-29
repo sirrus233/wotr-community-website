@@ -28,7 +28,13 @@ function GameReportForm() {
     const [
         formData,
         { errorOnSubmit, successMessage },
-        { handleInputChange, validateField, handleSubmit, setSuccessMessage },
+        {
+            handleInputChange,
+            validateField,
+            handleSubmit,
+            isStrongholdInPlay,
+            setSuccessMessage,
+        },
     ] = useFormData();
 
     const { value: selectedExpansions } = formData.expansions;
@@ -398,43 +404,6 @@ function GameReportForm() {
 }
 
 export default GameReportForm;
-
-function isStrongholdInPlay(
-    expansions: Expansion[],
-    stronghold: Stronghold
-): boolean {
-    switch (stronghold) {
-        case "EredLuin":
-            return expansions.includes("Cities");
-        case "SouthRhun":
-            return expansions.includes("Cities");
-        case "IronHills":
-            return expansions.includes("FateOfErebor");
-        case "Shire":
-        case "Edoras":
-        case "Dale":
-        case "Pelargir":
-        case "Rivendell":
-        case "GreyHavens":
-        case "HelmsDeep":
-        case "Lorien":
-        case "WoodlandRealm":
-        case "MinasTirith":
-        case "DolAmroth":
-        case "Erebor":
-        case "Angmar":
-        case "FarHarad":
-        case "MountGundabad":
-        case "Moria":
-        case "DolGuldur":
-        case "Orthanc":
-        case "Morannon":
-        case "BaradDur":
-        case "MinasMorgul":
-        case "Umbar":
-            return true;
-    }
-}
 
 function strongholdSide(expansions: Expansion[], stronghold: Stronghold): Side {
     switch (stronghold) {

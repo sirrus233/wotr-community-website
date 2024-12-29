@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import {
+    Expansion,
     FieldError,
     FormData,
     GameReportPayload,
@@ -9,7 +10,7 @@ import {
     ValidFormData,
     ValueOf,
 } from "../../types";
-import { ErrorMessage, optionalFields } from "../../constants";
+import { ErrorMessage, optionalFields, strongholds } from "../../constants";
 import initialFormData from "./initialFormData";
 
 type Helpers = {
@@ -19,6 +20,10 @@ type Helpers = {
     validateField: <K extends keyof FormData>(field: K) => () => void;
     handleSubmit: () => Promise<void>;
     setSuccessMessage: (message: SuccessMessage) => void;
+    isStrongholdInPlay: (
+        expansions: Expansion[],
+        stronghold: Stronghold
+    ) => boolean;
 };
 
 type Meta = {
@@ -31,9 +36,9 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
     const [successMessage, setSuccessMessage] = useState<SuccessMessage>(null);
 
-    const isFateOfEreborSelected =
-        formData.expansions.value.includes("FateOfErebor");
-    const isCitiesSelected = formData.expansions.value.includes("Cities");
+    // const isFateOfEreborSelected =
+    //     formData.expansions.value.includes("FateOfErebor");
+    // const isCitiesSelected = formData.expansions.value.includes("Cities");
 
     const handleInputChange = <K extends keyof FormData>(field: K) => {
         return (value: FormData[K]["value"]) =>
@@ -150,7 +155,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
         [successMessage]
     );
     const useStrongholdDeselectEffect = (
-        deselectValues: Stronghold[],
+        deselectedStronghold: Stronghold,
         controlCondition: boolean
     ) => {
         useEffect(() => {
@@ -160,7 +165,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
                     strongholds: {
                         ...formData.strongholds,
                         value: formData.strongholds.value.filter(
-                            (stronghold) => !deselectValues.includes(stronghold)
+                            (stronghold) => stronghold !== deselectedStronghold
                         ),
                     },
                 }));
@@ -195,17 +200,23 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     useControlledClearEffect(formData.didFellowshipReachMordor.value, "mordor");
     useControlledClearEffect(formData.wasAragornCrowned.value, "aragornTurn");
 
-    useStrongholdDeselectEffect(
-        ["IronHills", "Erebor"],
-        isFateOfEreborSelected
-    );
-    useStrongholdDeselectEffect(["Erebor"], !isFateOfEreborSelected);
-    useStrongholdDeselectEffect(["EredLuin", "SouthRhun"], isCitiesSelected);
+    strongholds.map((stronghold) => {
+        useStrongholdDeselectEffect(
+            stronghold,
+            isStrongholdInPlay(formData.expansions.value, stronghold)
+        );
+    });
 
     return [
         formData,
         { errorOnSubmit, successMessage },
-        { handleInputChange, validateField, handleSubmit, setSuccessMessage },
+        {
+            handleInputChange,
+            validateField,
+            handleSubmit,
+            isStrongholdInPlay,
+            setSuccessMessage,
+        },
     ];
 };
 
@@ -244,6 +255,43 @@ function toPayload(formData: ValidFormData): GameReportPayload {
         interestRating: formData.interestRating.value,
         comment: formData.comment.value,
     };
+}
+
+function isStrongholdInPlay(
+    expansions: Expansion[],
+    stronghold: Stronghold
+): boolean {
+    switch (stronghold) {
+        case "EredLuin":
+            return expansions.includes("Cities");
+        case "SouthRhun":
+            return expansions.includes("Cities");
+        case "IronHills":
+            return expansions.includes("FateOfErebor");
+        case "Shire":
+        case "Edoras":
+        case "Dale":
+        case "Pelargir":
+        case "Rivendell":
+        case "GreyHavens":
+        case "HelmsDeep":
+        case "Lorien":
+        case "WoodlandRealm":
+        case "MinasTirith":
+        case "DolAmroth":
+        case "Erebor":
+        case "Angmar":
+        case "FarHarad":
+        case "MountGundabad":
+        case "Moria":
+        case "DolGuldur":
+        case "Orthanc":
+        case "Morannon":
+        case "BaradDur":
+        case "MinasMorgul":
+        case "Umbar":
+            return true;
+    }
 }
 
 function objectKeys<T extends object>(obj: T): Array<keyof T> {
