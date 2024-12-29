@@ -104,7 +104,8 @@ const useFormData = (): [FormData, Meta, Helpers] => {
                 setErrorOnSubmit(null);
 
                 const response = await axios.post(
-                    "http://localhost:8081/submitReport",
+                    //"http://localhost:8081/submitReport",
+                    "https://api.waroftheringcommunity.net:8080/submitReport",
                     toPayload(validatedResult),
                     {
                         headers: {

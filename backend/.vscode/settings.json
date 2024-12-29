@@ -14,9 +14,11 @@
         "fmap",
         "fpmv",
         "fprv",
+        "fullchain",
         "Goldur",
         "Gundabad",
         "Harad",
+        "letsencrypt",
         "Lorien",
         "Luin",
         "Minas",
@@ -27,6 +29,7 @@
         "Orthanc",
         "Pelargir",
         "Relude",
+        "privkey",
         "Rhun",
         "Rivendell",
         "Semigroup",
@@ -37,7 +40,8 @@
         "Umbar",
         "uncurry",
         "Unranked",
-        "utct"
+        "utct",
+        "waroftheringcommunity"
     ],
     "cSpell.ignorePaths": [".vscode", "wotr-community-website.cabal"]
 }
