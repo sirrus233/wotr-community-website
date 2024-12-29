@@ -23,33 +23,20 @@ export const expansions = [
     "Treebeard",
 ] as const;
 
-export const defaultShadowCities = ["Angmar", "FarHarad"] as const;
-
-export const conditionalShadowCities = ["SouthRhun"] as const;
-
-export const defaultFreeCities = [
-    "Shire",
-    "Edoras",
-    "Dale",
-    "Pelargir",
-] as const;
-
-export const conditionalFreeCities = ["EredLuin", "IronHills"] as const;
-
-export const defaultFreeStrongholds = [
-    ...defaultFreeCities,
+export const strongholds = [
     "Rivendell",
     "GreyHavens",
     "HelmsDeep",
     "Lorien",
     "WoodlandRealm",
-    "Erebor",
     "MinasTirith",
     "DolAmroth",
-] as const;
-
-export const defaultShadowStrongholds = [
-    ...defaultShadowCities,
+    "Shire",
+    "Edoras",
+    "Dale",
+    "Pelargir",
+    "EredLuin",
+    "IronHills",
     "MountGundabad",
     "Moria",
     "DolGuldur",
@@ -58,20 +45,10 @@ export const defaultShadowStrongholds = [
     "BaradDur",
     "MinasMorgul",
     "Umbar",
-] as const;
-
-export const strongholds = [
-    ...defaultShadowStrongholds,
-    ...conditionalShadowCities,
-    ...defaultFreeStrongholds,
-    ...conditionalFreeCities,
-] as const;
-
-export const cities: (typeof strongholds)[number][] = [
-    ...defaultShadowCities,
-    ...conditionalShadowCities,
-    ...defaultFreeCities,
-    ...conditionalFreeCities,
+    "Angmar",
+    "FarHarad",
+    "SouthRhun",
+    "Erebor",
 ] as const;
 
 export const optionalFields = [

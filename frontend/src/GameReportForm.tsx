@@ -8,20 +8,14 @@ import Sheet from "@mui/joy/Sheet";
 import Button from "@mui/joy/Button";
 import {
     competitionTypes,
-    defaultFreeStrongholds,
-    defaultShadowStrongholds,
     expansions,
     leagues,
     matchTypes,
+    strongholds,
     sides,
     victoryTypes,
 } from "./constants";
-import {
-    Expansion,
-    ExpansionWithStrongholdEffect,
-    League,
-    Stronghold,
-} from "./types";
+import { Expansion, League, Stronghold, Side } from "./types";
 import useFormData from "./hooks/useFormData";
 import GameReportFormElement from "./GameReportFormElement";
 import MultiOptionInput from "./MultiOptionInput";
@@ -37,23 +31,19 @@ function GameReportForm() {
         { handleInputChange, validateField, handleSubmit, setSuccessMessage },
     ] = useFormData();
 
-    const freeStrongholdOptions: Stronghold[] = [
-        ...defaultFreeStrongholds,
-        ...formData.expansions.value
-            .filter(doesExpansionAffectStrongholds)
-            .map(expandFreeStrongholds),
-    ].filter(
+    const { value: selectedExpansions } = formData.expansions;
+
+    const freeStrongholdOptions: Stronghold[] = strongholds.filter(
         (stronghold) =>
-            stronghold !== "Erebor" ||
-            !formData.expansions.value.includes("FateOfErebor")
+            strongholdSide(selectedExpansions, stronghold) === "Free" &&
+            isStrongholdInPlay(selectedExpansions, stronghold)
     );
 
-    const shadowStrongholdOptions: Stronghold[] = [
-        ...defaultShadowStrongholds,
-        ...formData.expansions.value
-            .filter(doesExpansionAffectStrongholds)
-            .map(expandShadowStrongholds),
-    ];
+    const shadowStrongholdOptions: Stronghold[] = strongholds.filter(
+        (stronghold) =>
+            strongholdSide(selectedExpansions, stronghold) === "Shadow" &&
+            isStrongholdInPlay(selectedExpansions, stronghold)
+    );
 
     return (
         <Sheet
@@ -409,31 +399,73 @@ function GameReportForm() {
 
 export default GameReportForm;
 
-function doesExpansionAffectStrongholds(
-    expansion: Expansion
-): expansion is ExpansionWithStrongholdEffect {
-    return expansion === "Cities" || expansion == "FateOfErebor";
-}
-
-function expandFreeStrongholds(
-    expansion: ExpansionWithStrongholdEffect
-): Stronghold {
-    switch (expansion) {
-        case "Cities":
-            return "EredLuin";
-        case "FateOfErebor":
-            return "IronHills";
+function isStrongholdInPlay(
+    expansions: Expansion[],
+    stronghold: Stronghold
+): boolean {
+    switch (stronghold) {
+        case "EredLuin":
+            return expansions.includes("Cities");
+        case "SouthRhun":
+            return expansions.includes("Cities");
+        case "IronHills":
+            return expansions.includes("FateOfErebor");
+        case "Shire":
+        case "Edoras":
+        case "Dale":
+        case "Pelargir":
+        case "Rivendell":
+        case "GreyHavens":
+        case "HelmsDeep":
+        case "Lorien":
+        case "WoodlandRealm":
+        case "MinasTirith":
+        case "DolAmroth":
+        case "Erebor":
+        case "Angmar":
+        case "FarHarad":
+        case "MountGundabad":
+        case "Moria":
+        case "DolGuldur":
+        case "Orthanc":
+        case "Morannon":
+        case "BaradDur":
+        case "MinasMorgul":
+        case "Umbar":
+            return true;
     }
 }
 
-function expandShadowStrongholds(
-    expansion: ExpansionWithStrongholdEffect
-): Stronghold {
-    switch (expansion) {
-        case "Cities":
-            return "SouthRhun";
-        case "FateOfErebor":
-            return "Erebor";
+function strongholdSide(expansions: Expansion[], stronghold: Stronghold): Side {
+    switch (stronghold) {
+        case "Erebor":
+            return expansions.includes("FateOfErebor") ? "Shadow" : "Free";
+        case "Shire":
+        case "Edoras":
+        case "Dale":
+        case "Pelargir":
+        case "EredLuin":
+        case "IronHills":
+        case "Rivendell":
+        case "GreyHavens":
+        case "HelmsDeep":
+        case "Lorien":
+        case "WoodlandRealm":
+        case "MinasTirith":
+        case "DolAmroth":
+            return "Free";
+        case "Angmar":
+        case "FarHarad":
+        case "SouthRhun":
+        case "MountGundabad":
+        case "Moria":
+        case "DolGuldur":
+        case "Orthanc":
+        case "Morannon":
+        case "BaradDur":
+        case "MinasMorgul":
+        case "Umbar":
+            return "Shadow";
     }
 }
 
