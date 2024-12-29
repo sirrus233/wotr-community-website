@@ -5,11 +5,17 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cloudfront_origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 export class InfrastructureStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
+        this.website();
+        this.server();
+    }
+
+    website() {
         const websiteBucket = new s3.Bucket(this, "WebsiteBucket");
 
         const certificate = certificatemanager.Certificate.fromCertificateArn(
@@ -18,20 +24,15 @@ export class InfrastructureStack extends cdk.Stack {
             "arn:aws:acm:us-east-1:533267266440:certificate/801c9745-2fd1-4737-8e6c-3b341a3934e2"
         );
 
-        const cloudfrontBehavior = {
-            origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
-                websiteBucket,
-                { originAccessLevels: [cloudfront.AccessLevel.READ] }
-            ),
-            viewerProtocolPolicy:
-                cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        };
-
         const distribution = new cloudfront.Distribution(this, "Distribution", {
             defaultRootObject: "index.html",
-            defaultBehavior: cloudfrontBehavior,
-            additionalBehaviors: {
-                "/*": cloudfrontBehavior,
+            defaultBehavior: {
+                origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
+                    websiteBucket,
+                    { originAccessLevels: [cloudfront.AccessLevel.READ] }
+                ),
+                viewerProtocolPolicy:
+                    cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             },
             errorResponses: [
                 {
@@ -54,18 +55,28 @@ export class InfrastructureStack extends cdk.Stack {
             ],
         });
 
-        const vpc = new ec2.Vpc(this, "VPC", { maxAzs: 2 });
+        new cdk.CfnOutput(this, "DistributionDomainName", {
+            value: distribution.distributionDomainName,
+        });
+    }
 
-        const securityGroup = new ec2.SecurityGroup(
-            this,
-            "ServerSecurityGroup",
-            { vpc, allowAllOutbound: true }
-        );
+    server() {
+        const ami = ec2.MachineImage.latestAmazonLinux2023();
 
-        securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80));
-        securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443));
+        const vpc = new ec2.Vpc(this, "VPC", {
+            maxAzs: 2,
+            subnetConfiguration: [
+                {
+                    cidrMask: 24,
+                    name: "Public",
+                    subnetType: ec2.SubnetType.PUBLIC,
+                },
+            ],
+        });
 
-        const ami = ec2.MachineImage.latestAmazonLinux2();
+        const role = new iam.Role(this, "ServerRole", {
+            assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+        });
 
         const instance = new ec2.Instance(this, "ServerInstance", {
             instanceType: ec2.InstanceType.of(
@@ -74,8 +85,18 @@ export class InfrastructureStack extends cdk.Stack {
             ),
             machineImage: ami,
             vpc,
-            securityGroup,
+            role,
+            keyPair: ec2.KeyPair.fromKeyPairName(
+                this,
+                "BradleyServerKey",
+                "BradleyServerKey"
+            ),
         });
+
+        instance.connections.allowFrom(
+            ec2.Peer.ipv4("97.113.177.113/32"),
+            ec2.Port.tcp(22)
+        );
 
         const elasticIp = new ec2.CfnEIP(this, "ElasticIP");
         new ec2.CfnEIPAssociation(this, "EIPAssociation", {
@@ -85,10 +106,6 @@ export class InfrastructureStack extends cdk.Stack {
 
         new cdk.CfnOutput(this, "InstancePublicIP", {
             value: instance.instancePublicIp,
-        });
-
-        new cdk.CfnOutput(this, "DistributionDomainName", {
-            value: distribution.distributionDomainName,
         });
     }
 }
