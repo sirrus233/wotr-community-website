@@ -36,10 +36,6 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
     const [successMessage, setSuccessMessage] = useState<SuccessMessage>(null);
 
-    // const isFateOfEreborSelected =
-    //     formData.expansions.value.includes("FateOfErebor");
-    // const isCitiesSelected = formData.expansions.value.includes("Cities");
-
     const handleInputChange = <K extends keyof FormData>(field: K) => {
         return (value: FormData[K]["value"]) =>
             setFormData((prevData) => ({
