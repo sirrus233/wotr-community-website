@@ -11,8 +11,8 @@ import {
     expansions,
     leagues,
     matchTypes,
-    strongholds,
     sides,
+    strongholds,
     victoryTypes,
 } from "./constants";
 import { Expansion, League, Stronghold, Side } from "./types";
