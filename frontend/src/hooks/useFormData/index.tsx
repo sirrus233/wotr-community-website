@@ -24,8 +24,6 @@ type Helpers = {
 type Meta = {
     errorOnSubmit: FieldError;
     successMessage: SuccessMessage;
-    isFateOfEreborSelected: boolean;
-    isCitiesSelected: boolean;
 };
 
 const useFormData = (): [FormData, Meta, Helpers] => {
@@ -206,12 +204,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
 
     return [
         formData,
-        {
-            errorOnSubmit,
-            successMessage,
-            isFateOfEreborSelected,
-            isCitiesSelected,
-        },
+        { errorOnSubmit, successMessage },
         { handleInputChange, validateField, handleSubmit, setSuccessMessage },
     ];
 };

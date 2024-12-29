@@ -30,6 +30,11 @@ export type PayloadField = (typeof payloadFields)[number];
 
 export type SuccessMessage = string | null;
 
+export type ExpansionWithStrongholdEffect = Exclude<
+    Expansion,
+    "LoME" | "KoME" | "WoME" | "Treebeard"
+>;
+
 export type FieldError = string | null;
 
 export interface FieldData<T> {

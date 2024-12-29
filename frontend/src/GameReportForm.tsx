@@ -8,15 +8,20 @@ import Sheet from "@mui/joy/Sheet";
 import Button from "@mui/joy/Button";
 import {
     competitionTypes,
+    defaultFreeStrongholds,
+    defaultShadowStrongholds,
     expansions,
     leagues,
     matchTypes,
     sides,
-    staticFreeStrongholds,
-    staticShadowStrongholds,
     victoryTypes,
 } from "./constants";
-import { Expansion, League, Stronghold } from "./types";
+import {
+    Expansion,
+    ExpansionWithStrongholdEffect,
+    League,
+    Stronghold,
+} from "./types";
 import useFormData from "./hooks/useFormData";
 import GameReportFormElement from "./GameReportFormElement";
 import MultiOptionInput from "./MultiOptionInput";
@@ -28,30 +33,27 @@ import VictoryPoints from "./VictoryPoints";
 function GameReportForm() {
     const [
         formData,
-        {
-            errorOnSubmit,
-            successMessage,
-            isFateOfEreborSelected,
-            isCitiesSelected,
-        },
+        { errorOnSubmit, successMessage },
         { handleInputChange, validateField, handleSubmit, setSuccessMessage },
     ] = useFormData();
 
-    const freeStrongholdOptions: Stronghold[] = staticFreeStrongholds.slice();
-    const shadowStrongholdOptions: Stronghold[] =
-        staticShadowStrongholds.slice();
+    const freeStrongholdOptions: Stronghold[] = [
+        ...defaultFreeStrongholds,
+        ...formData.expansions.value
+            .filter(doesExpansionAffectStrongholds)
+            .map(expandFreeStrongholds),
+    ].filter(
+        (stronghold) =>
+            stronghold !== "Erebor" ||
+            !formData.expansions.value.includes("FateOfErebor")
+    );
 
-    if (isFateOfEreborSelected) {
-        shadowStrongholdOptions.push("Erebor");
-        freeStrongholdOptions.push("IronHills");
-    } else {
-        freeStrongholdOptions.push("Erebor");
-    }
-
-    if (isCitiesSelected) {
-        freeStrongholdOptions.push("EredLuin");
-        shadowStrongholdOptions.push("SouthRhun");
-    }
+    const shadowStrongholdOptions: Stronghold[] = [
+        ...defaultShadowStrongholds,
+        ...formData.expansions.value
+            .filter(doesExpansionAffectStrongholds)
+            .map(expandShadowStrongholds),
+    ];
 
     return (
         <Sheet
@@ -406,6 +408,34 @@ function GameReportForm() {
 }
 
 export default GameReportForm;
+
+function doesExpansionAffectStrongholds(
+    expansion: Expansion
+): expansion is ExpansionWithStrongholdEffect {
+    return expansion === "Cities" || expansion == "FateOfErebor";
+}
+
+function expandFreeStrongholds(
+    expansion: ExpansionWithStrongholdEffect
+): Stronghold {
+    switch (expansion) {
+        case "Cities":
+            return "EredLuin";
+        case "FateOfErebor":
+            return "IronHills";
+    }
+}
+
+function expandShadowStrongholds(
+    expansion: ExpansionWithStrongholdEffect
+): Stronghold {
+    switch (expansion) {
+        case "Cities":
+            return "SouthRhun";
+        case "FateOfErebor":
+            return "Erebor";
+    }
+}
 
 function getStrongholdLabel(stronghold: Stronghold): string {
     switch (stronghold) {

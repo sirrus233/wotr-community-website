@@ -23,11 +23,11 @@ export const expansions = [
     "Treebeard",
 ] as const;
 
-export const staticShadowCities = ["Angmar", "FarHarad"] as const;
+export const defaultShadowCities = ["Angmar", "FarHarad"] as const;
 
 export const conditionalShadowCities = ["SouthRhun"] as const;
 
-export const staticFreeCities = [
+export const defaultFreeCities = [
     "Shire",
     "Edoras",
     "Dale",
@@ -36,8 +36,8 @@ export const staticFreeCities = [
 
 export const conditionalFreeCities = ["EredLuin", "IronHills"] as const;
 
-export const staticFreeStrongholds = [
-    ...staticFreeCities,
+export const defaultFreeStrongholds = [
+    ...defaultFreeCities,
     "Rivendell",
     "GreyHavens",
     "HelmsDeep",
@@ -45,15 +45,11 @@ export const staticFreeStrongholds = [
     "WoodlandRealm",
     "MinasTirith",
     "DolAmroth",
-] as const;
-
-export const conditionalFreeStrongholds = [
-    ...conditionalFreeCities,
     "Erebor",
 ] as const;
 
-export const staticShadowStrongholds = [
-    ...staticShadowCities,
+export const defaultShadowStrongholds = [
+    ...defaultShadowCities,
     "MountGundabad",
     "Moria",
     "DolGuldur",
@@ -64,21 +60,17 @@ export const staticShadowStrongholds = [
     "Umbar",
 ] as const;
 
-export const conditionalShadowStrongholds = [
-    ...conditionalShadowCities,
-] as const;
-
 export const strongholds = [
-    ...staticShadowStrongholds,
-    ...conditionalShadowStrongholds,
-    ...staticFreeStrongholds,
-    ...conditionalFreeStrongholds,
+    ...defaultShadowStrongholds,
+    ...conditionalShadowCities,
+    ...defaultFreeStrongholds,
+    ...conditionalFreeCities,
 ] as const;
 
 export const cities: (typeof strongholds)[number][] = [
-    ...staticShadowCities,
+    ...defaultShadowCities,
     ...conditionalShadowCities,
-    ...staticFreeCities,
+    ...defaultFreeCities,
     ...conditionalFreeCities,
 ] as const;
 
