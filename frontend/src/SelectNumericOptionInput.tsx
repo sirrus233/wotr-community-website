@@ -7,6 +7,7 @@ const NULL_MASK = -1;
 interface SelectNumericOptionInputProps {
     start: number;
     end: number;
+    current: number | null;
     initializeEmpty?: boolean;
     allowInfinite?: boolean;
     onChange: (value: number | null) => void;
@@ -16,6 +17,7 @@ interface SelectNumericOptionInputProps {
 export default function SelectNumericOptionInput({
     start,
     end,
+    current,
     initializeEmpty = true,
     allowInfinite = false,
     onChange,
@@ -32,7 +34,7 @@ export default function SelectNumericOptionInput({
     return (
         <SelectOptionInput
             values={values}
-            current={start}
+            current={maskNull(current)}
             getLabel={(value) => {
                 if (value === NULL_MASK) {
                     return "";
@@ -46,6 +48,10 @@ export default function SelectNumericOptionInput({
             validate={validate}
         />
     );
+}
+
+function maskNull(value: number | null) {
+    return value === null ? NULL_MASK : value;
 }
 
 function unmaskNull(value: number) {

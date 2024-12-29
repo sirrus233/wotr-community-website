@@ -1,5 +1,8 @@
 import "@fontsource/inter";
 import React from "react";
+import Modal from "@mui/joy/Modal";
+import ModalClose from "@mui/joy/ModalClose";
+import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
 import Sheet from "@mui/joy/Sheet";
 import Button from "@mui/joy/Button";
@@ -24,8 +27,8 @@ import VictoryPoints from "./VictoryPoints";
 function GameReportForm() {
     const [
         formData,
-        { errorOnSubmit },
-        { handleInputChange, validateField, handleSubmit },
+        { errorOnSubmit, successMessage },
+        { handleInputChange, validateField, handleSubmit, setSuccessMessage },
     ] = useFormData();
 
     return (
@@ -44,6 +47,17 @@ function GameReportForm() {
             }}
         >
             <h1>War of the Ring Game Report</h1>
+
+            <Modal
+                open={!!successMessage}
+                onClose={() => setSuccessMessage(null)}
+            >
+                <ModalDialog>
+                    <ModalClose />
+                    <Typography>{successMessage}</Typography>
+                </ModalDialog>
+            </Modal>
+
             <GameReportFormElement
                 label={"Who won?"}
                 error={formData.winner.error}
@@ -191,6 +205,7 @@ function GameReportForm() {
                         <SelectNumericOptionInput
                             start={0}
                             end={8}
+                            current={formData.actionTokens.value}
                             initializeEmpty={false}
                             allowInfinite={true}
                             onChange={handleInputChange("actionTokens")}
@@ -204,6 +219,7 @@ function GameReportForm() {
                         <SelectNumericOptionInput
                             start={0}
                             end={8}
+                            current={formData.dwarvenRings.value}
                             initializeEmpty={false}
                             allowInfinite={true}
                             onChange={handleInputChange("dwarvenRings")}
@@ -219,6 +235,7 @@ function GameReportForm() {
                 <SelectNumericOptionInput
                     start={1}
                     end={25}
+                    current={formData.turns.value}
                     onChange={handleInputChange("turns")}
                     validate={validateField("turns")}
                 />
@@ -230,6 +247,7 @@ function GameReportForm() {
                 <SelectNumericOptionInput
                     start={0}
                     end={18}
+                    current={formData.corruption.value}
                     onChange={handleInputChange("corruption")}
                     validate={validateField("corruption")}
                 />
@@ -254,6 +272,7 @@ function GameReportForm() {
                     <SelectNumericOptionInput
                         start={0}
                         end={5}
+                        current={formData.mordor.value}
                         onChange={handleInputChange("mordor")}
                         validate={validateField("mordor")}
                     />
@@ -266,6 +285,7 @@ function GameReportForm() {
                 <SelectNumericOptionInput
                     start={0}
                     end={7}
+                    current={formData.initialEyes.value}
                     onChange={handleInputChange("initialEyes")}
                     validate={validateField("initialEyes")}
                 />
@@ -290,6 +310,7 @@ function GameReportForm() {
                     <SelectNumericOptionInput
                         start={1}
                         end={18}
+                        current={formData.aragornTurn.value}
                         onChange={handleInputChange("aragornTurn")}
                         validate={validateField("aragornTurn")}
                     />
@@ -318,6 +339,7 @@ function GameReportForm() {
                 <SelectNumericOptionInput
                     start={1}
                     end={10}
+                    current={formData.interestRating.value}
                     onChange={handleInputChange("interestRating")}
                     validate={validateField("interestRating")}
                 />
