@@ -4,6 +4,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cloudfront_origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 
 export class InfrastructureStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -51,6 +52,39 @@ export class InfrastructureStack extends cdk.Stack {
                 "*.waroftheringcommunity.net",
                 "waroftheringcommunity.net",
             ],
+        });
+
+        const vpc = new ec2.Vpc(this, "VPC", { maxAzs: 2 });
+
+        const securityGroup = new ec2.SecurityGroup(
+            this,
+            "ServerSecurityGroup",
+            { vpc, allowAllOutbound: true }
+        );
+
+        securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80));
+        securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443));
+
+        const ami = ec2.MachineImage.latestAmazonLinux2();
+
+        const instance = new ec2.Instance(this, "ServerInstance", {
+            instanceType: ec2.InstanceType.of(
+                ec2.InstanceClass.T3,
+                ec2.InstanceSize.MICRO
+            ),
+            machineImage: ami,
+            vpc,
+            securityGroup,
+        });
+
+        const elasticIp = new ec2.CfnEIP(this, "ElasticIP");
+        new ec2.CfnEIPAssociation(this, "EIPAssociation", {
+            allocationId: elasticIp.attrAllocationId,
+            instanceId: instance.instanceId,
+        });
+
+        new cdk.CfnOutput(this, "InstancePublicIP", {
+            value: instance.instancePublicIp,
         });
 
         new cdk.CfnOutput(this, "DistributionDomainName", {
