@@ -9,13 +9,7 @@ export class InfrastructureStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        const originAccessIdentity = new cloudfront.OriginAccessIdentity(
-            this,
-            "OriginAccessIdentity"
-        );
-
         const bucket = new s3.Bucket(this, "Bucket");
-        bucket.grantRead(originAccessIdentity);
 
         const certificate = certificatemanager.Certificate.fromCertificateArn(
             this,
@@ -26,9 +20,10 @@ export class InfrastructureStack extends cdk.Stack {
         const distribution = new cloudfront.Distribution(this, "Distribution", {
             defaultRootObject: "index.html",
             defaultBehavior: {
-                origin: new cloudfront_origins.S3Origin(bucket, {
-                    originAccessIdentity,
-                }),
+                origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
+                    bucket,
+                    { originAccessLevels: [cloudfront.AccessLevel.READ] }
+                ),
             },
             certificate: certificate,
             domainNames: [
