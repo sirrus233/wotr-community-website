@@ -88,8 +88,8 @@ export class InfrastructureStack extends cdk.Stack {
             role,
             keyPair: ec2.KeyPair.fromKeyPairName(
                 this,
-                "BradleyServerKey",
-                "BradleyServerKey"
+                "ServerKey",
+                "ServerKey"
             ),
         });
 
