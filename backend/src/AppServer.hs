@@ -93,9 +93,9 @@ submitReportHandler report = case validateReport report of
     let (winnerSide, loserSide) = (side, other side)
 
     (winnerStatsTotal, winnerStatsYear) <-
-      bimapF entityVal entityVal (readOrError ("Could not find stats for " <> show winner) $ getPlayerStats winnerId)
+      bimapF entityVal entityVal (readOrError ("Could not find stats for " <>: winner) $ getPlayerStats winnerId)
     (loserStatsTotal, loserStatsYear) <-
-      bimapF entityVal entityVal (readOrError ("Could not find stats for " <> show loser) $ getPlayerStats loserId)
+      bimapF entityVal entityVal (readOrError ("Could not find stats for " <>: loser) $ getPlayerStats loserId)
 
     let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
     let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
