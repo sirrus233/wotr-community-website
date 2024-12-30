@@ -5,7 +5,6 @@ set -e
 BIN_DIR=$(dirname "$0")
 source "${BIN_DIR}/config.sh"
 
-# Build the binary
 echo "Building the Haskell binary..."
 mkdir -p $BUILD_DIR
 pushd "${BIN_DIR}/.." > /dev/null
@@ -19,11 +18,14 @@ fi
 
 echo "Binary built successfully."
 
-# Upload to server
-echo "Transferring binary to the server..."
+echo "Stopping the server..."
+ssh "$SERVER_USER@$SERVER_HOST" <<EOF
+  sudo systemctl stop $SERVICE_NAME
+EOF
+
+echo "Transferring new binary to the server..."
 scp "$BIN_PATH" "$SERVER_USER@$SERVER_HOST:$APP_DIR/$BIN_NAME"
 
-# Restart service on server
 echo "Restarting the server application..."
 ssh "$SERVER_USER@$SERVER_HOST" <<EOF
   set -e
