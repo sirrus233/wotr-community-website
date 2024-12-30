@@ -29,12 +29,14 @@ type Helpers = {
 type Meta = {
     errorOnSubmit: FieldError;
     successMessage: SuccessMessage;
+    loading: boolean;
 };
 
 const useFormData = (): [FormData, Meta, Helpers] => {
     const [formData, setFormData] = useState(initialFormData);
     const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
     const [successMessage, setSuccessMessage] = useState<SuccessMessage>(null);
+    const [loading, setLoading] = useState(false);
 
     const handleInputChange = <K extends keyof FormData>(field: K) => {
         return (value: FormData[K]["value"]) =>
@@ -102,6 +104,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
                 setErrorOnSubmit(validatedResult);
             } else {
                 setErrorOnSubmit(null);
+                setLoading(true);
 
                 const response = await axios.post(
                     //"http://localhost:8081/submitReport",
@@ -122,6 +125,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
         } catch (error) {
             console.error("Error submitting form:", error);
         }
+        setLoading(false);
     };
 
     const useControlledClearEffect = <
@@ -207,7 +211,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
 
     return [
         formData,
-        { errorOnSubmit, successMessage },
+        { errorOnSubmit, successMessage, loading },
         {
             handleInputChange,
             validateField,
