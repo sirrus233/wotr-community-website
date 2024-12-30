@@ -3,10 +3,10 @@
 
 module Types.Database where
 
-import Data.Time (UTCTime (utctDay), Year, toGregorian)
+import Data.Time (UTCTime (utctDay), toGregorian)
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
-import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side (..), Stronghold, Victory)
+import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side (..), Stronghold, Victory, Year)
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
@@ -49,85 +49,98 @@ share
     ratingAfter Rating
     deriving Show
 
-   PlayerStats
+   PlayerStatsYear
     playerId PlayerId
     year Int
+    winsFree Int
+    winsShadow Int
+    lossesFree Int
+    lossesShadow Int
+    Primary playerId year
+    deriving Show
+
+   PlayerStatsTotal
+    playerId PlayerId
     currentRatingFree Rating
     currentRatingShadow Rating
-    totalWinsFree Int
-    totalWinsShadow Int
-    totalLossesFree Int
-    totalLossesShadow Int
-    yearlyWinsFree Int
-    yearlyWinsShadow Int
-    yearlyLossesFree Int
-    yearlyLossesShadow Int
-    Primary playerId year
+    winsFree Int
+    winsShadow Int
+    lossesFree Int
+    lossesShadow Int
+    Primary playerId
     deriving Show
 |]
 
-currentYear :: (MonadIO m) => m Year
-currentYear = (\(year, _, _) -> pure year) . toGregorian . utctDay =<< liftIO getCurrentTime
+currentYear :: (MonadIO m) => m Int
+currentYear = (\(year, _, _) -> pure $ fromIntegral year) . toGregorian . utctDay =<< liftIO getCurrentTime
 
-defaultPlayerStats :: PlayerId -> Year -> PlayerStats
+defaultPlayerStats :: PlayerId -> Year -> (PlayerStatsTotal, PlayerStatsYear)
 defaultPlayerStats pid year =
-  PlayerStats
-    { playerStatsPlayerId = pid,
-      playerStatsYear = fromIntegral year,
-      playerStatsCurrentRatingFree = 500,
-      playerStatsCurrentRatingShadow = 500,
-      playerStatsTotalWinsFree = 0,
-      playerStatsTotalWinsShadow = 0,
-      playerStatsTotalLossesFree = 0,
-      playerStatsTotalLossesShadow = 0,
-      playerStatsYearlyWinsFree = 0,
-      playerStatsYearlyWinsShadow = 0,
-      playerStatsYearlyLossesFree = 0,
-      playerStatsYearlyLossesShadow = 0
-    }
+  ( PlayerStatsTotal
+      { playerStatsTotalPlayerId = pid,
+        playerStatsTotalCurrentRatingFree = 500,
+        playerStatsTotalCurrentRatingShadow = 500,
+        playerStatsTotalWinsFree = 0,
+        playerStatsTotalWinsShadow = 0,
+        playerStatsTotalLossesFree = 0,
+        playerStatsTotalLossesShadow = 0
+      },
+    PlayerStatsYear
+      { playerStatsYearPlayerId = pid,
+        playerStatsYearYear = year,
+        playerStatsYearWinsFree = 0,
+        playerStatsYearWinsShadow = 0,
+        playerStatsYearLossesFree = 0,
+        playerStatsYearLossesShadow = 0
+      }
+  )
 
-rolloverPlayerStats :: PlayerId -> Year -> PlayerStats -> PlayerStats
-rolloverPlayerStats pid year (PlayerStats {..}) =
-  PlayerStats
-    { playerStatsPlayerId = pid,
-      playerStatsYear = fromIntegral year,
-      playerStatsYearlyWinsFree = 0,
-      playerStatsYearlyWinsShadow = 0,
-      playerStatsYearlyLossesFree = 0,
-      playerStatsYearlyLossesShadow = 0,
-      ..
-    }
-
-updatePlayerStatsWin :: Side -> Rating -> PlayerStats -> PlayerStats
-updatePlayerStatsWin side rating (PlayerStats {..}) = case side of
+updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> (PlayerStatsTotal, PlayerStatsYear)
+updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
-    PlayerStats
-      { playerStatsCurrentRatingFree = rating,
-        playerStatsTotalWinsFree = playerStatsTotalWinsFree + 1,
-        playerStatsYearlyWinsFree = playerStatsYearlyWinsFree + 1,
-        ..
-      }
+    ( PlayerStatsTotal
+        { playerStatsTotalCurrentRatingFree = rating,
+          playerStatsTotalWinsFree = playerStatsTotalWinsFree + 1,
+          ..
+        },
+      PlayerStatsYear
+        { playerStatsYearWinsFree = playerStatsYearWinsFree + 1,
+          ..
+        }
+    )
   Shadow ->
-    PlayerStats
-      { playerStatsCurrentRatingShadow = rating,
-        playerStatsTotalWinsShadow = playerStatsTotalWinsShadow + 1,
-        playerStatsYearlyWinsShadow = playerStatsYearlyWinsShadow + 1,
-        ..
-      }
+    ( PlayerStatsTotal
+        { playerStatsTotalCurrentRatingShadow = rating,
+          playerStatsTotalWinsShadow = playerStatsTotalWinsShadow + 1,
+          ..
+        },
+      PlayerStatsYear
+        { playerStatsYearWinsShadow = playerStatsYearWinsShadow + 1,
+          ..
+        }
+    )
 
-updatePlayerStatsLose :: Side -> Rating -> PlayerStats -> PlayerStats
-updatePlayerStatsLose side rating (PlayerStats {..}) = case side of
+updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> (PlayerStatsTotal, PlayerStatsYear)
+updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
-    PlayerStats
-      { playerStatsCurrentRatingFree = rating,
-        playerStatsTotalLossesFree = playerStatsTotalLossesFree + 1,
-        playerStatsYearlyLossesFree = playerStatsYearlyLossesFree + 1,
-        ..
-      }
+    ( PlayerStatsTotal
+        { playerStatsTotalCurrentRatingFree = rating,
+          playerStatsTotalLossesFree = playerStatsTotalLossesFree + 1,
+          ..
+        },
+      PlayerStatsYear
+        { playerStatsYearLossesFree = playerStatsYearLossesFree + 1,
+          ..
+        }
+    )
   Shadow ->
-    PlayerStats
-      { playerStatsCurrentRatingShadow = rating,
-        playerStatsTotalLossesShadow = playerStatsTotalLossesShadow + 1,
-        playerStatsYearlyLossesShadow = playerStatsYearlyLossesShadow + 1,
-        ..
-      }
+    ( PlayerStatsTotal
+        { playerStatsTotalCurrentRatingShadow = rating,
+          playerStatsTotalLossesShadow = playerStatsTotalLossesShadow + 1,
+          ..
+        },
+      PlayerStatsYear
+        { playerStatsYearLossesShadow = playerStatsYearLossesShadow + 1,
+          ..
+        }
+    )

@@ -1,17 +1,34 @@
 module AppServer where
 
 import Api (Api)
-import App (AppM, runDb)
-import Control.Monad.Logger (logInfoN)
+import AppConfig (AppM)
+import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
 import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
-import Database (getGameReports, getStats, insertGameReport, insertPlayerIfNotExists, insertRatingChange, replacePlayerStats)
+import Database
+  ( DBAction,
+    getGameReports,
+    getPlayerStats,
+    insertGameReport,
+    insertPlayerIfNotExists,
+    insertRatingChange,
+    replacePlayerStats,
+    runDb,
+  )
+import Database.Esqueleto.Experimental (Entity (..))
 import Logging ((<>:))
-import Servant (ServerError (errBody), ServerT, err422, throwError, type (:<|>) (..))
-import Types.Api (GetReportsResponse (GetReportsResponse), RawGameReport (..), SubmitGameReportResponse (..), fromGameReport, toGameReport)
+import Relude.Extra (bimapF)
+import Servant (ServerError (errBody), ServerT, err422, err500, throwError, type (:<|>) (..))
+import Types.Api
+  ( GetReportsResponse (GetReportsResponse),
+    RawGameReport (..),
+    SubmitGameReportResponse (..),
+    fromGameReport,
+    toGameReport,
+  )
 import Types.DataField (Match (..), Rating, Side (..))
-import Types.Database (PlayerStats (..), RatingDiff (..), currentYear, updatePlayerStatsLose, updatePlayerStatsWin)
+import Types.Database (PlayerStatsTotal (..), RatingDiff (..), updatedPlayerStatsLose, updatedPlayerStatsWin)
 import Validation (validateReport)
 
 defaultRating :: Rating
@@ -48,6 +65,14 @@ ratingAdjustment winner loser
     diff = abs (winner - loser)
     (smallAdjust, bigAdjust) = maybe maxThreshold snd (Map.lookupGE diff ratingThresholds)
 
+readOrError :: (Monad m, MonadLogger m) => Text -> DBAction m (Maybe a) -> DBAction m a
+readOrError errMsg action =
+  action >>= \case
+    Just a -> pure a
+    Nothing -> do
+      logErrorN errMsg
+      throwError err500 {errBody = show errMsg}
+
 submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
 submitReportHandler report = case validateReport report of
   Failure errors -> throwError $ err422 {errBody = show errors}
@@ -55,21 +80,23 @@ submitReportHandler report = case validateReport report of
     logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
 
     timestamp <- liftIO getCurrentTime
-    year <- currentYear
 
     -- TODO Normalize spelling/caps
     winnerId <- insertPlayerIfNotExists winner
     loserId <- insertPlayerIfNotExists loser
-
-    winnerStats <- getStats winnerId year
-    loserStats <- getStats loserId year
-
     reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
 
     let (winnerSide, loserSide) = (side, other side)
-    let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStats, getRating loserSide loserStats)
+
+    (winnerStatsTotal, winnerStatsYear) <-
+      bimapF entityVal entityVal (readOrError ("Could not find stats for " <> show winner) $ getPlayerStats winnerId)
+    (loserStatsTotal, loserStatsYear) <-
+      bimapF entityVal entityVal (readOrError ("Could not find stats for " <> show loser) $ getPlayerStats loserId)
+
+    let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
     let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
     let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
+
     logInfoN $ "Rating diff: " <>: adjustment
     logInfoN $ "Adjustment for " <> winner <> " (" <>: side <> "): " <>: winnerRatingOld <> " -> " <>: winnerRating
     logInfoN $ "Adjustment for " <> loser <> " (" <>: other side <> "): " <>: loserRatingOld <> " -> " <>: loserRating
@@ -77,16 +104,16 @@ submitReportHandler report = case validateReport report of
     insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRatingOld winnerRating
     insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRatingOld loserRating
 
-    replacePlayerStats . updatePlayerStatsWin winnerSide winnerRating $ winnerStats
-    replacePlayerStats . updatePlayerStatsLose loserSide loserRating $ loserStats
+    uncurry replacePlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
+    uncurry replacePlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
 
     pure SubmitGameReportResponse {report, winnerRating, loserRating}
   where
     other side = case side of Free -> Shadow; Shadow -> Free
 
-    getRating side (PlayerStats {..}) = case side of
-      Free -> playerStatsCurrentRatingFree
-      Shadow -> playerStatsCurrentRatingShadow
+    getRating side (PlayerStatsTotal {..}) = case side of
+      Free -> playerStatsTotalCurrentRatingFree
+      Shadow -> playerStatsTotalCurrentRatingShadow
 
 getReportsHandler :: AppM GetReportsResponse
 getReportsHandler = runDb getGameReports <&> GetReportsResponse . map fromGameReport

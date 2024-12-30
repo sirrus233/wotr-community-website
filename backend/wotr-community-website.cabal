@@ -54,7 +54,7 @@ library
                       extensions,
                       dependencies
     exposed-modules:  Api,
-                      App,
+                      AppConfig,
                       AppServer,
                       Database,
                       Logging,

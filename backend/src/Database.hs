@@ -1,14 +1,13 @@
 module Database where
 
-import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
-import Data.Time (Year)
+import AppConfig (AppM, Env (..), runAppLogger)
+import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
 import Database.Esqueleto.Experimental
   ( Entity (..),
     Key,
     SqlPersistT,
     desc,
     from,
-    get,
     getBy,
     innerJoin,
     insert,
@@ -16,16 +15,18 @@ import Database.Esqueleto.Experimental
     on,
     orderBy,
     replace,
+    runSqlPool,
     select,
     selectOne,
     table,
     val,
     where_,
+    (&&.),
     (==.),
     (^.),
     type (:&) (..),
   )
-import Logging ((<>:))
+import Servant (ServerError, throwError)
 import Types.DataField (PlayerName)
 import Types.Database
   ( EntityField (..),
@@ -33,76 +34,78 @@ import Types.Database
     Key (..),
     Player (..),
     PlayerId,
-    PlayerStats (..),
+    PlayerStatsTotal (..),
+    PlayerStatsYear (..),
     RatingDiff,
     Unique (..),
     currentYear,
     defaultPlayerStats,
-    rolloverPlayerStats,
   )
 import Prelude hiding (get, on)
 
-getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> SqlPersistT m (Maybe (Entity Player))
-getPlayerByName name = getBy $ UniquePlayerName name
+type DBAction m = ExceptT ServerError (SqlPersistT m)
 
-insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> SqlPersistT m (Key Player)
-insertPlayerIfNotExists name =
-  getPlayerByName name >>= \case
+runDb :: DBAction (LoggingT IO) a -> AppM a
+runDb dbAction = do
+  env <- ask
+  result <- liftIO . runAppLogger env.logger . runSqlPool (runExceptT dbAction) $ env.dbPool
+  case result of
+    Left err -> throwError err
+    Right a -> pure a
+
+getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Maybe (Entity Player))
+getPlayerByName = lift . getBy . UniquePlayerName
+
+insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Key Player)
+insertPlayerIfNotExists name = do
+  player <- getPlayerByName name
+  case player of
     Just (Entity playerKey _) -> pure playerKey
-    Nothing -> do
+    Nothing -> lift $ do
       logInfoN $ "Adding new player " <> name <> " to database."
       playerKey <- insert $ Player name Nothing
       year <- currentYear
-      insert_ $ defaultPlayerStats playerKey year
+      let (totalStats, yearStats) = defaultPlayerStats playerKey year
+      insert_ totalStats
+      insert_ yearStats
       pure playerKey
 
-getStats :: (MonadIO m, MonadLogger m) => PlayerId -> Year -> SqlPersistT m PlayerStats
-getStats pid year =
-  get (PlayerStatsKey pid (fromIntegral year)) >>= \case
-    Just stats -> pure stats
-    Nothing -> do
-      priorStats <- getMostRecentStats pid -- TODO Buggy sadness https://github.com/sirrus233/wotr-community-website/pull/31#discussion_r1897581825
-      let priorYear = priorStats.playerStatsYear
-      logInfoN $ "No stats for PID " <>: pid <> " in year " <>: year <> ". Rolling over from " <>: priorYear <> "."
-      let stats = rolloverPlayerStats pid year priorStats
-      insert_ stats
-      pure stats
-
-getMostRecentStats :: (MonadIO m, MonadLogger m) => PlayerId -> SqlPersistT m PlayerStats
-getMostRecentStats pid =
-  recentStats >>= \case
-    Just (Entity _ stats) -> pure stats
-    Nothing -> do
-      logErrorN $ "Missing stats for PID " <>: pid <> ". Inserting defaults."
-      year <- currentYear
-      let stats = defaultPlayerStats pid year
-      insert_ stats
-      pure stats
-  where
-    recentStats = selectOne $ do
-      stats <- from $ table @PlayerStats
-      where_ (stats ^. PlayerStatsPlayerId ==. val pid)
-      orderBy [desc (stats ^. PlayerStatsYear)]
-      pure stats
-
-replacePlayerStats :: (MonadIO m, MonadLogger m) => PlayerStats -> SqlPersistT m ()
-replacePlayerStats stats@(PlayerStats {..}) = replace (PlayerStatsKey playerStatsPlayerId playerStatsYear) stats
-
-insertRatingChange :: (MonadIO m, MonadLogger m) => RatingDiff -> SqlPersistT m ()
-insertRatingChange = insert_
-
-insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> SqlPersistT m (Key GameReport)
-insertGameReport = insert
-
-getGameReports :: (MonadIO m, MonadLogger m) => SqlPersistT m [(Entity GameReport, Entity Player, Entity Player)]
-getGameReports =
-  select $ do
-    (report :& winner :& loser) <-
+getPlayerStats :: (MonadIO m, MonadLogger m) => PlayerId -> DBAction m (Maybe (Entity PlayerStatsTotal, Entity PlayerStatsYear))
+getPlayerStats pid = do
+  year <- currentYear
+  lift . selectOne $ do
+    (player :& totalStats :& yearStats) <-
       from $
-        table @GameReport
-          `innerJoin` table @Player
-            `on` (\(report :& winner) -> report ^. GameReportWinnerId ==. winner ^. PlayerId)
-          `innerJoin` table @Player
-            `on` (\(report :& _ :& loser) -> report ^. GameReportLoserId ==. loser ^. PlayerId)
-    orderBy [desc (report ^. GameReportTimestamp)]
-    pure (report, winner, loser)
+        table @Player
+          `innerJoin` table @PlayerStatsTotal
+            `on` (\(player :& totalStats) -> player ^. PlayerId ==. totalStats ^. PlayerStatsTotalPlayerId)
+          `innerJoin` table @PlayerStatsYear
+            `on` ( \(player :& _ :& yearStats) ->
+                     (player ^. PlayerId ==. yearStats ^. PlayerStatsYearPlayerId)
+                       &&. (yearStats ^. PlayerStatsYearYear ==. val year)
+                 )
+    where_ (player ^. PlayerId ==. val pid)
+    pure (totalStats, yearStats)
+
+replacePlayerStats :: (MonadIO m, MonadLogger m) => PlayerStatsTotal -> PlayerStatsYear -> DBAction m ()
+replacePlayerStats totalStats@(PlayerStatsTotal {..}) yearStats@(PlayerStatsYear {..}) = lift $ do
+  replace (PlayerStatsTotalKey playerStatsTotalPlayerId) totalStats
+  replace (PlayerStatsYearKey playerStatsYearPlayerId playerStatsYearYear) yearStats
+
+insertRatingChange :: (MonadIO m, MonadLogger m) => RatingDiff -> DBAction m ()
+insertRatingChange = lift . insert_
+
+insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> DBAction m (Key GameReport)
+insertGameReport = lift . insert
+
+getGameReports :: (MonadIO m, MonadLogger m) => DBAction m [(Entity GameReport, Entity Player, Entity Player)]
+getGameReports = lift . select $ do
+  (report :& winner :& loser) <-
+    from $
+      table @GameReport
+        `innerJoin` table @Player
+          `on` (\(report :& winner) -> report ^. GameReportWinnerId ==. winner ^. PlayerId)
+        `innerJoin` table @Player
+          `on` (\(report :& _ :& loser) -> report ^. GameReportLoserId ==. loser ^. PlayerId)
+  orderBy [desc (report ^. GameReportTimestamp)]
+  pure (report, winner, loser)
