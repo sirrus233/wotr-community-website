@@ -43,7 +43,7 @@ vpValue IronHills = 1
 vpValue MountGundabad = 2
 vpValue Angmar = 1
 vpValue Moria = 2
-vpValue DolGoldur = 2
+vpValue DolGuldur = 2
 vpValue Orthanc = 2
 vpValue Morannon = 2
 vpValue BaradDur = 2
@@ -73,7 +73,7 @@ strongholdSide expansions stronghold
       MountGundabad -> Shadow
       Angmar -> Shadow
       Moria -> Shadow
-      DolGoldur -> Shadow
+      DolGuldur -> Shadow
       Orthanc -> Shadow
       Morannon -> Shadow
       BaradDur -> Shadow

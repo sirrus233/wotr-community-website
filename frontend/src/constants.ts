@@ -29,7 +29,6 @@ export const strongholds = [
     "HelmsDeep",
     "Lorien",
     "WoodlandRealm",
-    "Erebor",
     "MinasTirith",
     "DolAmroth",
     "Shire",
@@ -38,16 +37,19 @@ export const strongholds = [
     "Pelargir",
     "EredLuin",
     "IronHills",
+    "MountGundabad",
+    "Moria",
+    "DolGuldur",
+    "Orthanc",
+    "Morannon",
+    "BaradDur",
+    "MinasMorgul",
+    "Umbar",
+    "Angmar",
+    "FarHarad",
+    "SouthRhun",
+    "Erebor",
 ] as const;
-
-export const cities: (typeof strongholds)[number][] = [
-    "Shire",
-    "Edoras",
-    "Dale",
-    "Pelargir",
-    "EredLuin",
-    "IronHills",
-];
 
 export const optionalFields = [
     "competition",

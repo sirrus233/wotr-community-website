@@ -1,14 +1,16 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import {
+    Expansion,
     FieldError,
     FormData,
     GameReportPayload,
+    Stronghold,
     SuccessMessage,
     ValidFormData,
     ValueOf,
 } from "../../types";
-import { ErrorMessage, optionalFields } from "../../constants";
+import { ErrorMessage, optionalFields, strongholds } from "../../constants";
 import initialFormData from "./initialFormData";
 
 type Helpers = {
@@ -18,6 +20,10 @@ type Helpers = {
     validateField: <K extends keyof FormData>(field: K) => () => void;
     handleSubmit: () => Promise<void>;
     setSuccessMessage: (message: SuccessMessage) => void;
+    isStrongholdInPlay: (
+        expansions: Expansion[],
+        stronghold: Stronghold
+    ) => boolean;
 };
 
 type Meta = {
@@ -138,6 +144,25 @@ const useFormData = (): [FormData, Meta, Helpers] => {
         }, [controlField]);
     };
 
+    const useStrongholdDeselectEffect = (
+        deselectedStronghold: Stronghold,
+        controlCondition: boolean
+    ) => {
+        useEffect(() => {
+            if (!controlCondition) {
+                setFormData((formData) => ({
+                    ...formData,
+                    strongholds: {
+                        ...formData.strongholds,
+                        value: formData.strongholds.value.filter(
+                            (stronghold) => stronghold !== deselectedStronghold
+                        ),
+                    },
+                }));
+            }
+        }, [controlCondition]);
+    };
+
     useEffect(
         function resetForm() {
             if (successMessage) setFormData(initialFormData);
@@ -172,10 +197,23 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     useControlledClearEffect(formData.didFellowshipReachMordor.value, "mordor");
     useControlledClearEffect(formData.wasAragornCrowned.value, "aragornTurn");
 
+    strongholds.filter(isStrongholdConditional).map((stronghold) => {
+        useStrongholdDeselectEffect(
+            stronghold,
+            isStrongholdInPlay(formData.expansions.value, stronghold)
+        );
+    });
+
     return [
         formData,
         { errorOnSubmit, successMessage },
-        { handleInputChange, validateField, handleSubmit, setSuccessMessage },
+        {
+            handleInputChange,
+            validateField,
+            handleSubmit,
+            isStrongholdInPlay,
+            setSuccessMessage,
+        },
     ];
 };
 
@@ -214,6 +252,47 @@ function toPayload(formData: ValidFormData): GameReportPayload {
         interestRating: formData.interestRating.value,
         comment: formData.comment.value,
     };
+}
+
+function isStrongholdInPlay(
+    expansions: Expansion[],
+    stronghold: Stronghold
+): boolean {
+    switch (stronghold) {
+        case "EredLuin":
+            return expansions.includes("Cities");
+        case "SouthRhun":
+            return expansions.includes("Cities");
+        case "IronHills":
+            return expansions.includes("FateOfErebor");
+        case "Shire":
+        case "Edoras":
+        case "Dale":
+        case "Pelargir":
+        case "Rivendell":
+        case "GreyHavens":
+        case "HelmsDeep":
+        case "Lorien":
+        case "WoodlandRealm":
+        case "MinasTirith":
+        case "DolAmroth":
+        case "Erebor":
+        case "Angmar":
+        case "FarHarad":
+        case "MountGundabad":
+        case "Moria":
+        case "DolGuldur":
+        case "Orthanc":
+        case "Morannon":
+        case "BaradDur":
+        case "MinasMorgul":
+        case "Umbar":
+            return true;
+    }
+}
+
+function isStrongholdConditional(stronghold: Stronghold): boolean {
+    return !isStrongholdInPlay([], stronghold);
 }
 
 function objectKeys<T extends object>(obj: T): Array<keyof T> {
