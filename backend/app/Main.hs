@@ -8,7 +8,8 @@ import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigratio
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
 import Logging (log, stdoutLogger)
-import Network.Wai.Handler.Warp (run)
+import Network.Wai.Handler.Warp (defaultSettings, setPort)
+import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Servant (Application, hoistServer)
 import Servant.Server (serve)
@@ -21,8 +22,8 @@ corsMiddleware = cors $ const $ Just policy
   where
     policy =
       CorsResourcePolicy
-        { corsOrigins = Just (["http://127.0.0.1:3000"], True),
-          corsMethods = ["POST"],
+        { corsOrigins = Nothing,
+          corsMethods = ["HEAD", "GET", "POST"],
           corsRequestHeaders = ["content-type"],
           corsExposedHeaders = Nothing,
           corsMaxAge = Nothing,
@@ -50,4 +51,9 @@ main = do
   mapM_ (log logger LevelDebug . toLogStr) migrations
 
   log logger LevelInfo "Starting server."
-  run 8081 $ app env
+
+  let certFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/fullchain.pem"
+  let keyFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/privkey.pem"
+  let tlsSettings_ = tlsSettings certFile keyFile
+  let settings = setPort 8080 defaultSettings
+  runTLS tlsSettings_ settings $ app env
