@@ -1,5 +1,6 @@
 import "@fontsource/inter";
 import React from "react";
+import CircularProgress from "@mui/joy/CircularProgress";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
@@ -27,7 +28,7 @@ import VictoryPoints from "./VictoryPoints";
 function GameReportForm() {
     const [
         formData,
-        { errorOnSubmit, successMessage },
+        { errorOnSubmit, successMessage, loading },
         {
             handleInputChange,
             validateField,
@@ -395,7 +396,13 @@ function GameReportForm() {
                     validate={validateField("comment")}
                 />
             </GameReportFormElement>
-            <Button onClick={handleSubmit}>Submit</Button>
+            <Button
+                onClick={handleSubmit}
+                disabled={loading}
+                startDecorator={loading ? <CircularProgress /> : undefined}
+            >
+                {loading ? "Submitting..." : "Submit"}
+            </Button>
             {errorOnSubmit && (
                 <Typography color="danger">{errorOnSubmit}</Typography>
             )}
