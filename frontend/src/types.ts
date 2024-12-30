@@ -77,4 +77,28 @@ export type GameReportPayload = {
     >[K]["value"];
 };
 
+export interface LeaderboardEntry {
+    pid: number;
+    name: string;
+    country: string | null;
+    currentRatingFree: number;
+    currentRatingShadow: number;
+    averageRating: number;
+    totalGames: number;
+    totalWinsFree: number;
+    totalWinsShadow: number;
+    totalLossesFree: number;
+    totalLossesShadow: number;
+    totalWinRateFree: number;
+    totalWinRateShadow: number;
+    year: number;
+    yearlyGames: number;
+    yearlyWinsFree: number;
+    yearlyWinsShadow: number;
+    yearlyLossesFree: number;
+    yearlyLossesShadow: number;
+    yearlyWinRateFree: number;
+    yearlyWinRateShadow: number;
+}
+
 export type ValueOf<T> = T[keyof T];
