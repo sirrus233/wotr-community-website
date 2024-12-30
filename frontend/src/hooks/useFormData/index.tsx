@@ -196,7 +196,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
     useControlledClearEffect(formData.didFellowshipReachMordor.value, "mordor");
     useControlledClearEffect(formData.wasAragornCrowned.value, "aragornTurn");
 
-    strongholds.map((stronghold) => {
+    strongholds.filter(isStrongholdConditional).map((stronghold) => {
         useStrongholdDeselectEffect(
             stronghold,
             isStrongholdInPlay(formData.expansions.value, stronghold)
@@ -288,6 +288,10 @@ function isStrongholdInPlay(
         case "Umbar":
             return true;
     }
+}
+
+function isStrongholdConditional(stronghold: Stronghold): boolean {
+    return !isStrongholdInPlay([], stronghold);
 }
 
 function objectKeys<T extends object>(obj: T): Array<keyof T> {
