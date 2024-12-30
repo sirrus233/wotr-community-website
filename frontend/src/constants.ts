@@ -77,6 +77,27 @@ export const payloadFields = [
     "interestRating",
 ] as const;
 
+export const serverValidationErrors = [
+    "VictoryConditionConflictSPRV",
+    "VictoryConditionConflictFPRV",
+    "VictoryConditionConflictSPMV",
+    "VictoryConditionConflictFPMV",
+    "VictoryConditionConflictConcession",
+    "InvalidSPMV",
+    "InvalidFPMV",
+    "InvalidSPRV",
+    "InvalidFPRV",
+    "CompetitionMismatch",
+    "LeagueExpansionMismatch",
+    "TreebeardExpansionMismatch",
+    "TurnsOutOfRange",
+    "CorruptionOutOfRange",
+    "MordorOutOfRange",
+    "InitialEyesOutOfRange",
+    "InterestRatingOutOfRange",
+    "InvalidStronghold",
+] as const;
+
 export enum ErrorMessage {
     Required = "Required",
     OnSubmit = "Could not submit, please resolve errors",
