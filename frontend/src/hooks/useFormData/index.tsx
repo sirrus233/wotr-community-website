@@ -144,12 +144,6 @@ const useFormData = (): [FormData, Meta, Helpers] => {
         }, [controlField]);
     };
 
-    useEffect(
-        function resetForm() {
-            if (successMessage) setFormData(initialFormData);
-        },
-        [successMessage]
-    );
     const useStrongholdDeselectEffect = (
         deselectedStronghold: Stronghold,
         controlCondition: boolean
@@ -168,6 +162,13 @@ const useFormData = (): [FormData, Meta, Helpers] => {
             }
         }, [controlCondition]);
     };
+
+    useEffect(
+        function resetForm() {
+            if (successMessage) setFormData(initialFormData);
+        },
+        [successMessage]
+    );
 
     useControlledClearEffect(
         formData.match.value,
