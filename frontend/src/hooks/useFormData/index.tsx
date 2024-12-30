@@ -5,12 +5,19 @@ import {
     FieldError,
     FormData,
     GameReportPayload,
+    ServerErrorBody,
+    ServerValidationError,
     Stronghold,
     SuccessMessage,
     ValidFormData,
     ValueOf,
 } from "../../types";
-import { ErrorMessage, optionalFields, strongholds } from "../../constants";
+import {
+    ErrorMessage,
+    optionalFields,
+    serverValidationErrors,
+    strongholds,
+} from "../../constants";
 import initialFormData from "./initialFormData";
 
 type Helpers = {
@@ -124,6 +131,11 @@ const useFormData = (): [FormData, Meta, Helpers] => {
             }
         } catch (error) {
             console.error("Error submitting form:", error);
+            if (isServerError(error)) {
+                setErrorOnSubmit(toErrorMessage(error));
+            } else {
+                setErrorOnSubmit("Something went wrong.");
+            }
         }
         setLoading(false);
     };
@@ -302,4 +314,90 @@ function isStrongholdConditional(stronghold: Stronghold): boolean {
 
 function objectKeys<T extends object>(obj: T): Array<keyof T> {
     return Object.keys(obj) as Array<keyof T>;
+}
+
+function isServerError(error: unknown): error is ServerErrorBody {
+    return (
+        typeof error === "object" &&
+        error !== null &&
+        "status" in error &&
+        typeof error.status === "number" &&
+        "response" in error &&
+        typeof error.response === "object" &&
+        error.response !== null &&
+        "data" in error.response &&
+        typeof error.response.data === "string"
+    );
+}
+
+function toErrorMessage(error: ServerErrorBody): string {
+    if (error.status === 422) {
+        const parsedResult = parseValidationResult(error.response.data);
+        if (parsedResult.length) {
+            const errorMessage = parsedResult
+                .map(validationErrorToMessage)
+                .join(", ");
+            return (
+                errorMessage.slice(0, 1).toUpperCase() + errorMessage.slice(1)
+            );
+        }
+    }
+    return "Something went wrong.";
+}
+
+function parseValidationResult(
+    serverValidationResult: string
+): ServerValidationError[] {
+    const parsedResult = serverValidationResult
+        .slice(1, serverValidationResult.length - 1)
+        .split(",");
+
+    return parsedResult.every((error) =>
+        serverValidationErrors.includes(error as ServerValidationError)
+    )
+        ? (parsedResult as ServerValidationError[])
+        : [];
+}
+
+function validationErrorToMessage(
+    validationError: ServerValidationError
+): string {
+    switch (validationError) {
+        case "VictoryConditionConflictSPRV":
+            return "conditions met for Shadow ring victory instead of selected victory type";
+        case "VictoryConditionConflictFPRV":
+            return "conditions met for Free Peoples ring victory instead of selected victory type";
+        case "VictoryConditionConflictSPMV":
+            return "conditions met for Shadow military victory instead of selected victory type";
+        case "VictoryConditionConflictFPMV":
+            return "conditions met for Free Peoples military victory instead of selected victory type";
+        case "VictoryConditionConflictConcession":
+            return "conditions met for Concession victory type instead of selected victory type";
+        case "InvalidSPMV":
+            return "invalid Shadow military victory";
+        case "InvalidFPMV":
+            return "invalid Free Peoples military victory";
+        case "InvalidSPRV":
+            return "invalid Shadow ring victory";
+        case "InvalidFPRV":
+            return "invalid Free Peoples ring victory";
+        case "CompetitionMismatch":
+            return "reported competition type does not match reported league";
+        case "LeagueExpansionMismatch":
+            return "reported league does not match reported expansions";
+        case "TreebeardExpansionMismatch":
+            return "reported Treebeard muster does not match reported expansions";
+        case "TurnsOutOfRange":
+            return "invalid ending game turn selection";
+        case "CorruptionOutOfRange":
+            return "invalid fellowship corruption selection";
+        case "MordorOutOfRange":
+            return "invalid Mordor track selection";
+        case "InitialEyesOutOfRange":
+            return "invalid number of eyes allocated by Shadow on turn 1";
+        case "InterestRatingOutOfRange":
+            return "invalid interest rating selection";
+        case "InvalidStronghold":
+            return "invalid stronghold selections for the indicated expansions";
+    }
 }

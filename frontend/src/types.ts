@@ -5,6 +5,7 @@ import {
     matchTypes,
     optionalFields,
     payloadFields,
+    serverValidationErrors,
     sides,
     strongholds,
     victoryTypes,
@@ -29,6 +30,16 @@ export type OptionalField = (typeof optionalFields)[number];
 export type PayloadField = (typeof payloadFields)[number];
 
 export type SuccessMessage = string | null;
+
+export type ServerErrorBody = {
+    message: string;
+    status: number;
+    response: {
+        data: string;
+    };
+};
+
+export type ServerValidationError = (typeof serverValidationErrors)[number];
 
 export type FieldError = string | null;
 
