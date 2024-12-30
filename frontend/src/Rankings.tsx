@@ -16,7 +16,8 @@ function Rankings() {
     const getLeaderboard = async () => {
         try {
             const response = await axios.get(
-                "http://localhost:8081/leaderboard"
+                // "http://localhost:8081/leaderboard"
+                "https://api.waroftheringcommunity.net:8080/leaderboard"
             );
             setEntries(response.data.entries);
         } catch (error) {
