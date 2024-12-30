@@ -10,6 +10,7 @@ data ReportError
   | VictoryConditionConflictSPMV
   | VictoryConditionConflictFPMV
   | VictoryConditionConflictConcession
+  | NoVictoryConditionMet
   | InvalidSPMV
   | InvalidFPMV
   | InvalidSPRV
@@ -90,12 +91,13 @@ victoryPoints (RawGameReport {strongholds, expansions}) side =
 
 validateVictory :: RawGameReport -> Validation [ReportError] RawGameReport
 validateVictory report
-  | victory /= correctVictory = case correctVictory of
-      (Shadow, Ring) -> Failure [VictoryConditionConflictSPRV]
-      (Free, Ring) -> Failure [VictoryConditionConflictFPRV]
-      (Shadow, Military) -> Failure [VictoryConditionConflictSPMV]
-      (Free, Military) -> Failure [VictoryConditionConflictFPMV]
-      (_, Concession) -> Failure [VictoryConditionConflictConcession]
+  | Just victory /= correctVictory = case correctVictory of
+      Just (Shadow, Ring) -> Failure [VictoryConditionConflictSPRV]
+      Just (Free, Ring) -> Failure [VictoryConditionConflictFPRV]
+      Just (Shadow, Military) -> Failure [VictoryConditionConflictSPMV]
+      Just (Free, Military) -> Failure [VictoryConditionConflictFPMV]
+      Just (_, Concession) -> Failure [VictoryConditionConflictConcession]
+      Nothing -> Failure [NoVictoryConditionMet]
   | spmv && victoryPoints report Shadow < 10 = Failure [InvalidSPMV]
   | fpmv && victoryPoints report Free < 4 = Failure [InvalidFPMV]
   | sprv && report.corruption < 12 = Failure [InvalidSPRV]
@@ -108,12 +110,13 @@ validateVictory report
     fpmv = report.side == Free && report.victory == Military
     victory = (report.side, report.victory)
     correctVictory
-      | report.corruption >= 12 = (Shadow, Ring)
-      | report.mordor == Just 5 = (Free, Ring)
-      | report.side == Free && report.victory == Concession = (Free, Concession)
-      | report.side == Shadow && report.victory == Concession = (Shadow, Concession)
-      | victoryPoints report Shadow >= 10 = (Shadow, Military)
-      | otherwise = (Free, Military)
+      | report.corruption >= 12 = Just (Shadow, Ring)
+      | report.mordor == Just 5 = Just (Free, Ring)
+      | report.side == Free && report.victory == Concession = Just (Free, Concession)
+      | report.side == Shadow && report.victory == Concession = Just (Shadow, Concession)
+      | victoryPoints report Shadow >= 10 = Just (Shadow, Military)
+      | victoryPoints report Free >= 4 = Just (Free, Military)
+      | otherwise = Nothing
 
 validateCompetition :: RawGameReport -> Validation [ReportError] RawGameReport
 validateCompetition report
