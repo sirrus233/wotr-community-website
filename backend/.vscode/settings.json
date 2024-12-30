@@ -6,6 +6,9 @@
         "aragorn",
         "Barad",
         "bimap",
+        "certbot",
+        "certonly",
+        "chgrp",
         "dwarven",
         "Edoras",
         "Erebor",
@@ -28,8 +31,8 @@
         "Moria",
         "Orthanc",
         "Pelargir",
-        "Relude",
         "privkey",
+        "Relude",
         "Rhun",
         "Rivendell",
         "Semigroup",
@@ -40,8 +43,10 @@
         "Umbar",
         "uncurry",
         "Unranked",
+        "usermod",
         "utct",
-        "waroftheringcommunity"
+        "waroftheringcommunity",
+        "wotr"
     ],
     "cSpell.ignorePaths": [".vscode", "wotr-community-website.cabal"]
 }
