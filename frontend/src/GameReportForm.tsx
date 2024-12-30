@@ -448,7 +448,6 @@ function strongholdSide(expansions: Expansion[], stronghold: Stronghold): Side {
 function getStrongholdLabel(stronghold: Stronghold): string {
     switch (stronghold) {
         case "Rivendell":
-        case "Lorien":
         case "Erebor":
         case "Shire":
         case "Edoras":
@@ -460,6 +459,8 @@ function getStrongholdLabel(stronghold: Stronghold): string {
         case "Morannon":
         case "Umbar":
             return stronghold;
+        case "Lorien":
+            return "Lórien";
         case "GreyHavens":
             return "Grey Havens";
         case "HelmsDeep":
