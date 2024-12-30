@@ -27,6 +27,7 @@ function Rankings() {
     };
 
     const refresh = () => {
+        setError(null);
         setLoading(true);
         getLeaderboard();
     };
