@@ -60,7 +60,13 @@ function Rankings() {
             {loading ? (
                 "Loading..."
             ) : (
-                <Box sx={{ overflow: "auto", py: 1 }}>
+                <Box
+                    sx={{
+                        overflow: "auto",
+                        boxShadow: "lg",
+                        borderRadius: "sm",
+                    }}
+                >
                     <Table
                         aria-label="Rankings"
                         noWrap
@@ -69,9 +75,16 @@ function Rankings() {
                         stickyHeader
                         sx={{
                             tableLayout: "auto",
-                            borderRadius: "sm",
-                            overflow: "auto",
+                            border: "none",
                             "& tr > *": { textAlign: "center" },
+                            "& thead > tr:first-child > *:first-child": {
+                                pl: 2,
+                            },
+                            "& tbody > tr > *:first-child": { pl: 2 },
+                            "& thead > tr:first-child > *:last-child": {
+                                pr: 2,
+                            },
+                            "& tbody > tr > *:last-child": { pr: 2 },
                         }}
                     >
                         <thead>
@@ -132,22 +145,22 @@ function Rankings() {
                                 {/* FP Base */}
                                 <TableHeader side="Free">Win</TableHeader>
                                 <TableHeader side="Free">Loss</TableHeader>
-                                <TableHeader side="Free">%</TableHeader>
+                                <TableHeader>%</TableHeader>
 
                                 {/* SP Base */}
                                 <TableHeader side="Shadow">Win</TableHeader>
                                 <TableHeader side="Shadow">Loss</TableHeader>
-                                <TableHeader side="Shadow">%</TableHeader>
+                                <TableHeader>%</TableHeader>
 
                                 {/* FP LOME */}
                                 <TableHeader side="Free">Win</TableHeader>
                                 <TableHeader side="Free">Loss</TableHeader>
-                                <TableHeader side="Free">%</TableHeader>
+                                <TableHeader>%</TableHeader>
 
                                 {/* SP LOME */}
                                 <TableHeader side="Shadow">Win</TableHeader>
                                 <TableHeader side="Shadow">Loss</TableHeader>
-                                <TableHeader side="Shadow">%</TableHeader>
+                                <TableHeader>%</TableHeader>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,9 +189,9 @@ function Rankings() {
                                         {entry.year === CURRENT_YEAR &&
                                             entry.yearlyLossesFree}
                                     </TableCell>
-                                    <TableCell side="Free">
+                                    <TableCell>
                                         {entry.year === CURRENT_YEAR &&
-                                            entry.yearlyWinRateFree}
+                                            toPercent(entry.yearlyWinRateFree)}
                                     </TableCell>
                                     <TableCell side="Shadow" light>
                                         {entry.year === CURRENT_YEAR &&
@@ -188,16 +201,18 @@ function Rankings() {
                                         {entry.year === CURRENT_YEAR &&
                                             entry.yearlyLossesShadow}
                                     </TableCell>
-                                    <TableCell side="Shadow">
+                                    <TableCell>
                                         {entry.year === CURRENT_YEAR &&
-                                            entry.yearlyWinRateShadow}
+                                            toPercent(
+                                                entry.yearlyWinRateShadow
+                                            )}
                                     </TableCell>
                                     <TableCell side="Free" light />
                                     <TableCell side="Free" />
-                                    <TableCell side="Free" />
+                                    <TableCell />
                                     <TableCell side="Shadow" light />
                                     <TableCell side="Shadow" />
-                                    <TableCell side="Shadow" />
+                                    <TableCell />
                                     <TableCell side="Free" light />
                                     <TableCell />
                                 </tr>
@@ -275,4 +290,8 @@ function TableHeader({
             {children}
         </th>
     );
+}
+
+function toPercent(num: number) {
+    return Math.round(num * 100) + "%";
 }
