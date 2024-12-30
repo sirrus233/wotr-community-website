@@ -14,6 +14,9 @@ type AppM = ReaderT Env (LoggingT Handler)
 databaseFile :: FilePath
 databaseFile = "data/db.sqlite"
 
+logFile :: FilePath
+logFile = "logs/app.log"
+
 redisConfig :: ConnectInfo
 redisConfig = defaultConnectInfo
 

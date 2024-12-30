@@ -1,13 +1,13 @@
 module Main where
 
 import Api (api)
-import AppConfig (Env (..), databaseFile, nt, redisConfig, runAppLogger)
+import AppConfig (Env (..), databaseFile, logFile, nt, redisConfig, runAppLogger)
 import AppServer (server)
 import Control.Monad.Logger (LogLevel (..), ToLogStr (toLogStr))
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigrationQuiet, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
-import Logging (log, stdoutLogger)
+import Logging (fileLogger, log)
 import Network.Wai.Handler.Warp (defaultSettings, setPort)
 import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
@@ -38,8 +38,9 @@ app env = corsMiddleware . serve api . hoistServer api (nt env) $ server
 main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
+  createDirectoryIfMissing True . takeDirectory $ logFile
 
-  logger <- stdoutLogger
+  logger <- fileLogger logFile
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
 

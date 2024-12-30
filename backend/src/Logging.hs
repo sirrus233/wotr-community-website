@@ -39,6 +39,12 @@ stdoutLogger = do
   (logger, _) <- newTimedFastLogger timeCache (LogStdout defaultBufSize)
   pure $ \_ _ level msg -> logger (\time -> formatLogMsg time level msg)
 
+fileLogger :: FilePath -> IO Logger
+fileLogger path = do
+  timeCache <- newTimeCache simpleTimeFormat
+  (logger, _) <- newTimedFastLogger timeCache (LogFileNoRotate path defaultBufSize)
+  pure $ \_ _ level msg -> logger (\time -> formatLogMsg time level msg)
+
 log :: Logger -> LogLevel -> LogStr -> IO ()
 log logger = logger defaultLoc ""
 
