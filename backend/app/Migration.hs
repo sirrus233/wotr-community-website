@@ -72,7 +72,7 @@ main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
-  ladderData <- readFileLBS "/home/bradley/downloads/ladder.csv"
+  ladderData <- readFileLBS "migration/ladder.csv"
   case decode NoHeader ladderData of
     Left err -> putStrLn err
     Right rawLadderEntries -> do
@@ -85,7 +85,7 @@ main = do
       let entries = V.toList $ fmap toParsedLadderEntry rawLadderEntries
       players <- traverse (\entry -> runSqlPool (insertEntry entry) dbPool) entries
 
-      reportData <- readFileLBS "/home/bradley/downloads/reports.csv"
+      reportData <- readFileLBS "migration/reports.csv"
       case decode NoHeader reportData :: Either String (V.Vector GameReportWithTrash) of
         Left err -> putStrLn err
         Right rawGameReports -> do
