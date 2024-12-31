@@ -8,7 +8,7 @@ import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigratio
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Logging (stdoutLogger)
 import Migration.Database (insertEntry, insertGameReport, insertPlayer)
-import Migration.Types (GameReportWithTrash, toParsedGameReport, toParsedLadderEntry)
+import Migration.Types (GameReportWithTrash, PlayerBanList, toParsedGameReport, toParsedLadderEntry)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 import Types.DataField (PlayerName)
@@ -68,6 +68,9 @@ tragedies =
     "DR Sigma"
   ]
 
+banList :: PlayerBanList
+banList = ["mordak", "mellowsedge"]
+
 main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
@@ -82,7 +85,7 @@ main = do
 
       sadPlayers <- traverse (\player -> (T.toLower player,) <$> runSqlPool (insertPlayer (T.toLower player)) dbPool) tragedies
 
-      let entries = V.toList $ fmap toParsedLadderEntry rawLadderEntries
+      let entries = mapMaybe (toParsedLadderEntry banList) . V.toList $ rawLadderEntries
       players <- traverse (\entry -> runSqlPool (insertEntry entry) dbPool) entries
 
       reportData <- readFileLBS "migration/reports.csv"

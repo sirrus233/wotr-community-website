@@ -7,6 +7,8 @@ import Relude.Extra (lookup)
 import Types.DataField (Competition (..), Expansion (..), League (..), Match (..), PlayerName, Side (..), Stronghold (..), Victory (..))
 import Types.Database (PlayerId)
 
+type PlayerBanList = [PlayerName]
+
 data LadderEntryWithTrash = LadderEntryWithTrash
   { rank :: (),
     flag :: (),
@@ -70,12 +72,11 @@ data ParsedLadderEntry = ParsedLadderEntry
     lomeSpLoss :: Int
   }
 
-toParsedLadderEntry :: LadderEntryWithTrash -> ParsedLadderEntry
-toParsedLadderEntry (LadderEntryWithTrash {..}) =
-  ParsedLadderEntry
-    { player = T.toLower player,
-      ..
-    }
+toParsedLadderEntry :: PlayerBanList -> LadderEntryWithTrash -> Maybe ParsedLadderEntry
+toParsedLadderEntry banList (LadderEntryWithTrash {..}) =
+  if player `elem` banList
+    then Nothing
+    else Just ParsedLadderEntry {player = T.toLower player, ..}
 
 data GameReportWithTrash = GameReportWithTrash
   { gameId :: (),
