@@ -4,61 +4,15 @@ import AppConfig (databaseFile, runAppLogger)
 import Data.Csv (HasHeader (..), decode)
 import Data.Text qualified as T
 import Data.Vector qualified as V
-import Database.Esqueleto.Experimental
-  ( PersistEntity (..),
-    SqlPersistT,
-    defaultConnectionPoolConfig,
-    insert,
-    insert_,
-    runMigration,
-    runSqlPool,
-  )
+import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Logging (stdoutLogger)
-import Migration.Types
-  ( GameReportWithTrash,
-    LadderEntry (..),
-    ParsedGameReport (..),
-    toGameReport,
-    toLadderEntry,
-  )
+import Migration.Database (insertEntry, insertGameReport, insertPlayer)
+import Migration.Types (GameReportWithTrash, toGameReport, toLadderEntry)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
-import Types.DataField
-  ( PlayerName,
-    Side (..),
-  )
-import Types.Database
-  ( GameReport (..),
-    Player (..),
-    PlayerStatsTotal (..),
-    PlayerStatsYear (..),
-    RatingDiff (..),
-    migrateAll,
-  )
-
-insertPlayer :: (MonadIO m) => Text -> SqlPersistT m (Key Player)
-insertPlayer name = insert $ Player name Nothing
-
-insertStats :: (MonadIO m) => Key Player -> LadderEntry -> SqlPersistT m ()
-insertStats playerId entry = do
-  insert_ $ PlayerStatsTotal playerId entry.freeRating entry.shadowRating entry.gamesPlayedTotal
-  insert_ $ PlayerStatsYear playerId 2024 entry.fpWins entry.spWins entry.fpLoss entry.spLoss
-
-insertEntry :: (MonadIO m) => LadderEntry -> SqlPersistT m (PlayerName, Key Player)
-insertEntry entry = do
-  playerId <- insertPlayer entry.player
-  insertStats playerId entry
-  pure (entry.player, playerId)
-
-insertGameReport :: (MonadIO m) => ParsedGameReport -> SqlPersistT m ()
-insertGameReport (ParsedGameReport {..}) = do
-  rid <- insert $ GameReport {..}
-  let losingSide = case gameReportSide of
-        Free -> Shadow
-        Shadow -> Free
-  insert_ $ RatingDiff gameReportTimestamp gameReportWinnerId rid gameReportSide winnerRatingBefore winnerRatingAfter
-  insert_ $ RatingDiff gameReportTimestamp gameReportLoserId rid losingSide loserRatingBefore loserRatingAfter
+import Types.DataField (PlayerName)
+import Types.Database (migrateAll)
 
 tragedies :: [PlayerName]
 tragedies =
