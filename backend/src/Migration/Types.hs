@@ -54,7 +54,7 @@ data LadderEntryWithTrash = LadderEntryWithTrash
 
 instance FromRecord LadderEntryWithTrash
 
-data LadderEntry = LadderEntry
+data ParsedLadderEntry = ParsedLadderEntry
   { player :: Text,
     shadowRating :: Int,
     freeRating :: Int,
@@ -70,9 +70,9 @@ data LadderEntry = LadderEntry
     lomeSpLoss :: Int
   }
 
-toLadderEntry :: LadderEntryWithTrash -> LadderEntry
-toLadderEntry (LadderEntryWithTrash {..}) =
-  LadderEntry
+toParsedLadderEntry :: LadderEntryWithTrash -> ParsedLadderEntry
+toParsedLadderEntry (LadderEntryWithTrash {..}) =
+  ParsedLadderEntry
     { player = T.toLower player,
       ..
     }
@@ -203,8 +203,8 @@ data ParsedGameReport = ParsedGameReport
     loserRatingAfter :: Int
   }
 
-toGameReport :: HashMap PlayerName PlayerId -> GameReportWithTrash -> ParsedGameReport
-toGameReport playersByName report =
+toParsedGameReport :: HashMap PlayerName PlayerId -> GameReportWithTrash -> ParsedGameReport
+toParsedGameReport playersByName report =
   ParsedGameReport
     { gameReportTimestamp,
       gameReportWinnerId,

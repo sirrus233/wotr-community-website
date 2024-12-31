@@ -8,7 +8,7 @@ import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigratio
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Logging (stdoutLogger)
 import Migration.Database (insertEntry, insertGameReport, insertPlayer)
-import Migration.Types (GameReportWithTrash, toGameReport, toLadderEntry)
+import Migration.Types (GameReportWithTrash, toParsedGameReport, toParsedLadderEntry)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 import Types.DataField (PlayerName)
@@ -82,12 +82,12 @@ main = do
 
       sadPlayers <- traverse (\player -> (T.toLower player,) <$> runSqlPool (insertPlayer (T.toLower player)) dbPool) tragedies
 
-      let entries = V.toList $ fmap toLadderEntry rawLadderEntries
+      let entries = V.toList $ fmap toParsedLadderEntry rawLadderEntries
       players <- traverse (\entry -> runSqlPool (insertEntry entry) dbPool) entries
 
       reportData <- readFileLBS "/home/bradley/downloads/reports.csv"
       case decode NoHeader reportData :: Either String (V.Vector GameReportWithTrash) of
         Left err -> putStrLn err
         Right rawGameReports -> do
-          let reports = V.toList $ fmap (toGameReport (fromList $ sadPlayers <> players)) rawGameReports
+          let reports = V.toList $ fmap (toParsedGameReport (fromList $ sadPlayers <> players)) rawGameReports
           traverse_ (\report -> runSqlPool (insertGameReport report) dbPool) reports
