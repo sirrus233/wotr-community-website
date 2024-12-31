@@ -63,10 +63,7 @@ share
     playerId PlayerId
     currentRatingFree Rating
     currentRatingShadow Rating
-    winsFree Int
-    winsShadow Int
-    lossesFree Int
-    lossesShadow Int
+    totalGames Int
     Primary playerId
     deriving Show
 |]
@@ -80,10 +77,7 @@ defaultPlayerStats pid year =
       { playerStatsTotalPlayerId = pid,
         playerStatsTotalCurrentRatingFree = 500,
         playerStatsTotalCurrentRatingShadow = 500,
-        playerStatsTotalWinsFree = 0,
-        playerStatsTotalWinsShadow = 0,
-        playerStatsTotalLossesFree = 0,
-        playerStatsTotalLossesShadow = 0
+        playerStatsTotalTotalGames = 0
       },
     PlayerStatsYear
       { playerStatsYearPlayerId = pid,
@@ -100,7 +94,7 @@ updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..})
   Free ->
     ( PlayerStatsTotal
         { playerStatsTotalCurrentRatingFree = rating,
-          playerStatsTotalWinsFree = playerStatsTotalWinsFree + 1,
+          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
           ..
         },
       PlayerStatsYear
@@ -111,7 +105,7 @@ updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..})
   Shadow ->
     ( PlayerStatsTotal
         { playerStatsTotalCurrentRatingShadow = rating,
-          playerStatsTotalWinsShadow = playerStatsTotalWinsShadow + 1,
+          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
           ..
         },
       PlayerStatsYear
@@ -125,7 +119,7 @@ updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}
   Free ->
     ( PlayerStatsTotal
         { playerStatsTotalCurrentRatingFree = rating,
-          playerStatsTotalLossesFree = playerStatsTotalLossesFree + 1,
+          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
           ..
         },
       PlayerStatsYear
@@ -136,7 +130,7 @@ updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}
   Shadow ->
     ( PlayerStatsTotal
         { playerStatsTotalCurrentRatingShadow = rating,
-          playerStatsTotalLossesShadow = playerStatsTotalLossesShadow + 1,
+          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
           ..
         },
       PlayerStatsYear

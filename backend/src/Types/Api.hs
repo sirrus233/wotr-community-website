@@ -138,12 +138,6 @@ data LeaderboardEntry = LeaderboardEntry
     currentRatingShadow :: Rating,
     averageRating :: Double,
     totalGames :: Int,
-    totalWinsFree :: Int,
-    totalWinsShadow :: Int,
-    totalLossesFree :: Int,
-    totalLossesShadow :: Int,
-    totalWinRateFree :: Double,
-    totalWinRateShadow :: Double,
     year :: Int,
     yearlyGames :: Int,
     yearlyWinsFree :: Int,
@@ -167,16 +161,7 @@ fromPlayerStats (player, totalStats, yearStats) =
       currentRatingShadow = t.playerStatsTotalCurrentRatingShadow,
       averageRating =
         (fromIntegral t.playerStatsTotalCurrentRatingFree + fromIntegral t.playerStatsTotalCurrentRatingShadow) / 2,
-      totalGames =
-        t.playerStatsTotalWinsFree + t.playerStatsTotalWinsShadow + t.playerStatsTotalLossesFree + t.playerStatsTotalLossesShadow,
-      totalWinsFree = t.playerStatsTotalWinsFree,
-      totalWinsShadow = t.playerStatsTotalWinsShadow,
-      totalLossesFree = t.playerStatsTotalLossesFree,
-      totalLossesShadow = t.playerStatsTotalLossesShadow,
-      totalWinRateFree =
-        fromIntegral t.playerStatsTotalWinsFree / fromIntegral (t.playerStatsTotalWinsFree + t.playerStatsTotalLossesFree),
-      totalWinRateShadow =
-        fromIntegral t.playerStatsTotalWinsShadow / fromIntegral (t.playerStatsTotalWinsShadow + t.playerStatsTotalLossesShadow),
+      totalGames = t.playerStatsTotalTotalGames,
       year = y.playerStatsYearYear,
       yearlyGames =
         y.playerStatsYearWinsFree + y.playerStatsYearWinsShadow + y.playerStatsYearLossesFree + y.playerStatsYearLossesShadow,
