@@ -83,6 +83,7 @@ export const serverValidationErrors = [
     "VictoryConditionConflictSPMV",
     "VictoryConditionConflictFPMV",
     "VictoryConditionConflictConcession",
+    "NoVictoryConditionMet",
     "InvalidSPMV",
     "InvalidFPMV",
     "InvalidSPRV",

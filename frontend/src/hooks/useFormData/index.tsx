@@ -373,6 +373,8 @@ function validationErrorToMessage(
             return "conditions met for Free Peoples military victory instead of selected victory type";
         case "VictoryConditionConflictConcession":
             return "conditions met for Concession victory type instead of selected victory type";
+        case "NoVictoryConditionMet":
+            return "no victory conditions met";
         case "InvalidSPMV":
             return "invalid Shadow military victory";
         case "InvalidFPMV":
