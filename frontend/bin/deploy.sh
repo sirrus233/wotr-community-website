@@ -10,8 +10,10 @@ BUILD_DIR="${BIN_DIR}/../dist"
 echo "Starting frontend deployment..."
 
 echo "Building the frontend..."
+pushd "${BIN_DIR}/.." > /dev/null
 npm install
 npm run build
+popd > /dev/null
 
 echo "Uploading files to S3..."
 aws --profile wotrcommunity s3 sync $BUILD_DIR s3://$S3_BUCKET --delete
