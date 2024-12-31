@@ -263,9 +263,7 @@ toParsedGameReport playersByName report =
       _ -> error $ "Invalid victory: " <> report.typeOfVictory
     gameReportMatch = case report.competitive of
       "Ladder" -> Ranked
-      "ladder" -> Ranked
       "Friendly" -> Unranked
-      "friendly" -> Unranked
       "Ladder and tournament" -> Ranked
       "Ladder and league (wome)" -> Ranked
       "Ladder and league (lome)" -> Ranked
@@ -279,9 +277,7 @@ toParsedGameReport playersByName report =
       _ -> error $ "Invalid match: " <> report.competitive
     gameReportCompetition = case report.competitive of
       "Ladder" -> []
-      "ladder" -> []
       "Friendly" -> []
-      "friendly" -> []
       "Ladder and tournament" -> [Tournament]
       "Ladder and league (wome)" -> [League]
       "Ladder and league (lome)" -> [League]
@@ -295,9 +291,7 @@ toParsedGameReport playersByName report =
       _ -> error $ "Invalid competition: " <> report.competitive
     gameReportLeague = case report.competitive of
       "Ladder" -> Nothing
-      "ladder" -> Nothing
       "Friendly" -> Nothing
-      "friendly" -> Nothing
       "Ladder and tournament" -> Nothing
       "Ladder and league (wome)" -> Just WoMELeague
       "Ladder and league (lome)" -> Just LoMELeague
@@ -313,10 +307,8 @@ toParsedGameReport playersByName report =
       where
         expansions = case report.expansions of
           "LoME" -> [LoME]
-          "Lome" -> [LoME]
           "Base" -> []
           "LoME+WoME" -> [LoME, WoME]
-          "Lome+Wome" -> [LoME, WoME]
           "WoME" -> [WoME]
           "KoME" -> [KoME]
           "KoME+LoME+WoME" -> [LoME, WoME, KoME]
@@ -348,7 +340,6 @@ toParsedGameReport playersByName report =
       "Nope!" -> 0
       "One Dwarven Ring" -> 1
       "Two Dwarven Rings" -> 2
-      "Two Dwarven Ring" -> 2
       "Three Dwarven Rings" -> 3
       "Four Dwarven Rings" -> 4
       "5+" -> 5
