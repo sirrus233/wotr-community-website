@@ -2,6 +2,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
 import React from "react";
 import GameReportForm from "./GameReportForm";
+import GameReports from "./GameReports";
 import Rankings from "./Rankings";
 import IconButton from "@mui/joy/IconButton";
 import Drawer from "@mui/joy/Drawer";
@@ -18,6 +19,7 @@ export default function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/game-report" element={<GameReportForm />} />
+                    <Route path="/game-reports" element={<GameReports />} />
                     <Route path="/rankings" element={<Rankings />} />
                 </Routes>
             </BrowserRouter>
@@ -68,6 +70,13 @@ function DrawerNavigation() {
                         onClick={() => setOpen(false)}
                     >
                         Rankings
+                    </ListItemButton>
+                    <ListItemButton
+                        component={Link}
+                        to="/game-reports"
+                        onClick={() => setOpen(false)}
+                    >
+                        Game Reports
                     </ListItemButton>
                     <ListItemButton>Leagues (Coming Soon!)</ListItemButton>
                 </List>

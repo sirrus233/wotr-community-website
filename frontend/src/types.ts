@@ -112,4 +112,30 @@ export interface LeaderboardEntry {
     yearlyWinRateShadow: number;
 }
 
+export interface ProcessedGameReport {
+    rid: number;
+    timestamp: string;
+    winnerId: number;
+    winner: string;
+    loserId: number;
+    loser: string;
+    side: Side;
+    victory: Victory;
+    match: Match;
+    competition: Competition[];
+    league: League | null;
+    expansions: Expansion[];
+    treebeard: boolean | null;
+    actionTokens: number;
+    dwarvenRings: number;
+    turns: number;
+    corruption: number;
+    mordor: number | null;
+    initialEyes: number;
+    aragornTurn: number | null;
+    strongholds: Stronghold[];
+    interestRating: number;
+    comments: string | null;
+}
+
 export type ValueOf<T> = T[keyof T];

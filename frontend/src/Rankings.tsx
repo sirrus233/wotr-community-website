@@ -1,10 +1,7 @@
 import axios from "axios";
 import React, { CSSProperties, ReactNode, useEffect, useState } from "react";
-import Box from "@mui/joy/Box";
-import Button from "@mui/joy/Button";
-import Table from "@mui/joy/Table";
-import Typography from "@mui/joy/Typography";
 import { LeaderboardEntry, Side } from "./types";
+import TableView from "./TableView";
 
 const CURRENT_YEAR = 2024;
 
@@ -36,192 +33,129 @@ function Rankings() {
     useEffect(refresh, []);
 
     return (
-        <Box
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                m: 2,
-            }}
-        >
-            <Box
-                sx={{
-                    display: "flex",
-                    width: "100%",
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
-            >
-                <Button onClick={refresh}>Refresh</Button>
-            </Box>
+        <TableView
+            refresh={refresh}
+            error={error}
+            loading={loading}
+            label="Rankings"
+            header={
+                <>
+                    <tr>
+                        <TableHeader rowSpan={3}>Rank</TableHeader>
+                        <TableHeader rowSpan={2} colSpan={2}>
+                            Player
+                        </TableHeader>
+                        <TableHeader
+                            rowSpan={2}
+                            style={{ borderBottom: "none" }}
+                        >
+                            Balanced
+                        </TableHeader>
+                        <TableHeader side="Shadow" rowSpan={3}>
+                            Shadow Rating
+                        </TableHeader>
+                        <TableHeader side="Free" rowSpan={3}>
+                            Free Rating
+                        </TableHeader>
+                        <TableHeader rowSpan={3}>Games</TableHeader>
+                        <TableHeader rowSpan={3}>Games 2024</TableHeader>
+                        <TableHeader colSpan={6}>Base Game 2024</TableHeader>
+                        <TableHeader colSpan={6}>LoME 2024</TableHeader>
+                        <TableHeader side="Free" rowSpan={3}>
+                            # FPMV
+                        </TableHeader>
+                        <TableHeader rowSpan={3}>Tournament Wins</TableHeader>
+                    </tr>
+                    <tr>
+                        {/* Base */}
+                        <TableHeader side="Free" colSpan={3}>
+                            FP
+                        </TableHeader>
+                        <TableHeader side="Shadow" colSpan={3}>
+                            SP
+                        </TableHeader>
 
-            {error && <Typography color="danger">{error}</Typography>}
+                        {/* LoME */}
+                        <TableHeader side="Free" colSpan={3}>
+                            FP
+                        </TableHeader>
+                        <TableHeader side="Shadow" colSpan={3}>
+                            SP
+                        </TableHeader>
+                    </tr>
+                    <tr>
+                        <TableHeader>Country</TableHeader>
+                        <TableHeader>Name</TableHeader>
+                        <TableHeader>Avg. Rating</TableHeader>
 
-            {loading ? (
-                "Loading..."
-            ) : (
-                <Box
-                    sx={{
-                        overflow: "auto",
-                        boxShadow: "lg",
-                        borderRadius: "sm",
-                    }}
-                >
-                    <Table
-                        aria-label="Rankings"
-                        noWrap
-                        size="sm"
-                        variant="outlined"
-                        stickyHeader
-                        sx={{
-                            tableLayout: "auto",
-                            border: "none",
-                            "& tr > *": { textAlign: "center" },
-                            "& thead > tr:first-child > *:first-child": {
-                                pl: 2,
-                            },
-                            "& tbody > tr > *:first-child": { pl: 2 },
-                            "& thead > tr:first-child > *:last-child": {
-                                pr: 2,
-                            },
-                            "& tbody > tr > *:last-child": { pr: 2 },
-                        }}
-                    >
-                        <thead>
-                            <tr>
-                                <TableHeader rowSpan={3}>Rank</TableHeader>
-                                <TableHeader rowSpan={2} colSpan={2}>
-                                    Player
-                                </TableHeader>
-                                <TableHeader
-                                    rowSpan={2}
-                                    style={{ borderBottom: "none" }}
-                                >
-                                    Balanced
-                                </TableHeader>
-                                <TableHeader side="Shadow" rowSpan={3}>
-                                    Shadow Rating
-                                </TableHeader>
-                                <TableHeader side="Free" rowSpan={3}>
-                                    Free Rating
-                                </TableHeader>
-                                <TableHeader rowSpan={3}>Games</TableHeader>
-                                <TableHeader rowSpan={3}>
-                                    Games 2024
-                                </TableHeader>
-                                <TableHeader colSpan={6}>
-                                    Base Game 2024
-                                </TableHeader>
-                                <TableHeader colSpan={6}>LoME 2024</TableHeader>
-                                <TableHeader side="Free" rowSpan={3}>
-                                    # FPMV
-                                </TableHeader>
-                                <TableHeader rowSpan={3}>
-                                    Tournament Wins
-                                </TableHeader>
-                            </tr>
-                            <tr>
-                                {/* Base */}
-                                <TableHeader side="Free" colSpan={3}>
-                                    FP
-                                </TableHeader>
-                                <TableHeader side="Shadow" colSpan={3}>
-                                    SP
-                                </TableHeader>
+                        {/* FP Base */}
+                        <TableHeader side="Free">Win</TableHeader>
+                        <TableHeader side="Free">Loss</TableHeader>
+                        <TableHeader>%</TableHeader>
 
-                                {/* LoME */}
-                                <TableHeader side="Free" colSpan={3}>
-                                    FP
-                                </TableHeader>
-                                <TableHeader side="Shadow" colSpan={3}>
-                                    SP
-                                </TableHeader>
-                            </tr>
-                            <tr>
-                                <TableHeader>Country</TableHeader>
-                                <TableHeader>Name</TableHeader>
-                                <TableHeader>Avg. Rating</TableHeader>
+                        {/* SP Base */}
+                        <TableHeader side="Shadow">Win</TableHeader>
+                        <TableHeader side="Shadow">Loss</TableHeader>
+                        <TableHeader>%</TableHeader>
 
-                                {/* FP Base */}
-                                <TableHeader side="Free">Win</TableHeader>
-                                <TableHeader side="Free">Loss</TableHeader>
-                                <TableHeader>%</TableHeader>
+                        {/* FP LOME */}
+                        <TableHeader side="Free">Win</TableHeader>
+                        <TableHeader side="Free">Loss</TableHeader>
+                        <TableHeader>%</TableHeader>
 
-                                {/* SP Base */}
-                                <TableHeader side="Shadow">Win</TableHeader>
-                                <TableHeader side="Shadow">Loss</TableHeader>
-                                <TableHeader>%</TableHeader>
-
-                                {/* FP LOME */}
-                                <TableHeader side="Free">Win</TableHeader>
-                                <TableHeader side="Free">Loss</TableHeader>
-                                <TableHeader>%</TableHeader>
-
-                                {/* SP LOME */}
-                                <TableHeader side="Shadow">Win</TableHeader>
-                                <TableHeader side="Shadow">Loss</TableHeader>
-                                <TableHeader>%</TableHeader>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {entries.map((entry, i) => (
-                                <tr key={entry.name}>
-                                    <TableCell>{i + 1}</TableCell>
-                                    <TableCell>{entry.country}</TableCell>
-                                    <TableCell>{entry.name}</TableCell>
-                                    <TableCell>{entry.averageRating}</TableCell>
-                                    <TableCell side="Shadow">
-                                        {entry.currentRatingShadow}
-                                    </TableCell>
-                                    <TableCell side="Free">
-                                        {entry.currentRatingFree}
-                                    </TableCell>
-                                    <TableCell>{entry.totalGames}</TableCell>
-                                    <TableCell>
-                                        {entry.year === CURRENT_YEAR &&
-                                            entry.yearlyGames}
-                                    </TableCell>
-                                    <TableCell side="Free" light>
-                                        {entry.year === CURRENT_YEAR &&
-                                            entry.yearlyWinsFree}
-                                    </TableCell>
-                                    <TableCell side="Free">
-                                        {entry.year === CURRENT_YEAR &&
-                                            entry.yearlyLossesFree}
-                                    </TableCell>
-                                    <TableCell>
-                                        {entry.year === CURRENT_YEAR &&
-                                            toPercent(entry.yearlyWinRateFree)}
-                                    </TableCell>
-                                    <TableCell side="Shadow" light>
-                                        {entry.year === CURRENT_YEAR &&
-                                            entry.yearlyWinsShadow}
-                                    </TableCell>
-                                    <TableCell side="Shadow">
-                                        {entry.year === CURRENT_YEAR &&
-                                            entry.yearlyLossesShadow}
-                                    </TableCell>
-                                    <TableCell>
-                                        {entry.year === CURRENT_YEAR &&
-                                            toPercent(
-                                                entry.yearlyWinRateShadow
-                                            )}
-                                    </TableCell>
-                                    <TableCell side="Free" light />
-                                    <TableCell side="Free" />
-                                    <TableCell />
-                                    <TableCell side="Shadow" light />
-                                    <TableCell side="Shadow" />
-                                    <TableCell />
-                                    <TableCell side="Free" light />
-                                    <TableCell />
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
-                </Box>
-            )}
-        </Box>
+                        {/* SP LOME */}
+                        <TableHeader side="Shadow">Win</TableHeader>
+                        <TableHeader side="Shadow">Loss</TableHeader>
+                        <TableHeader>%</TableHeader>
+                    </tr>
+                </>
+            }
+            body={entries.map((entry, i) => (
+                <tr key={entry.name}>
+                    <TableCell>{i + 1}</TableCell>
+                    <TableCell>{entry.country}</TableCell>
+                    <TableCell>{entry.name}</TableCell>
+                    <TableCell>{entry.averageRating}</TableCell>
+                    <TableCell side="Shadow">
+                        {entry.currentRatingShadow}
+                    </TableCell>
+                    <TableCell side="Free">{entry.currentRatingFree}</TableCell>
+                    <TableCell>{entry.totalGames}</TableCell>
+                    <TableCell>
+                        {entry.year === CURRENT_YEAR && entry.yearlyGames}
+                    </TableCell>
+                    <TableCell side="Free" light>
+                        {entry.year === CURRENT_YEAR && entry.yearlyWinsFree}
+                    </TableCell>
+                    <TableCell side="Free">
+                        {entry.year === CURRENT_YEAR && entry.yearlyLossesFree}
+                    </TableCell>
+                    <TableCell>
+                        {entry.year === CURRENT_YEAR &&
+                            toPercent(entry.yearlyWinRateFree)}
+                    </TableCell>
+                    <TableCell side="Shadow" light>
+                        {entry.year === CURRENT_YEAR && entry.yearlyWinsShadow}
+                    </TableCell>
+                    <TableCell side="Shadow">
+                        {entry.year === CURRENT_YEAR &&
+                            entry.yearlyLossesShadow}
+                    </TableCell>
+                    <TableCell>
+                        {entry.year === CURRENT_YEAR &&
+                            toPercent(entry.yearlyWinRateShadow)}
+                    </TableCell>
+                    <TableCell side="Free" light />
+                    <TableCell side="Free" />
+                    <TableCell />
+                    <TableCell side="Shadow" light />
+                    <TableCell side="Shadow" />
+                    <TableCell />
+                    <TableCell side="Free" light />
+                    <TableCell />
+                </tr>
+            ))}
+        />
     );
 }
 
