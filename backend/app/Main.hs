@@ -11,13 +11,16 @@ import Logging (fileLogger, log)
 import Network.Wai.Handler.Warp (defaultSettings, setPort)
 import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
+import Network.Wai.Middleware.Gzip (defaultGzipSettings, gzip)
 import Servant (Application, hoistServer)
 import Servant.Server (serve)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 import Types.Database (migrateAll)
 
-corsMiddleware :: Application -> Application
+type Middleware = Application -> Application
+
+corsMiddleware :: Middleware
 corsMiddleware = cors $ const $ Just policy
   where
     policy =
@@ -32,8 +35,11 @@ corsMiddleware = cors $ const $ Just policy
           corsIgnoreFailures = True
         }
 
+gzipMiddleware :: Middleware
+gzipMiddleware = gzip defaultGzipSettings
+
 app :: Env -> Application
-app env = corsMiddleware . serve api . hoistServer api (nt env) $ server
+app env = gzipMiddleware . corsMiddleware . serve api . hoistServer api (nt env) $ server
 
 main :: IO ()
 main = do

@@ -14,6 +14,7 @@ import Database.Esqueleto.Experimental
     innerJoin,
     insert,
     insert_,
+    limit,
     on,
     orderBy,
     replace,
@@ -119,4 +120,5 @@ getGameReports = lift . select $ do
         `innerJoin` table @Player
           `on` (\(report :& _ :& loser) -> report ^. GameReportLoserId ==. loser ^. PlayerId)
   orderBy [desc (report ^. GameReportTimestamp)]
+  limit 500
   pure (report, winner, loser)
