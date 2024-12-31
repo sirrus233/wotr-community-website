@@ -62,6 +62,7 @@ library
                       AppServer,
                       Database,
                       Logging,
+                      Migration.Types,
                       Types.Api,
                       Types.Database,
                       Types.DataField,
