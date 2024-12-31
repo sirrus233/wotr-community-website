@@ -18,6 +18,7 @@
         "fpmv",
         "fprv",
         "fullchain",
+        "gondor",
         "Guldur",
         "Gundabad",
         "Harad",
@@ -35,6 +36,7 @@
         "Relude",
         "Rhun",
         "Rivendell",
+        "rohan",
         "Semigroup",
         "spmv",
         "sprv",
@@ -46,6 +48,7 @@
         "usermod",
         "utct",
         "waroftheringcommunity",
+        "wome",
         "wotr"
     ],
     "cSpell.ignorePaths": [".vscode", "wotr-community-website.cabal"]
