@@ -1,6 +1,7 @@
 import React from "react";
 import Typography from "@mui/joy/Typography";
 import { Stronghold } from "./types";
+import { strongholdPoints } from "./utils";
 
 interface VictoryPointsProps {
     strongholds: Stronghold[];
@@ -18,36 +19,4 @@ export default function VictoryPoints({
     return (
         <Typography sx={{ fontWeight: "bold", pb: 2 }}>VP: {points}</Typography>
     );
-}
-
-function strongholdPoints(stronghold: Stronghold): 1 | 2 {
-    switch (stronghold) {
-        case "Shire":
-        case "Edoras":
-        case "Dale":
-        case "Pelargir":
-        case "EredLuin":
-        case "IronHills":
-        case "Angmar":
-        case "FarHarad":
-        case "SouthRhun":
-            return 1;
-        case "Rivendell":
-        case "GreyHavens":
-        case "HelmsDeep":
-        case "Lorien":
-        case "WoodlandRealm":
-        case "MinasTirith":
-        case "DolAmroth":
-        case "Erebor":
-        case "MountGundabad":
-        case "Moria":
-        case "DolGuldur":
-        case "Orthanc":
-        case "Morannon":
-        case "BaradDur":
-        case "MinasMorgul":
-        case "Umbar":
-            return 2;
-    }
 }
