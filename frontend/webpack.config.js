@@ -2,6 +2,7 @@ const prod = process.env.NODE_ENV === "production";
 
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const EncodingPlugin = require("encoding-plugin");
 
 const path = require("path");
 
@@ -42,5 +43,8 @@ module.exports = {
             favicon: "./public/favicon.ico",
         }),
         new MiniCssExtractPlugin(),
+        new EncodingPlugin({
+            encoding: "utf8",
+        }),
     ],
 };
