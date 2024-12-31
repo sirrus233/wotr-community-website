@@ -2,12 +2,12 @@
 
 set -e
 
-BIN_DIR=$(dirname "$0")
-source "${BIN_DIR}/config.sh"
+BACKEND_DIR=$(dirname "$0")/..
+source "${BACKEND_DIR}/bin/config.sh"
 
 echo "Building the Haskell binary..."
 mkdir -p $BUILD_DIR
-pushd "${BIN_DIR}/.." > /dev/null
+pushd "${BACKEND_DIR}" > /dev/null
 cabal build --builddir=$BUILD_DIR
 popd > /dev/null
 
