@@ -18,7 +18,6 @@ import Types.Database (PlayerId, migrateAll)
 tragedies :: [PlayerName]
 tragedies =
   [ "Shade",
-    "Igforce",
     "Mikhael",
     "exegesis1978",
     "Mikhael Kates",
@@ -49,12 +48,17 @@ tragedies =
     "Starlock",
     "Kakashi",
     "Guthix",
-    "Tom Bombadil",
-    "DR Sigma"
+    "Tom Bombadil"
   ]
 
 banList :: PlayerBanList
 banList = ["mordak", "mellowsedge"]
+
+rename :: PlayerName -> PlayerName
+rename = \case
+  "DR Sigma" -> "DrSigma"
+  "Igforce" -> "igforce77"
+  name -> name
 
 migrate :: [ParsedLadderEntry] -> [HashMap PlayerName PlayerId -> ParsedGameReport] -> SqlPersistT IO ()
 migrate ladderEntries reports = do
