@@ -79,6 +79,29 @@ toParsedLadderEntry banList (LadderEntryWithTrash {..}) =
     then Nothing
     else Just ParsedLadderEntry {player = normalizeName player, ..}
 
+data LegacyLadderEntryWithTrash = LegacyLadderEntryWithTrash
+  { rank :: (),
+    flag :: (),
+    player :: Text,
+    averageRating :: (),
+    shadowRating :: Int,
+    freeRating :: Int,
+    gamesPlayedTotal :: Int
+  }
+  deriving (Generic, Show)
+
+instance FromRecord LegacyLadderEntryWithTrash
+
+data ParsedLegacyLadderEntry = ParsedLegacyLadderEntry
+  { player :: Text,
+    shadowRating :: Int,
+    freeRating :: Int,
+    gamesPlayedTotal :: Int
+  }
+
+toParsedLegacyLadderEntry :: LegacyLadderEntryWithTrash -> ParsedLegacyLadderEntry
+toParsedLegacyLadderEntry (LegacyLadderEntryWithTrash {..}) = ParsedLegacyLadderEntry {..}
+
 data GameReportWithTrash = GameReportWithTrash
   { gameId :: (),
     pairing :: (),
