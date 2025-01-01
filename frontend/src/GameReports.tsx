@@ -1,5 +1,7 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
+import Box from "@mui/joy/Box";
+import Typography from "@mui/joy/Typography";
 import {
     Competition,
     Expansion,
@@ -18,6 +20,9 @@ import {
     strongholdSide,
 } from "./utils";
 import TableView from "./TableView";
+
+const FREE_ACCENT_COLOR = "#3f99ff";
+const SHADOW_ACCENT_COLOR = "#990200";
 
 export default function GameReports() {
     const [reports, setReports] = useState<ProcessedGameReport[]>([]);
@@ -54,6 +59,9 @@ export default function GameReports() {
             label="Game Reports"
             header={
                 <tr>
+                    <th />
+                    <th />
+                    <th>No.</th>
                     <th>Pairing</th>
                     <th>Timestamp</th>
                     <th>Turn</th>
@@ -77,13 +85,18 @@ export default function GameReports() {
                     <th>Interest Rating</th>
                     <th>Comments</th>
                     <th>Game Log</th>
-                    <th>Winning Side</th>
-                    <th>League</th>
-                    <th>Tournament</th>
                 </tr>
             }
-            body={reports.map((report) => (
+            body={reports.map((report, i) => (
                 <tr key={report.rid}>
+                    <RowAccent side={report.side} />
+                    <td style={{ padding: "0 10px 0 0" }}>
+                        {report.side === "Free" ? "💍" : "🌋"}
+                    </td>
+
+                    {/* TODO: account for pagination */}
+                    <td style={{ fontWeight: "bold" }}>{reports.length - i}</td>
+
                     <td>{[report.winner, report.loser].sort().join("-")}</td>
                     <td>
                         {Intl.DateTimeFormat("en-GB").format(
@@ -141,14 +154,45 @@ export default function GameReports() {
                         )}
                     </td>
                     <td>{report.interestRating}</td>
-                    <td>{report.comments}</td>
+                    <WrappedCell>{report.comments}</WrappedCell>
                     <td></td>
-                    <td>{report.side}</td>
-                    <td>{report.league && "✓"}</td>
-                    <td>{report.competition.includes("Tournament") && "✓"}</td>
                 </tr>
             ))}
         />
+    );
+}
+
+interface WrappedCellProps {
+    children: ReactNode;
+}
+
+function WrappedCell({ children }: WrappedCellProps) {
+    return (
+        <td style={{ whiteSpace: "wrap" }}>
+            <Typography width="400px">{children}</Typography>
+        </td>
+    );
+}
+
+interface RowAccentProps {
+    side: Side;
+}
+
+function RowAccent({ side }: RowAccentProps) {
+    return (
+        <td style={{ padding: 0 }}>
+            <div
+                style={{
+                    height: "100%",
+                    width: "5px",
+                    borderBottom: "1px solid white",
+                    background:
+                        side === "Free"
+                            ? FREE_ACCENT_COLOR
+                            : SHADOW_ACCENT_COLOR,
+                }}
+            />
+        </td>
     );
 }
 
@@ -163,9 +207,25 @@ function isGameTypeExpansion(expansion: Expansion) {
 }
 
 function summarizeVictoryType(side: Side, victory: Victory) {
-    return `${side} ${
-        side === "Shadow" && victory === "Ring" ? "Corruption" : victory
-    }`;
+    return (
+        <Box
+            style={{
+                color: "white",
+                background:
+                    side === "Free" ? FREE_ACCENT_COLOR : SHADOW_ACCENT_COLOR,
+                borderRadius: "12px",
+                padding: "3px 8px",
+            }}
+        >
+            {`${side} ${
+                side === "Shadow" && victory === "Ring"
+                    ? "Corruption"
+                    : victory === "Concession"
+                    ? "via Concession"
+                    : victory
+            }`}
+        </Box>
+    );
 }
 
 function summarizeCompetitionType(
@@ -192,7 +252,7 @@ function summarizeCapturedSettlements(
     return strongholds
         .filter((stronghold) => strongholdSide(expansions, stronghold) === side)
         .map(getStrongholdLabel)
-        .join(", ");
+        .join(" • ");
 }
 
 function countVictoryPoints(
