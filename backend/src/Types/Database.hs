@@ -61,9 +61,17 @@ share
 
    PlayerStatsTotal
     playerId PlayerId
-    currentRatingFree Rating
-    currentRatingShadow Rating
-    totalGames Int
+    ratingFree Rating
+    ratingShadow Rating
+    gameCount Int
+    Primary playerId
+    deriving Show
+
+   PlayerStatsInitial
+    playerId PlayerId
+    ratingFree Rating
+    ratingShadow Rating
+    gameCount Int
     Primary playerId
     deriving Show
 |]
@@ -75,9 +83,9 @@ defaultPlayerStats :: PlayerId -> Year -> (PlayerStatsTotal, PlayerStatsYear)
 defaultPlayerStats pid year =
   ( PlayerStatsTotal
       { playerStatsTotalPlayerId = pid,
-        playerStatsTotalCurrentRatingFree = 500,
-        playerStatsTotalCurrentRatingShadow = 500,
-        playerStatsTotalTotalGames = 0
+        playerStatsTotalRatingFree = 500,
+        playerStatsTotalRatingShadow = 500,
+        playerStatsTotalGameCount = 0
       },
     PlayerStatsYear
       { playerStatsYearPlayerId = pid,
@@ -93,8 +101,8 @@ updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -
 updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
     ( PlayerStatsTotal
-        { playerStatsTotalCurrentRatingFree = rating,
-          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
+        { playerStatsTotalRatingFree = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
       PlayerStatsYear
@@ -104,8 +112,8 @@ updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..})
     )
   Shadow ->
     ( PlayerStatsTotal
-        { playerStatsTotalCurrentRatingShadow = rating,
-          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
+        { playerStatsTotalRatingShadow = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
       PlayerStatsYear
@@ -118,8 +126,8 @@ updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear 
 updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
     ( PlayerStatsTotal
-        { playerStatsTotalCurrentRatingFree = rating,
-          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
+        { playerStatsTotalRatingFree = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
       PlayerStatsYear
@@ -129,8 +137,8 @@ updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}
     )
   Shadow ->
     ( PlayerStatsTotal
-        { playerStatsTotalCurrentRatingShadow = rating,
-          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
+        { playerStatsTotalRatingShadow = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
       PlayerStatsYear

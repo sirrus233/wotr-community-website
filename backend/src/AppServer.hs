@@ -120,8 +120,8 @@ submitReportHandler report = case validateReport report of
     other side = case side of Free -> Shadow; Shadow -> Free
 
     getRating side (PlayerStatsTotal {..}) = case side of
-      Free -> playerStatsTotalCurrentRatingFree
-      Shadow -> playerStatsTotalCurrentRatingShadow
+      Free -> playerStatsTotalRatingFree
+      Shadow -> playerStatsTotalRatingShadow
 
 getReportsHandler :: AppM GetReportsResponse
 getReportsHandler = runDb getGameReports <&> GetReportsResponse . map fromGameReport

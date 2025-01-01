@@ -157,11 +157,11 @@ fromPlayerStats (player, totalStats, yearStats) =
     { pid = entityKey player,
       name = p.playerName,
       country = p.playerCountry,
-      currentRatingFree = t.playerStatsTotalCurrentRatingFree,
-      currentRatingShadow = t.playerStatsTotalCurrentRatingShadow,
+      currentRatingFree = t.playerStatsTotalRatingFree,
+      currentRatingShadow = t.playerStatsTotalRatingShadow,
       averageRating =
-        (fromIntegral t.playerStatsTotalCurrentRatingFree + fromIntegral t.playerStatsTotalCurrentRatingShadow) / 2,
-      totalGames = t.playerStatsTotalTotalGames,
+        (fromIntegral t.playerStatsTotalRatingFree + fromIntegral t.playerStatsTotalRatingShadow) / 2,
+      totalGames = t.playerStatsTotalGameCount,
       year = y.playerStatsYearYear,
       yearlyGames =
         y.playerStatsYearWinsFree + y.playerStatsYearWinsShadow + y.playerStatsYearLossesFree + y.playerStatsYearLossesShadow,
