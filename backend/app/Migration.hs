@@ -2,17 +2,16 @@ module Main where
 
 import AppConfig (databaseFile, runAppLogger)
 import Data.Csv (HasHeader (..), decode)
-import Data.Text qualified as T
 import Data.Vector qualified as V
-import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
+import Database.Esqueleto.Experimental (SqlPersistT, defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Logging (stdoutLogger)
-import Migration.Database (insertEntry, insertGameReport, insertPlayer)
-import Migration.Types (GameReportWithTrash, PlayerBanList, toParsedGameReport, toParsedLadderEntry)
+import Migration.Database (insertEntry, insertGameReport)
+import Migration.Types (ParsedGameReport, ParsedLadderEntry, PlayerBanList, toParsedGameReport, toParsedLadderEntry)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 import Types.DataField (PlayerName)
-import Types.Database (migrateAll)
+import Types.Database (PlayerId, migrateAll)
 
 tragedies :: [PlayerName]
 tragedies =
@@ -71,26 +70,30 @@ tragedies =
 banList :: PlayerBanList
 banList = ["mordak", "mellowsedge"]
 
+migrate :: [ParsedLadderEntry] -> [HashMap PlayerName PlayerId -> ParsedGameReport] -> SqlPersistT IO ()
+migrate ladderEntries reports = do
+  players <- traverse insertEntry ladderEntries
+  traverse_ (insertGameReport . ($ fromList players)) reports
+
+-- sadPlayers <- traverse (\player -> (T.toLower player,) <$> runSqlPool (insertPlayer (T.toLower player)) dbPool) tragedies
+
 main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
   ladderData <- readFileLBS "migration/ladder.csv"
-  case decode NoHeader ladderData of
-    Left err -> putStrLn err
-    Right rawLadderEntries -> do
-      logger <- stdoutLogger
-      dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
-      runSqlPool (runMigration migrateAll) dbPool
+  reportData <- readFileLBS "migration/reports.csv"
 
-      sadPlayers <- traverse (\player -> (T.toLower player,) <$> runSqlPool (insertPlayer (T.toLower player)) dbPool) tragedies
+  let ladderEntries = case decode NoHeader ladderData of
+        Left err -> error $ show err
+        Right raw -> mapMaybe (toParsedLadderEntry banList) . V.toList $ raw
 
-      let entries = mapMaybe (toParsedLadderEntry banList) . V.toList $ rawLadderEntries
-      players <- traverse (\entry -> runSqlPool (insertEntry entry) dbPool) entries
+  let reports = case decode NoHeader reportData of
+        Left err -> error $ show err
+        Right raw -> V.toList $ fmap toParsedGameReport raw
 
-      reportData <- readFileLBS "migration/reports.csv"
-      case decode NoHeader reportData :: Either String (V.Vector GameReportWithTrash) of
-        Left err -> putStrLn err
-        Right rawGameReports -> do
-          let reports = V.toList $ fmap (toParsedGameReport (fromList $ sadPlayers <> players)) rawGameReports
-          traverse_ (\report -> runSqlPool (insertGameReport report) dbPool) reports
+  logger <- stdoutLogger
+  dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
+
+  runSqlPool (runMigration migrateAll) dbPool
+  runSqlPool (migrate ladderEntries reports) dbPool

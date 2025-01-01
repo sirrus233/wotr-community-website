@@ -204,8 +204,8 @@ data ParsedGameReport = ParsedGameReport
     loserRatingAfter :: Int
   }
 
-toParsedGameReport :: HashMap PlayerName PlayerId -> GameReportWithTrash -> ParsedGameReport
-toParsedGameReport playersByName report =
+toParsedGameReport :: GameReportWithTrash -> HashMap PlayerName PlayerId -> ParsedGameReport
+toParsedGameReport report playersByName =
   ParsedGameReport
     { gameReportTimestamp,
       gameReportWinnerId,
