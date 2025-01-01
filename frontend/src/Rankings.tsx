@@ -60,22 +60,9 @@ function Rankings() {
                         <TableHeader rowSpan={3}>Games</TableHeader>
                         <TableHeader rowSpan={3}>Games 2024</TableHeader>
                         <TableHeader colSpan={6}>Base Game 2024</TableHeader>
-                        <TableHeader colSpan={6}>LoME 2024</TableHeader>
-                        <TableHeader side="Free" rowSpan={3}>
-                            # FPMV
-                        </TableHeader>
-                        <TableHeader rowSpan={3}>Tournament Wins</TableHeader>
                     </tr>
                     <tr>
                         {/* Base */}
-                        <TableHeader side="Free" colSpan={3}>
-                            FP
-                        </TableHeader>
-                        <TableHeader side="Shadow" colSpan={3}>
-                            SP
-                        </TableHeader>
-
-                        {/* LoME */}
                         <TableHeader side="Free" colSpan={3}>
                             FP
                         </TableHeader>
@@ -97,21 +84,11 @@ function Rankings() {
                         <TableHeader side="Shadow">Win</TableHeader>
                         <TableHeader side="Shadow">Loss</TableHeader>
                         <TableHeader>%</TableHeader>
-
-                        {/* FP LOME */}
-                        <TableHeader side="Free">Win</TableHeader>
-                        <TableHeader side="Free">Loss</TableHeader>
-                        <TableHeader>%</TableHeader>
-
-                        {/* SP LOME */}
-                        <TableHeader side="Shadow">Win</TableHeader>
-                        <TableHeader side="Shadow">Loss</TableHeader>
-                        <TableHeader>%</TableHeader>
                     </tr>
                 </>
             }
             body={entries.map((entry, i) => (
-                <tr key={entry.name}>
+                <tr key={entry.pid}>
                     <TableCell>{i + 1}</TableCell>
                     <TableCell>{entry.country}</TableCell>
                     <TableCell>{entry.name}</TableCell>
@@ -145,14 +122,6 @@ function Rankings() {
                         {entry.year === CURRENT_YEAR &&
                             toPercent(entry.yearlyWinRateShadow)}
                     </TableCell>
-                    <TableCell side="Free" light />
-                    <TableCell side="Free" />
-                    <TableCell />
-                    <TableCell side="Shadow" light />
-                    <TableCell side="Shadow" />
-                    <TableCell />
-                    <TableCell side="Free" light />
-                    <TableCell />
                 </tr>
             ))}
         />
