@@ -6,7 +6,8 @@ import Types.DataField (PlayerName, Side (..))
 import Types.Database (GameReport (..), Player (..), PlayerStatsTotal (..), PlayerStatsYear (..), RatingDiff (..))
 
 insertPlayer :: (MonadIO m) => Text -> SqlPersistT m (Key Player)
-insertPlayer name = insert $ Player name Nothing
+insertPlayer name = do
+  insert $ Player name Nothing
 
 insertStats :: (MonadIO m) => Key Player -> ParsedLadderEntry -> SqlPersistT m ()
 insertStats playerId entry = do
