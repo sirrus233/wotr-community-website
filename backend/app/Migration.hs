@@ -1,13 +1,15 @@
 module Main where
 
 import AppConfig (databaseFile, runAppLogger)
+import AppServer (normalizeName)
 import Data.Csv (HasHeader (..), decode)
 import Data.Vector qualified as V
 import Database.Esqueleto.Experimental (SqlPersistT, defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Logging (stdoutLogger)
-import Migration.Database (insertEntry, insertGameReport)
+import Migration.Database (insertEntry, insertGameReport, insertPlayer)
 import Migration.Types (ParsedGameReport, ParsedLadderEntry, PlayerBanList, toParsedGameReport, toParsedLadderEntry)
+import Relude.Extra (traverseToSnd)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 import Types.DataField (PlayerName)
@@ -73,9 +75,8 @@ banList = ["mordak", "mellowsedge"]
 migrate :: [ParsedLadderEntry] -> [HashMap PlayerName PlayerId -> ParsedGameReport] -> SqlPersistT IO ()
 migrate ladderEntries reports = do
   players <- traverse insertEntry ladderEntries
-  traverse_ (insertGameReport . ($ fromList players)) reports
-
--- sadPlayers <- traverse (\player -> (T.toLower player,) <$> runSqlPool (insertPlayer (T.toLower player)) dbPool) tragedies
+  sadPlayers <- traverse (traverseToSnd insertPlayer . normalizeName) tragedies
+  traverse_ (insertGameReport . ($ fromList $ sadPlayers <> players)) reports
 
 main :: IO ()
 main = do

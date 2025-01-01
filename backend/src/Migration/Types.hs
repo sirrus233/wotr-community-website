@@ -1,5 +1,6 @@
 module Migration.Types where
 
+import AppServer (normalizeName)
 import Data.Csv (FromRecord)
 import Data.Text qualified as T
 import Data.Time (UTCTime (..), fromGregorian, midnight, timeOfDayToTime)
@@ -76,7 +77,7 @@ toParsedLadderEntry :: PlayerBanList -> LadderEntryWithTrash -> Maybe ParsedLadd
 toParsedLadderEntry banList (LadderEntryWithTrash {..}) =
   if player `elem` banList
     then Nothing
-    else Just ParsedLadderEntry {player = T.toLower player, ..}
+    else Just ParsedLadderEntry {player = normalizeName player, ..}
 
 data GameReportWithTrash = GameReportWithTrash
   { gameId :: (),
@@ -244,10 +245,10 @@ toParsedGameReport report playersByName =
         readOrError t = case readMaybe . toString $ t of
           Just a -> a
           Nothing -> error $ "Invalid timestamp number: " <> t
-    gameReportWinnerId = case lookup (T.toLower report.winner) playersByName of
+    gameReportWinnerId = case lookup (normalizeName report.winner) playersByName of
       Just a -> a
       Nothing -> error $ "Invalid winner: " <> report.winner
-    gameReportLoserId = case lookup (T.toLower report.loser) playersByName of
+    gameReportLoserId = case lookup (normalizeName report.loser) playersByName of
       Just a -> a
       Nothing -> error $ "Invalid loser: " <> report.loser
     gameReportSide = case report.winningSide of

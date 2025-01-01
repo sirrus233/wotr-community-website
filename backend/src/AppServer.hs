@@ -4,6 +4,7 @@ import Api (Api)
 import AppConfig (AppM)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
+import Data.Text qualified as T
 import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database
@@ -68,6 +69,9 @@ ratingAdjustment winner loser
   where
     diff = abs (winner - loser)
     (smallAdjust, bigAdjust) = maybe maxThreshold snd (Map.lookupGE diff ratingThresholds)
+
+normalizeName :: Text -> Text
+normalizeName = T.strip . T.toLower
 
 readOrError :: (Monad m, MonadLogger m) => Text -> DBAction m (Maybe a) -> DBAction m a
 readOrError errMsg action =
