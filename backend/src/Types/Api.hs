@@ -27,7 +27,7 @@ data RawGameReport = RawGameReport
     interestRating :: Int,
     comments :: Maybe Text
   }
-  deriving (Generic)
+  deriving (Generic, Show)
 
 instance FromJSON RawGameReport
 
