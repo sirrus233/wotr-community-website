@@ -6,7 +6,7 @@ import Data.Csv (HasHeader (..), decode)
 import Data.Validation (Validation (..))
 import Data.Vector qualified as V
 import Database (insertGameReport, insertPlayerIfNotExists, runDb)
-import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
+import Database.Esqueleto.Experimental (Entity (..), defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
 import Logging (stdoutLogger)
@@ -34,8 +34,8 @@ migrate :: [ParsedLegacyLadderEntry] -> [ParsedGameReport] -> AppM ()
 migrate legacyEntries reports = do
   traverse_ insertLegacyEntry . filter (\entry -> entry.player `notElem` banList) $ legacyEntries
   forM_ reports $ \parsedReport -> runDb $ do
-    winnerId <- insertPlayerIfNotExists <$> normalizeName <*> id $ parsedReport.winner
-    loserId <- insertPlayerIfNotExists <$> normalizeName <*> id $ parsedReport.loser
+    Entity winnerId _ <- insertPlayerIfNotExists <$> normalizeName <*> id $ parsedReport.winner
+    Entity loserId _ <- insertPlayerIfNotExists <$> normalizeName <*> id $ parsedReport.loser
     let rawReport = toRawGameReport parsedReport
     let report = toGameReport parsedReport.timestamp winnerId loserId rawReport
     let validation = validateReport rawReport

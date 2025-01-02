@@ -5,7 +5,6 @@ import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
 import Database.Esqueleto.Experimental
   ( Entity (..),
     From,
-    Key,
     PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
@@ -62,14 +61,16 @@ runDb dbAction = do
 getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Maybe (Entity Player))
 getPlayerByName = lift . getBy . UniquePlayerName
 
-insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> PlayerName -> DBAction m (Key Player)
+insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> PlayerName -> DBAction m (Entity Player)
 insertPlayerIfNotExists name displayName = do
   player <- getPlayerByName name
   case player of
-    Just (Entity playerKey _) -> pure playerKey
+    Just p -> pure p
     Nothing -> lift $ do
       logInfoN $ "Adding new player " <> displayName <> " to database."
-      insert $ Player name displayName Nothing
+      let p = Player name displayName Nothing
+      pid <- insert p
+      pure $ Entity pid p
 
 joinedPlayerStats :: Year -> From (SqlExpr (Entity Player) :& SqlExpr (Maybe (Entity PlayerStatsTotal)) :& SqlExpr (Maybe (Entity PlayerStatsYear)))
 joinedPlayerStats year =
@@ -120,9 +121,10 @@ resetStats = do
   initialStats <- getInitialStats
   lift . insertMany_ $ map entityVal initialStats
 
-insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> DBAction m (Key GameReport)
-insertGameReport = do
-  lift . insert
+insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> DBAction m (Entity GameReport)
+insertGameReport report = lift $ do
+  rid <- insert report
+  pure $ Entity rid report
 
 getGameReports :: (MonadIO m, MonadLogger m) => DBAction m [(Entity GameReport, Entity Player, Entity Player)]
 getGameReports = lift . select $ do

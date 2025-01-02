@@ -34,7 +34,16 @@ import Types.Api
     toGameReport,
   )
 import Types.DataField (Match (..), Rating, Side (..), Year)
-import Types.Database (GameReport (..), PlayerId, PlayerStats, PlayerStatsTotal (..), defaultPlayerStatsTotal, defaultPlayerStatsYear, updatedPlayerStatsLose, updatedPlayerStatsWin)
+import Types.Database
+  ( GameReport (..),
+    PlayerId,
+    PlayerStats,
+    PlayerStatsTotal (..),
+    defaultPlayerStatsTotal,
+    defaultPlayerStatsYear,
+    updatedPlayerStatsLose,
+    updatedPlayerStatsWin,
+  )
 import Validation (validateReport)
 
 defaultRating :: Rating
@@ -120,7 +129,7 @@ readOrError errMsg action =
       throwError err500 {errBody = show errMsg}
 
 submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
-submitReportHandler report = case validateReport report of
+submitReportHandler rawReport = case validateReport rawReport of
   Failure errors -> throwError $ err422 {errBody = show errors}
   Success (RawGameReport {..}) -> runDb $ do
     logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
@@ -128,9 +137,11 @@ submitReportHandler report = case validateReport report of
     timestamp <- liftIO getCurrentTime
     let year = (\(y, _, _) -> fromIntegral y) . toGregorian . utctDay $ timestamp
 
-    winnerId <- insertPlayerIfNotExists <$> normalizeName <*> id $ winner
-    loserId <- insertPlayerIfNotExists <$> normalizeName <*> id $ loser
-    _ <- insertGameReport $ toGameReport timestamp winnerId loserId report
+    winnerPlayer@(Entity winnerId _) <- insertPlayerIfNotExists <$> normalizeName <*> id $ winner
+    loserPlayer@(Entity loserId _) <- insertPlayerIfNotExists <$> normalizeName <*> id $ loser
+
+    report <- insertGameReport $ toGameReport timestamp winnerId loserId rawReport
+    let processedReport = fromGameReport (report, winnerPlayer, loserPlayer)
 
     let (winnerSide, loserSide) = (side, other side)
 
@@ -150,7 +161,7 @@ submitReportHandler report = case validateReport report of
     repsertPlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
     repsertPlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
 
-    pure SubmitGameReportResponse {report, winnerRating, loserRating}
+    pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
   where
     other side = case side of Free -> Shadow; Shadow -> Free
 

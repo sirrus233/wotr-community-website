@@ -31,8 +31,6 @@ data RawGameReport = RawGameReport
 
 instance FromJSON RawGameReport
 
-instance ToJSON RawGameReport
-
 toGameReport :: UTCTime -> PlayerId -> PlayerId -> RawGameReport -> GameReport
 toGameReport timestamp winnerId loserId r =
   GameReport
@@ -57,15 +55,6 @@ toGameReport timestamp winnerId loserId r =
       gameReportInterestRating = r.interestRating,
       gameReportComments = r.comments
     }
-
-data SubmitGameReportResponse = SubmitGameReportResponse
-  { report :: RawGameReport,
-    winnerRating :: Rating,
-    loserRating :: Rating
-  }
-  deriving (Generic)
-
-instance ToJSON SubmitGameReportResponse
 
 data ProcessedGameReport = ProcessedGameReport
   { rid :: GameReportId,
@@ -97,14 +86,14 @@ data ProcessedGameReport = ProcessedGameReport
 instance ToJSON ProcessedGameReport
 
 fromGameReport :: (Entity GameReport, Entity Player, Entity Player) -> ProcessedGameReport
-fromGameReport (report, winner, loser) =
+fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
   ProcessedGameReport
-    { rid = entityKey report,
+    { rid,
       timestamp = r.gameReportTimestamp,
       winnerId = r.gameReportWinnerId,
-      winner = playerName . entityVal $ winner,
+      winner = winner.playerName,
       loserId = r.gameReportLoserId,
-      loser = playerName . entityVal $ loser,
+      loser = loser.playerName,
       side = r.gameReportSide,
       victory = r.gameReportVictory,
       match = r.gameReportMatch,
@@ -123,8 +112,15 @@ fromGameReport (report, winner, loser) =
       interestRating = r.gameReportInterestRating,
       comments = r.gameReportComments
     }
-  where
-    r = entityVal report
+
+data SubmitGameReportResponse = SubmitGameReportResponse
+  { report :: ProcessedGameReport,
+    winnerRating :: Rating,
+    loserRating :: Rating
+  }
+  deriving (Generic)
+
+instance ToJSON SubmitGameReportResponse
 
 newtype GetReportsResponse = GetReportsResponse {reports :: [ProcessedGameReport]} deriving (Generic)
 
@@ -152,7 +148,7 @@ data LeaderboardEntry = LeaderboardEntry
 instance ToJSON LeaderboardEntry
 
 fromPlayerStats :: (Entity Player, PlayerStats) -> LeaderboardEntry
-fromPlayerStats (player, (t, y)) =
+fromPlayerStats (Entity pid p, (t, y)) =
   LeaderboardEntry
     { pid,
       name = p.playerName,
@@ -174,9 +170,6 @@ fromPlayerStats (player, (t, y)) =
       yearlyWinRateShadow =
         fromIntegral y.playerStatsYearWinsShadow / fromIntegral (y.playerStatsYearWinsShadow + y.playerStatsYearLossesShadow)
     }
-  where
-    pid = entityKey player
-    p = entityVal player
 
 newtype GetLeaderboardResponse = GetLeaderboardResponse {entries :: [LeaderboardEntry]} deriving (Generic)
 
