@@ -7,8 +7,8 @@ import { LeaderboardEntry, Side } from "./types";
 import TableView from "./TableView";
 
 const DEFAULT_YEAR = 2024;
-const AVAILABLE_YEARS = [DEFAULT_YEAR];
-const COMING_SOON_YEARS = [2023, 2022];
+const AVAILABLE_YEARS = [DEFAULT_YEAR, 2023];
+const COMING_SOON_YEARS = [2022];
 
 function Rankings() {
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -21,7 +21,7 @@ function Rankings() {
             const response = await axios.get(
                 // "http://localhost:8081/leaderboard"
                 "https://api.waroftheringcommunity.net:8080/leaderboard",
-                { params: { year: year } }
+                { params: { year } }
             );
             setEntries(response.data.entries);
         } catch (error) {
