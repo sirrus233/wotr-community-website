@@ -3,8 +3,7 @@
 
 module Types.Database where
 
-import Data.Time (UTCTime (utctDay), toGregorian)
-import Data.Time.Clock (getCurrentTime)
+import Data.Time (UTCTime)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side (..), Stronghold, Victory, Year)
 
@@ -70,9 +69,6 @@ share
 |]
 
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
-
-currentYear :: (MonadIO m) => m Int
-currentYear = (\(year, _, _) -> pure $ fromIntegral year) . toGregorian . utctDay =<< liftIO getCurrentTime
 
 defaultPlayerStatsTotal :: PlayerId -> PlayerStatsTotal
 defaultPlayerStatsTotal pid =
