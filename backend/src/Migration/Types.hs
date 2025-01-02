@@ -4,9 +4,7 @@ import AppServer (normalizeName)
 import Data.Csv (FromRecord)
 import Data.Text qualified as T
 import Data.Time (UTCTime (..), fromGregorian, midnight, timeOfDayToTime)
-import Relude.Extra (lookup)
 import Types.DataField (Competition (..), Expansion (..), League (..), Match (..), PlayerName, Side (..), Stronghold (..), Victory (..))
-import Types.Database (PlayerId)
 
 type PlayerBanList = [PlayerName]
 
@@ -203,8 +201,6 @@ instance FromRecord GameReportWithTrash
 
 data ParsedGameReport = ParsedGameReport
   { gameReportTimestamp :: UTCTime,
-    gameReportWinnerId :: PlayerId,
-    gameReportLoserId :: PlayerId,
     gameReportSide :: Side,
     gameReportVictory :: Victory,
     gameReportMatch :: Match,
@@ -228,12 +224,10 @@ data ParsedGameReport = ParsedGameReport
     loserRatingAfter :: Int
   }
 
-toParsedGameReport :: GameReportWithTrash -> HashMap PlayerName PlayerId -> ParsedGameReport
-toParsedGameReport report playersByName =
+toParsedGameReport :: GameReportWithTrash -> ParsedGameReport
+toParsedGameReport report =
   ParsedGameReport
     { gameReportTimestamp,
-      gameReportWinnerId,
-      gameReportLoserId,
       gameReportSide,
       gameReportVictory,
       gameReportMatch,
@@ -268,12 +262,6 @@ toParsedGameReport report playersByName =
         readOrError t = case readMaybe . toString $ t of
           Just a -> a
           Nothing -> error $ "Invalid timestamp number: " <> t
-    gameReportWinnerId = case lookup (normalizeName report.winner) playersByName of
-      Just a -> a
-      Nothing -> error $ "Invalid winner: " <> report.winner
-    gameReportLoserId = case lookup (normalizeName report.loser) playersByName of
-      Just a -> a
-      Nothing -> error $ "Invalid loser: " <> report.loser
     gameReportSide = case report.winningSide of
       "FP" -> Free
       "SP" -> Shadow

@@ -13,8 +13,10 @@ share
   [persistLowerCase|
    Player
     name PlayerName
+    displayName PlayerName
     country Text Maybe
     UniquePlayerName name
+    UniquePlayerDisplayName name
     deriving Show
 
    GameReport
@@ -38,15 +40,6 @@ share
     strongholds [Stronghold]
     interestRating Int
     comments Text Maybe
-    deriving Show
-
-   RatingDiff
-    timestamp UTCTime
-    playerId PlayerId
-    reportId GameReportId
-    side Side
-    ratingBefore Rating
-    ratingAfter Rating
     deriving Show
 
    PlayerStatsYear
@@ -76,28 +69,32 @@ share
     deriving Show
 |]
 
+type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
+
 currentYear :: (MonadIO m) => m Int
 currentYear = (\(year, _, _) -> pure $ fromIntegral year) . toGregorian . utctDay =<< liftIO getCurrentTime
 
-defaultPlayerStats :: PlayerId -> Year -> (PlayerStatsTotal, PlayerStatsYear)
-defaultPlayerStats pid year =
-  ( PlayerStatsTotal
-      { playerStatsTotalPlayerId = pid,
-        playerStatsTotalRatingFree = 500,
-        playerStatsTotalRatingShadow = 500,
-        playerStatsTotalGameCount = 0
-      },
-    PlayerStatsYear
-      { playerStatsYearPlayerId = pid,
-        playerStatsYearYear = year,
-        playerStatsYearWinsFree = 0,
-        playerStatsYearWinsShadow = 0,
-        playerStatsYearLossesFree = 0,
-        playerStatsYearLossesShadow = 0
-      }
-  )
+defaultPlayerStatsTotal :: PlayerId -> PlayerStatsTotal
+defaultPlayerStatsTotal pid =
+  PlayerStatsTotal
+    { playerStatsTotalPlayerId = pid,
+      playerStatsTotalRatingFree = 500,
+      playerStatsTotalRatingShadow = 500,
+      playerStatsTotalGameCount = 0
+    }
 
-updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> (PlayerStatsTotal, PlayerStatsYear)
+defaultPlayerStatsYear :: PlayerId -> Year -> PlayerStatsYear
+defaultPlayerStatsYear pid year =
+  PlayerStatsYear
+    { playerStatsYearPlayerId = pid,
+      playerStatsYearYear = year,
+      playerStatsYearWinsFree = 0,
+      playerStatsYearWinsShadow = 0,
+      playerStatsYearLossesFree = 0,
+      playerStatsYearLossesShadow = 0
+    }
+
+updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats
 updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
     ( PlayerStatsTotal
@@ -122,7 +119,7 @@ updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..})
         }
     )
 
-updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> (PlayerStatsTotal, PlayerStatsYear)
+updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats
 updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
     ( PlayerStatsTotal

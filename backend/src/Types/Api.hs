@@ -3,8 +3,8 @@ module Types.Api where
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
-import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
-import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId, PlayerStatsTotal (..), PlayerStatsYear (..))
+import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory, Year)
+import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId, PlayerStats, PlayerStatsTotal (..), PlayerStatsYear (..))
 
 data RawGameReport = RawGameReport
   { winner :: PlayerName,
@@ -130,6 +130,10 @@ newtype GetReportsResponse = GetReportsResponse {reports :: [ProcessedGameReport
 
 instance ToJSON GetReportsResponse
 
+newtype GetLeaderboardRequest = GetLeaderboardRequest {year :: Year} deriving (Generic)
+
+instance FromJSON GetLeaderboardRequest
+
 data LeaderboardEntry = LeaderboardEntry
   { pid :: PlayerId,
     name :: PlayerName,
@@ -151,10 +155,10 @@ data LeaderboardEntry = LeaderboardEntry
 
 instance ToJSON LeaderboardEntry
 
-fromPlayerStats :: (Entity Player, Entity PlayerStatsTotal, Entity PlayerStatsYear) -> LeaderboardEntry
-fromPlayerStats (player, totalStats, yearStats) =
+fromPlayerStats :: (Entity Player, PlayerStats) -> LeaderboardEntry
+fromPlayerStats (player, (t, y)) =
   LeaderboardEntry
-    { pid = entityKey player,
+    { pid,
       name = p.playerName,
       country = p.playerCountry,
       currentRatingFree = t.playerStatsTotalRatingFree,
@@ -175,9 +179,8 @@ fromPlayerStats (player, totalStats, yearStats) =
         fromIntegral y.playerStatsYearWinsShadow / fromIntegral (y.playerStatsYearWinsShadow + y.playerStatsYearLossesShadow)
     }
   where
+    pid = entityKey player
     p = entityVal player
-    t = entityVal totalStats
-    y = entityVal yearStats
 
 newtype GetLeaderboardResponse = GetLeaderboardResponse {entries :: [LeaderboardEntry]} deriving (Generic)
 

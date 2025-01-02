@@ -7,8 +7,8 @@ import Data.Vector qualified as V
 import Database.Esqueleto.Experimental (SqlPersistT, defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Logging (stdoutLogger)
-import Migration.Database (insertEntry, insertGameReport, insertPlayer)
-import Migration.Types (ParsedGameReport, ParsedLadderEntry, PlayerBanList, toParsedGameReport, toParsedLadderEntry)
+import Migration.Database (insertGameReport, insertLegacyEntry)
+import Migration.Types (ParsedGameReport, ParsedLadderEntry, ParsedLegacyLadderEntry, PlayerBanList, toParsedGameReport, toParsedLadderEntry, toParsedLegacyLadderEntry)
 import Relude.Extra (traverseToSnd)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
@@ -60,22 +60,29 @@ rename = \case
   "Igforce" -> "igforce77"
   name -> name
 
-migrate :: [ParsedLadderEntry] -> [HashMap PlayerName PlayerId -> ParsedGameReport] -> SqlPersistT IO ()
-migrate ladderEntries reports = do
-  players <- traverse insertEntry ladderEntries
-  sadPlayers <- traverse (traverseToSnd insertPlayer . normalizeName) tragedies
-  traverse_ (insertGameReport . ($ fromList $ sadPlayers <> players)) reports
+migrate :: [ParsedLegacyLadderEntry] -> [HashMap PlayerName PlayerId -> ParsedGameReport] -> SqlPersistT IO ()
+migrate legacyEntries reports = do
+  playerMap <- fromList <$> traverse insertLegacyEntry legacyEntries
+  pure playerMap
+
+-- sadPlayers <- traverse (traverseToSnd insertPlayer . normalizeName) tragedies
+-- traverse_ (insertGameReport . ($ fromList $ sadPlayers <> players)) reports
 
 main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
+  legacyData <- readFileLBS "migration/legacy-ladder.csv"
   ladderData <- readFileLBS "migration/ladder.csv"
   reportData <- readFileLBS "migration/reports.csv"
 
-  let ladderEntries = case decode NoHeader ladderData of
+  let legacyEntries = case decode NoHeader legacyData of
         Left err -> error $ show err
-        Right raw -> mapMaybe (toParsedLadderEntry banList) . V.toList $ raw
+        Right raw -> map toParsedLegacyLadderEntry . V.toList $ raw
+
+  -- let ladderEntries = case decode NoHeader ladderData of
+  --       Left err -> error $ show err
+  --       Right raw -> mapMaybe (toParsedLadderEntry banList) . V.toList $ raw
 
   let reports = case decode NoHeader reportData of
         Left err -> error $ show err
