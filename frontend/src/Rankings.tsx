@@ -21,7 +21,7 @@ function Rankings() {
             const response = await axios.get(
                 // "http://localhost:8081/leaderboard"
                 "https://api.waroftheringcommunity.net:8080/leaderboard",
-                { data: { year } }
+                { params: { year: year } }
             );
             setEntries(response.data.entries);
         } catch (error) {
