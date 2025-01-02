@@ -80,6 +80,9 @@ ratingAdjustment winner loser
     diff = abs (winner - loser)
     (smallAdjust, bigAdjust) = maybe maxThreshold snd (Map.lookupGE diff ratingThresholds)
 
+yearOf :: UTCTime -> Year
+yearOf = (\(y, _, _) -> fromIntegral y) . toGregorian . utctDay
+
 readStats :: PlayerId -> Year -> MaybePlayerStats -> PlayerStats
 readStats pid year (mStatsTotal, mStatsYear) = case (mStatsTotal, mStatsYear) of
   (Nothing, Nothing) -> (defaultPlayerStatsTotal_, defaultPlayerStatsYear_)
@@ -95,7 +98,7 @@ reprocessReports = runDb $ do
   reports <- getAllGameReports
   forM_ (reverse reports) $ \(report, winner, loser) -> do
     let r = entityVal report
-    let year = (\(y, _, _) -> fromIntegral y) . toGregorian . utctDay $ r.gameReportTimestamp
+    let year = yearOf r.gameReportTimestamp
     let (winnerSide, loserSide) = (r.gameReportSide, other r.gameReportSide)
     let (winnerId, loserId) = (r.gameReportWinnerId, r.gameReportLoserId)
 
