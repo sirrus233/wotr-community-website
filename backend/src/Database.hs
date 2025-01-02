@@ -9,6 +9,7 @@ import Database.Esqueleto.Experimental
     PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
+    delete,
     desc,
     from,
     getBy,
@@ -101,6 +102,24 @@ repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), yearStats@(PlayerStatsYe
   repsert (PlayerStatsTotalKey playerStatsTotalPlayerId) totalStats
   repsert (PlayerStatsYearKey playerStatsYearPlayerId playerStatsYearYear) yearStats
 
+getInitialStats :: (MonadIO m, MonadLogger m) => DBAction m [Entity PlayerStatsInitial]
+getInitialStats = lift . select $ from $ table @PlayerStatsInitial
+
+deleteStats :: (MonadIO m, MonadLogger m) => DBAction m ()
+deleteStats = lift $ do
+  delete $ do
+    _ <- from $ table @PlayerStatsTotal
+    pass
+  delete $ do
+    _ <- from $ table @PlayerStatsYear
+    pass
+
+resetStats :: (MonadIO m, MonadLogger m) => DBAction m ()
+resetStats = do
+  deleteStats
+  initialStats <- getInitialStats
+  lift . insertMany_ $ map entityVal initialStats
+
 insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> DBAction m (Key GameReport)
 insertGameReport = do
   lift . insert
@@ -116,4 +135,17 @@ getGameReports = lift . select $ do
           `on` (\(report :& _ :& loser) -> report ^. GameReportLoserId ==. loser ^. PlayerId)
   orderBy [desc (report ^. GameReportTimestamp)]
   limit 500
+  pure (report, winner, loser)
+
+-- TODO Duplicated code
+getAllGameReports :: (MonadIO m, MonadLogger m) => DBAction m [(Entity GameReport, Entity Player, Entity Player)]
+getAllGameReports = lift . select $ do
+  (report :& winner :& loser) <-
+    from $
+      table @GameReport
+        `innerJoin` table @Player
+          `on` (\(report :& winner) -> report ^. GameReportWinnerId ==. winner ^. PlayerId)
+        `innerJoin` table @Player
+          `on` (\(report :& _ :& loser) -> report ^. GameReportLoserId ==. loser ^. PlayerId)
+  orderBy [desc (report ^. GameReportTimestamp)]
   pure (report, winner, loser)

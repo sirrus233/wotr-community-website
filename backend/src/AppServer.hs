@@ -11,6 +11,7 @@ import Data.Validation (Validation (..))
 import Database
   ( DBAction,
     MaybePlayerStats,
+    getAllGameReports,
     getAllStats,
     getGameReports,
     getPlayerStats,
@@ -34,7 +35,7 @@ import Types.Api
     toGameReport,
   )
 import Types.DataField (Match (..), Rating, Side (..), Year)
-import Types.Database (PlayerId, PlayerStats, PlayerStatsTotal (..), defaultPlayerStatsTotal, defaultPlayerStatsYear, updatedPlayerStatsLose, updatedPlayerStatsWin)
+import Types.Database (GameReport (..), PlayerId, PlayerStats, PlayerStatsTotal (..), defaultPlayerStatsTotal, defaultPlayerStatsYear, updatedPlayerStatsLose, updatedPlayerStatsWin)
 import Validation (validateReport)
 
 defaultRating :: Rating
@@ -80,6 +81,33 @@ readStats pid year (mStatsTotal, mStatsYear) = case (mStatsTotal, mStatsYear) of
   where
     defaultPlayerStatsTotal_ = defaultPlayerStatsTotal pid
     defaultPlayerStatsYear_ = defaultPlayerStatsYear pid year
+
+reprocessReports :: AppM ()
+reprocessReports = runDb $ do
+  reports <- getAllGameReports
+  forM_ (reverse reports) $ \(report, winner, loser) -> do
+    let r = entityVal report
+    let year = (\(y, _, _) -> fromIntegral y) . toGregorian . utctDay $ r.gameReportTimestamp
+    let (winnerSide, loserSide) = (r.gameReportSide, other r.gameReportSide)
+    let (winnerId, loserId) = (r.gameReportWinnerId, r.gameReportLoserId)
+
+    (winnerStatsTotal, winnerStatsYear) <-
+      readStats winnerId year <$> readOrError ("Could not find stats for " <>: winner) (getPlayerStats winnerId year)
+    (loserStatsTotal, loserStatsYear) <-
+      readStats loserId year <$> readOrError ("Could not find stats for " <>: loser) (getPlayerStats loserId year)
+
+    let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
+    let adjustment = if r.gameReportMatch == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
+    let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
+
+    repsertPlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
+    repsertPlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
+  where
+    other side = case side of Free -> Shadow; Shadow -> Free
+
+    getRating side (PlayerStatsTotal {..}) = case side of
+      Free -> playerStatsTotalRatingFree
+      Shadow -> playerStatsTotalRatingShadow
 
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip

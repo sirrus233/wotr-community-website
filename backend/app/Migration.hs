@@ -1,17 +1,18 @@
 module Main where
 
 import AppConfig (AppM, Env (..), databaseFile, redisConfig, runAppLogger)
-import AppServer (submitReportHandler)
+import AppServer (normalizeName, reprocessReports)
 import Data.Csv (HasHeader (..), decode)
 import Data.Validation (Validation (..))
 import Data.Vector qualified as V
+import Database (insertGameReport, insertPlayerIfNotExists, runDb)
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
 import Logging (stdoutLogger)
 import Migration.Actions (insertLegacyEntry)
 import Migration.Types
-  ( ParsedGameReport,
+  ( ParsedGameReport (..),
     ParsedLegacyLadderEntry (..),
     PlayerBanList,
     toParsedGameReport,
@@ -21,9 +22,9 @@ import Migration.Types
 import Servant (runHandler)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
-import Types.Api (RawGameReport (..))
+import Types.Api (toGameReport)
 import Types.DataField (Victory (..))
-import Types.Database (migrateAll)
+import Types.Database (GameReport (..), migrateAll)
 import Validation (ReportError (..), validateReport)
 
 banList :: PlayerBanList
@@ -32,15 +33,18 @@ banList = ["mordak", "mellowsedge"]
 migrate :: [ParsedLegacyLadderEntry] -> [ParsedGameReport] -> AppM ()
 migrate legacyEntries reports = do
   traverse_ insertLegacyEntry . filter (\entry -> entry.player `notElem` banList) $ legacyEntries
-  let rawReports = map toRawGameReport reports
-  forM_
-    (map (liftA2 (,) validateReport id) rawReports)
-    ( \case
-        (Failure errs, r) -> case errs of
-          [NoVictoryConditionMet] -> submitReportHandler (r {victory = Concession}) >> pass
-          _ -> error $ "Unrecognized failure: " <> show errs <> " for report: " <> show r
-        (Success report, _) -> submitReportHandler report >> pass
-    )
+  forM_ reports $ \parsedReport -> runDb $ do
+    winnerId <- insertPlayerIfNotExists <$> normalizeName <*> id $ parsedReport.winner
+    loserId <- insertPlayerIfNotExists <$> normalizeName <*> id $ parsedReport.loser
+    let rawReport = toRawGameReport parsedReport
+    let report = toGameReport parsedReport.timestamp winnerId loserId rawReport
+    let validation = validateReport rawReport
+    case validation of
+      Failure errs -> case errs of
+        [NoVictoryConditionMet] -> insertGameReport (report {gameReportVictory = Concession})
+        _ -> error $ "Unrecognized failure: " <> show errs <> " for report: " <> show report
+      Success _ -> insertGameReport report
+  reprocessReports
 
 main :: IO ()
 main = do
