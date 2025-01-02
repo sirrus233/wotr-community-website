@@ -1,13 +1,19 @@
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
-import React from "react";
+import React, { ReactNode } from "react";
 import GameReportForm from "./GameReportForm";
 import GameReports from "./GameReports";
 import Rankings from "./Rankings";
+import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
+import DownloadIcon from "@mui/icons-material/Download";
 import Drawer from "@mui/joy/Drawer";
+import MuiLink from "@mui/joy/Link";
 import List from "@mui/joy/List";
 import ListItemButton from "@mui/joy/ListItemButton";
+import MenuIcon from "@mui/icons-material/Menu";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 export default function App() {
@@ -15,7 +21,33 @@ export default function App() {
         <CssVarsProvider>
             <CssBaseline />
             <BrowserRouter>
-                <DrawerNavigation />
+                <header
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        width: "100%",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1000,
+                        margin: "0 0 20px 0",
+                        padding: "10px 10px",
+                        boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.5)",
+                        color: "white",
+                        backgroundColor: "var(--joy-palette-primary-solidBg)",
+                    }}
+                >
+                    <DrawerNavigation />
+                    <Typography
+                        level="title-lg"
+                        sx={{
+                            color: "white",
+                            width: "100%",
+                            textAlign: "center",
+                        }}
+                    >
+                        WotR Community Ladder
+                    </Typography>
+                </header>
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/game-report" element={<GameReportForm />} />
@@ -28,7 +60,127 @@ export default function App() {
 }
 
 function Home() {
-    return <div>Welcome to the Home Page</div>;
+    return (
+        <Box
+            gap={4}
+            sx={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+            }}
+        >
+            <Section>
+                <Typography level="title-lg">Welcome!</Typography>
+            </Section>
+
+            <Section>
+                <Typography level="title-lg" mb={1}>
+                    Community Resources*
+                </Typography>
+
+                <Typography level="title-sm" mb={1}>
+                    *Not affiliated with the official War of the Ring board game
+                    produced by Ares Games
+                </Typography>
+
+                {[
+                    { to: "/game-report", label: "Game Report Form" },
+                    { to: "/rankings", label: "Rankings" },
+                    { to: "/game-reports", label: "Game Reports" },
+                ].map(({ to, label }) => (
+                    <MuiLink component={Link} to={to}>
+                        {label}
+                    </MuiLink>
+                ))}
+
+                {[
+                    {
+                        label: "Game Client",
+                        href: "https://www.dropbox.com/s/vc0q5twum8iol2b/WOTR-GANDALF2.zip?dl=0",
+                        isDownload: false,
+                    },
+                    {
+                        label: "Discord",
+                        href: "https://discord.gg/yZxQF4fK",
+                        isDownload: false,
+                    },
+                    {
+                        label: "WotR Almanac",
+                        href: "https://tinyurl.com/WOTRAlmanac",
+                        isDownload: false,
+                    },
+                    {
+                        label: "WotR Almanac: Expansions",
+                        href: "https://tinyurl.com/WOTRExpansions",
+                        isDownload: false,
+                    },
+                    {
+                        label: "WotR Almanac: KoME",
+                        href: "https://tinyurl.com/KOMEAlmanac",
+                        isDownload: false,
+                    },
+                    {
+                        label: "Legacy Ladder (2024)",
+                        href: "https://docs.google.com/spreadsheets/d/1okxuCGH1P9mDT-3Np4IvK-dUhmJHaoxP1-xG5U8CX4U/edit?gid=1355474132#gid=1355474132",
+                        isDownload: false,
+                    },
+                    {
+                        label: "Legacy Game Report Form",
+                        href: "https://docs.google.com/forms/d/e/1FAIpQLSeHCvS71vBIZnEYErzdgmANWzyiAL57Dv0wJDitXtp6J11tFg/viewform",
+                        isDownload: false,
+                    },
+                ].map(({ label, href, isDownload }) => (
+                    <ExternalLink href={href} isDownload={isDownload}>
+                        {label}
+                    </ExternalLink>
+                ))}
+            </Section>
+
+            <Section>
+                <Typography level="title-lg" mb={1}>
+                    Official Resources
+                </Typography>
+
+                {[
+                    {
+                        label: "Official WotR Game",
+                        href: "https://www.aresgames.eu/games/war-of-the-ring-line/war-of-the-ring-second-edition",
+                        isDownload: false,
+                    },
+                    {
+                        label: "Official WotR Products",
+                        href: "https://www.aresgames.eu/games/war-of-the-ring-line",
+                        isDownload: false,
+                    },
+                    {
+                        label: "Official Rules - Base",
+                        href: "https://www.aresgames.eu/download/20980/?tmstv=1735779992",
+                        isDownload: true,
+                    },
+                    {
+                        label: "Official Rules - LoME",
+                        href: "https://www.aresgames.eu/download/21011/?tmstv=1735780330",
+                        isDownload: true,
+                    },
+                    {
+                        label: "Official Rules - WoME",
+                        href: "https://www.aresgames.eu/download/21189/?tmstv=1735780518",
+                        isDownload: true,
+                    },
+                    {
+                        label: "Official Rules - KoME",
+                        href: "https://www.aresgames.eu/download/33646/?tmstv=1735780308",
+                        isDownload: true,
+                    },
+                ].map(({ label, href, isDownload }) => (
+                    <ExternalLink href={href} isDownload={isDownload}>
+                        {label}
+                    </ExternalLink>
+                ))}
+            </Section>
+        </Box>
+    );
 }
 
 function DrawerNavigation() {
@@ -39,8 +191,11 @@ function DrawerNavigation() {
             <IconButton
                 variant="solid"
                 color="primary"
+                sx={{ position: "absolute" }}
                 onClick={() => setOpen(true)}
-            />
+            >
+                <MenuIcon />
+            </IconButton>
             <Drawer open={open} onClose={() => setOpen(false)}>
                 <List
                     size="lg"
@@ -82,5 +237,43 @@ function DrawerNavigation() {
                 </List>
             </Drawer>
         </>
+    );
+}
+
+interface SectionProps {
+    children: ReactNode;
+}
+
+function Section({ children }: SectionProps) {
+    return (
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+            }}
+        >
+            {children}
+        </Box>
+    );
+}
+
+interface ExternalLinkProps {
+    href: string;
+    isDownload?: boolean;
+    children: ReactNode;
+}
+
+function ExternalLink({
+    href,
+    isDownload = false,
+    children,
+}: ExternalLinkProps) {
+    const Icon = isDownload ? DownloadIcon : OpenInNewIcon;
+    return (
+        <MuiLink href={href} target="_blank" rel="noopener noreferrer">
+            <Icon sx={{ paddingRight: "5px" }} />
+            {children}
+        </MuiLink>
     );
 }
