@@ -16,6 +16,7 @@ import Database.Esqueleto.Experimental
     just,
     leftJoin,
     limit,
+    offset,
     on,
     orderBy,
     runSqlPool,
@@ -60,18 +61,9 @@ runDb dbAction = do
 getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Maybe (Entity Player))
 getPlayerByName = lift . getBy . UniquePlayerName
 
-insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> PlayerName -> DBAction m (Entity Player)
-insertPlayerIfNotExists name displayName = do
-  player <- getPlayerByName name
-  case player of
-    Just p -> pure p
-    Nothing -> lift $ do
-      logInfoN $ "Adding new player " <> displayName <> " to database."
-      let p = Player name displayName Nothing
-      pid <- insert p
-      pure $ Entity pid p
-
-joinedPlayerStats :: Year -> From (SqlExpr (Entity Player) :& SqlExpr (Maybe (Entity PlayerStatsTotal)) :& SqlExpr (Maybe (Entity PlayerStatsYear)))
+joinedPlayerStats ::
+  Year ->
+  From (SqlExpr (Entity Player) :& SqlExpr (Maybe (Entity PlayerStatsTotal)) :& SqlExpr (Maybe (Entity PlayerStatsYear)))
 joinedPlayerStats year =
   table @Player
     `leftJoin` table @PlayerStatsTotal
@@ -94,16 +86,54 @@ getAllStats year = do
     (player :& totalStats :& yearStats) <- from $ joinedPlayerStats year
     pure (player, (totalStats, yearStats))
 
+getInitialStats :: (MonadIO m, MonadLogger m) => DBAction m [Entity PlayerStatsInitial]
+getInitialStats = lift . select $ from $ table @PlayerStatsInitial
+
+joinedGameReports :: From (SqlExpr (Entity GameReport) :& SqlExpr (Entity Player) :& SqlExpr (Entity Player))
+joinedGameReports =
+  table @GameReport
+    `innerJoin` table @Player
+      `on` (\(report :& winner) -> report ^. GameReportWinnerId ==. winner ^. PlayerId)
+    `innerJoin` table @Player
+      `on` (\(report :& _ :& loser) -> report ^. GameReportLoserId ==. loser ^. PlayerId)
+
+getGameReports :: (MonadIO m, MonadLogger m) => Int64 -> Int64 -> DBAction m [(Entity GameReport, Entity Player, Entity Player)]
+getGameReports limit' offset' = lift . select $ do
+  (report :& winner :& loser) <- from joinedGameReports
+  orderBy [desc (report ^. GameReportTimestamp)]
+  limit limit'
+  offset offset'
+  pure (report, winner, loser)
+
+getAllGameReports :: (MonadIO m, MonadLogger m) => DBAction m [(Entity GameReport, Entity Player, Entity Player)]
+getAllGameReports = lift . select $ do
+  (report :& winner :& loser) <- from joinedGameReports
+  orderBy [desc (report ^. GameReportTimestamp)]
+  pure (report, winner, loser)
+
+insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> PlayerName -> DBAction m (Entity Player)
+insertPlayerIfNotExists name displayName = do
+  player <- getPlayerByName name
+  case player of
+    Just p -> pure p
+    Nothing -> lift $ do
+      logInfoN $ "Adding new player " <> displayName <> " to database."
+      let p = Player name displayName Nothing
+      pid <- insert p
+      pure $ Entity pid p
+
 insertInitialStats :: (MonadIO m, MonadLogger m) => PlayerStatsInitial -> DBAction m ()
 insertInitialStats = lift . insert_
+
+insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> DBAction m (Entity GameReport)
+insertGameReport report = lift $ do
+  rid <- insert report
+  pure $ Entity rid report
 
 repsertPlayerStats :: (MonadIO m, MonadLogger m) => PlayerStats -> DBAction m ()
 repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), yearStats@(PlayerStatsYear {..})) = lift $ do
   repsert (PlayerStatsTotalKey playerStatsTotalPlayerId) totalStats
   repsert (PlayerStatsYearKey playerStatsYearPlayerId playerStatsYearYear) yearStats
-
-getInitialStats :: (MonadIO m, MonadLogger m) => DBAction m [Entity PlayerStatsInitial]
-getInitialStats = lift . select $ from $ table @PlayerStatsInitial
 
 deleteStats :: (MonadIO m, MonadLogger m) => DBAction m ()
 deleteStats = lift $ do
@@ -118,35 +148,4 @@ resetStats :: (MonadIO m, MonadLogger m) => DBAction m ()
 resetStats = do
   deleteStats
   initialStats <- getInitialStats
-  lift . insertMany_ $ map entityVal initialStats
-
-insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> DBAction m (Entity GameReport)
-insertGameReport report = lift $ do
-  rid <- insert report
-  pure $ Entity rid report
-
-getGameReports :: (MonadIO m, MonadLogger m) => DBAction m [(Entity GameReport, Entity Player, Entity Player)]
-getGameReports = lift . select $ do
-  (report :& winner :& loser) <-
-    from $
-      table @GameReport
-        `innerJoin` table @Player
-          `on` (\(report :& winner) -> report ^. GameReportWinnerId ==. winner ^. PlayerId)
-        `innerJoin` table @Player
-          `on` (\(report :& _ :& loser) -> report ^. GameReportLoserId ==. loser ^. PlayerId)
-  orderBy [desc (report ^. GameReportTimestamp)]
-  limit 500
-  pure (report, winner, loser)
-
--- TODO Duplicated code
-getAllGameReports :: (MonadIO m, MonadLogger m) => DBAction m [(Entity GameReport, Entity Player, Entity Player)]
-getAllGameReports = lift . select $ do
-  (report :& winner :& loser) <-
-    from $
-      table @GameReport
-        `innerJoin` table @Player
-          `on` (\(report :& winner) -> report ^. GameReportWinnerId ==. winner ^. PlayerId)
-        `innerJoin` table @Player
-          `on` (\(report :& _ :& loser) -> report ^. GameReportLoserId ==. loser ^. PlayerId)
-  orderBy [desc (report ^. GameReportTimestamp)]
-  pure (report, winner, loser)
+  lift $ insertEntityMany initialStats

@@ -173,7 +173,7 @@ submitReportHandler rawReport = case validateReport rawReport of
       Shadow -> playerStatsTotalRatingShadow
 
 getReportsHandler :: AppM GetReportsResponse
-getReportsHandler = runDb getGameReports <&> GetReportsResponse . map fromGameReport
+getReportsHandler = runDb $ getGameReports 500 0 <&> GetReportsResponse . map fromGameReport
 
 getLeaderboardHandler :: Int -> AppM GetLeaderboardResponse
 getLeaderboardHandler year =
