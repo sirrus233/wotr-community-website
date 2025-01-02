@@ -10,7 +10,6 @@ import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
-    MaybePlayerStats,
     getAllGameReports,
     getAllStats,
     getGameReports,
@@ -36,6 +35,7 @@ import Types.Api
 import Types.DataField (Match (..), Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
+    MaybePlayerStats,
     PlayerId,
     PlayerStats,
     PlayerStatsTotal (..),

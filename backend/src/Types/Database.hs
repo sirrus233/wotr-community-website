@@ -4,6 +4,7 @@
 module Types.Database where
 
 import Data.Time (UTCTime)
+import Database.Esqueleto.Experimental (Entity)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side (..), Stronghold, Victory, Year)
 
@@ -69,6 +70,8 @@ share
 |]
 
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
+
+type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerStatsYear))
 
 defaultPlayerStatsTotal :: PlayerId -> PlayerStatsTotal
 defaultPlayerStatsTotal pid =

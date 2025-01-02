@@ -36,6 +36,7 @@ import Types.Database
   ( EntityField (..),
     GameReport (..),
     Key (..),
+    MaybePlayerStats,
     Player (..),
     PlayerId,
     PlayerStats,
@@ -47,8 +48,6 @@ import Types.Database
 import Prelude hiding (get, on)
 
 type DBAction m = ExceptT ServerError (SqlPersistT m)
-
-type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerStatsYear))
 
 runDb :: DBAction (LoggingT IO) a -> AppM a
 runDb dbAction = do
