@@ -6,19 +6,18 @@ import Database.Esqueleto.Experimental
   ( Entity (..),
     From,
     Key,
+    PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
     desc,
     from,
     getBy,
     innerJoin,
-    insert,
     just,
     leftJoin,
     limit,
     on,
     orderBy,
-    replace,
     runSqlPool,
     select,
     selectOne,
@@ -39,6 +38,7 @@ import Types.Database
     Key (..),
     Player (..),
     PlayerId,
+    PlayerStats,
     PlayerStatsTotal (..),
     PlayerStatsYear (..),
     Unique (..),
@@ -92,10 +92,10 @@ getAllStats year = do
     (player :& totalStats :& yearStats) <- from $ joinedPlayerStats year
     pure (player, (totalStats, yearStats))
 
-replacePlayerStats :: (MonadIO m, MonadLogger m) => PlayerStatsTotal -> PlayerStatsYear -> DBAction m ()
-replacePlayerStats totalStats@(PlayerStatsTotal {..}) yearStats@(PlayerStatsYear {..}) = lift $ do
-  replace (PlayerStatsTotalKey playerStatsTotalPlayerId) totalStats
-  replace (PlayerStatsYearKey playerStatsYearPlayerId playerStatsYearYear) yearStats
+repsertPlayerStats :: (MonadIO m, MonadLogger m) => PlayerStats -> DBAction m ()
+repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), yearStats@(PlayerStatsYear {..})) = lift $ do
+  repsert (PlayerStatsTotalKey playerStatsTotalPlayerId) totalStats
+  repsert (PlayerStatsYearKey playerStatsYearPlayerId playerStatsYearYear) yearStats
 
 insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> DBAction m (Key GameReport)
 insertGameReport = do

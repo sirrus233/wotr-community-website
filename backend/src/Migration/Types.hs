@@ -1,10 +1,11 @@
 module Migration.Types where
 
-import AppServer (normalizeName)
 import Data.Csv (FromRecord)
 import Data.Text qualified as T
 import Data.Time (UTCTime (..), fromGregorian, midnight, timeOfDayToTime)
+import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Match (..), PlayerName, Side (..), Stronghold (..), Victory (..))
+import Types.Database (PlayerId, PlayerStatsTotal (..))
 
 type PlayerBanList = [PlayerName]
 
@@ -13,8 +14,8 @@ data LadderEntryWithTrash = LadderEntryWithTrash
     flag :: (),
     player :: Text,
     averageRating :: (),
-    shadowRating :: Int,
-    freeRating :: Int,
+    ratingShadow :: Int,
+    ratingFree :: Int,
     gamesPlayedTotal :: Int,
     gamesPlayedYear :: Int,
     fpWins :: Int,
@@ -55,27 +56,27 @@ data LadderEntryWithTrash = LadderEntryWithTrash
 
 instance FromRecord LadderEntryWithTrash
 
-data ParsedLadderEntry = ParsedLadderEntry
-  { player :: Text,
-    shadowRating :: Int,
-    freeRating :: Int,
-    gamesPlayedTotal :: Int,
-    gamesPlayedYear :: Int,
-    fpWins :: Int,
-    fpLoss :: Int,
-    spWins :: Int,
-    spLoss :: Int,
-    lomeFpWins :: Int,
-    lomeFpLoss :: Int,
-    lomeSpWins :: Int,
-    lomeSpLoss :: Int
-  }
+-- data ParsedLadderEntry = ParsedLadderEntry
+--   { player :: Text,
+--     shadowRating :: Int,
+--     freeRating :: Int,
+--     gamesPlayedTotal :: Int,
+--     gamesPlayedYear :: Int,
+--     fpWins :: Int,
+--     fpLoss :: Int,
+--     spWins :: Int,
+--     spLoss :: Int,
+--     lomeFpWins :: Int,
+--     lomeFpLoss :: Int,
+--     lomeSpWins :: Int,
+--     lomeSpLoss :: Int
+--   }
 
-toParsedLadderEntry :: PlayerBanList -> LadderEntryWithTrash -> Maybe ParsedLadderEntry
-toParsedLadderEntry banList (LadderEntryWithTrash {..}) =
-  if player `elem` banList
-    then Nothing
-    else Just ParsedLadderEntry {player = normalizeName player, ..}
+-- toParsedLadderEntry :: PlayerBanList -> LadderEntryWithTrash -> Maybe ParsedLadderEntry
+-- toParsedLadderEntry banList (LadderEntryWithTrash {..}) =
+--   if player `elem` banList
+--     then Nothing
+--     else Just ParsedLadderEntry {player = normalizeName player, ..}
 
 data LegacyLadderEntryWithTrash = LegacyLadderEntryWithTrash
   { rank :: (),
@@ -404,3 +405,6 @@ toParsedGameReport report =
     winnerRatingAfter = round report.winnerRatingAfter
     loserRatingBefore = round report.loserRatingBefore
     loserRatingAfter = round report.loserRatingAfter
+
+toRawGameReport :: ParsedGameReport -> RawGameReport
+toRawGameReport report@(ParsedGameReport {..}) = RawGameReport {..}

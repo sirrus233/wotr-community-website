@@ -1,19 +1,27 @@
 module Main where
 
-import AppConfig (databaseFile, runAppLogger)
-import AppServer (normalizeName)
+import AppConfig (AppM, Env (..), databaseFile, redisConfig, runAppLogger)
+import AppServer (submitReportHandler)
 import Data.Csv (HasHeader (..), decode)
 import Data.Vector qualified as V
-import Database.Esqueleto.Experimental (SqlPersistT, defaultConnectionPoolConfig, runMigration, runSqlPool)
+import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
+import Database.Redis (connect)
 import Logging (stdoutLogger)
-import Migration.Database (insertGameReport, insertLegacyEntry)
-import Migration.Types (ParsedGameReport, ParsedLadderEntry, ParsedLegacyLadderEntry, PlayerBanList, toParsedGameReport, toParsedLadderEntry, toParsedLegacyLadderEntry)
-import Relude.Extra (traverseToSnd)
+import Migration.Database (insertLegacyEntry)
+import Migration.Types
+  ( ParsedGameReport,
+    ParsedLegacyLadderEntry,
+    PlayerBanList,
+    toParsedGameReport,
+    toParsedLegacyLadderEntry,
+    toRawGameReport,
+  )
+import Servant (runHandler)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 import Types.DataField (PlayerName)
-import Types.Database (PlayerId, migrateAll)
+import Types.Database (migrateAll)
 
 tragedies :: [PlayerName]
 tragedies =
@@ -60,36 +68,34 @@ rename = \case
   "Igforce" -> "igforce77"
   name -> name
 
-migrate :: [ParsedLegacyLadderEntry] -> [HashMap PlayerName PlayerId -> ParsedGameReport] -> SqlPersistT IO ()
+migrate :: [ParsedLegacyLadderEntry] -> [ParsedGameReport] -> AppM ()
 migrate legacyEntries reports = do
-  playerMap <- fromList <$> traverse insertLegacyEntry legacyEntries
-  pure playerMap
-
--- sadPlayers <- traverse (traverseToSnd insertPlayer . normalizeName) tragedies
--- traverse_ (insertGameReport . ($ fromList $ sadPlayers <> players)) reports
+  traverse_ insertLegacyEntry legacyEntries
+  forM_ (map toRawGameReport reports) submitReportHandler
 
 main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
+  logger <- stdoutLogger
+  dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
+  redisPool <- connect redisConfig
+
+  let env = Env {dbPool, redisPool, logger}
+
   legacyData <- readFileLBS "migration/legacy-ladder.csv"
-  ladderData <- readFileLBS "migration/ladder.csv"
   reportData <- readFileLBS "migration/reports.csv"
 
   let legacyEntries = case decode NoHeader legacyData of
         Left err -> error $ show err
-        Right raw -> map toParsedLegacyLadderEntry . V.toList $ raw
-
-  -- let ladderEntries = case decode NoHeader ladderData of
-  --       Left err -> error $ show err
-  --       Right raw -> mapMaybe (toParsedLadderEntry banList) . V.toList $ raw
+        Right a -> map toParsedLegacyLadderEntry . V.toList $ a
 
   let reports = case decode NoHeader reportData of
         Left err -> error $ show err
-        Right raw -> V.toList $ fmap toParsedGameReport raw
-
-  logger <- stdoutLogger
-  dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
+        Right a -> map toParsedGameReport . V.toList $ a
 
   runSqlPool (runMigration migrateAll) dbPool
-  runSqlPool (migrate ladderEntries reports) dbPool
+  migrationResult <- runHandler . runAppLogger logger . usingReaderT env $ migrate legacyEntries reports
+  case migrationResult of
+    Left err -> error $ show err
+    Right _ -> pass

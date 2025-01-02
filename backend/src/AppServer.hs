@@ -16,7 +16,7 @@ import Database
     getPlayerStats,
     insertGameReport,
     insertPlayerIfNotExists,
-    replacePlayerStats,
+    repsertPlayerStats,
     runDb,
   )
 import Database.Esqueleto.Experimental (Entity (..))
@@ -120,8 +120,8 @@ submitReportHandler report = case validateReport report of
     logInfoN $ "Adjustment for " <> winner <> " (" <>: side <> "): " <>: winnerRatingOld <> " -> " <>: winnerRating
     logInfoN $ "Adjustment for " <> loser <> " (" <>: other side <> "): " <>: loserRatingOld <> " -> " <>: loserRating
 
-    uncurry replacePlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
-    uncurry replacePlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
+    repsertPlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
+    repsertPlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
 
     pure SubmitGameReportResponse {report, winnerRating, loserRating}
   where
