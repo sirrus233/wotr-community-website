@@ -162,8 +162,8 @@ submitReportHandler report = case validateReport report of
 getReportsHandler :: AppM GetReportsResponse
 getReportsHandler = runDb getGameReports <&> GetReportsResponse . map fromGameReport
 
-getLeaderboardHandler :: GetLeaderboardRequest -> AppM GetLeaderboardResponse
-getLeaderboardHandler (GetLeaderboardRequest year) =
+getLeaderboardHandler :: Int -> AppM GetLeaderboardResponse
+getLeaderboardHandler year =
   runDb (getAllStats year)
     <&> ( GetLeaderboardResponse
             . sortOn (Down . averageRating)
