@@ -15,7 +15,7 @@ data LegacyLadderEntryWithTrash = LegacyLadderEntryWithTrash
     averageRating :: (),
     shadowRating :: Int,
     freeRating :: Int,
-    gamesPlayedTotal :: Int
+    gamesPlayedTotal :: Double
   }
   deriving (Generic, Show)
 
@@ -29,7 +29,10 @@ data ParsedLegacyLadderEntry = ParsedLegacyLadderEntry
   }
 
 toParsedLegacyLadderEntry :: LegacyLadderEntryWithTrash -> ParsedLegacyLadderEntry
-toParsedLegacyLadderEntry (LegacyLadderEntryWithTrash {..}) = ParsedLegacyLadderEntry {..}
+toParsedLegacyLadderEntry entry@(LegacyLadderEntryWithTrash {..}) =
+  ParsedLegacyLadderEntry {gamesPlayedTotal = totalGames, ..}
+  where
+    totalGames = round entry.gamesPlayedTotal
 
 data GameReportWithTrash = GameReportWithTrash
   { gameId :: (),
@@ -286,12 +289,12 @@ toParsedGameReport report =
       "Four Dwarven Rings" -> 4
       "5+" -> 5
       _ -> error $ "Invalid dwarven rings: " <> show report.dwarvenRings
-    turns = report.turns
+    turns = if report.turns == 0 then 1 else report.turns
     corruption = report.corruption
     mordor = case report.step of
       0 -> Nothing
       a -> Just a
-    initialEyes = fromMaybe 4 (readMaybe . toString $ report.gameRating)
+    initialEyes = fromMaybe 4 (readMaybe . toString $ report.eyes)
     aragornTurn = case report.aragorn of
       Nothing -> Nothing
       Just 0 -> Nothing
@@ -327,7 +330,9 @@ toParsedGameReport report =
         ]
       where
         toStronghold strongholdField stronghold = [stronghold | strongholdField == Just 1]
-    interestRating = fromMaybe (-1) (readMaybe . toString $ report.gameRating)
+    interestRating = if interest == 0 then 1 else interest
+      where
+        interest = fromMaybe 1 (readMaybe . toString $ report.gameRating)
     comments = report.gameComments
 
 toRawGameReport :: ParsedGameReport -> RawGameReport

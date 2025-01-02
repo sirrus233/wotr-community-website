@@ -2,7 +2,9 @@ module Main where
 
 import AppConfig (AppM, Env (..), databaseFile, redisConfig, runAppLogger)
 import AppServer (submitReportHandler)
+import Control.Monad.Logger (logErrorN)
 import Data.Csv (HasHeader (..), decode)
+import Data.Validation (Validation (..))
 import Data.Vector qualified as V
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
@@ -10,8 +12,8 @@ import Database.Redis (connect)
 import Logging (stdoutLogger)
 import Migration.Actions (insertLegacyEntry)
 import Migration.Types
-  ( ParsedGameReport,
-    ParsedLegacyLadderEntry,
+  ( ParsedGameReport (..),
+    ParsedLegacyLadderEntry (..),
     PlayerBanList,
     toParsedGameReport,
     toParsedLegacyLadderEntry,
@@ -20,58 +22,23 @@ import Migration.Types
 import Servant (runHandler)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
-import Types.DataField (PlayerName)
 import Types.Database (migrateAll)
-
-tragedies :: [PlayerName]
-tragedies =
-  [ "Shade",
-    "Mikhael",
-    "exegesis1978",
-    "Mikhael Kates",
-    "Fluffy1",
-    "rosenbud",
-    "Arathaert",
-    "Interrogans",
-    "Fil",
-    "LUPO1972",
-    "Hallow",
-    "OurSaltation",
-    "CaHek",
-    "Jakalor",
-    "Kraktus",
-    "alfx23",
-    "herth",
-    "TheLastRoman",
-    "dinosaur-chan",
-    "Corey",
-    "Eric Garrison",
-    "Corey Chaves",
-    "bd",
-    "Woody23",
-    "Mogus",
-    "Iceman",
-    "Danisimos",
-    "JohnnyVictory",
-    "Starlock",
-    "Kakashi",
-    "Guthix",
-    "Tom Bombadil"
-  ]
+import Validation (validateReport)
 
 banList :: PlayerBanList
 banList = ["mordak", "mellowsedge"]
 
-rename :: PlayerName -> PlayerName
-rename = \case
-  "DR Sigma" -> "DrSigma"
-  "Igforce" -> "igforce77"
-  name -> name
-
 migrate :: [ParsedLegacyLadderEntry] -> [ParsedGameReport] -> AppM ()
 migrate legacyEntries reports = do
-  traverse_ insertLegacyEntry legacyEntries
-  forM_ (map toRawGameReport reports) submitReportHandler
+  traverse_ insertLegacyEntry . filter (\entry -> entry.player `notElem` banList) $ legacyEntries
+  forM_
+    (map (validateReport . toRawGameReport) reports)
+    ( \case
+        Failure errs -> logErrorN $ show errs
+        Success report -> do
+          _ <- submitReportHandler report
+          pass
+    )
 
 main :: IO ()
 main = do
@@ -95,7 +62,7 @@ main = do
         Right a -> map toParsedGameReport . V.toList $ a
 
   runSqlPool (runMigration migrateAll) dbPool
-  migrationResult <- runHandler . runAppLogger logger . usingReaderT env $ migrate legacyEntries reports
+  migrationResult <- runHandler . runAppLogger logger . usingReaderT env $ migrate legacyEntries (reverse reports)
   case migrationResult of
     Left err -> error $ show err
     Right _ -> pass
