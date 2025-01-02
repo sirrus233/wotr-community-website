@@ -1,20 +1,27 @@
 import axios from "axios";
 import React, { CSSProperties, ReactNode, useEffect, useState } from "react";
+import Box from "@mui/joy/Box";
+import Button from "@mui/joy/Button";
+import ButtonGroup from "@mui/joy/ButtonGroup";
 import { LeaderboardEntry, Side } from "./types";
 import TableView from "./TableView";
 
-const CURRENT_YEAR = 2024;
+const DEFAULT_YEAR = 2024;
+const AVAILABLE_YEARS = [DEFAULT_YEAR];
+const COMING_SOON_YEARS = [2023, 2022];
 
 function Rankings() {
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [year, setYear] = useState(DEFAULT_YEAR);
 
     const getLeaderboard = async () => {
         try {
             const response = await axios.get(
                 // "http://localhost:8081/leaderboard"
-                "https://api.waroftheringcommunity.net:8080/leaderboard"
+                "https://api.waroftheringcommunity.net:8080/leaderboard",
+                { data: { year } }
             );
             setEntries(response.data.entries);
         } catch (error) {
@@ -30,101 +37,131 @@ function Rankings() {
         getLeaderboard();
     };
 
-    useEffect(refresh, []);
+    useEffect(refresh, [year]);
 
     return (
-        <TableView
-            refresh={refresh}
-            error={error}
-            loading={loading}
-            label="Rankings"
-            header={
-                <>
-                    <tr>
-                        <TableHeader rowSpan={3}>Rank</TableHeader>
-                        <TableHeader rowSpan={2} colSpan={2}>
-                            Player
-                        </TableHeader>
-                        <TableHeader
-                            rowSpan={2}
-                            style={{ borderBottom: "none" }}
+        <Box>
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    width: "100%",
+                }}
+            >
+                <ButtonGroup>
+                    {AVAILABLE_YEARS.map((yearOption) => (
+                        <Button
+                            key={yearOption}
+                            variant="plain"
+                            onClick={() => setYear(yearOption)}
+                            sx={{
+                                fontWeight:
+                                    year === yearOption ? "bold" : "normal",
+                            }}
                         >
-                            Balanced
-                        </TableHeader>
-                        <TableHeader side="Shadow" rowSpan={3}>
-                            Shadow Rating
-                        </TableHeader>
-                        <TableHeader side="Free" rowSpan={3}>
-                            Free Rating
-                        </TableHeader>
-                        <TableHeader rowSpan={3}>Games</TableHeader>
-                        <TableHeader rowSpan={3}>Games 2024</TableHeader>
-                        <TableHeader colSpan={6}>Base Game 2024</TableHeader>
-                    </tr>
-                    <tr>
-                        {/* Base */}
-                        <TableHeader side="Free" colSpan={3}>
-                            FP
-                        </TableHeader>
-                        <TableHeader side="Shadow" colSpan={3}>
-                            SP
-                        </TableHeader>
-                    </tr>
-                    <tr>
-                        <TableHeader>Country</TableHeader>
-                        <TableHeader>Name</TableHeader>
-                        <TableHeader>Avg. Rating</TableHeader>
+                            {yearOption}
+                        </Button>
+                    ))}
+                    {COMING_SOON_YEARS.map((yearOption) => (
+                        <Button key={yearOption} disabled variant="plain">
+                            {yearOption}
+                        </Button>
+                    ))}
+                </ButtonGroup>
+            </Box>
 
-                        {/* FP Base */}
-                        <TableHeader side="Free">Win</TableHeader>
-                        <TableHeader side="Free">Loss</TableHeader>
-                        <TableHeader>%</TableHeader>
+            <TableView
+                refresh={refresh}
+                error={error}
+                loading={loading}
+                label="Rankings"
+                header={
+                    <>
+                        <tr>
+                            <TableHeader rowSpan={3}>Rank</TableHeader>
+                            <TableHeader rowSpan={2} colSpan={2}>
+                                Player
+                            </TableHeader>
+                            <TableHeader
+                                rowSpan={2}
+                                style={{ borderBottom: "none" }}
+                            >
+                                Balanced
+                            </TableHeader>
+                            <TableHeader side="Shadow" rowSpan={3}>
+                                Shadow Rating
+                            </TableHeader>
+                            <TableHeader side="Free" rowSpan={3}>
+                                Free Rating
+                            </TableHeader>
+                            <TableHeader rowSpan={3}>Games</TableHeader>
+                            <TableHeader rowSpan={3}>Games {year}</TableHeader>
+                            <TableHeader colSpan={6}>
+                                Base Game {year}
+                            </TableHeader>
+                        </tr>
+                        <tr>
+                            {/* Base */}
+                            <TableHeader side="Free" colSpan={3}>
+                                FP
+                            </TableHeader>
+                            <TableHeader side="Shadow" colSpan={3}>
+                                SP
+                            </TableHeader>
+                        </tr>
+                        <tr>
+                            <TableHeader>Country</TableHeader>
+                            <TableHeader>Name</TableHeader>
+                            <TableHeader>Avg. Rating</TableHeader>
 
-                        {/* SP Base */}
-                        <TableHeader side="Shadow">Win</TableHeader>
-                        <TableHeader side="Shadow">Loss</TableHeader>
-                        <TableHeader>%</TableHeader>
+                            {/* FP Base */}
+                            <TableHeader side="Free">Win</TableHeader>
+                            <TableHeader side="Free">Loss</TableHeader>
+                            <TableHeader>%</TableHeader>
+
+                            {/* SP Base */}
+                            <TableHeader side="Shadow">Win</TableHeader>
+                            <TableHeader side="Shadow">Loss</TableHeader>
+                            <TableHeader>%</TableHeader>
+                        </tr>
+                    </>
+                }
+                body={entries.map((entry, i) => (
+                    <tr key={entry.pid}>
+                        <TableCell>{i + 1}</TableCell>
+                        <TableCell>{entry.country}</TableCell>
+                        <TableCell>{entry.name}</TableCell>
+                        <TableCell>{entry.averageRating}</TableCell>
+                        <TableCell side="Shadow">
+                            {entry.currentRatingShadow}
+                        </TableCell>
+                        <TableCell side="Free">
+                            {entry.currentRatingFree}
+                        </TableCell>
+                        <TableCell>{entry.totalGames}</TableCell>
+                        <TableCell>{entry.yearlyGames}</TableCell>
+                        <TableCell side="Free" light>
+                            {entry.yearlyWinsFree}
+                        </TableCell>
+                        <TableCell side="Free">
+                            {entry.yearlyLossesFree}
+                        </TableCell>
+                        <TableCell>
+                            {toPercent(entry.yearlyWinRateFree)}
+                        </TableCell>
+                        <TableCell side="Shadow" light>
+                            {entry.yearlyWinsShadow}
+                        </TableCell>
+                        <TableCell side="Shadow">
+                            {entry.yearlyLossesShadow}
+                        </TableCell>
+                        <TableCell>
+                            {toPercent(entry.yearlyWinRateShadow)}
+                        </TableCell>
                     </tr>
-                </>
-            }
-            body={entries.map((entry, i) => (
-                <tr key={entry.pid}>
-                    <TableCell>{i + 1}</TableCell>
-                    <TableCell>{entry.country}</TableCell>
-                    <TableCell>{entry.name}</TableCell>
-                    <TableCell>{entry.averageRating}</TableCell>
-                    <TableCell side="Shadow">
-                        {entry.currentRatingShadow}
-                    </TableCell>
-                    <TableCell side="Free">{entry.currentRatingFree}</TableCell>
-                    <TableCell>{entry.totalGames}</TableCell>
-                    <TableCell>
-                        {entry.year === CURRENT_YEAR && entry.yearlyGames}
-                    </TableCell>
-                    <TableCell side="Free" light>
-                        {entry.year === CURRENT_YEAR && entry.yearlyWinsFree}
-                    </TableCell>
-                    <TableCell side="Free">
-                        {entry.year === CURRENT_YEAR && entry.yearlyLossesFree}
-                    </TableCell>
-                    <TableCell>
-                        {entry.year === CURRENT_YEAR &&
-                            toPercent(entry.yearlyWinRateFree)}
-                    </TableCell>
-                    <TableCell side="Shadow" light>
-                        {entry.year === CURRENT_YEAR && entry.yearlyWinsShadow}
-                    </TableCell>
-                    <TableCell side="Shadow">
-                        {entry.year === CURRENT_YEAR &&
-                            entry.yearlyLossesShadow}
-                    </TableCell>
-                    <TableCell>
-                        {entry.year === CURRENT_YEAR &&
-                            toPercent(entry.yearlyWinRateShadow)}
-                    </TableCell>
-                </tr>
-            ))}
-        />
+                ))}
+            />
+        </Box>
     );
 }
 
