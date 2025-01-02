@@ -3,7 +3,7 @@ module Types.Api where
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
-import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory, Year)
+import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
 import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId, PlayerStats, PlayerStatsTotal (..), PlayerStatsYear (..))
 
 data RawGameReport = RawGameReport
@@ -129,10 +129,6 @@ fromGameReport (report, winner, loser) =
 newtype GetReportsResponse = GetReportsResponse {reports :: [ProcessedGameReport]} deriving (Generic)
 
 instance ToJSON GetReportsResponse
-
-newtype GetLeaderboardRequest = GetLeaderboardRequest {year :: Year} deriving (Generic)
-
-instance FromJSON GetLeaderboardRequest
 
 data LeaderboardEntry = LeaderboardEntry
   { pid :: PlayerId,

@@ -24,8 +24,7 @@ import Database.Esqueleto.Experimental (Entity (..))
 import Logging ((<>:))
 import Servant (ServerError (errBody), ServerT, err422, err500, throwError, type (:<|>) (..))
 import Types.Api
-  ( GetLeaderboardRequest (GetLeaderboardRequest),
-    GetLeaderboardResponse (GetLeaderboardResponse),
+  ( GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
     RawGameReport (..),
