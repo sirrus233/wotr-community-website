@@ -8,7 +8,7 @@ import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigratio
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
 import Logging (stdoutLogger)
-import Migration.Database (insertLegacyEntry)
+import Migration.Actions (insertLegacyEntry)
 import Migration.Types
   ( ParsedGameReport,
     ParsedLegacyLadderEntry,

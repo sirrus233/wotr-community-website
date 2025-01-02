@@ -39,6 +39,7 @@ import Types.Database
     Player (..),
     PlayerId,
     PlayerStats,
+    PlayerStatsInitial,
     PlayerStatsTotal (..),
     PlayerStatsYear (..),
     Unique (..),
@@ -91,6 +92,9 @@ getAllStats year = do
   lift . select $ do
     (player :& totalStats :& yearStats) <- from $ joinedPlayerStats year
     pure (player, (totalStats, yearStats))
+
+insertInitialStats :: (MonadIO m, MonadLogger m) => PlayerStatsInitial -> DBAction m ()
+insertInitialStats = lift . insert_
 
 repsertPlayerStats :: (MonadIO m, MonadLogger m) => PlayerStats -> DBAction m ()
 repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), yearStats@(PlayerStatsYear {..})) = lift $ do

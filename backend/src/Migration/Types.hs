@@ -5,78 +5,8 @@ import Data.Text qualified as T
 import Data.Time (UTCTime (..), fromGregorian, midnight, timeOfDayToTime)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Match (..), PlayerName, Side (..), Stronghold (..), Victory (..))
-import Types.Database (PlayerId, PlayerStatsTotal (..))
 
 type PlayerBanList = [PlayerName]
-
-data LadderEntryWithTrash = LadderEntryWithTrash
-  { rank :: (),
-    flag :: (),
-    player :: Text,
-    averageRating :: (),
-    ratingShadow :: Int,
-    ratingFree :: Int,
-    gamesPlayedTotal :: Int,
-    gamesPlayedYear :: Int,
-    fpWins :: Int,
-    fpLoss :: Int,
-    fpPercent :: (),
-    spWins :: Int,
-    spLoss :: Int,
-    spPercent :: (),
-    lomeFpWins :: Int,
-    lomeFpLoss :: Int,
-    lome3 :: (),
-    lomeSpWins :: Int,
-    lomeSpLoss :: Int,
-    lome6 :: (),
-    lome7 :: (),
-    fpmv :: (),
-    trash1 :: (),
-    trash2 :: (),
-    trash3 :: (),
-    trash4 :: (),
-    trash5 :: (),
-    trash6 :: (),
-    trash7 :: (),
-    trash8 :: (),
-    trash9 :: (),
-    trash10 :: (),
-    trash11 :: (),
-    trash12 :: (),
-    trash13 :: (),
-    trash14 :: (),
-    trash15 :: (),
-    trash16 :: (),
-    trash17 :: (),
-    trash18 :: (),
-    trash19 :: ()
-  }
-  deriving (Generic, Show)
-
-instance FromRecord LadderEntryWithTrash
-
--- data ParsedLadderEntry = ParsedLadderEntry
---   { player :: Text,
---     shadowRating :: Int,
---     freeRating :: Int,
---     gamesPlayedTotal :: Int,
---     gamesPlayedYear :: Int,
---     fpWins :: Int,
---     fpLoss :: Int,
---     spWins :: Int,
---     spLoss :: Int,
---     lomeFpWins :: Int,
---     lomeFpLoss :: Int,
---     lomeSpWins :: Int,
---     lomeSpLoss :: Int
---   }
-
--- toParsedLadderEntry :: PlayerBanList -> LadderEntryWithTrash -> Maybe ParsedLadderEntry
--- toParsedLadderEntry banList (LadderEntryWithTrash {..}) =
---   if player `elem` banList
---     then Nothing
---     else Just ParsedLadderEntry {player = normalizeName player, ..}
 
 data LegacyLadderEntryWithTrash = LegacyLadderEntryWithTrash
   { rank :: (),
@@ -201,58 +131,54 @@ data GameReportWithTrash = GameReportWithTrash
 instance FromRecord GameReportWithTrash
 
 data ParsedGameReport = ParsedGameReport
-  { gameReportTimestamp :: UTCTime,
-    gameReportSide :: Side,
-    gameReportVictory :: Victory,
-    gameReportMatch :: Match,
-    gameReportCompetition :: [Competition],
-    gameReportLeague :: Maybe League,
-    gameReportExpansions :: [Expansion],
-    gameReportTreebeard :: Maybe Bool,
-    gameReportActionTokens :: Int,
-    gameReportDwarvenRings :: Int,
-    gameReportTurns :: Int,
-    gameReportCorruption :: Int,
-    gameReportMordor :: Maybe Int,
-    gameReportInitialEyes :: Int,
-    gameReportAragornTurn :: Maybe Int,
-    gameReportStrongholds :: [Stronghold],
-    gameReportInterestRating :: Int,
-    gameReportComments :: Maybe Text,
-    winnerRatingBefore :: Int,
-    winnerRatingAfter :: Int,
-    loserRatingBefore :: Int,
-    loserRatingAfter :: Int
+  { timestamp :: UTCTime,
+    winner :: Text,
+    loser :: Text,
+    side :: Side,
+    victory :: Victory,
+    match :: Match,
+    competition :: [Competition],
+    league :: Maybe League,
+    expansions :: [Expansion],
+    treebeard :: Maybe Bool,
+    actionTokens :: Int,
+    dwarvenRings :: Int,
+    turns :: Int,
+    corruption :: Int,
+    mordor :: Maybe Int,
+    initialEyes :: Int,
+    aragornTurn :: Maybe Int,
+    strongholds :: [Stronghold],
+    interestRating :: Int,
+    comments :: Maybe Text
   }
 
 toParsedGameReport :: GameReportWithTrash -> ParsedGameReport
 toParsedGameReport report =
   ParsedGameReport
-    { gameReportTimestamp,
-      gameReportSide,
-      gameReportVictory,
-      gameReportMatch,
-      gameReportCompetition,
-      gameReportLeague,
-      gameReportExpansions,
-      gameReportTreebeard,
-      gameReportActionTokens,
-      gameReportDwarvenRings,
-      gameReportTurns,
-      gameReportCorruption,
-      gameReportMordor,
-      gameReportInitialEyes,
-      gameReportAragornTurn,
-      gameReportStrongholds,
-      gameReportInterestRating,
-      gameReportComments,
-      winnerRatingBefore,
-      winnerRatingAfter,
-      loserRatingBefore,
-      loserRatingAfter
+    { timestamp,
+      winner,
+      loser,
+      side,
+      victory,
+      match,
+      competition,
+      league,
+      expansions,
+      treebeard,
+      actionTokens,
+      dwarvenRings,
+      turns,
+      corruption,
+      mordor,
+      initialEyes,
+      aragornTurn,
+      strongholds,
+      interestRating,
+      comments
     }
   where
-    gameReportTimestamp = case T.splitOn "/" (report.timestamp) of
+    timestamp = case T.splitOn "/" (report.timestamp) of
       [d, m, y] ->
         UTCTime
           (fromGregorian (readOrError y) (readOrError m) (readOrError d))
@@ -263,11 +189,13 @@ toParsedGameReport report =
         readOrError t = case readMaybe . toString $ t of
           Just a -> a
           Nothing -> error $ "Invalid timestamp number: " <> t
-    gameReportSide = case report.winningSide of
+    winner = report.winner
+    loser = report.loser
+    side = case report.winningSide of
       "FP" -> Free
       "SP" -> Shadow
       _ -> error $ "Invalid side: " <> report.winningSide
-    gameReportVictory = case report.typeOfVictory of
+    victory = case report.typeOfVictory of
       "Free People Ring" -> Ring
       "Free People Military" -> Military
       "Shadow Forces Corruption" -> Ring
@@ -275,7 +203,7 @@ toParsedGameReport report =
       "Conceded FP won" -> Concession
       "Conceded SP won" -> Concession
       _ -> error $ "Invalid victory: " <> report.typeOfVictory
-    gameReportMatch = case report.competitive of
+    match = case report.competitive of
       "Ladder" -> Ranked
       "Friendly" -> Unranked
       "Ladder and tournament" -> Ranked
@@ -289,7 +217,7 @@ toParsedGameReport report =
       "ladder and league (lome) 2023 2023" -> Ranked
       "ladder and league (TTS) 2023 2023" -> Ranked
       _ -> error $ "Invalid match: " <> report.competitive
-    gameReportCompetition = case report.competitive of
+    competition = case report.competitive of
       "Ladder" -> []
       "Friendly" -> []
       "Ladder and tournament" -> [Tournament]
@@ -303,7 +231,7 @@ toParsedGameReport report =
       "ladder and league (lome) 2023 2023" -> [League]
       "ladder and league (TTS) 2023 2023" -> [League]
       _ -> error $ "Invalid competition: " <> report.competitive
-    gameReportLeague = case report.competitive of
+    league = case report.competitive of
       "Ladder" -> Nothing
       "Friendly" -> Nothing
       "Ladder and tournament" -> Nothing
@@ -317,9 +245,9 @@ toParsedGameReport report =
       "ladder and league (lome) 2023 2023" -> Just LoMELeague
       "ladder and league (TTS) 2023 2023" -> Just TTSLeague
       _ -> error $ "Invalid league: " <> report.competitive
-    gameReportExpansions = expansions <> cities <> treebeard <> fateOfErebor
+    expansions = mainExpansions <> cities <> treebeardExp <> fateOfErebor
       where
-        expansions = case report.expansions of
+        mainExpansions = case report.expansions of
           "LoME" -> [LoME]
           "Base" -> []
           "LoME+WoME" -> [LoME, WoME]
@@ -329,20 +257,20 @@ toParsedGameReport report =
           "KoME+LoME" -> [LoME, KoME]
           _ -> error $ "Invalid expansions: " <> report.expansions
         cities = usedMiniExpansion report.cities Cities
-        treebeard = usedMiniExpansion report.treebeard Treebeard
+        treebeardExp = usedMiniExpansion report.treebeard Treebeard
         fateOfErebor = usedMiniExpansion report.fateOfErebor FateOfErebor
         usedMiniExpansion expansionStr expansion = case expansionStr of
           Just "Yes" -> [expansion]
           Just "No" -> []
           Nothing -> []
           _ -> error $ "Invalid expansion for (" <> show expansionStr <> "): " <> show expansion
-    gameReportTreebeard = case (report.treebeard, report.tree) of
+    treebeard = case (report.treebeard, report.tree) of
       (Just "Yes", Nothing) -> Just False
       (Just "Yes", Just 1) -> Just True
       (Just "No", _) -> Nothing
       (Nothing, _) -> Nothing
       _ -> error $ "Invalid treebeard: " <> show (report.treebeard, report.tree)
-    gameReportActionTokens = case report.tokens of
+    actionTokens = case report.tokens of
       "Nope!" -> 0
       "One Action Token" -> 1
       "Two Action Tokens" -> 2
@@ -350,7 +278,7 @@ toParsedGameReport report =
       "Four Action Tokens" -> 4
       "5+" -> 5
       _ -> error $ "Invalid action tokens: " <> show report.tokens
-    gameReportDwarvenRings = case report.dwarvenRings of
+    dwarvenRings = case report.dwarvenRings of
       "Nope!" -> 0
       "One Dwarven Ring" -> 1
       "Two Dwarven Rings" -> 2
@@ -358,17 +286,17 @@ toParsedGameReport report =
       "Four Dwarven Rings" -> 4
       "5+" -> 5
       _ -> error $ "Invalid dwarven rings: " <> show report.dwarvenRings
-    gameReportTurns = report.turns
-    gameReportCorruption = report.corruption
-    gameReportMordor = case report.step of
+    turns = report.turns
+    corruption = report.corruption
+    mordor = case report.step of
       0 -> Nothing
       a -> Just a
-    gameReportInitialEyes = fromMaybe 4 (readMaybe . toString $ report.gameRating)
-    gameReportAragornTurn = case report.aragorn of
+    initialEyes = fromMaybe 4 (readMaybe . toString $ report.gameRating)
+    aragornTurn = case report.aragorn of
       Nothing -> Nothing
       Just 0 -> Nothing
       Just a -> Just a
-    gameReportStrongholds =
+    strongholds =
       concat
         [ toStronghold report.rivendell Rivendell,
           toStronghold report.gH GreyHavens,
@@ -399,12 +327,8 @@ toParsedGameReport report =
         ]
       where
         toStronghold strongholdField stronghold = [stronghold | strongholdField == Just 1]
-    gameReportInterestRating = fromMaybe (-1) (readMaybe . toString $ report.gameRating)
-    gameReportComments = report.gameComments
-    winnerRatingBefore = round report.winnerRatingBefore
-    winnerRatingAfter = round report.winnerRatingAfter
-    loserRatingBefore = round report.loserRatingBefore
-    loserRatingAfter = round report.loserRatingAfter
+    interestRating = fromMaybe (-1) (readMaybe . toString $ report.gameRating)
+    comments = report.gameComments
 
 toRawGameReport :: ParsedGameReport -> RawGameReport
-toRawGameReport report@(ParsedGameReport {..}) = RawGameReport {..}
+toRawGameReport (ParsedGameReport {..}) = RawGameReport {..}

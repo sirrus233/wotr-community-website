@@ -62,7 +62,7 @@ library
                       AppServer,
                       Database,
                       Logging,
-                      Migration.Database,
+                      Migration.Actions,
                       Migration.Types,
                       Types.Api,
                       Types.Database,
