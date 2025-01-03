@@ -26,7 +26,8 @@ import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), Pers
 import Logging ((<>:))
 import Servant (NoContent (..), ServerError (errBody), ServerT, err404, err422, throwError, type (:<|>) (..))
 import Types.Api
-  ( GetLeaderboardResponse (GetLeaderboardResponse),
+  ( DeleteReportRequest (..),
+    GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
     ModifyReportRequest (..),
@@ -41,7 +42,6 @@ import Types.Api
 import Types.DataField (Match (..), Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
-    GameReportId,
     MaybePlayerStats,
     Player (..),
     PlayerId,
@@ -202,8 +202,8 @@ adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport
       | old.gameReportCompetition /= new.gameReportCompetition = True
       | otherwise = False
 
-adminDeleteReportHandler :: GameReportId -> AppM NoContent
-adminDeleteReportHandler rid = runDb $ do
+adminDeleteReportHandler :: DeleteReportRequest -> AppM NoContent
+adminDeleteReportHandler DeleteReportRequest {rid} = runDb $ do
   deleteGameReport rid
   reprocessReports
   pure NoContent

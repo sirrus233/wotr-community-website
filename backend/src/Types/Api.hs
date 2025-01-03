@@ -191,4 +191,11 @@ data ModifyReportRequest = ModifyReportRequest
 
 instance FromJSON ModifyReportRequest
 
+newtype DeleteReportRequest = DeleteReportRequest
+  { rid :: GameReportId
+  }
+  deriving (Generic)
+
+instance FromJSON DeleteReportRequest
+
 -- TODO Game Logs
