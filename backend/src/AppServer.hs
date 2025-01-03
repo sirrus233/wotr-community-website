@@ -178,12 +178,27 @@ adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
 adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ updatePlayerName pid newName >> pure NoContent
 
 adminModifyReportHandler :: ModifyReportRequest -> AppM NoContent
-adminModifyReportHandler ModifyReportRequest {rid, report} = runDb $ do
-  oldReport <- readOrError ("Cannot find report " <>: rid) $ lift . get $ rid
-  Entity _ newWinner <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner
-  Entity _ newLoser <- readOrError ("Cannot find player " <>: report.loser) $ getPlayerByName report.loser
+adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport report of
+  Failure errors -> throwError $ err422 {errBody = show errors}
+  Success _ -> runDb $ do
+    oldReport <- readOrError ("Cannot find report " <>: rid) $ lift . get $ rid
+    Entity newWinnerId _ <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner
+    Entity newLoserId _ <- readOrError ("Cannot find player " <>: report.loser) $ getPlayerByName report.loser
 
-  pure NoContent
+    let newReport = toGameReport oldReport.gameReportTimestamp newWinnerId newLoserId report
+    lift $ replace rid newReport
+
+    when (mustReprocess oldReport newReport) reprocessReports
+
+    pure NoContent
+  where
+    mustReprocess :: GameReport -> GameReport -> Bool
+    mustReprocess old new
+      | old.gameReportWinnerId /= new.gameReportWinnerId = True
+      | old.gameReportLoserId /= new.gameReportLoserId = True
+      | old.gameReportSide /= new.gameReportSide = True
+      | old.gameReportCompetition /= new.gameReportCompetition = True
+      | otherwise = False
 
 server :: ServerT Api AppM
 server =
