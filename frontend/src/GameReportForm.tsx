@@ -9,6 +9,7 @@ import Sheet from "@mui/joy/Sheet";
 import Button from "@mui/joy/Button";
 import {
     competitionTypes,
+    ErrorMessage,
     expansions,
     leagues,
     matchTypes,
@@ -24,6 +25,7 @@ import {
     strongholdSide,
 } from "./utils";
 import useFormData from "./hooks/useFormData";
+import Autocomplete from "./Autocomplete";
 import GameReportFormElement from "./GameReportFormElement";
 import MultiOptionInput from "./MultiOptionInput";
 import SelectNumericOptionInput from "./SelectNumericOptionInput";
@@ -34,7 +36,7 @@ import VictoryPoints from "./VictoryPoints";
 function GameReportForm() {
     const [
         formData,
-        { errorOnSubmit, successMessage, loading },
+        { errorOnSubmit, successMessage, loading, loadingPlayers, playerNames },
         {
             handleInputChange,
             validateField,
@@ -89,8 +91,16 @@ function GameReportForm() {
                 label={"Who won?"}
                 error={formData.winner.error}
             >
-                <TextInput
-                    value={formData.winner.value || ""}
+                <Autocomplete
+                    options={playerNames}
+                    current={formData.winner.value || ""}
+                    loading={loadingPlayers}
+                    alertText={
+                        !!formData.winner.value &&
+                        !playerNames.includes(formData.winner.value)
+                            ? ErrorMessage.MissingPlayerName
+                            : ""
+                    }
                     placeholder="Player Name - Please check spelling!"
                     onChange={handleInputChange("winner")}
                     validate={validateField("winner")}
@@ -100,8 +110,16 @@ function GameReportForm() {
                 label={"Who lost?"}
                 error={formData.loser.error}
             >
-                <TextInput
-                    value={formData.loser.value || ""}
+                <Autocomplete
+                    options={playerNames}
+                    current={formData.loser.value || ""}
+                    loading={loadingPlayers}
+                    alertText={
+                        !!formData.loser.value &&
+                        !playerNames.includes(formData.loser.value)
+                            ? ErrorMessage.MissingPlayerName
+                            : ""
+                    }
                     placeholder="Player Name - Please check spelling!"
                     onChange={handleInputChange("loser")}
                     validate={validateField("loser")}
