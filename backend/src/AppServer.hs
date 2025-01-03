@@ -10,7 +10,6 @@ import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
-    getAllGameReports,
     getAllStats,
     getGameReports,
     getPlayerStats,
@@ -26,6 +25,7 @@ import Types.Api
   ( GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
+    ProcessedGameReport,
     RawGameReport (..),
     SubmitGameReportResponse (..),
     fromGameReport,
@@ -36,6 +36,7 @@ import Types.DataField (Match (..), Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
     MaybePlayerStats,
+    Player (..),
     PlayerId,
     PlayerStats,
     PlayerStatsTotal (..),
@@ -93,33 +94,6 @@ readStats pid year (mStatsTotal, mStatsYear) = case (mStatsTotal, mStatsYear) of
     defaultPlayerStatsTotal_ = defaultPlayerStatsTotal pid
     defaultPlayerStatsYear_ = defaultPlayerStatsYear pid year
 
-reprocessReports :: AppM ()
-reprocessReports = runDb $ do
-  reports <- getAllGameReports
-  forM_ (reverse reports) $ \(report, winner, loser) -> do
-    let r = entityVal report
-    let year = yearOf r.gameReportTimestamp
-    let (winnerSide, loserSide) = (r.gameReportSide, other r.gameReportSide)
-    let (winnerId, loserId) = (r.gameReportWinnerId, r.gameReportLoserId)
-
-    (winnerStatsTotal, winnerStatsYear) <-
-      readStats winnerId year <$> readOrError ("Could not find stats for " <>: winner) (getPlayerStats winnerId year)
-    (loserStatsTotal, loserStatsYear) <-
-      readStats loserId year <$> readOrError ("Could not find stats for " <>: loser) (getPlayerStats loserId year)
-
-    let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
-    let adjustment = if r.gameReportMatch == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
-    let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
-
-    repsertPlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
-    repsertPlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
-  where
-    other side = case side of Free -> Shadow; Shadow -> Free
-
-    getRating side (PlayerStatsTotal {..}) = case side of
-      Free -> playerStatsTotalRatingFree
-      Shadow -> playerStatsTotalRatingShadow
-
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
 
@@ -131,46 +105,50 @@ readOrError errMsg action =
       logErrorN errMsg
       throwError err500 {errBody = show errMsg}
 
-submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
-submitReportHandler rawReport = case validateReport rawReport of
-  Failure errors -> throwError $ err422 {errBody = show errors}
-  Success (RawGameReport {..}) -> runDb $ do
-    logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
+processReport :: (MonadIO m, MonadLogger m) => Entity GameReport -> Entity Player -> Entity Player -> DBAction m ProcessedGameReport
+processReport report@(Entity _ GameReport {..}) winnerPlayer@(Entity winnerId winner) loserPlayer@(Entity loserId loser) = do
+  let year = yearOf gameReportTimestamp
+  let (winnerSide, loserSide) = (gameReportSide, other gameReportSide)
 
-    timestamp <- liftIO getCurrentTime
-    let year = (\(y, _, _) -> fromIntegral y) . toGregorian . utctDay $ timestamp
+  (winnerStatsTotal, winnerStatsYear) <-
+    readStats winnerId year <$> readOrError ("Failed reading stats for " <>: winner) (getPlayerStats winnerId year)
+  (loserStatsTotal, loserStatsYear) <-
+    readStats loserId year <$> readOrError ("Failed reading stats for " <>: loser) (getPlayerStats loserId year)
 
-    winnerPlayer@(Entity winnerId _) <- insertPlayerIfNotExists <$> normalizeName <*> id $ winner
-    loserPlayer@(Entity loserId _) <- insertPlayerIfNotExists <$> normalizeName <*> id $ loser
+  let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
+  let adjustment = if gameReportMatch == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
+  let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
 
-    report <- insertGameReport $ toGameReport timestamp winnerId loserId rawReport
-    let processedReport = fromGameReport (report, winnerPlayer, loserPlayer)
+  logInfoN $ "Rating diff: " <>: adjustment
+  logInfoN $ "Adjustment for " <> winner.playerDisplayName <> " (" <>: gameReportSide <> "): " <>: winnerRatingOld <> " -> " <>: winnerRating
+  logInfoN $ "Adjustment for " <> loser.playerDisplayName <> " (" <>: other gameReportSide <> "): " <>: loserRatingOld <> " -> " <>: loserRating
 
-    let (winnerSide, loserSide) = (side, other side)
+  repsertPlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
+  repsertPlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
 
-    (winnerStatsTotal, winnerStatsYear) <-
-      readStats winnerId year <$> readOrError ("Could not find stats for " <>: winner) (getPlayerStats winnerId year)
-    (loserStatsTotal, loserStatsYear) <-
-      readStats loserId year <$> readOrError ("Could not find stats for " <>: loser) (getPlayerStats loserId year)
-
-    let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
-    let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
-    let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
-
-    logInfoN $ "Rating diff: " <>: adjustment
-    logInfoN $ "Adjustment for " <> winner <> " (" <>: side <> "): " <>: winnerRatingOld <> " -> " <>: winnerRating
-    logInfoN $ "Adjustment for " <> loser <> " (" <>: other side <> "): " <>: loserRatingOld <> " -> " <>: loserRating
-
-    repsertPlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
-    repsertPlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
-
-    pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
+  pure $ fromGameReport (report, winnerPlayer, loserPlayer)
   where
     other side = case side of Free -> Shadow; Shadow -> Free
 
     getRating side (PlayerStatsTotal {..}) = case side of
       Free -> playerStatsTotalRatingFree
       Shadow -> playerStatsTotalRatingShadow
+
+submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
+submitReportHandler rawReport = case validateReport rawReport of
+  Failure errors -> throwError $ err422 {errBody = show errors}
+  Success (RawGameReport {..}) -> runDb $ do
+    logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
+    timestamp <- liftIO getCurrentTime
+    winnerPlayer@(Entity winnerId _) <- insertPlayerIfNotExists winner
+    loserPlayer@(Entity loserId _) <- insertPlayerIfNotExists loser
+    report <- insertGameReport $ toGameReport timestamp winnerId loserId rawReport
+    processedReport <- processReport report winnerPlayer loserPlayer
+
+    -- FIXME
+    let winnerRating = 0
+    let loserRating = 0
+    pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: AppM GetReportsResponse
 getReportsHandler = runDb $ getGameReports 500 0 <&> GetReportsResponse . map fromGameReport

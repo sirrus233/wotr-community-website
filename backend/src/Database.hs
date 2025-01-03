@@ -2,6 +2,7 @@ module Database where
 
 import AppConfig (AppM, Env (..), runAppLogger)
 import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
+import Data.Text qualified as T
 import Database.Esqueleto.Experimental
   ( Entity (..),
     From,
@@ -41,11 +42,13 @@ import Types.Database
     Player (..),
     PlayerId,
     PlayerStats,
-    PlayerStatsInitial,
+    PlayerStatsInitial (..),
     PlayerStatsTotal (..),
     PlayerStatsYear (..),
     Unique (..),
+    defaultPlayerStatsYear,
   )
+import Types.Migration (ParsedLegacyLadderEntry (..))
 import Prelude hiding (get, on)
 
 type DBAction m = ExceptT ServerError (SqlPersistT m)
@@ -58,8 +61,11 @@ runDb dbAction = do
     Left err -> throwError err
     Right a -> pure a
 
+normalizeName :: Text -> Text
+normalizeName = T.toLower . T.strip
+
 getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Maybe (Entity Player))
-getPlayerByName = lift . getBy . UniquePlayerName
+getPlayerByName = lift . getBy . UniquePlayerName . normalizeName
 
 joinedPlayerStats ::
   Year ->
@@ -111,14 +117,14 @@ getAllGameReports = lift . select $ do
   orderBy [desc (report ^. GameReportTimestamp)]
   pure (report, winner, loser)
 
-insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> PlayerName -> DBAction m (Entity Player)
-insertPlayerIfNotExists name displayName = do
+insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Entity Player)
+insertPlayerIfNotExists name = do
   player <- getPlayerByName name
   case player of
     Just p -> pure p
     Nothing -> lift $ do
-      logInfoN $ "Adding new player " <> displayName <> " to database."
-      let p = Player name displayName Nothing
+      logInfoN $ "Adding new player " <> normalizeName name <> " to database."
+      let p = Player (normalizeName name) name Nothing
       pid <- insert p
       pure $ Entity pid p
 
@@ -129,6 +135,17 @@ insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> DBAction m (Enti
 insertGameReport report = lift $ do
   rid <- insert report
   pure $ Entity rid report
+
+insertLegacyEntry :: (MonadIO m, MonadLogger m) => ParsedLegacyLadderEntry -> DBAction m ()
+insertLegacyEntry entry = do
+  (Entity playerId _) <- insertPlayerIfNotExists entry.player
+
+  let initialStats = PlayerStatsInitial playerId entry.freeRating entry.shadowRating entry.gamesPlayedTotal
+  let totalStats = PlayerStatsTotal playerId entry.freeRating entry.shadowRating entry.gamesPlayedTotal
+  let yearStats = defaultPlayerStatsYear playerId 2022
+
+  insertInitialStats initialStats
+  repsertPlayerStats (totalStats, yearStats)
 
 repsertPlayerStats :: (MonadIO m, MonadLogger m) => PlayerStats -> DBAction m ()
 repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), yearStats@(PlayerStatsYear {..})) = lift $ do

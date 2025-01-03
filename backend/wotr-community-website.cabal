@@ -62,11 +62,10 @@ library
                       AppServer,
                       Database,
                       Logging,
-                      Migration.Actions,
-                      Migration.Types,
                       Types.Api,
                       Types.Database,
                       Types.DataField,
+                      Types.Migration,
                       Validation
     hs-source-dirs:   src
     default-language: GHC2024

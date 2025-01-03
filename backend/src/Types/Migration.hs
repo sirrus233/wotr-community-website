@@ -1,4 +1,4 @@
-module Migration.Types where
+module Types.Migration where
 
 import Data.Csv (FromRecord)
 import Data.Text qualified as T

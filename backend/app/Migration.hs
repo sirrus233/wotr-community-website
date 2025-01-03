@@ -1,17 +1,22 @@
 module Main where
 
 import AppConfig (AppM, Env (..), databaseFile, redisConfig, runAppLogger)
-import AppServer (normalizeName, reprocessReports)
+import Control.Monad.Logger (LogLevel (..))
 import Data.Csv (HasHeader (..), decode)
 import Data.Validation (Validation (..))
 import Data.Vector qualified as V
-import Database (insertGameReport, insertPlayerIfNotExists, runDb)
+import Database (insertGameReport, insertLegacyEntry, insertPlayerIfNotExists, runDb)
 import Database.Esqueleto.Experimental (Entity (..), defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
-import Logging (stdoutLogger)
-import Migration.Actions (insertLegacyEntry)
-import Migration.Types
+import Logging (Logger, log, stdoutLogger, (<>:))
+import Servant (runHandler)
+import System.Directory (createDirectoryIfMissing)
+import System.FilePath (takeDirectory)
+import Types.Api (toGameReport)
+import Types.DataField (Victory (..))
+import Types.Database (GameReport (..), migrateAll)
+import Types.Migration
   ( ParsedGameReport (..),
     ParsedLegacyLadderEntry (..),
     PlayerBanList,
@@ -19,23 +24,17 @@ import Migration.Types
     toParsedLegacyLadderEntry,
     toRawGameReport,
   )
-import Servant (runHandler)
-import System.Directory (createDirectoryIfMissing)
-import System.FilePath (takeDirectory)
-import Types.Api (toGameReport)
-import Types.DataField (Victory (..))
-import Types.Database (GameReport (..), migrateAll)
 import Validation (ReportError (..), validateReport)
 
 banList :: PlayerBanList
 banList = ["mordak", "mellowsedge"]
 
 migrate :: [ParsedLegacyLadderEntry] -> [ParsedGameReport] -> AppM ()
-migrate legacyEntries reports = do
+migrate legacyEntries reports = runDb $ do
   traverse_ insertLegacyEntry . filter (\entry -> entry.player `notElem` banList) $ legacyEntries
-  forM_ reports $ \parsedReport -> runDb $ do
-    Entity winnerId _ <- insertPlayerIfNotExists <$> normalizeName <*> id $ parsedReport.winner
-    Entity loserId _ <- insertPlayerIfNotExists <$> normalizeName <*> id $ parsedReport.loser
+  forM_ reports $ \parsedReport -> do
+    Entity winnerId _ <- insertPlayerIfNotExists parsedReport.winner
+    Entity loserId _ <- insertPlayerIfNotExists parsedReport.loser
     let rawReport = toRawGameReport parsedReport
     let report = toGameReport parsedReport.timestamp winnerId loserId rawReport
     let validation = validateReport rawReport
@@ -45,6 +44,20 @@ migrate legacyEntries reports = do
         _ -> error $ "Unrecognized failure: " <> show errs <> " for report: " <> show report
       Success _ -> insertGameReport report
   reprocessReports
+
+tryParse :: FilePath -> Logger -> (a -> b) -> IO (Maybe [b])
+tryParse path logger mapper = do
+  raw <- readFileLBS path
+
+  let parsed = case decode NoHeader raw of
+        Left err -> Left err
+        Right a -> Right . map mapper . V.toList $ a
+
+  case parsed of
+    Left err -> do
+      log logger LevelError "Error parsing " <>: path <> ": " <>: err
+      pure Nothing
+    Right a -> pure $ Just a
 
 main :: IO ()
 main = do
@@ -56,19 +69,14 @@ main = do
 
   let env = Env {dbPool, redisPool, logger}
 
-  legacyData <- readFileLBS "migration/legacy-ladder.csv"
-  reportData <- readFileLBS "migration/reports.csv"
+  legacyEntries <- tryParse "migration/legacy-ladder.csv" logger toParsedLegacyLadderEntry
+  reports <- tryParse "migration/reports.csv" logger toParsedGameReport
 
-  let legacyEntries = case decode NoHeader legacyData of
-        Left err -> error $ show err
-        Right a -> map toParsedLegacyLadderEntry . V.toList $ a
-
-  let reports = case decode NoHeader reportData of
-        Left err -> error $ show err
-        Right a -> map toParsedGameReport . V.toList $ a
-
-  runSqlPool (runMigration migrateAll) dbPool
-  migrationResult <- runHandler . runAppLogger logger . usingReaderT env $ migrate legacyEntries (reverse reports)
-  case migrationResult of
-    Left err -> error $ show err
-    Right _ -> pass
+  case (legacyEntries, reports) of
+    (Just es, Just rs) -> do
+      runSqlPool (runMigration migrateAll) dbPool
+      migrationResult <- runHandler . runAppLogger logger . usingReaderT env $ migrate es (reverse rs)
+      case migrationResult of
+        Left err -> log logger LevelError $ "Migration failed: " <>: err
+        Right _ -> pass
+    _ -> pass
