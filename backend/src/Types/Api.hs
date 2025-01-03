@@ -4,7 +4,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
-import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId, PlayerStatsTotal (..), PlayerStatsYear (..))
+import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId, PlayerStats, PlayerStatsTotal (..), PlayerStatsYear (..), ReportInsertion)
 
 data RawGameReport = RawGameReport
   { winner :: PlayerName,
@@ -27,11 +27,9 @@ data RawGameReport = RawGameReport
     interestRating :: Int,
     comments :: Maybe Text
   }
-  deriving (Generic)
+  deriving (Generic, Show)
 
 instance FromJSON RawGameReport
-
-instance ToJSON RawGameReport
 
 toGameReport :: UTCTime -> PlayerId -> PlayerId -> RawGameReport -> GameReport
 toGameReport timestamp winnerId loserId r =
@@ -57,15 +55,6 @@ toGameReport timestamp winnerId loserId r =
       gameReportInterestRating = r.interestRating,
       gameReportComments = r.comments
     }
-
-data SubmitGameReportResponse = SubmitGameReportResponse
-  { report :: RawGameReport,
-    winnerRating :: Rating,
-    loserRating :: Rating
-  }
-  deriving (Generic)
-
-instance ToJSON SubmitGameReportResponse
 
 data ProcessedGameReport = ProcessedGameReport
   { rid :: GameReportId,
@@ -96,15 +85,15 @@ data ProcessedGameReport = ProcessedGameReport
 
 instance ToJSON ProcessedGameReport
 
-fromGameReport :: (Entity GameReport, Entity Player, Entity Player) -> ProcessedGameReport
-fromGameReport (report, winner, loser) =
+fromGameReport :: ReportInsertion -> ProcessedGameReport
+fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
   ProcessedGameReport
-    { rid = entityKey report,
+    { rid,
       timestamp = r.gameReportTimestamp,
       winnerId = r.gameReportWinnerId,
-      winner = playerName . entityVal $ winner,
+      winner = winner.playerName,
       loserId = r.gameReportLoserId,
-      loser = playerName . entityVal $ loser,
+      loser = loser.playerName,
       side = r.gameReportSide,
       victory = r.gameReportVictory,
       match = r.gameReportMatch,
@@ -123,8 +112,15 @@ fromGameReport (report, winner, loser) =
       interestRating = r.gameReportInterestRating,
       comments = r.gameReportComments
     }
-  where
-    r = entityVal report
+
+data SubmitGameReportResponse = SubmitGameReportResponse
+  { report :: ProcessedGameReport,
+    winnerRating :: Rating,
+    loserRating :: Rating
+  }
+  deriving (Generic)
+
+instance ToJSON SubmitGameReportResponse
 
 newtype GetReportsResponse = GetReportsResponse {reports :: [ProcessedGameReport]} deriving (Generic)
 
@@ -151,17 +147,17 @@ data LeaderboardEntry = LeaderboardEntry
 
 instance ToJSON LeaderboardEntry
 
-fromPlayerStats :: (Entity Player, Entity PlayerStatsTotal, Entity PlayerStatsYear) -> LeaderboardEntry
-fromPlayerStats (player, totalStats, yearStats) =
+fromPlayerStats :: (Entity Player, PlayerStats) -> LeaderboardEntry
+fromPlayerStats (Entity pid p, (t, y)) =
   LeaderboardEntry
-    { pid = entityKey player,
+    { pid,
       name = p.playerName,
       country = p.playerCountry,
-      currentRatingFree = t.playerStatsTotalCurrentRatingFree,
-      currentRatingShadow = t.playerStatsTotalCurrentRatingShadow,
+      currentRatingFree = t.playerStatsTotalRatingFree,
+      currentRatingShadow = t.playerStatsTotalRatingShadow,
       averageRating =
-        (fromIntegral t.playerStatsTotalCurrentRatingFree + fromIntegral t.playerStatsTotalCurrentRatingShadow) / 2,
-      totalGames = t.playerStatsTotalTotalGames,
+        (fromIntegral t.playerStatsTotalRatingFree + fromIntegral t.playerStatsTotalRatingShadow) / 2,
+      totalGames = t.playerStatsTotalGameCount,
       year = y.playerStatsYearYear,
       yearlyGames =
         y.playerStatsYearWinsFree + y.playerStatsYearWinsShadow + y.playerStatsYearLossesFree + y.playerStatsYearLossesShadow,
@@ -174,10 +170,6 @@ fromPlayerStats (player, totalStats, yearStats) =
       yearlyWinRateShadow =
         fromIntegral y.playerStatsYearWinsShadow / fromIntegral (y.playerStatsYearWinsShadow + y.playerStatsYearLossesShadow)
     }
-  where
-    p = entityVal player
-    t = entityVal totalStats
-    y = entityVal yearStats
 
 newtype GetLeaderboardResponse = GetLeaderboardResponse {entries :: [LeaderboardEntry]} deriving (Generic)
 

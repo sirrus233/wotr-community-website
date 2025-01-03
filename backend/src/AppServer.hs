@@ -4,35 +4,49 @@ import Api (Api)
 import AppConfig (AppM)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
+import Data.Time (UTCTime (..), toGregorian)
 import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
+    getAllGameReports,
     getAllStats,
     getGameReports,
     getPlayerStats,
     insertGameReport,
     insertPlayerIfNotExists,
-    insertRatingChange,
-    replacePlayerStats,
+    repsertPlayerStats,
+    resetStats,
     runDb,
   )
 import Database.Esqueleto.Experimental (Entity (..))
 import Logging ((<>:))
-import Relude.Extra (bimapF)
 import Servant (ServerError (errBody), ServerT, err422, err500, throwError, type (:<|>) (..))
 import Types.Api
   ( GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
-    LeaderboardEntry (averageRating),
+    LeaderboardEntry (..),
+    ProcessedGameReport,
     RawGameReport (..),
     SubmitGameReportResponse (..),
     fromGameReport,
     fromPlayerStats,
     toGameReport,
   )
-import Types.DataField (Match (..), Rating, Side (..))
-import Types.Database (PlayerStatsTotal (..), RatingDiff (..), updatedPlayerStatsLose, updatedPlayerStatsWin)
+import Types.DataField (Match (..), Rating, Side (..), Year)
+import Types.Database
+  ( GameReport (..),
+    MaybePlayerStats,
+    Player (..),
+    PlayerId,
+    PlayerStats,
+    PlayerStatsTotal (..),
+    ReportInsertion,
+    defaultPlayerStatsTotal,
+    defaultPlayerStatsYear,
+    updatedPlayerStatsLose,
+    updatedPlayerStatsWin,
+  )
 import Validation (validateReport)
 
 defaultRating :: Rating
@@ -69,6 +83,19 @@ ratingAdjustment winner loser
     diff = abs (winner - loser)
     (smallAdjust, bigAdjust) = maybe maxThreshold snd (Map.lookupGE diff ratingThresholds)
 
+yearOf :: UTCTime -> Year
+yearOf = (\(y, _, _) -> fromIntegral y) . toGregorian . utctDay
+
+readStats :: PlayerId -> Year -> MaybePlayerStats -> PlayerStats
+readStats pid year (mStatsTotal, mStatsYear) = case (mStatsTotal, mStatsYear) of
+  (Nothing, Nothing) -> (defaultPlayerStatsTotal_, defaultPlayerStatsYear_)
+  (Nothing, Just statsYear) -> (defaultPlayerStatsTotal_, entityVal statsYear)
+  (Just statsTotal, Nothing) -> (entityVal statsTotal, defaultPlayerStatsYear_)
+  (Just statsTotal, Just statsYear) -> (entityVal statsTotal, entityVal statsYear)
+  where
+    defaultPlayerStatsTotal_ = defaultPlayerStatsTotal pid
+    defaultPlayerStatsYear_ = defaultPlayerStatsYear pid year
+
 readOrError :: (Monad m, MonadLogger m) => Text -> DBAction m (Maybe a) -> DBAction m a
 readOrError errMsg action =
   action >>= \case
@@ -77,53 +104,70 @@ readOrError errMsg action =
       logErrorN errMsg
       throwError err500 {errBody = show errMsg}
 
-submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
-submitReportHandler report = case validateReport report of
-  Failure errors -> throwError $ err422 {errBody = show errors}
-  Success (RawGameReport {..}) -> runDb $ do
-    logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
+insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> DBAction m ReportInsertion
+insertReport timestamp rawReport = do
+  winner <- insertPlayerIfNotExists rawReport.winner
+  loser <- insertPlayerIfNotExists rawReport.loser
+  report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) rawReport
+  pure (report, winner, loser)
 
-    timestamp <- liftIO getCurrentTime
+insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> DBAction m ()
+insertReport_ timestamp rawReport = insertReport timestamp rawReport >> pass
 
-    -- TODO Normalize spelling/caps
-    winnerId <- insertPlayerIfNotExists winner
-    loserId <- insertPlayerIfNotExists loser
-    reportId <- insertGameReport $ toGameReport timestamp winnerId loserId report
+processReport :: (MonadIO m, MonadLogger m) => ReportInsertion -> DBAction m (ProcessedGameReport, Rating, Rating)
+processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId winner), loserPlayer@(Entity loserId loser)) = do
+  let year = yearOf gameReportTimestamp
+  let (winnerSide, loserSide) = (gameReportSide, other gameReportSide)
 
-    let (winnerSide, loserSide) = (side, other side)
+  (winnerStatsTotal, winnerStatsYear) <-
+    readStats winnerId year <$> readOrError ("Failed reading stats for " <>: winner) (getPlayerStats winnerId year)
+  (loserStatsTotal, loserStatsYear) <-
+    readStats loserId year <$> readOrError ("Failed reading stats for " <>: loser) (getPlayerStats loserId year)
 
-    (winnerStatsTotal, winnerStatsYear) <-
-      bimapF entityVal entityVal (readOrError ("Could not find stats for " <>: winner) $ getPlayerStats winnerId)
-    (loserStatsTotal, loserStatsYear) <-
-      bimapF entityVal entityVal (readOrError ("Could not find stats for " <>: loser) $ getPlayerStats loserId)
+  let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
+  let adjustment = if gameReportMatch == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
+  let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
 
-    let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
-    let adjustment = if match == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
-    let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
+  logInfoN $ "Rating diff: " <>: adjustment
+  logInfoN $ "Adjustment for " <> winner.playerDisplayName <> " (" <>: gameReportSide <> "): " <>: winnerRatingOld <> " -> " <>: winnerRating
+  logInfoN $ "Adjustment for " <> loser.playerDisplayName <> " (" <>: other gameReportSide <> "): " <>: loserRatingOld <> " -> " <>: loserRating
 
-    logInfoN $ "Rating diff: " <>: adjustment
-    logInfoN $ "Adjustment for " <> winner <> " (" <>: side <> "): " <>: winnerRatingOld <> " -> " <>: winnerRating
-    logInfoN $ "Adjustment for " <> loser <> " (" <>: other side <> "): " <>: loserRatingOld <> " -> " <>: loserRating
+  repsertPlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
+  repsertPlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
 
-    insertRatingChange $ RatingDiff timestamp winnerId reportId winnerSide winnerRatingOld winnerRating
-    insertRatingChange $ RatingDiff timestamp loserId reportId loserSide loserRatingOld loserRating
-
-    uncurry replacePlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
-    uncurry replacePlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
-
-    pure SubmitGameReportResponse {report, winnerRating, loserRating}
+  pure (fromGameReport (report, winnerPlayer, loserPlayer), winnerRating, loserRating)
   where
     other side = case side of Free -> Shadow; Shadow -> Free
 
     getRating side (PlayerStatsTotal {..}) = case side of
-      Free -> playerStatsTotalCurrentRatingFree
-      Shadow -> playerStatsTotalCurrentRatingShadow
+      Free -> playerStatsTotalRatingFree
+      Shadow -> playerStatsTotalRatingShadow
+
+reprocessReports :: (MonadIO m, MonadLogger m) => DBAction m ()
+reprocessReports = do
+  resetStats
+  reports <- getAllGameReports
+  forM_ (reverse reports) processReport
+
+submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
+submitReportHandler rawReport = case validateReport rawReport of
+  Failure errors -> throwError $ err422 {errBody = show errors}
+  Success (RawGameReport {..}) -> runDb $ do
+    logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
+    timestamp <- liftIO getCurrentTime
+    (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport
+    pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: AppM GetReportsResponse
-getReportsHandler = runDb getGameReports <&> GetReportsResponse . map fromGameReport
+getReportsHandler = runDb $ getGameReports 500 0 <&> GetReportsResponse . map fromGameReport
 
-getLeaderboardHandler :: AppM GetLeaderboardResponse
-getLeaderboardHandler = runDb getAllStats <&> GetLeaderboardResponse . sortOn (Down . averageRating) . map fromPlayerStats
+getLeaderboardHandler :: Int -> AppM GetLeaderboardResponse
+getLeaderboardHandler year =
+  runDb (getAllStats year)
+    <&> ( GetLeaderboardResponse
+            . sortOn (Down . averageRating)
+            . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year stats)))
+        )
 
 server :: ServerT Api AppM
 server = submitReportHandler :<|> getReportsHandler :<|> getLeaderboardHandler

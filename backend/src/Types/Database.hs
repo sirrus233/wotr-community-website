@@ -3,8 +3,8 @@
 
 module Types.Database where
 
-import Data.Time (UTCTime (utctDay), toGregorian)
-import Data.Time.Clock (getCurrentTime)
+import Data.Time (UTCTime)
+import Database.Esqueleto.Experimental (Entity)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side (..), Stronghold, Victory, Year)
 
@@ -13,8 +13,10 @@ share
   [persistLowerCase|
    Player
     name PlayerName
+    displayName PlayerName
     country Text Maybe
     UniquePlayerName name
+    UniquePlayerDisplayName name
     deriving Show
 
    GameReport
@@ -40,15 +42,6 @@ share
     comments Text Maybe
     deriving Show
 
-   RatingDiff
-    timestamp UTCTime
-    playerId PlayerId
-    reportId GameReportId
-    side Side
-    ratingBefore Rating
-    ratingAfter Rating
-    deriving Show
-
    PlayerStatsYear
     playerId PlayerId
     year Int
@@ -61,40 +54,53 @@ share
 
    PlayerStatsTotal
     playerId PlayerId
-    currentRatingFree Rating
-    currentRatingShadow Rating
-    totalGames Int
+    ratingFree Rating
+    ratingShadow Rating
+    gameCount Int
+    Primary playerId
+    deriving Show
+
+   PlayerStatsInitial
+    playerId PlayerId
+    ratingFree Rating
+    ratingShadow Rating
+    gameCount Int
     Primary playerId
     deriving Show
 |]
 
-currentYear :: (MonadIO m) => m Int
-currentYear = (\(year, _, _) -> pure $ fromIntegral year) . toGregorian . utctDay =<< liftIO getCurrentTime
+type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 
-defaultPlayerStats :: PlayerId -> Year -> (PlayerStatsTotal, PlayerStatsYear)
-defaultPlayerStats pid year =
-  ( PlayerStatsTotal
-      { playerStatsTotalPlayerId = pid,
-        playerStatsTotalCurrentRatingFree = 500,
-        playerStatsTotalCurrentRatingShadow = 500,
-        playerStatsTotalTotalGames = 0
-      },
-    PlayerStatsYear
-      { playerStatsYearPlayerId = pid,
-        playerStatsYearYear = year,
-        playerStatsYearWinsFree = 0,
-        playerStatsYearWinsShadow = 0,
-        playerStatsYearLossesFree = 0,
-        playerStatsYearLossesShadow = 0
-      }
-  )
+type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerStatsYear))
 
-updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> (PlayerStatsTotal, PlayerStatsYear)
+type ReportInsertion = (Entity GameReport, Entity Player, Entity Player)
+
+defaultPlayerStatsTotal :: PlayerId -> PlayerStatsTotal
+defaultPlayerStatsTotal pid =
+  PlayerStatsTotal
+    { playerStatsTotalPlayerId = pid,
+      playerStatsTotalRatingFree = 500,
+      playerStatsTotalRatingShadow = 500,
+      playerStatsTotalGameCount = 0
+    }
+
+defaultPlayerStatsYear :: PlayerId -> Year -> PlayerStatsYear
+defaultPlayerStatsYear pid year =
+  PlayerStatsYear
+    { playerStatsYearPlayerId = pid,
+      playerStatsYearYear = year,
+      playerStatsYearWinsFree = 0,
+      playerStatsYearWinsShadow = 0,
+      playerStatsYearLossesFree = 0,
+      playerStatsYearLossesShadow = 0
+    }
+
+updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats
 updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
     ( PlayerStatsTotal
-        { playerStatsTotalCurrentRatingFree = rating,
-          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
+        { playerStatsTotalRatingFree = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
       PlayerStatsYear
@@ -104,8 +110,8 @@ updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..})
     )
   Shadow ->
     ( PlayerStatsTotal
-        { playerStatsTotalCurrentRatingShadow = rating,
-          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
+        { playerStatsTotalRatingShadow = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
       PlayerStatsYear
@@ -114,12 +120,12 @@ updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..})
         }
     )
 
-updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> (PlayerStatsTotal, PlayerStatsYear)
+updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats
 updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
     ( PlayerStatsTotal
-        { playerStatsTotalCurrentRatingFree = rating,
-          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
+        { playerStatsTotalRatingFree = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
       PlayerStatsYear
@@ -129,8 +135,8 @@ updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}
     )
   Shadow ->
     ( PlayerStatsTotal
-        { playerStatsTotalCurrentRatingShadow = rating,
-          playerStatsTotalTotalGames = playerStatsTotalTotalGames + 1,
+        { playerStatsTotalRatingShadow = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
       PlayerStatsYear

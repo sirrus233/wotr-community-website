@@ -110,10 +110,10 @@ validateVictory report
     fpmv = report.side == Free && report.victory == Military
     victory = (report.side, report.victory)
     correctVictory
-      | report.corruption >= 12 = Just (Shadow, Ring)
-      | report.mordor == Just 5 = Just (Free, Ring)
       | report.side == Free && report.victory == Concession = Just (Free, Concession)
       | report.side == Shadow && report.victory == Concession = Just (Shadow, Concession)
+      | report.corruption >= 12 = Just (Shadow, Ring)
+      | report.mordor == Just 5 = Just (Free, Ring)
       | victoryPoints report Shadow >= 10 = Just (Shadow, Military)
       | victoryPoints report Free >= 4 = Just (Free, Military)
       | otherwise = Nothing
