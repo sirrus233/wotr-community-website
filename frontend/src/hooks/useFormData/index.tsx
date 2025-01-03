@@ -200,7 +200,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
                     )
                 );
             })
-            .catch((error) => console.error(error))
+            .catch(console.error)
             .finally(() => {
                 setLoadingPlayers(false);
             });
