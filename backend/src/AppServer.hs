@@ -172,7 +172,7 @@ getLeaderboardHandler year =
         )
 
 adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
-adminRenamePlayerHandler RenamePlayerRequest {..} = runDb $ updatePlayerName pid newName >> pure NoContent
+adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ updatePlayerName pid newName >> pure NoContent
 
 server :: ServerT Api AppM
 server =
