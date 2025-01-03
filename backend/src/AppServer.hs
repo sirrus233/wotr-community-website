@@ -9,6 +9,7 @@ import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
+    deleteGameReport,
     getAllGameReports,
     getAllStats,
     getGameReports,
@@ -40,6 +41,7 @@ import Types.Api
 import Types.DataField (Match (..), Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
+    GameReportId,
     MaybePlayerStats,
     Player (..),
     PlayerId,
@@ -200,6 +202,12 @@ adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport
       | old.gameReportCompetition /= new.gameReportCompetition = True
       | otherwise = False
 
+adminDeleteReportHandler :: GameReportId -> AppM NoContent
+adminDeleteReportHandler rid = runDb $ do
+  deleteGameReport rid
+  reprocessReports
+  pure NoContent
+
 server :: ServerT Api AppM
 server =
   submitReportHandler
@@ -207,3 +215,4 @@ server =
     :<|> getLeaderboardHandler
     :<|> adminRenamePlayerHandler
     :<|> adminModifyReportHandler
+    :<|> adminDeleteReportHandler

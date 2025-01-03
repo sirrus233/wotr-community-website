@@ -9,6 +9,7 @@ import Types.Api
     RenamePlayerRequest,
     SubmitGameReportResponse,
   )
+import Types.Database (GameReportId)
 
 type SubmitReportAPI = "submitReport" :> ReqBody '[JSON] RawGameReport :> Post '[JSON] SubmitGameReportResponse
 
@@ -19,6 +20,8 @@ type GetLeaderboardAPI = "leaderboard" :> QueryParam' '[Required] "year" Int :> 
 type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
 type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
+
+type AdminDeleteReportAPI = "deleteReport" :> ReqBody '[JSON] GameReportId :> PostNoContent
 
 submitReportAPI :: Proxy SubmitReportAPI
 submitReportAPI = Proxy
@@ -35,12 +38,16 @@ adminRenamePlayerAPI = Proxy
 adminModifyReportAPI :: Proxy AdminModifyReportAPI
 adminModifyReportAPI = Proxy
 
+adminDeleteReportAPI :: Proxy AdminDeleteReportAPI
+adminDeleteReportAPI = Proxy
+
 type Api =
   SubmitReportAPI
     :<|> GetReportsAPI
     :<|> GetLeaderboardAPI
     :<|> AdminRenamePlayerAPI
     :<|> AdminModifyReportAPI
+    :<|> AdminDeleteReportAPI
 
 api :: Proxy Api
 api = Proxy
