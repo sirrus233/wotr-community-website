@@ -5,6 +5,7 @@ import {
     FieldError,
     FormData,
     GameReportPayload,
+    LeaderboardEntry,
     ServerErrorBody,
     ServerValidationError,
     Stronghold,
@@ -37,13 +38,17 @@ type Meta = {
     errorOnSubmit: FieldError;
     successMessage: SuccessMessage;
     loading: boolean;
+    playerNames: string[];
+    loadingPlayers: boolean;
 };
 
 const useFormData = (): [FormData, Meta, Helpers] => {
     const [formData, setFormData] = useState(initialFormData);
+    const [playerNames, setPlayerNames] = useState<string[]>([]);
     const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
     const [successMessage, setSuccessMessage] = useState<SuccessMessage>(null);
     const [loading, setLoading] = useState(false);
+    const [loadingPlayers, setLoadingPlayers] = useState(false);
 
     const handleInputChange = <K extends keyof FormData>(field: K) => {
         return (value: FormData[K]["value"]) =>
@@ -180,6 +185,27 @@ const useFormData = (): [FormData, Meta, Helpers] => {
         }, [controlCondition]);
     };
 
+    useEffect(function loadPlayerNames() {
+        setLoadingPlayers(true);
+
+        axios
+            .get(
+                "https://api.waroftheringcommunity.net:8080/leaderboard",
+                { params: { year: 2024 } } // :'D
+            )
+            .then((response) => {
+                setPlayerNames(
+                    (response.data.entries as LeaderboardEntry[]).map(
+                        (entry) => entry.name
+                    )
+                );
+            })
+            .catch(console.error)
+            .finally(() => {
+                setLoadingPlayers(false);
+            });
+    }, []);
+
     useEffect(
         function resetForm() {
             if (successMessage) setFormData(initialFormData);
@@ -223,7 +249,7 @@ const useFormData = (): [FormData, Meta, Helpers] => {
 
     return [
         formData,
-        { errorOnSubmit, successMessage, loading },
+        { errorOnSubmit, successMessage, loading, loadingPlayers, playerNames },
         {
             handleInputChange,
             validateField,
