@@ -1,23 +1,24 @@
 module Main where
 
 import AppConfig (AppM, Env (..), databaseFile, redisConfig, runAppLogger)
+import AppServer (insertReport_, reprocessReports)
 import Control.Monad.Logger (LogLevel (..))
-import Data.Csv (HasHeader (..), decode)
+import Data.Csv (FromRecord, HasHeader (..), decode)
 import Data.Validation (Validation (..))
 import Data.Vector qualified as V
-import Database (insertGameReport, insertLegacyEntry, insertPlayerIfNotExists, runDb)
-import Database.Esqueleto.Experimental (Entity (..), defaultConnectionPoolConfig, runMigration, runSqlPool)
+import Database (insertLegacyEntry, runDb)
+import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
 import Logging (Logger, log, stdoutLogger, (<>:))
-import Servant (runHandler)
+import Servant (ServerError (errBody), err500, runHandler, throwError)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
-import Types.Api (toGameReport)
+import Types.Api (RawGameReport (..))
 import Types.DataField (Victory (..))
-import Types.Database (GameReport (..), migrateAll)
+import Types.Database (migrateAll)
 import Types.Migration
-  ( ParsedGameReport (..),
+  ( ParsedGameReport (timestamp),
     ParsedLegacyLadderEntry (..),
     PlayerBanList,
     toParsedGameReport,
@@ -32,20 +33,17 @@ banList = ["mordak", "mellowsedge"]
 migrate :: [ParsedLegacyLadderEntry] -> [ParsedGameReport] -> AppM ()
 migrate legacyEntries reports = runDb $ do
   traverse_ insertLegacyEntry . filter (\entry -> entry.player `notElem` banList) $ legacyEntries
-  forM_ reports $ \parsedReport -> do
-    Entity winnerId _ <- insertPlayerIfNotExists parsedReport.winner
-    Entity loserId _ <- insertPlayerIfNotExists parsedReport.loser
-    let rawReport = toRawGameReport parsedReport
-    let report = toGameReport parsedReport.timestamp winnerId loserId rawReport
-    let validation = validateReport rawReport
-    case validation of
+
+  forM_ (map (\r -> (r.timestamp, toRawGameReport r)) reports) $ \(timestamp, report) -> do
+    case validateReport report of
       Failure errs -> case errs of
-        [NoVictoryConditionMet] -> insertGameReport (report {gameReportVictory = Concession})
-        _ -> error $ "Unrecognized failure: " <> show errs <> " for report: " <> show report
-      Success _ -> insertGameReport report
+        [NoVictoryConditionMet] -> insertReport_ timestamp (report {victory = Concession})
+        _ -> throwError $ err500 {errBody = "Unrecognized failure: " <>: errs <> " for report: " <>: report}
+      Success _ -> insertReport_ timestamp report
+
   reprocessReports
 
-tryParse :: FilePath -> Logger -> (a -> b) -> IO (Maybe [b])
+tryParse :: (FromRecord a) => FilePath -> Logger -> (a -> b) -> IO (Maybe [b])
 tryParse path logger mapper = do
   raw <- readFileLBS path
 
@@ -55,7 +53,7 @@ tryParse path logger mapper = do
 
   case parsed of
     Left err -> do
-      log logger LevelError "Error parsing " <>: path <> ": " <>: err
+      log logger LevelError $ "Error parsing " <>: path <> ": " <>: err
       pure Nothing
     Right a -> pure $ Just a
 

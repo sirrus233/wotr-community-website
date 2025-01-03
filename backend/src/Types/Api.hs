@@ -4,7 +4,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
-import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId, PlayerStats, PlayerStatsTotal (..), PlayerStatsYear (..))
+import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId, PlayerStats, PlayerStatsTotal (..), PlayerStatsYear (..), ReportInsertion)
 
 data RawGameReport = RawGameReport
   { winner :: PlayerName,
@@ -85,7 +85,7 @@ data ProcessedGameReport = ProcessedGameReport
 
 instance ToJSON ProcessedGameReport
 
-fromGameReport :: (Entity GameReport, Entity Player, Entity Player) -> ProcessedGameReport
+fromGameReport :: ReportInsertion -> ProcessedGameReport
 fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
   ProcessedGameReport
     { rid,

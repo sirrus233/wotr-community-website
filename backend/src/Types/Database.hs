@@ -73,6 +73,8 @@ type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 
 type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerStatsYear))
 
+type ReportInsertion = (Entity GameReport, Entity Player, Entity Player)
+
 defaultPlayerStatsTotal :: PlayerId -> PlayerStatsTotal
 defaultPlayerStatsTotal pid =
   PlayerStatsTotal

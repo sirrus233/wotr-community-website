@@ -10,12 +10,14 @@ import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
+    getAllGameReports,
     getAllStats,
     getGameReports,
     getPlayerStats,
     insertGameReport,
     insertPlayerIfNotExists,
     repsertPlayerStats,
+    resetStats,
     runDb,
   )
 import Database.Esqueleto.Experimental (Entity (..))
@@ -40,6 +42,7 @@ import Types.Database
     PlayerId,
     PlayerStats,
     PlayerStatsTotal (..),
+    ReportInsertion,
     defaultPlayerStatsTotal,
     defaultPlayerStatsYear,
     updatedPlayerStatsLose,
@@ -105,8 +108,18 @@ readOrError errMsg action =
       logErrorN errMsg
       throwError err500 {errBody = show errMsg}
 
-processReport :: (MonadIO m, MonadLogger m) => Entity GameReport -> Entity Player -> Entity Player -> DBAction m ProcessedGameReport
-processReport report@(Entity _ GameReport {..}) winnerPlayer@(Entity winnerId winner) loserPlayer@(Entity loserId loser) = do
+insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> DBAction m ReportInsertion
+insertReport timestamp rawReport = do
+  winner <- insertPlayerIfNotExists rawReport.winner
+  loser <- insertPlayerIfNotExists rawReport.loser
+  report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) rawReport
+  pure (report, winner, loser)
+
+insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> DBAction m ()
+insertReport_ timestamp rawReport = insertReport timestamp rawReport >> pass
+
+processReport :: (MonadIO m, MonadLogger m) => ReportInsertion -> DBAction m (ProcessedGameReport, Rating, Rating)
+processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId winner), loserPlayer@(Entity loserId loser)) = do
   let year = yearOf gameReportTimestamp
   let (winnerSide, loserSide) = (gameReportSide, other gameReportSide)
 
@@ -126,7 +139,7 @@ processReport report@(Entity _ GameReport {..}) winnerPlayer@(Entity winnerId wi
   repsertPlayerStats $ updatedPlayerStatsWin winnerSide winnerRating winnerStatsTotal winnerStatsYear
   repsertPlayerStats $ updatedPlayerStatsLose loserSide loserRating loserStatsTotal loserStatsYear
 
-  pure $ fromGameReport (report, winnerPlayer, loserPlayer)
+  pure (fromGameReport (report, winnerPlayer, loserPlayer), winnerRating, loserRating)
   where
     other side = case side of Free -> Shadow; Shadow -> Free
 
@@ -134,20 +147,19 @@ processReport report@(Entity _ GameReport {..}) winnerPlayer@(Entity winnerId wi
       Free -> playerStatsTotalRatingFree
       Shadow -> playerStatsTotalRatingShadow
 
+reprocessReports :: (MonadIO m, MonadLogger m) => DBAction m ()
+reprocessReports = do
+  resetStats
+  reports <- getAllGameReports
+  forM_ (reverse reports) processReport
+
 submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
 submitReportHandler rawReport = case validateReport rawReport of
   Failure errors -> throwError $ err422 {errBody = show errors}
   Success (RawGameReport {..}) -> runDb $ do
     logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
     timestamp <- liftIO getCurrentTime
-    winnerPlayer@(Entity winnerId _) <- insertPlayerIfNotExists winner
-    loserPlayer@(Entity loserId _) <- insertPlayerIfNotExists loser
-    report <- insertGameReport $ toGameReport timestamp winnerId loserId rawReport
-    processedReport <- processReport report winnerPlayer loserPlayer
-
-    -- FIXME
-    let winnerRating = 0
-    let loserRating = 0
+    (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport
     pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: AppM GetReportsResponse
