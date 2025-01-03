@@ -1,8 +1,12 @@
-import React, { ReactNode } from "react";
+import React, { CSSProperties, ReactNode } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import Table from "@mui/joy/Table";
 import Typography from "@mui/joy/Typography";
+import {
+    TABLE_REFRESH_BTN_HEIGHT_PX,
+    TABLE_ELEMENTS_GAP,
+} from "./styles/sizes";
 
 interface Props {
     refresh: () => void;
@@ -11,6 +15,7 @@ interface Props {
     label: string;
     header: ReactNode;
     body: ReactNode;
+    containerStyle?: CSSProperties;
 }
 
 export default function TableView({
@@ -20,14 +25,15 @@ export default function TableView({
     label,
     header,
     body,
+    containerStyle = {},
 }: Props) {
     return (
         <Box
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 2,
-                m: 2,
+                mx: 2,
+                mb: `${TABLE_ELEMENTS_GAP}px`,
             }}
         >
             <Box
@@ -36,9 +42,15 @@ export default function TableView({
                     width: "100%",
                     alignItems: "center",
                     justifyContent: "center",
+                    margin: `${TABLE_ELEMENTS_GAP}px 0`,
                 }}
             >
-                <Button onClick={refresh}>Refresh</Button>
+                <Button
+                    onClick={refresh}
+                    sx={{ height: `${TABLE_REFRESH_BTN_HEIGHT_PX}px` }}
+                >
+                    Refresh
+                </Button>
             </Box>
 
             {error && <Typography color="danger">{error}</Typography>}
@@ -51,6 +63,7 @@ export default function TableView({
                         overflow: "auto",
                         boxShadow: "lg",
                         borderRadius: "sm",
+                        ...containerStyle,
                     }}
                 >
                     <Table
