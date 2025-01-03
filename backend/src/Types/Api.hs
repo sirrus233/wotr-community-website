@@ -91,9 +91,9 @@ fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
     { rid,
       timestamp = r.gameReportTimestamp,
       winnerId = r.gameReportWinnerId,
-      winner = winner.playerName,
+      winner = winner.playerDisplayName,
       loserId = r.gameReportLoserId,
-      loser = loser.playerName,
+      loser = loser.playerDisplayName,
       side = r.gameReportSide,
       victory = r.gameReportVictory,
       match = r.gameReportMatch,
@@ -151,7 +151,7 @@ fromPlayerStats :: (Entity Player, PlayerStats) -> LeaderboardEntry
 fromPlayerStats (Entity pid p, (t, y)) =
   LeaderboardEntry
     { pid,
-      name = p.playerName,
+      name = p.playerDisplayName,
       country = p.playerCountry,
       currentRatingFree = t.playerStatsTotalRatingFree,
       currentRatingShadow = t.playerStatsTotalRatingShadow,
