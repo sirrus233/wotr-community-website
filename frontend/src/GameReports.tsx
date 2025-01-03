@@ -12,6 +12,13 @@ import {
     Stronghold,
     Victory,
 } from "./types";
+import { FREE_ACCENT_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
+import {
+    HEADER_HEIGHT_PX,
+    HEADER_MARGIN_PX,
+    TABLE_REFRESH_BTN_HEIGHT_PX,
+    TABLE_ELEMENTS_GAP,
+} from "./styles/sizes";
 import {
     getExpansionLabel,
     getLeagueLabel,
@@ -21,8 +28,11 @@ import {
 } from "./utils";
 import TableView from "./TableView";
 
-const FREE_ACCENT_COLOR = "#3f99ff";
-const SHADOW_ACCENT_COLOR = "#990200";
+const TABLE_TOP_POSITION =
+    HEADER_HEIGHT_PX +
+    HEADER_MARGIN_PX +
+    TABLE_REFRESH_BTN_HEIGHT_PX +
+    TABLE_ELEMENTS_GAP * 2;
 
 export default function GameReports() {
     const [reports, setReports] = useState<ProcessedGameReport[]>([]);
@@ -57,6 +67,9 @@ export default function GameReports() {
             error={error}
             loading={loading}
             label="Game Reports"
+            containerStyle={{
+                maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
+            }}
             header={
                 <tr>
                     <th />
@@ -189,7 +202,7 @@ function RowAccent({ side }: RowAccentProps) {
                     background:
                         side === "Free"
                             ? FREE_ACCENT_COLOR
-                            : SHADOW_ACCENT_COLOR,
+                            : SHADOW_PRIMARY_COLOR,
                 }}
             />
         </td>
@@ -212,7 +225,7 @@ function summarizeVictoryType(side: Side, victory: Victory) {
             style={{
                 color: "white",
                 background:
-                    side === "Free" ? FREE_ACCENT_COLOR : SHADOW_ACCENT_COLOR,
+                    side === "Free" ? FREE_ACCENT_COLOR : SHADOW_PRIMARY_COLOR,
                 borderRadius: "12px",
                 padding: "3px 8px",
             }}

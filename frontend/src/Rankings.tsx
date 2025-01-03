@@ -4,11 +4,28 @@ import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import ButtonGroup from "@mui/joy/ButtonGroup";
 import { LeaderboardEntry, Side } from "./types";
+import { FREE_PRIMARY_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
+import {
+    HEADER_HEIGHT_PX,
+    HEADER_MARGIN_PX,
+    TABLE_REFRESH_BTN_HEIGHT_PX,
+    TABLE_ELEMENTS_GAP,
+} from "./styles/sizes";
 import TableView from "./TableView";
 
 const DEFAULT_YEAR = 2024;
 const AVAILABLE_YEARS = [DEFAULT_YEAR, 2023];
 const COMING_SOON_YEARS = [2022];
+
+const YEAR_SELECTOR_HEIGHT = 36;
+const HEADER_ROW_HEIGHT = 32;
+
+const TABLE_TOP_POSITION =
+    HEADER_HEIGHT_PX +
+    HEADER_MARGIN_PX +
+    YEAR_SELECTOR_HEIGHT +
+    TABLE_REFRESH_BTN_HEIGHT_PX +
+    TABLE_ELEMENTS_GAP * 2;
 
 function Rankings() {
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -48,7 +65,7 @@ function Rankings() {
                     width: "100%",
                 }}
             >
-                <ButtonGroup>
+                <ButtonGroup style={{ height: `${YEAR_SELECTOR_HEIGHT}px` }}>
                     {AVAILABLE_YEARS.map((yearOption) => (
                         <Button
                             key={yearOption}
@@ -75,55 +92,85 @@ function Rankings() {
                 error={error}
                 loading={loading}
                 label="Rankings"
+                containerStyle={{
+                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
+                }}
                 header={
                     <>
-                        <tr>
-                            <TableHeader rowSpan={3}>Rank</TableHeader>
-                            <TableHeader rowSpan={2} colSpan={2}>
+                        <TableHeaderRow>
+                            <TableHeaderCell level={0} rowSpan={3}>
+                                Rank
+                            </TableHeaderCell>
+                            <TableHeaderCell level={0} rowSpan={2} colSpan={2}>
                                 Player
-                            </TableHeader>
-                            <TableHeader
+                            </TableHeaderCell>
+                            <TableHeaderCell
+                                level={0}
                                 rowSpan={2}
                                 style={{ borderBottom: "none" }}
                             >
                                 Balanced
-                            </TableHeader>
-                            <TableHeader side="Shadow" rowSpan={3}>
+                            </TableHeaderCell>
+                            <TableHeaderCell
+                                level={0}
+                                side="Shadow"
+                                rowSpan={3}
+                            >
                                 Shadow Rating
-                            </TableHeader>
-                            <TableHeader side="Free" rowSpan={3}>
+                            </TableHeaderCell>
+                            <TableHeaderCell level={0} side="Free" rowSpan={3}>
                                 Free Rating
-                            </TableHeader>
-                            <TableHeader rowSpan={3}>Games</TableHeader>
-                            <TableHeader rowSpan={3}>Games {year}</TableHeader>
-                            <TableHeader colSpan={6}>
+                            </TableHeaderCell>
+                            <TableHeaderCell level={0} rowSpan={3}>
+                                Games
+                            </TableHeaderCell>
+                            <TableHeaderCell level={0} rowSpan={3}>
+                                Games {year}
+                            </TableHeaderCell>
+                            <TableHeaderCell level={0} colSpan={6}>
                                 Base Game {year}
-                            </TableHeader>
-                        </tr>
-                        <tr>
+                            </TableHeaderCell>
+                        </TableHeaderRow>
+
+                        <TableHeaderRow>
                             {/* Base */}
-                            <TableHeader side="Free" colSpan={3}>
+                            <TableHeaderCell level={1} side="Free" colSpan={3}>
                                 FP
-                            </TableHeader>
-                            <TableHeader side="Shadow" colSpan={3}>
+                            </TableHeaderCell>
+                            <TableHeaderCell
+                                level={1}
+                                side="Shadow"
+                                colSpan={3}
+                            >
                                 SP
-                            </TableHeader>
-                        </tr>
-                        <tr>
-                            <TableHeader>Country</TableHeader>
-                            <TableHeader>Name</TableHeader>
-                            <TableHeader>Avg. Rating</TableHeader>
+                            </TableHeaderCell>
+                        </TableHeaderRow>
+
+                        <TableHeaderRow>
+                            <TableHeaderCell level={2}>Country</TableHeaderCell>
+                            <TableHeaderCell level={2}>Name</TableHeaderCell>
+                            <TableHeaderCell level={2}>
+                                Avg. Rating
+                            </TableHeaderCell>
 
                             {/* FP Base */}
-                            <TableHeader side="Free">Win</TableHeader>
-                            <TableHeader side="Free">Loss</TableHeader>
-                            <TableHeader>%</TableHeader>
+                            <TableHeaderCell level={2} side="Free">
+                                Win
+                            </TableHeaderCell>
+                            <TableHeaderCell level={2} side="Free">
+                                Loss
+                            </TableHeaderCell>
+                            <TableHeaderCell level={2}>%</TableHeaderCell>
 
                             {/* SP Base */}
-                            <TableHeader side="Shadow">Win</TableHeader>
-                            <TableHeader side="Shadow">Loss</TableHeader>
-                            <TableHeader>%</TableHeader>
-                        </tr>
+                            <TableHeaderCell level={2} side="Shadow">
+                                Win
+                            </TableHeaderCell>
+                            <TableHeaderCell level={2} side="Shadow">
+                                Loss
+                            </TableHeaderCell>
+                            <TableHeaderCell level={2}>%</TableHeaderCell>
+                        </TableHeaderRow>
                     </>
                 }
                 body={entries.map((entry, i) => (
@@ -187,7 +234,9 @@ function TableCell({
                     ? {
                           ...style,
                           backgroundColor:
-                              side === "Shadow" ? "#990200" : "#0b5394",
+                              side === "Shadow"
+                                  ? SHADOW_PRIMARY_COLOR
+                                  : FREE_PRIMARY_COLOR,
                           color: "white",
                           opacity: light ? "60%" : "100%",
                       }
@@ -199,7 +248,16 @@ function TableCell({
     );
 }
 
-interface TableHeaderProps {
+interface TableHeaderRowProps {
+    children: ReactNode;
+}
+
+function TableHeaderRow({ children }: TableHeaderRowProps) {
+    return <tr style={{ height: `${HEADER_ROW_HEIGHT}px` }}>{children}</tr>;
+}
+
+interface TableHeaderCellProps {
+    level: number;
     children?: ReactNode;
     side?: Side;
     rowSpan?: number;
@@ -207,13 +265,14 @@ interface TableHeaderProps {
     style?: CSSProperties;
 }
 
-function TableHeader({
+function TableHeaderCell({
+    level,
     children,
     side,
     rowSpan,
     colSpan,
-    style = {},
-}: TableHeaderProps) {
+    style = { top: `${HEADER_ROW_HEIGHT * level}px` },
+}: TableHeaderCellProps) {
     return (
         <th
             rowSpan={rowSpan}
@@ -222,7 +281,10 @@ function TableHeader({
                 side
                     ? {
                           ...style,
-                          color: side === "Shadow" ? "#990200" : "#0b5394",
+                          color:
+                              side === "Shadow"
+                                  ? SHADOW_PRIMARY_COLOR
+                                  : FREE_PRIMARY_COLOR,
                       }
                     : style
             }

@@ -15,6 +15,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 
 export default function App() {
     return (
@@ -26,11 +27,12 @@ export default function App() {
                         display: "flex",
                         alignItems: "center",
                         width: "100%",
+                        height: `${HEADER_HEIGHT_PX}px`,
                         position: "sticky",
                         top: 0,
                         zIndex: 1000,
-                        margin: "0 0 20px 0",
-                        padding: "10px 10px",
+                        margin: `0 0 ${HEADER_MARGIN_PX}px 0`,
+                        padding: "0 10px",
                         boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.5)",
                         color: "white",
                         backgroundColor: "var(--joy-palette-primary-solidBg)",
