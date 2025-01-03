@@ -91,7 +91,7 @@ function Home() {
                     { to: "/rankings", label: "Rankings" },
                     { to: "/game-reports", label: "Game Reports" },
                 ].map(({ to, label }) => (
-                    <MuiLink component={Link} to={to}>
+                    <MuiLink component={Link} to={to} key={label}>
                         {label}
                     </MuiLink>
                 ))}
@@ -133,7 +133,11 @@ function Home() {
                         isDownload: false,
                     },
                 ].map(({ label, href, isDownload }) => (
-                    <ExternalLink href={href} isDownload={isDownload}>
+                    <ExternalLink
+                        href={href}
+                        isDownload={isDownload}
+                        key={label}
+                    >
                         {label}
                     </ExternalLink>
                 ))}
@@ -176,7 +180,11 @@ function Home() {
                         isDownload: true,
                     },
                 ].map(({ label, href, isDownload }) => (
-                    <ExternalLink href={href} isDownload={isDownload}>
+                    <ExternalLink
+                        href={href}
+                        isDownload={isDownload}
+                        key={label}
+                    >
                         {label}
                     </ExternalLink>
                 ))}
