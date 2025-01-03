@@ -183,4 +183,12 @@ data RenamePlayerRequest = RenamePlayerRequest
 
 instance FromJSON RenamePlayerRequest
 
+data ModifyReportRequest = ModifyReportRequest
+  { rid :: GameReportId,
+    report :: RawGameReport
+  }
+  deriving (Generic)
+
+instance FromJSON ModifyReportRequest
+
 -- TODO Game Logs

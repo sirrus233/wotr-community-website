@@ -12,6 +12,7 @@ import Database
     getAllGameReports,
     getAllStats,
     getGameReports,
+    getPlayerByName,
     getPlayerStats,
     insertGameReport,
     insertPlayerIfNotExists,
@@ -20,13 +21,14 @@ import Database
     runDb,
     updatePlayerName,
   )
-import Database.Esqueleto.Experimental (Entity (..))
+import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
-import Servant (NoContent (..), ServerError (errBody), ServerT, err422, err500, throwError, type (:<|>) (..))
+import Servant (NoContent (..), ServerError (errBody), ServerT, err404, err422, throwError, type (:<|>) (..))
 import Types.Api
   ( GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
+    ModifyReportRequest (..),
     ProcessedGameReport,
     RawGameReport (..),
     RenamePlayerRequest (..),
@@ -50,6 +52,7 @@ import Types.Database
     updatedPlayerStatsWin,
   )
 import Validation (validateReport)
+import Prelude hiding (get, on)
 
 defaultRating :: Rating
 defaultRating = 500
@@ -104,7 +107,7 @@ readOrError errMsg action =
     Just a -> pure a
     Nothing -> do
       logErrorN errMsg
-      throwError err500 {errBody = show errMsg}
+      throwError err404 {errBody = show errMsg}
 
 insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> DBAction m ReportInsertion
 insertReport timestamp rawReport = do
@@ -122,9 +125,9 @@ processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId 
   let (winnerSide, loserSide) = (gameReportSide, other gameReportSide)
 
   (winnerStatsTotal, winnerStatsYear) <-
-    readStats winnerId year <$> readOrError ("Failed reading stats for " <>: winner) (getPlayerStats winnerId year)
+    readStats winnerId year <$> readOrError ("Missing stats for " <>: winner) (getPlayerStats winnerId year)
   (loserStatsTotal, loserStatsYear) <-
-    readStats loserId year <$> readOrError ("Failed reading stats for " <>: loser) (getPlayerStats loserId year)
+    readStats loserId year <$> readOrError ("Missing stats for " <>: loser) (getPlayerStats loserId year)
 
   let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
   let adjustment = if gameReportMatch == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
@@ -174,9 +177,18 @@ getLeaderboardHandler year =
 adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
 adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ updatePlayerName pid newName >> pure NoContent
 
+adminModifyReportHandler :: ModifyReportRequest -> AppM NoContent
+adminModifyReportHandler ModifyReportRequest {rid, report} = runDb $ do
+  oldReport <- readOrError ("Cannot find report " <>: rid) $ lift . get $ rid
+  Entity _ newWinner <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner
+  Entity _ newLoser <- readOrError ("Cannot find player " <>: report.loser) $ getPlayerByName report.loser
+
+  pure NoContent
+
 server :: ServerT Api AppM
 server =
   submitReportHandler
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
     :<|> adminRenamePlayerHandler
+    :<|> adminModifyReportHandler
