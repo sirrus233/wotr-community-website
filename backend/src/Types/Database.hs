@@ -75,6 +75,15 @@ type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerSt
 
 type ReportInsertion = (Entity GameReport, Entity Player, Entity Player)
 
+toPlayerStatsTotal :: PlayerStatsInitial -> PlayerStatsTotal
+toPlayerStatsTotal (PlayerStatsInitial {..}) =
+  PlayerStatsTotal
+    { playerStatsTotalPlayerId = playerStatsInitialPlayerId,
+      playerStatsTotalRatingFree = playerStatsInitialRatingFree,
+      playerStatsTotalRatingShadow = playerStatsInitialRatingShadow,
+      playerStatsTotalGameCount = playerStatsInitialGameCount
+    }
+
 defaultPlayerStatsTotal :: PlayerId -> PlayerStatsTotal
 defaultPlayerStatsTotal pid =
   PlayerStatsTotal

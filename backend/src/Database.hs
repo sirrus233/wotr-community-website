@@ -47,6 +47,7 @@ import Types.Database
     PlayerStatsYear (..),
     Unique (..),
     defaultPlayerStatsYear,
+    toPlayerStatsTotal,
   )
 import Types.Migration (ParsedLegacyLadderEntry (..))
 import Prelude hiding (get, on)
@@ -165,4 +166,4 @@ resetStats :: (MonadIO m, MonadLogger m) => DBAction m ()
 resetStats = do
   deleteStats
   initialStats <- getInitialStats
-  lift $ insertEntityMany initialStats
+  lift $ insertMany_ (map (toPlayerStatsTotal . entityVal) initialStats)
