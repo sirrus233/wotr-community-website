@@ -1,6 +1,6 @@
 module Api where
 
-import Servant (Get, JSON, NoContent, Post, QueryParam', ReqBody, Required, (:<|>), (:>))
+import Servant (Get, JSON, Post, PostNoContent, QueryParam', ReqBody, Required, (:<|>), (:>))
 import Types.Api
   ( GetLeaderboardResponse,
     GetReportsResponse,
@@ -15,7 +15,7 @@ type GetReportsAPI = "reports" :> Get '[JSON] GetReportsResponse
 
 type GetLeaderboardAPI = "leaderboard" :> QueryParam' '[Required] "year" Int :> Get '[JSON] GetLeaderboardResponse
 
-type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> Post '[JSON] NoContent
+type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
 submitReportAPI :: Proxy SubmitReportAPI
 submitReportAPI = Proxy
