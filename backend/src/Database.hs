@@ -23,10 +23,13 @@ import Database.Esqueleto.Experimental
     runSqlPool,
     select,
     selectOne,
+    set,
     table,
+    update,
     val,
     where_,
     (&&.),
+    (=.),
     (==.),
     (?.),
     (^.),
@@ -152,6 +155,12 @@ repsertPlayerStats :: (MonadIO m, MonadLogger m) => PlayerStats -> DBAction m ()
 repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), yearStats@(PlayerStatsYear {..})) = lift $ do
   repsert (PlayerStatsTotalKey playerStatsTotalPlayerId) totalStats
   repsert (PlayerStatsYearKey playerStatsYearPlayerId playerStatsYearYear) yearStats
+
+updatePlayerName :: (MonadIO m, MonadLogger m) => PlayerId -> PlayerName -> DBAction m ()
+updatePlayerName pid name = lift $ do
+  update $ \player -> do
+    set player [PlayerName =. val (normalizeName name), PlayerDisplayName =. val name]
+    where_ (player ^. PlayerId ==. val pid)
 
 deleteStats :: (MonadIO m, MonadLogger m) => DBAction m ()
 deleteStats = lift $ do
