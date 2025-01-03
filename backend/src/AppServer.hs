@@ -4,7 +4,6 @@ import Api (Api)
 import AppConfig (AppM)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
-import Data.Text qualified as T
 import Data.Time (UTCTime (..), toGregorian)
 import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
@@ -96,9 +95,6 @@ readStats pid year (mStatsTotal, mStatsYear) = case (mStatsTotal, mStatsYear) of
   where
     defaultPlayerStatsTotal_ = defaultPlayerStatsTotal pid
     defaultPlayerStatsYear_ = defaultPlayerStatsYear pid year
-
-normalizeName :: Text -> Text
-normalizeName = T.toLower . T.strip
 
 readOrError :: (Monad m, MonadLogger m) => Text -> DBAction m (Maybe a) -> DBAction m a
 readOrError errMsg action =
