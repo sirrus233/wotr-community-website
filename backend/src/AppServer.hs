@@ -18,16 +18,18 @@ import Database
     repsertPlayerStats,
     resetStats,
     runDb,
+    updatePlayerName,
   )
 import Database.Esqueleto.Experimental (Entity (..))
 import Logging ((<>:))
-import Servant (ServerError (errBody), ServerT, err422, err500, throwError, type (:<|>) (..))
+import Servant (NoContent (..), ServerError (errBody), ServerT, err422, err500, throwError, type (:<|>) (..))
 import Types.Api
   ( GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
     ProcessedGameReport,
     RawGameReport (..),
+    RenamePlayerRequest (..),
     SubmitGameReportResponse (..),
     fromGameReport,
     fromPlayerStats,
@@ -169,5 +171,12 @@ getLeaderboardHandler year =
             . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year stats)))
         )
 
+adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
+adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ updatePlayerName pid newName >> pure NoContent
+
 server :: ServerT Api AppM
-server = submitReportHandler :<|> getReportsHandler :<|> getLeaderboardHandler
+server =
+  submitReportHandler
+    :<|> getReportsHandler
+    :<|> getLeaderboardHandler
+    :<|> adminRenamePlayerHandler

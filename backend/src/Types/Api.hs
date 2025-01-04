@@ -175,4 +175,12 @@ newtype GetLeaderboardResponse = GetLeaderboardResponse {entries :: [Leaderboard
 
 instance ToJSON GetLeaderboardResponse
 
+data RenamePlayerRequest = RenamePlayerRequest
+  { pid :: PlayerId,
+    newName :: PlayerName
+  }
+  deriving (Generic)
+
+instance FromJSON RenamePlayerRequest
+
 -- TODO Game Logs
