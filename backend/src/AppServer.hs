@@ -189,6 +189,8 @@ adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do
 
 adminRemapPlayerHandler :: RemapPlayerRequest -> AppM RemapPlayerResponse
 adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
+  when (fromPid == toPid) (throwError err422 {errBody = "Cannot remap identical player IDs."})
+
   _ <- readOrError ("Cannot find player " <>: fromPid) $ lift . get $ fromPid
   player <- readOrError ("Cannot find player " <>: toPid) $ lift . get $ toPid
 
