@@ -1,7 +1,9 @@
 module AppServer where
 
+import Amazonka qualified as AWS
+import Amazonka.S3 qualified as S3
 import Api (Api)
-import AppConfig (AppM)
+import AppConfig (AppM, gameLogBucket)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
 import Data.Time (UTCTime (..), toGregorian)
@@ -117,6 +119,15 @@ readOrError errMsg action =
     Nothing -> do
       logErrorN errMsg
       throwError err404 {errBody = show errMsg}
+
+putS3Object :: FilePath -> S3.ObjectKey -> IO S3.PutObjectResponse
+putS3Object path key = do
+  awsLogger <- AWS.newLogger AWS.Debug stdout
+  discoveredEnv <- AWS.newEnv AWS.discover
+
+  let env = discoveredEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
+
+  AWS.chunkedFile AWS.defaultChunkSize path >>= AWS.runResourceT . AWS.send env . S3.newPutObject gameLogBucket key
 
 insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Path -> DBAction m ReportInsertion
 insertReport timestamp rawReport logFilePath = do

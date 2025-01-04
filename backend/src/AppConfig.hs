@@ -1,5 +1,6 @@
 module AppConfig where
 
+import Amazonka.S3 qualified as S3
 import Control.Monad.Logger (LoggingT (runLoggingT), filterLogger)
 import Database.Esqueleto.Experimental qualified as SQL
 import Database.Redis (ConnectInfo, defaultConnectInfo)
@@ -16,6 +17,9 @@ databaseFile = "data/db.sqlite"
 
 logFile :: FilePath
 logFile = "logs/app.log"
+
+gameLogBucket :: S3.BucketName
+gameLogBucket = "infrastructurestack-gamereportbucket21a257d2-v7okzv3x39a9"
 
 redisConfig :: ConnectInfo
 redisConfig = defaultConnectInfo
