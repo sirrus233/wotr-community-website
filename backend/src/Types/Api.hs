@@ -183,6 +183,21 @@ data RenamePlayerRequest = RenamePlayerRequest
 
 instance FromJSON RenamePlayerRequest
 
+data RemapPlayerRequest = RemapPlayerRequest
+  { fromPid :: PlayerId,
+    toPid :: PlayerId
+  }
+  deriving (Generic)
+
+instance FromJSON RemapPlayerRequest
+
+newtype RemapPlayerResponse = RemapPlayerResponse
+  { name :: PlayerName
+  }
+  deriving (Generic)
+
+instance ToJSON RemapPlayerResponse
+
 data ModifyReportRequest = ModifyReportRequest
   { rid :: GameReportId,
     report :: RawGameReport

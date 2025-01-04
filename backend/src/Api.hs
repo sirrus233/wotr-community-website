@@ -7,6 +7,8 @@ import Types.Api
     GetReportsResponse,
     ModifyReportRequest,
     RawGameReport,
+    RemapPlayerRequest,
+    RemapPlayerResponse,
     RenamePlayerRequest,
     SubmitGameReportResponse,
   )
@@ -18,6 +20,8 @@ type GetReportsAPI = "reports" :> Get '[JSON] GetReportsResponse
 type GetLeaderboardAPI = "leaderboard" :> QueryParam' '[Required] "year" Int :> Get '[JSON] GetLeaderboardResponse
 
 type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
+
+type AdminRemapPlayerAPI = "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :> Post '[JSON] RemapPlayerResponse
 
 type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
 
@@ -35,6 +39,9 @@ getLeaderboardAPI = Proxy
 adminRenamePlayerAPI :: Proxy AdminRenamePlayerAPI
 adminRenamePlayerAPI = Proxy
 
+adminRemapPlayerAPI :: Proxy AdminRemapPlayerAPI
+adminRemapPlayerAPI = Proxy
+
 adminModifyReportAPI :: Proxy AdminModifyReportAPI
 adminModifyReportAPI = Proxy
 
@@ -46,6 +53,7 @@ type Api =
     :<|> GetReportsAPI
     :<|> GetLeaderboardAPI
     :<|> AdminRenamePlayerAPI
+    :<|> AdminRemapPlayerAPI
     :<|> AdminModifyReportAPI
     :<|> AdminDeleteReportAPI
 
