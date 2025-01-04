@@ -130,6 +130,7 @@ data LeaderboardEntry = LeaderboardEntry
   { pid :: PlayerId,
     name :: PlayerName,
     country :: Maybe Text,
+    isActive :: Bool,
     currentRatingFree :: Rating,
     currentRatingShadow :: Rating,
     averageRating :: Double,
@@ -153,6 +154,7 @@ fromPlayerStats (Entity pid p, (t, y)) =
     { pid,
       name = p.playerDisplayName,
       country = p.playerCountry,
+      isActive = p.playerIsActive,
       currentRatingFree = t.playerStatsTotalRatingFree,
       currentRatingShadow = t.playerStatsTotalRatingShadow,
       averageRating =

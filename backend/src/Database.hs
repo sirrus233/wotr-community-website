@@ -3,6 +3,7 @@ module Database where
 import AppConfig (AppM, Env (..), runAppLogger)
 import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
 import Data.Text qualified as T
+import Data.Time (addUTCTime, getCurrentTime, nominalDay)
 import Database.Esqueleto.Experimental
   ( Entity (..),
     From,
@@ -26,6 +27,7 @@ import Database.Esqueleto.Experimental
     select,
     selectOne,
     set,
+    subSelectCount,
     table,
     then_,
     update,
@@ -33,10 +35,13 @@ import Database.Esqueleto.Experimental
     when_,
     where_,
     (&&.),
+    (<.),
     (=.),
     (==.),
+    (>=.),
     (?.),
     (^.),
+    (||.),
     type (:&) (..),
   )
 import Servant (ServerError, throwError)
@@ -132,7 +137,7 @@ insertPlayerIfNotExists name = do
     Just p -> pure p
     Nothing -> lift $ do
       logInfoN $ "Adding new player " <> normalizeName name <> " to database."
-      let p = Player (normalizeName name) name Nothing
+      let p = Player (normalizeName name) name Nothing False
       pid <- insert p
       pure $ Entity pid p
 
@@ -180,6 +185,31 @@ updateReports fromPid toPid = lift $ do
             [when_ (report ^. GameReportLoserId ==. val fromPid) then_ (val toPid)]
             (else_ (report ^. GameReportLoserId))
       ]
+
+updateActiveStatus :: (MonadIO m, MonadLogger m) => DBAction m ()
+updateActiveStatus = do
+  now <- liftIO getCurrentTime
+  let cutoffDay = addUTCTime (negate $ 365 * nominalDay) now
+  let activeRequirement = 4 :: Int
+
+  lift $ update $ \player -> do
+    set
+      player
+      [ PlayerIsActive
+          =. case_
+            [when_ (countReports player cutoffDay <. val activeRequirement) then_ (val False)]
+            (else_ val True)
+      ]
+  where
+    countReports player cutoffDay =
+      subSelectCount $ do
+        report <- from $ table @GameReport
+        where_
+          ( ( (report ^. GameReportWinnerId ==. player ^. PlayerId)
+                ||. (report ^. GameReportLoserId ==. player ^. PlayerId)
+            )
+              &&. report ^. GameReportTimestamp >=. val cutoffDay
+          )
 
 deletePlayer :: (MonadIO m, MonadLogger m) => PlayerId -> DBAction m ()
 deletePlayer pid = lift $ do
