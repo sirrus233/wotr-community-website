@@ -9,6 +9,7 @@ import Data.Time.Clock (getCurrentTime)
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
+    deleteGameReport,
     getAllGameReports,
     getAllStats,
     getGameReports,
@@ -25,7 +26,8 @@ import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), Pers
 import Logging ((<>:))
 import Servant (NoContent (..), ServerError (errBody), ServerT, err404, err422, throwError, type (:<|>) (..))
 import Types.Api
-  ( GetLeaderboardResponse (GetLeaderboardResponse),
+  ( DeleteReportRequest (..),
+    GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
     ModifyReportRequest (..),
@@ -200,6 +202,12 @@ adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport
       | old.gameReportCompetition /= new.gameReportCompetition = True
       | otherwise = False
 
+adminDeleteReportHandler :: DeleteReportRequest -> AppM NoContent
+adminDeleteReportHandler DeleteReportRequest {rid} = runDb $ do
+  deleteGameReport rid
+  reprocessReports
+  pure NoContent
+
 server :: ServerT Api AppM
 server =
   submitReportHandler
@@ -207,3 +215,4 @@ server =
     :<|> getLeaderboardHandler
     :<|> adminRenamePlayerHandler
     :<|> adminModifyReportHandler
+    :<|> adminDeleteReportHandler

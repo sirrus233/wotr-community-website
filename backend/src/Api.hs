@@ -2,7 +2,8 @@ module Api where
 
 import Servant (Get, JSON, Post, PostNoContent, QueryParam', ReqBody, Required, (:<|>), (:>))
 import Types.Api
-  ( GetLeaderboardResponse,
+  ( DeleteReportRequest,
+    GetLeaderboardResponse,
     GetReportsResponse,
     ModifyReportRequest,
     RawGameReport,
@@ -20,6 +21,8 @@ type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerReques
 
 type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
 
+type AdminDeleteReportAPI = "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
+
 submitReportAPI :: Proxy SubmitReportAPI
 submitReportAPI = Proxy
 
@@ -35,12 +38,16 @@ adminRenamePlayerAPI = Proxy
 adminModifyReportAPI :: Proxy AdminModifyReportAPI
 adminModifyReportAPI = Proxy
 
+adminDeleteReportAPI :: Proxy AdminDeleteReportAPI
+adminDeleteReportAPI = Proxy
+
 type Api =
   SubmitReportAPI
     :<|> GetReportsAPI
     :<|> GetLeaderboardAPI
     :<|> AdminRenamePlayerAPI
     :<|> AdminModifyReportAPI
+    :<|> AdminDeleteReportAPI
 
 api :: Proxy Api
 api = Proxy
