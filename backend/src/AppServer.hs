@@ -10,6 +10,7 @@ import Data.Validation (Validation (..))
 import Database
   ( DBAction,
     deleteGameReport,
+    deletePlayer,
     getAllGameReports,
     getAllStats,
     getGameReports,
@@ -21,6 +22,7 @@ import Database
     resetStats,
     runDb,
     updatePlayerName,
+    updateReports,
   )
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
@@ -34,7 +36,7 @@ import Types.Api
     ProcessedGameReport,
     RawGameReport (..),
     RemapPlayerRequest (..),
-    RemapPlayerResponse,
+    RemapPlayerResponse (..),
     RenamePlayerRequest (..),
     SubmitGameReportResponse (..),
     fromGameReport,
@@ -187,7 +189,14 @@ adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do
 
 adminRemapPlayerHandler :: RemapPlayerRequest -> AppM RemapPlayerResponse
 adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
-  pass
+  _ <- readOrError ("Cannot find player " <>: fromPid) $ lift . get $ fromPid
+  player <- readOrError ("Cannot find player " <>: toPid) $ lift . get $ toPid
+
+  updateReports fromPid toPid
+  deletePlayer fromPid
+  reprocessReports
+
+  pure $ RemapPlayerResponse player.playerDisplayName
 
 adminModifyReportHandler :: ModifyReportRequest -> AppM NoContent
 adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport report of

@@ -9,8 +9,10 @@ import Database.Esqueleto.Experimental
     PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
+    case_,
     delete,
     desc,
+    else_,
     from,
     getBy,
     innerJoin,
@@ -25,8 +27,10 @@ import Database.Esqueleto.Experimental
     selectOne,
     set,
     table,
+    then_,
     update,
     val,
+    when_,
     where_,
     (&&.),
     (=.),
@@ -162,11 +166,30 @@ updatePlayerName pid name = lift $ do
     set player [PlayerName =. val (normalizeName name), PlayerDisplayName =. val name]
     where_ (player ^. PlayerId ==. val pid)
 
-deletePlayer :: (MonadIO m, MonadLogger m) => Key Player -> DBAction m ()
+updateReports :: (MonadIO m, MonadLogger m) => PlayerId -> PlayerId -> DBAction m ()
+updateReports fromPid toPid = lift $ do
+  update $ \report -> do
+    set
+      report
+      [ GameReportWinnerId
+          =. case_
+            [when_ (report ^. GameReportWinnerId ==. val fromPid) then_ (val toPid)]
+            (else_ (report ^. GameReportWinnerId)),
+        GameReportLoserId
+          =. case_
+            [when_ (report ^. GameReportLoserId ==. val fromPid) then_ (val toPid)]
+            (else_ (report ^. GameReportLoserId))
+      ]
+
+deletePlayer :: (MonadIO m, MonadLogger m) => PlayerId -> DBAction m ()
 deletePlayer pid = lift $ do
   delete $ do
     player <- from $ table @Player
     where_ (player ^. PlayerId ==. val pid)
+
+  delete $ do
+    player <- from $ table @PlayerStatsInitial
+    where_ (player ^. PlayerStatsInitialPlayerId ==. val pid)
 
 deleteGameReport :: (MonadIO m, MonadLogger m) => Key GameReport -> DBAction m ()
 deleteGameReport rid = lift $ do
