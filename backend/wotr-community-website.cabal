@@ -53,6 +53,8 @@ common dependencies
         warp-tls            ^>=3.4.12,
         cassava             ^>=0.5.3.2,
         vector              ^>=0.13.2.0,
+        amazonka            ^>=2.0,
+        amazonka-s3         ^>=2.0,
 
 library
     import:           warnings,
