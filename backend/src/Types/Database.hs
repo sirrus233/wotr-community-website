@@ -44,7 +44,7 @@ share
     deriving Show
 
    PlayerStatsYear
-    playerId PlayerId
+    playerId PlayerId OnDeleteCascade
     year Int
     winsFree Int
     winsShadow Int
@@ -54,7 +54,7 @@ share
     deriving Show
 
    PlayerStatsTotal
-    playerId PlayerId
+    playerId PlayerId OnDeleteCascade
     ratingFree Rating
     ratingShadow Rating
     gameCount Int
@@ -62,7 +62,7 @@ share
     deriving Show
 
    PlayerStatsInitial
-    playerId PlayerId
+    playerId PlayerId OnDeleteCascade
     ratingFree Rating
     ratingShadow Rating
     gameCount Int
