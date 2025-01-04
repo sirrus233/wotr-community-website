@@ -16,6 +16,8 @@ import Types.Database
     ReportInsertion,
   )
 
+type S3Path = Text
+
 data SubmitReportRequest = SubmitReportRequest
   { report :: RawGameReport,
     logFile :: FileData Tmp
@@ -58,7 +60,7 @@ data RawGameReport = RawGameReport
 
 instance FromJSON RawGameReport
 
-toGameReport :: UTCTime -> PlayerId -> PlayerId -> Maybe Text -> RawGameReport -> GameReport
+toGameReport :: UTCTime -> PlayerId -> PlayerId -> Maybe S3Path -> RawGameReport -> GameReport
 toGameReport timestamp winnerId loserId logFile r =
   GameReport
     { gameReportTimestamp = timestamp,

@@ -39,6 +39,7 @@ import Types.Api
     RemapPlayerRequest (..),
     RemapPlayerResponse (..),
     RenamePlayerRequest (..),
+    S3Path,
     SubmitGameReportResponse (..),
     SubmitReportRequest (..),
     fromGameReport,
@@ -117,14 +118,14 @@ readOrError errMsg action =
       logErrorN errMsg
       throwError err404 {errBody = show errMsg}
 
-insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe Text -> DBAction m ReportInsertion
+insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Path -> DBAction m ReportInsertion
 insertReport timestamp rawReport logFilePath = do
   winner <- insertPlayerIfNotExists rawReport.winner
   loser <- insertPlayerIfNotExists rawReport.loser
   report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) logFilePath rawReport
   pure (report, winner, loser)
 
-insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe Text -> DBAction m ()
+insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Path -> DBAction m ()
 insertReport_ timestamp rawReport logFilePath = insertReport timestamp rawReport logFilePath >> pass
 
 processReport :: (MonadIO m, MonadLogger m) => ReportInsertion -> DBAction m (ProcessedGameReport, Rating, Rating)
