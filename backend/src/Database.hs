@@ -162,6 +162,12 @@ updatePlayerName pid name = lift $ do
     set player [PlayerName =. val (normalizeName name), PlayerDisplayName =. val name]
     where_ (player ^. PlayerId ==. val pid)
 
+deletePlayer :: (MonadIO m, MonadLogger m) => Key Player -> DBAction m ()
+deletePlayer pid = lift $ do
+  delete $ do
+    player <- from $ table @Player
+    where_ (player ^. PlayerId ==. val pid)
+
 deleteGameReport :: (MonadIO m, MonadLogger m) => Key GameReport -> DBAction m ()
 deleteGameReport rid = lift $ do
   delete $ do
