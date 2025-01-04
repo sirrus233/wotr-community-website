@@ -25,7 +25,8 @@ data RawGameReport = RawGameReport
     aragornTurn :: Maybe Int,
     strongholds :: [Stronghold],
     interestRating :: Int,
-    comment :: Maybe Text
+    comment :: Maybe Text,
+    log :: Maybe Text
   }
   deriving (Generic, Show)
 
@@ -53,7 +54,8 @@ toGameReport timestamp winnerId loserId r =
       gameReportAragornTurn = r.aragornTurn,
       gameReportStrongholds = r.strongholds,
       gameReportInterestRating = r.interestRating,
-      gameReportComment = r.comment
+      gameReportComment = r.comment,
+      gameReportLog = r.log
     }
 
 data ProcessedGameReport = ProcessedGameReport
@@ -214,5 +216,3 @@ newtype DeleteReportRequest = DeleteReportRequest
   deriving (Generic)
 
 instance FromJSON DeleteReportRequest
-
--- TODO Game Logs

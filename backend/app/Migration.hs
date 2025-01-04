@@ -14,7 +14,7 @@ import Logging (Logger, log, stdoutLogger, (<>:))
 import Servant (ServerError (errBody), err500, runHandler, throwError)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
-import Types.Api (RawGameReport (..))
+import Types.Api (RawGameReport (victory))
 import Types.DataField (Victory (..))
 import Types.Database (migrateAll)
 import Types.Migration
