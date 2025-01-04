@@ -4,6 +4,7 @@ import Servant (Get, JSON, Post, PostNoContent, QueryParam', ReqBody, Required, 
 import Types.Api
   ( GetLeaderboardResponse,
     GetReportsResponse,
+    ModifyReportRequest,
     RawGameReport,
     RenamePlayerRequest,
     SubmitGameReportResponse,
@@ -17,6 +18,8 @@ type GetLeaderboardAPI = "leaderboard" :> QueryParam' '[Required] "year" Int :> 
 
 type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
+type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
+
 submitReportAPI :: Proxy SubmitReportAPI
 submitReportAPI = Proxy
 
@@ -29,11 +32,15 @@ getLeaderboardAPI = Proxy
 adminRenamePlayerAPI :: Proxy AdminRenamePlayerAPI
 adminRenamePlayerAPI = Proxy
 
+adminModifyReportAPI :: Proxy AdminModifyReportAPI
+adminModifyReportAPI = Proxy
+
 type Api =
   SubmitReportAPI
     :<|> GetReportsAPI
     :<|> GetLeaderboardAPI
     :<|> AdminRenamePlayerAPI
+    :<|> AdminModifyReportAPI
 
 api :: Proxy Api
 api = Proxy
