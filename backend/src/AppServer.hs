@@ -21,6 +21,7 @@ import Database
     repsertPlayerStats,
     resetStats,
     runDb,
+    updateActiveStatus,
     updatePlayerName,
     updateReports,
   )
@@ -159,6 +160,7 @@ reprocessReports = do
   resetStats
   reports <- getAllGameReports
   forM_ (reverse reports) processReport
+  updateActiveStatus
 
 submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
 submitReportHandler rawReport = case validateReport rawReport of
