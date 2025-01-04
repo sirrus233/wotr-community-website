@@ -3,8 +3,31 @@ module Types.Api where
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
+import Servant.Multipart (FromMultipart (..), MultipartData, Tmp)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
-import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId, PlayerStats, PlayerStatsTotal (..), PlayerStatsYear (..), ReportInsertion)
+import Types.Database
+  ( GameReport (..),
+    GameReportId,
+    Player (..),
+    PlayerId,
+    PlayerStats,
+    PlayerStatsTotal (..),
+    PlayerStatsYear (..),
+    ReportInsertion,
+  )
+
+data SubmitReportRequest = SubmitReportRequest
+  { report :: PlayerId,
+    logFile :: FilePath
+  }
+  deriving (Generic)
+
+instance FromMultipart Tmp SubmitReportRequest where
+  fromMultipart :: MultipartData Tmp -> Either String SubmitReportRequest
+  fromMultipart multipartData = undefined
+
+-- User <$> lookupInput "username" multipartData
+--    <*> fmap fdPayload (lookupFile "pic" multipartData)
 
 data RawGameReport = RawGameReport
   { winner :: PlayerName,
@@ -32,8 +55,8 @@ data RawGameReport = RawGameReport
 
 instance FromJSON RawGameReport
 
-toGameReport :: UTCTime -> PlayerId -> PlayerId -> RawGameReport -> GameReport
-toGameReport timestamp winnerId loserId r =
+toGameReport :: UTCTime -> PlayerId -> PlayerId -> Maybe Text -> RawGameReport -> GameReport
+toGameReport timestamp winnerId loserId logFile r =
   GameReport
     { gameReportTimestamp = timestamp,
       gameReportWinnerId = winnerId,
@@ -55,7 +78,7 @@ toGameReport timestamp winnerId loserId r =
       gameReportStrongholds = r.strongholds,
       gameReportInterestRating = r.interestRating,
       gameReportComment = r.comment,
-      gameReportLog = r.log
+      gameReportLogFile = logFile
     }
 
 data ProcessedGameReport = ProcessedGameReport

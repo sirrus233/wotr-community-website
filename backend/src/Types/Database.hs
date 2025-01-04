@@ -41,7 +41,7 @@ share
     strongholds [Stronghold]
     interestRating Int
     comment Text Maybe
-    log Text Maybe
+    logFile Text Maybe
     deriving Show
 
    PlayerStatsYear
