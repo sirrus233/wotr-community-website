@@ -177,7 +177,11 @@ getLeaderboardHandler year =
         )
 
 adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
-adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ updatePlayerName pid newName >> pure NoContent
+adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do
+  player <- getPlayerByName newName
+  case player of
+    Nothing -> updatePlayerName pid newName >> pure NoContent
+    Just _ -> throwError err422 {errBody = "Name " <>: newName <> " already taken."}
 
 adminModifyReportHandler :: ModifyReportRequest -> AppM NoContent
 adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport report of
@@ -199,11 +203,12 @@ adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport
       | old.gameReportWinnerId /= new.gameReportWinnerId = True
       | old.gameReportLoserId /= new.gameReportLoserId = True
       | old.gameReportSide /= new.gameReportSide = True
-      | old.gameReportCompetition /= new.gameReportCompetition = True
+      | old.gameReportMatch /= new.gameReportMatch = True
       | otherwise = False
 
 adminDeleteReportHandler :: DeleteReportRequest -> AppM NoContent
 adminDeleteReportHandler DeleteReportRequest {rid} = runDb $ do
+  _ <- readOrError ("Cannot find report " <>: rid) $ lift . get $ rid
   deleteGameReport rid
   reprocessReports
   pure NoContent
