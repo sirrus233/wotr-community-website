@@ -217,10 +217,6 @@ deletePlayer pid = lift $ do
     player <- from $ table @Player
     where_ (player ^. PlayerId ==. val pid)
 
-  delete $ do
-    player <- from $ table @PlayerStatsInitial
-    where_ (player ^. PlayerStatsInitialPlayerId ==. val pid)
-
 deleteGameReport :: (MonadIO m, MonadLogger m) => Key GameReport -> DBAction m ()
 deleteGameReport rid = lift $ do
   delete $ do
