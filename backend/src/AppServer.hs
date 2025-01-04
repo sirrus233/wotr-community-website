@@ -40,6 +40,7 @@ import Types.Api
     RemapPlayerResponse (..),
     RenamePlayerRequest (..),
     SubmitGameReportResponse (..),
+    SubmitReportRequest (..),
     fromGameReport,
     fromPlayerStats,
     toGameReport,
@@ -116,15 +117,15 @@ readOrError errMsg action =
       logErrorN errMsg
       throwError err404 {errBody = show errMsg}
 
-insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> DBAction m ReportInsertion
-insertReport timestamp rawReport = do
+insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe Text -> DBAction m ReportInsertion
+insertReport timestamp rawReport logFilePath = do
   winner <- insertPlayerIfNotExists rawReport.winner
   loser <- insertPlayerIfNotExists rawReport.loser
-  report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) rawReport
+  report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) logFilePath rawReport
   pure (report, winner, loser)
 
-insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> DBAction m ()
-insertReport_ timestamp rawReport = insertReport timestamp rawReport >> pass
+insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe Text -> DBAction m ()
+insertReport_ timestamp rawReport logFilePath = insertReport timestamp rawReport logFilePath >> pass
 
 processReport :: (MonadIO m, MonadLogger m) => ReportInsertion -> DBAction m (ProcessedGameReport, Rating, Rating)
 processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId winner), loserPlayer@(Entity loserId loser)) = do
@@ -162,13 +163,13 @@ reprocessReports = do
   forM_ (reverse reports) processReport
   updateActiveStatus
 
-submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
-submitReportHandler rawReport = case validateReport rawReport of
+submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
+submitReportHandler (SubmitReportRequest rawReport logFileData) = case validateReport rawReport of
   Failure errors -> throwError $ err422 {errBody = show errors}
   Success (RawGameReport {..}) -> runDb $ do
     logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
     timestamp <- liftIO getCurrentTime
-    (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport
+    (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport (Just "") -- FIXME
     pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: AppM GetReportsResponse
@@ -210,7 +211,7 @@ adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport
     Entity newWinnerId _ <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner
     Entity newLoserId _ <- readOrError ("Cannot find player " <>: report.loser) $ getPlayerByName report.loser
 
-    let newReport = toGameReport oldReport.gameReportTimestamp newWinnerId newLoserId report
+    let newReport = toGameReport oldReport.gameReportTimestamp newWinnerId newLoserId oldReport.gameReportLogFile report
     lift $ replace rid newReport
 
     when (mustReprocess oldReport newReport) reprocessReports

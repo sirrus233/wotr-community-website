@@ -1,9 +1,9 @@
 module Types.Api where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
-import Servant.Multipart (FromMultipart (..), MultipartData, Tmp)
+import Servant.Multipart (FileData (..), FromMultipart (..), MultipartData (..), Tmp, lookupFile, lookupInput)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
 import Types.Database
   ( GameReport (..),
@@ -17,17 +17,20 @@ import Types.Database
   )
 
 data SubmitReportRequest = SubmitReportRequest
-  { report :: PlayerId,
-    logFile :: FilePath
+  { report :: RawGameReport,
+    logFile :: FileData Tmp
   }
   deriving (Generic)
 
 instance FromMultipart Tmp SubmitReportRequest where
   fromMultipart :: MultipartData Tmp -> Either String SubmitReportRequest
-  fromMultipart multipartData = undefined
-
--- User <$> lookupInput "username" multipartData
---    <*> fmap fdPayload (lookupFile "pic" multipartData)
+  fromMultipart multipartData = do
+    rawJson <- lookupInput "report" multipartData
+    report <- case eitherDecodeStrict (encodeUtf8 rawJson) of
+      Left err -> Left $ "Error parsing RawGameReport JSON: " <> err
+      Right a -> Right a
+    logFile <- lookupFile "logFile" multipartData
+    pure $ SubmitReportRequest {..}
 
 data RawGameReport = RawGameReport
   { winner :: PlayerName,

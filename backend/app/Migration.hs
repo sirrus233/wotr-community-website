@@ -37,9 +37,9 @@ migrate legacyEntries reports = runDb $ do
   forM_ (map (\r -> (r.timestamp, toRawGameReport r)) reports) $ \(timestamp, report) -> do
     case validateReport report of
       Failure errs -> case errs of
-        [NoVictoryConditionMet] -> insertReport_ timestamp (report {victory = Concession})
+        [NoVictoryConditionMet] -> insertReport_ timestamp (report {victory = Concession}) Nothing
         _ -> throwError $ err500 {errBody = "Unrecognized failure: " <>: errs <> " for report: " <>: report}
-      Success _ -> insertReport_ timestamp report
+      Success _ -> insertReport_ timestamp report Nothing
 
   reprocessReports
 
