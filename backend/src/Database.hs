@@ -205,7 +205,9 @@ updateActiveStatus = do
       subSelectCount $ do
         report <- from $ table @GameReport
         where_
-          ( ((report ^. GameReportWinnerId ==. player ^. PlayerId) ||. (report ^. GameReportLoserId ==. player ^. PlayerId))
+          ( ( (report ^. GameReportWinnerId ==. player ^. PlayerId)
+                ||. (report ^. GameReportLoserId ==. player ^. PlayerId)
+            )
               &&. report ^. GameReportTimestamp >=. val cutoffDay
           )
 
