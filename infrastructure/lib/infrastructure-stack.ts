@@ -13,6 +13,16 @@ export class InfrastructureStack extends cdk.Stack {
 
         const elasticIp = new ec2.CfnEIP(this, "ElasticIP");
 
+        const gameReportBucket = new s3.Bucket(this, "GameReportBucket", {
+            blockPublicAccess: new s3.BlockPublicAccess({
+                blockPublicAcls: false,
+                blockPublicPolicy: false,
+                ignorePublicAcls: false,
+                restrictPublicBuckets: false,
+            }),
+        });
+        gameReportBucket.grantPublicAccess();
+
         this.website();
         this.server(elasticIp);
     }
