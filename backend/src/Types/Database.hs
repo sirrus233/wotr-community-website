@@ -15,6 +15,7 @@ share
     name PlayerName
     displayName PlayerName
     country Text Maybe
+    isActive Bool
     UniquePlayerName name
     UniquePlayerDisplayName name
     deriving Show

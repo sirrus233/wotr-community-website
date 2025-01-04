@@ -132,7 +132,7 @@ insertPlayerIfNotExists name = do
     Just p -> pure p
     Nothing -> lift $ do
       logInfoN $ "Adding new player " <> normalizeName name <> " to database."
-      let p = Player (normalizeName name) name Nothing
+      let p = Player (normalizeName name) name Nothing False
       pid <- insert p
       pure $ Entity pid p
 
