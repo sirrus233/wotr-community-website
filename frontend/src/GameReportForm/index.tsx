@@ -14,6 +14,7 @@ import {
     expansions,
     leagues,
     matchTypes,
+    MAX_GAME_LOG_SIZE_BYTES,
     optionalFields,
     serverValidationErrors,
     sides,
@@ -21,23 +22,25 @@ import {
     victoryTypes,
 } from "../constants";
 import {
-    FormData,
+    GameFormData,
     GameReportPayload,
     LeaderboardEntry,
     ServerErrorBody,
     ServerValidationError,
     Stronghold,
-    ValidFormData,
+    ValidGameFormData,
 } from "../types";
 import {
     getExpansionLabel,
     getLeagueLabel,
     getStrongholdLabel,
     isStrongholdInPlay,
+    objectKeys,
     strongholdSide,
 } from "../utils";
 import useFormData from "../hooks/useFormData";
 import Autocomplete from "../Autocomplete";
+import FileUpload from "../FileUpload";
 import GameReportFormElement from "../GameReportFormElement";
 import MultiOptionInput from "../MultiOptionInput";
 import SelectNumericOptionInput from "../SelectNumericOptionInput";
@@ -63,7 +66,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             handleSubmit,
             setSuccessMessage,
         },
-    ] = useFormData<FormData, ValidFormData>({
+    ] = useFormData<GameFormData, ValidGameFormData>({
         initialFormData,
         optionalFields: optionalFields.slice(),
         submit,
@@ -453,6 +456,27 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     validate={validateField("comment")}
                 />
             </GameReportFormElement>
+            <GameReportFormElement
+                error={formData.logFile.error}
+                label={
+                    "Game log (mandatory for rank 30 and higher, or for tournament and league games):"
+                }
+            >
+                <FileUpload
+                    value={formData.logFile.value}
+                    validate={validateField("logFile")}
+                    onChange={handleInputChange(
+                        "logFile",
+                        (file: File | null) => {
+                            return file
+                                ? file.size <= MAX_GAME_LOG_SIZE_BYTES
+                                    ? null
+                                    : "File too large"
+                                : null;
+                        }
+                    )}
+                />
+            </GameReportFormElement>
             <Button
                 onClick={handleSubmit}
                 disabled={loading}
@@ -469,37 +493,69 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
 
 export default GameReportForm;
 
-async function submit(validatedResult: ValidFormData) {
+async function submit(validatedResult: ValidGameFormData) {
     return await axios.post(
         //"http://localhost:8081/submitReport",
         "https://api.waroftheringcommunity.net:8080/submitReport",
         toPayload(validatedResult),
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "multipart/form-data" } }
     );
 }
 
-function toPayload(formData: ValidFormData): GameReportPayload {
-    return {
-        winner: formData.winner.value,
-        loser: formData.loser.value,
-        side: formData.side.value,
-        victory: formData.victory.value,
-        match: formData.match.value,
-        competition: formData.competition.value,
-        league: formData.league.value,
-        expansions: formData.expansions.value,
-        treebeard: formData.treebeard.value,
-        actionTokens: formData.actionTokens.value,
-        dwarvenRings: formData.dwarvenRings.value,
-        turns: formData.turns.value,
-        corruption: formData.corruption.value,
-        mordor: formData.mordor.value,
-        initialEyes: formData.initialEyes.value,
-        aragornTurn: formData.aragornTurn.value,
-        strongholds: formData.strongholds.value,
-        interestRating: formData.interestRating.value,
-        comment: formData.comment.value,
+function toPayload(formData: ValidGameFormData): FormData {
+    const unencodedPayload: GameReportPayload = {
+        logFile: formData.logFile.value,
+        report: {
+            winner: formData.winner.value,
+            loser: formData.loser.value,
+            side: formData.side.value,
+            victory: formData.victory.value,
+            match: formData.match.value,
+            competition: formData.competition.value,
+            league: formData.league.value,
+            expansions: formData.expansions.value,
+            treebeard: formData.treebeard.value,
+            actionTokens: formData.actionTokens.value,
+            dwarvenRings: formData.dwarvenRings.value,
+            turns: formData.turns.value,
+            corruption: formData.corruption.value,
+            mordor: formData.mordor.value,
+            initialEyes: formData.initialEyes.value,
+            aragornTurn: formData.aragornTurn.value,
+            strongholds: formData.strongholds.value,
+            interestRating: formData.interestRating.value,
+            comment: formData.comment.value,
+        },
     };
+    return toFormData(unencodedPayload);
+}
+
+function toFormData(unencodedPayload: GameReportPayload): FormData {
+    const { logFile, report } = unencodedPayload;
+    const formData = new FormData();
+
+    if (logFile) formData.append("logFile", logFile);
+
+    objectKeys(report).forEach((field) => {
+        const value = report[field];
+
+        if (value !== null) {
+            if (Array.isArray(value)) {
+                value.forEach((element, i) =>
+                    formData.append(`${field}[${i}]`, element)
+                );
+            } else if (
+                typeof value === "boolean" ||
+                typeof value === "number"
+            ) {
+                formData.append(field, value.toString());
+            } else {
+                formData.append(field, value);
+            }
+        }
+    });
+
+    return formData;
 }
 
 function toErrorMessage(error: ServerErrorBody): string {

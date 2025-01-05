@@ -56,7 +56,7 @@ export type ConstrainedFormData<F> = {
     [K in keyof F]: F[K] extends FieldData<unknown> ? F[K] : never;
 };
 
-export interface FormData {
+export interface GameFormData {
     winner: FieldData<string | null>;
     loser: FieldData<string | null>;
     side: FieldData<Side | null>;
@@ -80,19 +80,23 @@ export interface FormData {
     strongholds: FieldData<Stronghold[]>;
     interestRating: FieldData<number | null>;
     comment: FieldData<string | null>;
+    logFile: FieldData<File | null>;
 }
 
-export type ValidFormData = {
-    [K in keyof FormData]: K extends OptionalField
-        ? FormData[K]
-        : { [J in keyof FormData[K]]: Exclude<FormData[K][J], null> };
+export type ValidGameFormData = {
+    [K in keyof GameFormData]: K extends OptionalField
+        ? GameFormData[K]
+        : { [J in keyof GameFormData[K]]: Exclude<GameFormData[K][J], null> };
 };
 
 export type GameReportPayload = {
-    [K in keyof Pick<ValidFormData, PayloadField>]: Pick<
-        ValidFormData,
-        PayloadField
-    >[K]["value"];
+    logFile: ValidGameFormData["logFile"]["value"];
+    report: {
+        [K in keyof Pick<ValidGameFormData, PayloadField>]: Pick<
+            ValidGameFormData,
+            PayloadField
+        >[K]["value"];
+    };
 };
 
 export interface LeaderboardEntry {

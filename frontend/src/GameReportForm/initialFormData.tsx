@@ -1,6 +1,6 @@
-import { FormData } from "../types";
+import { GameFormData } from "../types";
 
-const initialFormData: FormData = {
+const initialFormData: GameFormData = {
     winner: {
         value: null,
         error: null,
@@ -104,6 +104,7 @@ const initialFormData: FormData = {
         validate: alwaysValid,
     },
     comment: { value: null, error: null, validate: alwaysValid },
+    logFile: { value: null, error: null, validate: alwaysValid },
 };
 
 export default initialFormData;

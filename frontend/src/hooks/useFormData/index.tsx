@@ -11,7 +11,10 @@ import { isServerError, objectKeys } from "../../utils";
 type Helpers<F> = {
     setFormData: Dispatch<SetStateAction<ConstrainedFormData<F>>>;
     handleInputChange: <K extends keyof F>(
-        field: K
+        field: K,
+        validateBeforeAccept?: (
+            value: ConstrainedFormData<F>[K]["value"]
+        ) => FieldError
     ) => (value: ConstrainedFormData<F>[K]["value"]) => void;
     validateField: <K extends keyof F>(field: K) => () => void;
     handleSubmit: () => Promise<void>;
@@ -46,13 +49,27 @@ export default function useFormData<F, V extends F>({
     const [loading, setLoading] = useState(false);
 
     const handleInputChange = <K extends keyof ConstrainedFormData<F>>(
-        field: K
+        field: K,
+        validateBeforeAccept?: (
+            value: ConstrainedFormData<F>[K]["value"]
+        ) => FieldError
     ) => {
-        return (value: ConstrainedFormData<F>[K]["value"]) =>
-            setFormData((prevData) => ({
-                ...prevData,
-                [field]: { ...prevData[field], value },
-            }));
+        return (value: ConstrainedFormData<F>[K]["value"]) => {
+            if (validateBeforeAccept) {
+                const error: FieldError = validateBeforeAccept(value);
+                setFormData((prevData) => ({
+                    ...prevData,
+                    [field]: error
+                        ? { ...prevData[field], error }
+                        : { ...prevData[field], error, value },
+                }));
+            } else {
+                setFormData((prevData) => ({
+                    ...prevData,
+                    [field]: { ...prevData[field], value },
+                }));
+            }
+        };
     };
 
     const validateField = <K extends keyof ConstrainedFormData<F>>(

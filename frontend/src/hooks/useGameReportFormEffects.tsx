@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { FormData, Stronghold, ValueOf } from "../types";
+import { GameFormData, Stronghold, ValueOf } from "../types";
 import { strongholds } from "../constants";
 import { isStrongholdInPlay } from "../utils";
 
 interface Args {
-    formData: FormData;
-    initialFormData: FormData;
-    setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+    formData: GameFormData;
+    initialFormData: GameFormData;
+    setFormData: React.Dispatch<React.SetStateAction<GameFormData>>;
     successMessage: string | null;
 }
 
@@ -17,8 +17,8 @@ export default function useGameReportClearEffects({
     successMessage,
 }: Args) {
     const useControlledClearEffect = <
-        K extends keyof FormData,
-        V extends ValueOf<FormData>["value"]
+        K extends keyof GameFormData,
+        V extends ValueOf<GameFormData>["value"]
     >(
         controlField: V,
         clearField: K,
