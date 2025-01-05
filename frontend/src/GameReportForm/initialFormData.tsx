@@ -1,4 +1,4 @@
-import { FormData } from "./types";
+import { FormData } from "../types";
 
 const initialFormData: FormData = {
     winner: {

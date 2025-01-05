@@ -19,7 +19,7 @@ import {
     sides,
     strongholds,
     victoryTypes,
-} from "./constants";
+} from "../constants";
 import {
     FormData,
     GameReportPayload,
@@ -28,24 +28,24 @@ import {
     ServerValidationError,
     Stronghold,
     ValidFormData,
-} from "./types";
+} from "../types";
 import {
     getExpansionLabel,
     getLeagueLabel,
     getStrongholdLabel,
     isStrongholdInPlay,
     strongholdSide,
-} from "./utils";
-import useFormData from "./hooks/useFormData";
-import Autocomplete from "./Autocomplete";
-import GameReportFormElement from "./GameReportFormElement";
-import MultiOptionInput from "./MultiOptionInput";
-import SelectNumericOptionInput from "./SelectNumericOptionInput";
-import SingleOptionInput from "./SingleOptionInput";
-import TextInput from "./TextInput";
-import VictoryPoints from "./VictoryPoints";
-import initialGameReportFormData from "./initialGameReportFormData";
-import useGameReportClearEffects from "./hooks/useGameReportFormEffects";
+} from "../utils";
+import useFormData from "../hooks/useFormData";
+import Autocomplete from "../Autocomplete";
+import GameReportFormElement from "../GameReportFormElement";
+import MultiOptionInput from "../MultiOptionInput";
+import SelectNumericOptionInput from "../SelectNumericOptionInput";
+import SingleOptionInput from "../SingleOptionInput";
+import TextInput from "../TextInput";
+import VictoryPoints from "../VictoryPoints";
+import initialFormData from "./initialFormData";
+import useGameReportClearEffects from "../hooks/useGameReportFormEffects";
 
 interface Props {
     leaderboard: LeaderboardEntry[];
@@ -64,7 +64,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             setSuccessMessage,
         },
     ] = useFormData<FormData, ValidFormData>({
-        initialFormData: initialGameReportFormData,
+        initialFormData,
         optionalFields: optionalFields.slice(),
         submit,
         toErrorMessage,
@@ -72,7 +72,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
 
     useGameReportClearEffects({
         formData,
-        initialFormData: initialGameReportFormData,
+        initialFormData,
         setFormData,
         successMessage,
     });
