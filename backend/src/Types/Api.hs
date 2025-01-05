@@ -16,7 +16,7 @@ import Types.Database
     ReportInsertion,
   )
 
-type S3Path = Text
+type S3Url = Text
 
 data SubmitReportRequest = SubmitReportRequest
   { report :: RawGameReport,
@@ -62,7 +62,7 @@ data RawGameReport = RawGameReport
 
 instance FromJSON RawGameReport
 
-toGameReport :: UTCTime -> PlayerId -> PlayerId -> Maybe S3Path -> RawGameReport -> GameReport
+toGameReport :: UTCTime -> PlayerId -> PlayerId -> Maybe S3Url -> RawGameReport -> GameReport
 toGameReport timestamp winnerId loserId logFile r =
   GameReport
     { gameReportTimestamp = timestamp,
@@ -112,7 +112,7 @@ data ProcessedGameReport = ProcessedGameReport
     strongholds :: [Stronghold],
     interestRating :: Int,
     comment :: Maybe Text,
-    logFile :: Maybe S3Path
+    logFile :: Maybe S3Url
   }
   deriving (Generic)
 

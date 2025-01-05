@@ -40,7 +40,7 @@ import Types.Api
     RemapPlayerRequest (..),
     RemapPlayerResponse (..),
     RenamePlayerRequest (..),
-    S3Path,
+    S3Url,
     SubmitGameReportResponse (..),
     SubmitReportRequest (..),
     fromGameReport,
@@ -126,8 +126,8 @@ toS3Key timestamp freePlayer shadowPlayer =
     (y, m, d) = toGregorian . utctDay $ timestamp
     ts = toText . formatTime defaultTimeLocale "%Y-%m-%d_%H%M%S" $ timestamp
 
-toS3Path :: S3.ObjectKey -> S3Path
-toS3Path (S3.ObjectKey key) =
+toS3Url :: S3.ObjectKey -> S3Url
+toS3Url (S3.ObjectKey key) =
   "https://" <> S3.fromBucketName gameLogBucket <> ".s3." <> AWS.fromRegion AWS.Oregon <> ".amazonaws.com/" <> key
 
 putS3Object :: (MonadIO m) => FilePath -> S3.ObjectKey -> m S3.PutObjectResponse
@@ -140,14 +140,14 @@ putS3Object path key = do
 putS3Object_ :: (MonadIO m) => FilePath -> S3.ObjectKey -> m ()
 putS3Object_ path key = putS3Object path key >> pass
 
-insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Path -> DBAction m ReportInsertion
+insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Url -> DBAction m ReportInsertion
 insertReport timestamp rawReport logFilePath = do
   winner <- insertPlayerIfNotExists rawReport.winner
   loser <- insertPlayerIfNotExists rawReport.loser
   report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) logFilePath rawReport
   pure (report, winner, loser)
 
-insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Path -> DBAction m ()
+insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Url -> DBAction m ()
 insertReport_ timestamp rawReport logFilePath = insertReport timestamp rawReport logFilePath >> pass
 
 processReport :: (MonadIO m, MonadLogger m) => ReportInsertion -> DBAction m (ProcessedGameReport, Rating, Rating)
@@ -196,7 +196,7 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = case validateR
     let key = toS3Key timestamp rawReport.winner rawReport.loser
     let s3Path = case logFileData of
           Nothing -> Nothing
-          Just _ -> Just $ toS3Path key
+          Just _ -> Just $ toS3Url key
 
     (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport s3Path
     when (isJust s3Path) (putS3Object_ "" key)
