@@ -135,7 +135,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                             : ""
                     }
                     placeholder="Player Name - Please check spelling!"
-                    onChange={handleInputChange("winner")}
+                    onInputValueChange={handleInputChange("winner")}
                     validate={validateField("winner")}
                 />
             </GameReportFormElement>
@@ -154,7 +154,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                             : ""
                     }
                     placeholder="Player Name - Please check spelling!"
-                    onChange={handleInputChange("loser")}
+                    onInputValueChange={handleInputChange("loser")}
                     validate={validateField("loser")}
                 />
             </GameReportFormElement>

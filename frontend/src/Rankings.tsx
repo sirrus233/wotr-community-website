@@ -2,7 +2,13 @@ import React, { CSSProperties, ReactNode, useState } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import ButtonGroup from "@mui/joy/ButtonGroup";
-import { LeaderboardEntry, Side } from "./types";
+import EditIcon from "@mui/icons-material/EditOutlined";
+import IconButton from "@mui/joy/IconButton";
+import MergeIcon from "@mui/icons-material/Merge";
+import Modal from "@mui/joy/Modal";
+import ModalClose from "@mui/joy/ModalClose";
+import ModalDialog from "@mui/joy/ModalDialog";
+import { LeaderboardEntry, PlayerEditMode, Side } from "./types";
 import { FREE_PRIMARY_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
 import {
     HEADER_HEIGHT_PX,
@@ -10,9 +16,17 @@ import {
     TABLE_REFRESH_BTN_HEIGHT_PX,
     TABLE_ELEMENTS_GAP,
 } from "./styles/sizes";
+import PlayerEditForm from "./PlayerEditForm";
+import PlayerRemapForm from "./PlayerRemapForm";
 import TableView from "./TableView";
 import { range } from "./utils";
 import { START_YEAR } from "./constants";
+
+type PlayerEditParams = {
+    pid: number;
+    name: string;
+    mode: PlayerEditMode;
+};
 
 interface Props {
     leaderboard: LeaderboardEntry[];
@@ -41,6 +55,9 @@ function Rankings({
 }: Props) {
     const [error, setError] = useState<string | null>(null);
 
+    const [playerEditParams, setPlayerEditParams] =
+        useState<PlayerEditParams | null>(null);
+
     const refresh = () => {
         setError(null);
         getLeaderboard();
@@ -50,6 +67,29 @@ function Rankings({
 
     return (
         <Box>
+            {playerEditParams && (
+                <Modal open onClose={() => setPlayerEditParams(null)}>
+                    <ModalDialog>
+                        <ModalClose />
+                        {playerEditParams.mode === "remap" ? (
+                            <PlayerRemapForm
+                                {...playerEditParams}
+                                refresh={refresh}
+                                playerOptions={leaderboard.map((entry) => ({
+                                    label: entry.name,
+                                    pid: entry.pid,
+                                }))}
+                            />
+                        ) : (
+                            <PlayerEditForm
+                                {...playerEditParams}
+                                refresh={refresh}
+                            />
+                        )}
+                    </ModalDialog>
+                </Modal>
+            )}
+
             <Box
                 sx={{
                     display: "flex",
@@ -85,6 +125,9 @@ function Rankings({
                 header={
                     <>
                         <TableHeaderRow>
+                            <TableHeaderCell level={0} rowSpan={3}>
+                                Edit Player
+                            </TableHeaderCell>
                             <TableHeaderCell level={0} rowSpan={3}>
                                 Rank
                             </TableHeaderCell>
@@ -162,6 +205,36 @@ function Rankings({
                 }
                 body={leaderboard.map((entry, i) => (
                     <tr key={entry.pid}>
+                        <TableCell>
+                            <IconButton
+                                size="sm"
+                                disabled={loading}
+                                onClick={() =>
+                                    setPlayerEditParams({
+                                        pid: entry.pid,
+                                        name: entry.name,
+                                        mode: "edit",
+                                    })
+                                }
+                            >
+                                <EditIcon />
+                            </IconButton>
+
+                            <IconButton
+                                size="sm"
+                                disabled={loading}
+                                onClick={() =>
+                                    setPlayerEditParams({
+                                        pid: entry.pid,
+                                        name: entry.name,
+                                        mode: "remap",
+                                    })
+                                }
+                            >
+                                <MergeIcon />
+                            </IconButton>
+                        </TableCell>
+
                         <TableCell>{i + 1}</TableCell>
                         <TableCell>{entry.country}</TableCell>
                         <TableCell>{entry.name}</TableCell>

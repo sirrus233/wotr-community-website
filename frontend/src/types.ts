@@ -142,4 +142,39 @@ export interface ProcessedGameReport {
     comments: string | null;
 }
 
+export type PlayerEditMode = "edit" | "remap";
+
+export type PlayerOption = {
+    label: string;
+    pid: number;
+};
+
+export interface PlayerEditFormData {
+    pid: FieldData<number>;
+    newName: FieldData<string | null>;
+}
+
+export type ValidPlayerEditFormData = {
+    [K in keyof PlayerEditFormData]: {
+        [J in keyof PlayerEditFormData[K]]: Exclude<
+            PlayerEditFormData[K][J],
+            null
+        >;
+    };
+};
+
+export interface PlayerRemapFormData {
+    fromPlayer: FieldData<PlayerOption>;
+    toPlayer: FieldData<PlayerOption | null>;
+}
+
+export type ValidPlayerRemapFormData = {
+    [K in keyof PlayerRemapFormData]: {
+        [J in keyof PlayerRemapFormData[K]]: Exclude<
+            PlayerRemapFormData[K][J],
+            null
+        >;
+    };
+};
+
 export type ValueOf<T> = T[keyof T];

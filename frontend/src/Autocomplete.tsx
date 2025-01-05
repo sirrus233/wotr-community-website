@@ -3,26 +3,30 @@ import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
 import MaterialAutocomplete from "@mui/joy/Autocomplete";
 import CircularProgress from "@mui/joy/CircularProgress";
+import { PlayerOption } from "./types";
 
-interface Props {
-    options: string[]; // could update to allow objects: https://mui.com/joy-ui/react-autocomplete/
-    current: string;
+interface Props<O extends string | PlayerOption> {
+    options: O[];
+    current: O | null;
     placeholder: string;
     loading: boolean;
     alertText?: string;
-    onChange: (value: string) => void;
+    onChange?: (value: O | null) => void;
+    onInputValueChange?: (value: string) => void;
     validate: () => void;
 }
 
-export default function Autocomplete({
+export default function Autocomplete<O extends string | PlayerOption>({
     options,
     current,
     placeholder,
     loading,
     alertText,
-    onChange,
+    onChange = () => {},
+    onInputValueChange = () => {},
     validate,
-}: Props) {
+}: Props<O>) {
+    const [localInputValue, setLocalInputValue] = useState("");
     const [displayedAlertText, setDisplayedAlertText] =
         useState<ReactNode>(null);
 
@@ -39,9 +43,28 @@ export default function Autocomplete({
                 freeSolo
                 openOnFocus
                 options={options}
-                inputValue={current}
+                inputValue={
+                    typeof current === "string" ? current : localInputValue
+                }
+                value={current}
                 placeholder={placeholder}
-                onInputChange={(_, value) => onChange(value)}
+                onInputChange={(_, value) => {
+                    onInputValueChange(value);
+                    setLocalInputValue(value);
+
+                    const selected = options.find(
+                        (option) =>
+                            option === value ||
+                            (typeof option !== "string" &&
+                                option.label === value)
+                    );
+
+                    if (selected) {
+                        onChange(selected);
+                    } else {
+                        onChange(null);
+                    }
+                }}
                 onChange={(_, value) => {
                     if (value) setDisplayedAlertText(null);
                 }}
