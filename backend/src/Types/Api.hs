@@ -55,8 +55,7 @@ data RawGameReport = RawGameReport
     aragornTurn :: Maybe Int,
     strongholds :: [Stronghold],
     interestRating :: Int,
-    comment :: Maybe Text,
-    log :: Maybe Text
+    comment :: Maybe Text
   }
   deriving (Generic, Show)
 
