@@ -1,5 +1,6 @@
 module AppConfig where
 
+import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
 import Control.Monad.Logger (LoggingT (runLoggingT), filterLogger)
 import Database.Esqueleto.Experimental qualified as SQL
@@ -8,7 +9,7 @@ import Database.Redis qualified as Redis
 import Logging (LogLevelFilter, Logger, filterInfo)
 import Servant (Handler)
 
-data Env = Env {dbPool :: SQL.ConnectionPool, redisPool :: Redis.Connection, logger :: Logger}
+data Env = Env {dbPool :: SQL.ConnectionPool, redisPool :: Redis.Connection, logger :: Logger, aws :: AWS.Env}
 
 type AppM = ReaderT Env (LoggingT Handler)
 

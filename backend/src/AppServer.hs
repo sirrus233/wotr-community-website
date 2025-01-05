@@ -3,7 +3,7 @@ module AppServer where
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
 import Api (Api)
-import AppConfig (AppM, gameLogBucket)
+import AppConfig (AppM, Env (..), gameLogBucket)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
@@ -129,19 +129,14 @@ toS3Key timestamp freePlayer shadowPlayer =
     formattedTimestamp = toText . formatTime defaultTimeLocale "%Y-%m-%d_%H%M%S" $ timestamp
     formattedFilename = formattedTimestamp <> "_FP_" <> freePlayer <> "_SP_" <> shadowPlayer <> ".log"
 
-toS3Url :: AWS.Env -> S3.ObjectKey -> S3Url
-toS3Url (AWS.Env {AWS.region}) (S3.ObjectKey key) =
+toS3Url :: AWS.Region -> S3.ObjectKey -> S3Url
+toS3Url region (S3.ObjectKey key) =
   "https://" <> S3.fromBucketName gameLogBucket <> ".s3." <> AWS.fromRegion region <> ".amazonaws.com/" <> key
 
-putS3Object :: (MonadIO m) => FilePath -> S3.ObjectKey -> m S3.PutObjectResponse
-putS3Object path key = do
-  awsLogger <- AWS.newLogger AWS.Debug stdout
-  discoveredEnv <- liftIO $ AWS.newEnv AWS.discover
-  let env = discoveredEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
-  liftIO $ AWS.chunkedFile AWS.defaultChunkSize path >>= AWS.runResourceT . AWS.send env . S3.newPutObject gameLogBucket key
-
-putS3Object_ :: (MonadIO m) => FilePath -> S3.ObjectKey -> m ()
-putS3Object_ path key = putS3Object path key >> pass
+putS3Object :: (MonadIO m) => AWS.Env -> S3.ObjectKey -> FilePath -> m S3.PutObjectResponse
+putS3Object awsEnv key path =
+  liftIO $
+    AWS.chunkedFile AWS.defaultChunkSize path >>= AWS.runResourceT . AWS.send awsEnv . S3.newPutObject gameLogBucket key
 
 insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Url -> DBAction m ReportInsertion
 insertReport timestamp rawReport s3Url = do
@@ -190,24 +185,18 @@ reprocessReports = do
   updateActiveStatus
 
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
-submitReportHandler (SubmitReportRequest rawReport logFileData) = case validateReport rawReport of
-  Failure errors -> throwError $ err422 {errBody = show errors}
-  Success (RawGameReport {..}) -> runDb $ do
-    logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
-    timestamp <- liftIO getCurrentTime
-
-    let key = toS3Key timestamp rawReport.winner rawReport.loser
-    let s3Path = case logFileData of
-          Nothing -> Nothing
-          Just _ -> Just $ toS3Url key
-
-    (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport s3Path
-
-    case fdPayload <$> logFileData of
-      Nothing -> pass
-      Just path -> putS3Object_ path key
-
-    pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
+submitReportHandler (SubmitReportRequest rawReport logFileData) = do
+  awsEnv <- asks aws
+  case validateReport rawReport of
+    Failure errors -> throwError $ err422 {errBody = show errors}
+    Success (RawGameReport {..}) -> runDb $ do
+      logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
+      timestamp <- liftIO getCurrentTime
+      let key = toS3Key timestamp rawReport.winner rawReport.loser
+      let s3Path = toS3Url awsEnv.region key <$ logFileData
+      (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport s3Path
+      mapM_ (putS3Object awsEnv key . fdPayload) logFileData
+      pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: AppM GetReportsResponse
 getReportsHandler = runDb $ getGameReports 500 0 <&> GetReportsResponse . map fromGameReport
