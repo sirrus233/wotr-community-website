@@ -3,6 +3,7 @@ import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import Table from "@mui/joy/Table";
 import Typography from "@mui/joy/Typography";
+import { SxProps } from "@mui/joy/styles/types";
 import {
     TABLE_REFRESH_BTN_HEIGHT_PX,
     TABLE_ELEMENTS_GAP,
@@ -16,6 +17,7 @@ interface Props {
     header: ReactNode;
     body: ReactNode;
     containerStyle?: CSSProperties;
+    tableStyle?: SxProps;
 }
 
 export default function TableView({
@@ -26,6 +28,7 @@ export default function TableView({
     header,
     body,
     containerStyle = {},
+    tableStyle = {},
 }: Props) {
     return (
         <Box
@@ -76,14 +79,7 @@ export default function TableView({
                             tableLayout: "auto",
                             border: "none",
                             "& tr > *": { textAlign: "center" },
-                            "& thead > tr:first-child > *:first-child": {
-                                pl: 2,
-                            },
-                            "& tbody > tr > *:first-child": { pl: 2 },
-                            "& thead > tr:first-child > *:last-child": {
-                                pr: 2,
-                            },
-                            "& tbody > tr > *:last-child": { pr: 2 },
+                            ...tableStyle,
                         }}
                     >
                         <thead>{header}</thead>

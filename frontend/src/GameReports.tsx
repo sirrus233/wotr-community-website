@@ -70,6 +70,16 @@ export default function GameReports() {
             containerStyle={{
                 maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
             }}
+            tableStyle={{
+                "& thead > tr:first-child > *:first-child": {
+                    pl: 2,
+                },
+                "& tbody > tr > *:first-child": { pl: 2 },
+                "& thead > tr:first-child > *:last-child": {
+                    pr: 2,
+                },
+                "& tbody > tr > *:last-child": { pr: 2 },
+            }}
             header={
                 <tr>
                     <th />

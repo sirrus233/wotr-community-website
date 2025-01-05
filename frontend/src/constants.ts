@@ -103,6 +103,7 @@ export enum ErrorMessage {
     Required = "Required",
     OnSubmit = "Could not submit, please resolve errors",
     MissingPlayerName = "This player does not exist in the database. Unless it's a new player, please check the spelling.",
+    ExistingPlayerRequired = "Must choose an existing player",
 }
 
 export const INFINITE = 100;

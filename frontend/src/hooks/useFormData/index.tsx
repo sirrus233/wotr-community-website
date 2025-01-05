@@ -28,7 +28,7 @@ interface Args<F, V> {
     initialFormData: ConstrainedFormData<F>;
     optionalFields: string[];
     missingFieldErrorMessage?: ErrorMessage;
-    submit: (validatedFormData: ConstrainedFormData<V>) => Promise<any>; // FIXME
+    submit: (validatedFormData: ConstrainedFormData<V>) => Promise<any>;
     toErrorMessage: (error: ServerErrorBody) => string;
 }
 
