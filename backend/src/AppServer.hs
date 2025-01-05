@@ -29,6 +29,7 @@ import Database
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
 import Servant (NoContent (..), ServerError (errBody), ServerT, err404, err422, throwError, type (:<|>) (..))
+import Servant.Multipart (FileData (..))
 import Types.Api
   ( DeleteReportRequest (..),
     GetLeaderboardResponse (GetLeaderboardResponse),
@@ -199,7 +200,11 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = case validateR
           Just _ -> Just $ toS3Url key
 
     (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport s3Path
-    when (isJust s3Path) (putS3Object_ "" key)
+
+    case fdPayload <$> logFileData of
+      Nothing -> pass
+      Just path -> putS3Object_ path key
+
     pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: AppM GetReportsResponse
