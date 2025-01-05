@@ -59,11 +59,7 @@ export default function Autocomplete<O extends string | PlayerOption>({
                                 option.label === value)
                     );
 
-                    if (selected) {
-                        onChange(selected);
-                    } else {
-                        onChange(null);
-                    }
+                    onChange(selected || null);
                 }}
                 onChange={(_, value) => {
                     if (value) setDisplayedAlertText(null);
