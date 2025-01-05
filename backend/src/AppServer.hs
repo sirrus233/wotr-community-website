@@ -122,14 +122,16 @@ readOrError errMsg action =
 
 toS3Key :: UTCTime -> PlayerName -> PlayerName -> S3.ObjectKey
 toS3Key timestamp freePlayer shadowPlayer =
-  S3.ObjectKey $ show y <> "/" <>: m <> "/" <>: d <> "/" <> ts <> "_FP_" <> freePlayer <> "_SP_" <> shadowPlayer <> ".log"
+  S3.ObjectKey $ formattedPath <> formattedFilename
   where
     (y, m, d) = toGregorian . utctDay $ timestamp
-    ts = toText . formatTime defaultTimeLocale "%Y-%m-%d_%H%M%S" $ timestamp
+    formattedPath = show y <> "/" <>: m <> "/" <>: d <> "/"
+    formattedTimestamp = toText . formatTime defaultTimeLocale "%Y-%m-%d_%H%M%S" $ timestamp
+    formattedFilename = formattedTimestamp <> "_FP_" <> freePlayer <> "_SP_" <> shadowPlayer <> ".log"
 
-toS3Url :: S3.ObjectKey -> S3Url
-toS3Url (S3.ObjectKey key) =
-  "https://" <> S3.fromBucketName gameLogBucket <> ".s3." <> AWS.fromRegion AWS.Oregon <> ".amazonaws.com/" <> key
+toS3Url :: AWS.Env -> S3.ObjectKey -> S3Url
+toS3Url (AWS.Env {AWS.region}) (S3.ObjectKey key) =
+  "https://" <> S3.fromBucketName gameLogBucket <> ".s3." <> AWS.fromRegion region <> ".amazonaws.com/" <> key
 
 putS3Object :: (MonadIO m) => FilePath -> S3.ObjectKey -> m S3.PutObjectResponse
 putS3Object path key = do
