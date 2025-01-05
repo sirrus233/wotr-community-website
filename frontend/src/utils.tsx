@@ -1,4 +1,4 @@
-import { Expansion, League, Side, Stronghold } from "./types";
+import { Expansion, League, ServerErrorBody, Side, Stronghold } from "./types";
 
 export function strongholdSide(
     expansions: Expansion[],
@@ -139,4 +139,65 @@ export function strongholdPoints(stronghold: Stronghold): 1 | 2 {
         case "Umbar":
             return 2;
     }
+}
+
+export function isStrongholdInPlay(
+    expansions: Expansion[],
+    stronghold: Stronghold
+): boolean {
+    switch (stronghold) {
+        case "EredLuin":
+            return expansions.includes("Cities");
+        case "SouthRhun":
+            return expansions.includes("Cities");
+        case "IronHills":
+            return expansions.includes("FateOfErebor");
+        case "Shire":
+        case "Edoras":
+        case "Dale":
+        case "Pelargir":
+        case "Rivendell":
+        case "GreyHavens":
+        case "HelmsDeep":
+        case "Lorien":
+        case "WoodlandRealm":
+        case "MinasTirith":
+        case "DolAmroth":
+        case "Erebor":
+        case "Angmar":
+        case "FarHarad":
+        case "MountGundabad":
+        case "Moria":
+        case "DolGuldur":
+        case "Orthanc":
+        case "Morannon":
+        case "BaradDur":
+        case "MinasMorgul":
+        case "Umbar":
+            return true;
+    }
+}
+
+export function isServerError(error: unknown): error is ServerErrorBody {
+    return (
+        typeof error === "object" &&
+        error !== null &&
+        "status" in error &&
+        typeof error.status === "number" &&
+        "response" in error &&
+        typeof error.response === "object" &&
+        error.response !== null &&
+        "data" in error.response &&
+        typeof error.response.data === "string"
+    );
+}
+
+export function objectKeys<T extends object>(obj: T): Array<keyof T> {
+    return Object.keys(obj) as Array<keyof T>;
+}
+
+export function range(start: number = 0, end: number): number[] {
+    return end > start
+        ? [...Array(end - start).keys()].map((i) => i + start)
+        : [];
 }

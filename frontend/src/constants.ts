@@ -106,3 +106,4 @@ export enum ErrorMessage {
 }
 
 export const INFINITE = 100;
+export const START_YEAR = 2023;

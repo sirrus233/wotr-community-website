@@ -49,6 +49,10 @@ export interface FieldData<T> {
     validate: () => FieldError;
 }
 
+export type ConstrainedFormData<F> = {
+    [K in keyof F]: F[K] extends FieldData<unknown> ? F[K] : never;
+};
+
 export interface FormData {
     winner: FieldData<string | null>;
     loser: FieldData<string | null>;
