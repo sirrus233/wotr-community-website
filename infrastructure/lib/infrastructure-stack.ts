@@ -24,7 +24,7 @@ export class InfrastructureStack extends cdk.Stack {
         gameReportBucket.grantPublicAccess();
 
         this.website();
-        this.server(elasticIp);
+        this.server(elasticIp, gameReportBucket);
     }
 
     website() {
@@ -72,7 +72,7 @@ export class InfrastructureStack extends cdk.Stack {
         });
     }
 
-    server(elasticIp: ec2.CfnEIP) {
+    server(elasticIp: ec2.CfnEIP, gameReportBucket: s3.Bucket) {
         const ami = ec2.MachineImage.latestAmazonLinux2023();
 
         const vpc = new ec2.Vpc(this, "VPC", {
@@ -89,6 +89,7 @@ export class InfrastructureStack extends cdk.Stack {
         const role = new iam.Role(this, "ServerRole", {
             assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
         });
+        gameReportBucket.grantPut(role);
 
         const instance = new ec2.Instance(this, "ServerInstance", {
             instanceType: ec2.InstanceType.of(
