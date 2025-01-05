@@ -8,19 +8,20 @@ import MergeIcon from "@mui/icons-material/Merge";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
-import { LeaderboardEntry, PlayerEditMode, Side } from "./types";
+import { LeaderboardEntry, PlayerEditMode, PlayerState, Side } from "./types";
 import { FREE_PRIMARY_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
-    TABLE_REFRESH_BTN_HEIGHT_PX,
+    TABLE_BTN_HEIGHT_PX,
     TABLE_ELEMENTS_GAP,
 } from "./styles/sizes";
+import Filters from "./Filters";
 import PlayerEditForm from "./PlayerEditForm";
 import PlayerRemapForm from "./PlayerRemapForm";
 import TableView from "./TableView";
 import { range } from "./utils";
-import { START_YEAR } from "./constants";
+import { playerStates, START_YEAR } from "./constants";
 
 type PlayerEditParams = {
     pid: number;
@@ -43,8 +44,8 @@ const TABLE_TOP_POSITION =
     HEADER_HEIGHT_PX +
     HEADER_MARGIN_PX +
     YEAR_SELECTOR_HEIGHT +
-    TABLE_REFRESH_BTN_HEIGHT_PX +
-    TABLE_ELEMENTS_GAP * 2;
+    TABLE_BTN_HEIGHT_PX * 2 +
+    TABLE_ELEMENTS_GAP * 3;
 
 function Rankings({
     leaderboard,
@@ -53,6 +54,7 @@ function Rankings({
     getLeaderboard,
     setYear,
 }: Props) {
+    const [filters, setFilters] = useState<PlayerState[]>(["Active"]);
     const [error, setError] = useState<string | null>(null);
 
     const [playerEditParams, setPlayerEditParams] =
@@ -119,6 +121,13 @@ function Rankings({
                 error={error}
                 loading={loading}
                 label="Rankings"
+                filters={
+                    <Filters
+                        options={playerStates.slice()}
+                        current={filters}
+                        onChange={setFilters}
+                    />
+                }
                 containerStyle={{
                     maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
                 }}
@@ -203,70 +212,76 @@ function Rankings({
                         </TableHeaderRow>
                     </>
                 }
-                body={leaderboard.map((entry, i) => (
-                    <tr key={entry.pid}>
-                        <TableCell>
-                            <IconButton
-                                size="sm"
-                                disabled={loading}
-                                onClick={() =>
-                                    setPlayerEditParams({
-                                        pid: entry.pid,
-                                        name: entry.name,
-                                        mode: "edit",
-                                    })
-                                }
-                            >
-                                <EditIcon />
-                            </IconButton>
+                body={leaderboard
+                    .filter(
+                        (entry) =>
+                            (entry.isActive && filters.includes("Active")) ||
+                            (!entry.isActive && filters.includes("Inactive"))
+                    )
+                    .map((entry, i) => (
+                        <tr key={entry.pid}>
+                            <TableCell>
+                                <IconButton
+                                    size="sm"
+                                    disabled={loading}
+                                    onClick={() =>
+                                        setPlayerEditParams({
+                                            pid: entry.pid,
+                                            name: entry.name,
+                                            mode: "edit",
+                                        })
+                                    }
+                                >
+                                    <EditIcon />
+                                </IconButton>
 
-                            <IconButton
-                                size="sm"
-                                disabled={loading}
-                                onClick={() =>
-                                    setPlayerEditParams({
-                                        pid: entry.pid,
-                                        name: entry.name,
-                                        mode: "remap",
-                                    })
-                                }
-                            >
-                                <MergeIcon />
-                            </IconButton>
-                        </TableCell>
+                                <IconButton
+                                    size="sm"
+                                    disabled={loading}
+                                    onClick={() =>
+                                        setPlayerEditParams({
+                                            pid: entry.pid,
+                                            name: entry.name,
+                                            mode: "remap",
+                                        })
+                                    }
+                                >
+                                    <MergeIcon />
+                                </IconButton>
+                            </TableCell>
 
-                        <TableCell>{i + 1}</TableCell>
-                        <TableCell>{entry.country}</TableCell>
-                        <TableCell>{entry.name}</TableCell>
-                        <TableCell>{entry.averageRating}</TableCell>
-                        <TableCell side="Shadow">
-                            {entry.currentRatingShadow}
-                        </TableCell>
-                        <TableCell side="Free">
-                            {entry.currentRatingFree}
-                        </TableCell>
-                        <TableCell>{entry.totalGames}</TableCell>
-                        <TableCell>{entry.yearlyGames}</TableCell>
-                        <TableCell side="Free" light>
-                            {entry.yearlyWinsFree}
-                        </TableCell>
-                        <TableCell side="Free">
-                            {entry.yearlyLossesFree}
-                        </TableCell>
-                        <TableCell>
-                            {toPercent(entry.yearlyWinRateFree)}
-                        </TableCell>
-                        <TableCell side="Shadow" light>
-                            {entry.yearlyWinsShadow}
-                        </TableCell>
-                        <TableCell side="Shadow">
-                            {entry.yearlyLossesShadow}
-                        </TableCell>
-                        <TableCell>
-                            {toPercent(entry.yearlyWinRateShadow)}
-                        </TableCell>
-                    </tr>
-                ))}
+                            <TableCell>{i + 1}</TableCell>
+                            <TableCell>{entry.country}</TableCell>
+                            <TableCell>{entry.name}</TableCell>
+                            <TableCell>{entry.averageRating}</TableCell>
+                            <TableCell side="Shadow">
+                                {entry.currentRatingShadow}
+                            </TableCell>
+                            <TableCell side="Free">
+                                {entry.currentRatingFree}
+                            </TableCell>
+                            <TableCell>{entry.totalGames}</TableCell>
+                            <TableCell>{entry.yearlyGames}</TableCell>
+                            <TableCell side="Free" light>
+                                {entry.yearlyWinsFree}
+                            </TableCell>
+                            <TableCell side="Free">
+                                {entry.yearlyLossesFree}
+                            </TableCell>
+                            <TableCell>
+                                {toPercent(entry.yearlyWinRateFree)}
+                            </TableCell>
+                            <TableCell side="Shadow" light>
+                                {entry.yearlyWinsShadow}
+                            </TableCell>
+                            <TableCell side="Shadow">
+                                {entry.yearlyLossesShadow}
+                            </TableCell>
+                            <TableCell>
+                                {toPercent(entry.yearlyWinRateShadow)}
+                            </TableCell>
+                        </tr>
+                    ))}
             />
         </Box>
     );

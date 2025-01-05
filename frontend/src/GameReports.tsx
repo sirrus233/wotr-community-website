@@ -16,7 +16,7 @@ import { FREE_ACCENT_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
-    TABLE_REFRESH_BTN_HEIGHT_PX,
+    TABLE_BTN_HEIGHT_PX,
     TABLE_ELEMENTS_GAP,
 } from "./styles/sizes";
 import {
@@ -31,7 +31,7 @@ import TableView from "./TableView";
 const TABLE_TOP_POSITION =
     HEADER_HEIGHT_PX +
     HEADER_MARGIN_PX +
-    TABLE_REFRESH_BTN_HEIGHT_PX +
+    TABLE_BTN_HEIGHT_PX +
     TABLE_ELEMENTS_GAP * 2;
 
 export default function GameReports() {

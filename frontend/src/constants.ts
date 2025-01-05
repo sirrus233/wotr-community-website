@@ -99,6 +99,8 @@ export const serverValidationErrors = [
     "InvalidStronghold",
 ] as const;
 
+export const playerStates = ["Active", "Inactive"] as const;
+
 export enum ErrorMessage {
     Required = "Required",
     OnSubmit = "Could not submit, please resolve errors",

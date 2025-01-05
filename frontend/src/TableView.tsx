@@ -4,10 +4,7 @@ import Button from "@mui/joy/Button";
 import Table from "@mui/joy/Table";
 import Typography from "@mui/joy/Typography";
 import { SxProps } from "@mui/joy/styles/types";
-import {
-    TABLE_REFRESH_BTN_HEIGHT_PX,
-    TABLE_ELEMENTS_GAP,
-} from "./styles/sizes";
+import { TABLE_BTN_HEIGHT_PX, TABLE_ELEMENTS_GAP } from "./styles/sizes";
 
 interface Props {
     refresh: () => void;
@@ -16,6 +13,7 @@ interface Props {
     label: string;
     header: ReactNode;
     body: ReactNode;
+    filters?: ReactNode;
     containerStyle?: CSSProperties;
     tableStyle?: SxProps;
 }
@@ -25,6 +23,7 @@ export default function TableView({
     error,
     loading,
     label,
+    filters,
     header,
     body,
     containerStyle = {},
@@ -45,16 +44,31 @@ export default function TableView({
                     width: "100%",
                     alignItems: "center",
                     justifyContent: "center",
-                    margin: `${TABLE_ELEMENTS_GAP}px 0`,
+                    m: `${TABLE_ELEMENTS_GAP}px 0`,
                 }}
             >
                 <Button
                     onClick={refresh}
-                    sx={{ height: `${TABLE_REFRESH_BTN_HEIGHT_PX}px` }}
+                    sx={{ height: `${TABLE_BTN_HEIGHT_PX}px` }}
                 >
                     Refresh
                 </Button>
             </Box>
+
+            {filters && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        width: "100%",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: `${TABLE_BTN_HEIGHT_PX}px`,
+                        mb: `${TABLE_ELEMENTS_GAP}px`,
+                    }}
+                >
+                    {filters}
+                </Box>
+            )}
 
             {error && <Typography color="danger">{error}</Typography>}
 

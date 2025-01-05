@@ -5,6 +5,7 @@ import {
     matchTypes,
     optionalFields,
     payloadFields,
+    playerStates,
     serverValidationErrors,
     sides,
     strongholds,
@@ -28,6 +29,8 @@ export type Stronghold = (typeof strongholds)[number];
 export type OptionalField = (typeof optionalFields)[number];
 
 export type PayloadField = (typeof payloadFields)[number];
+
+export type PlayerState = (typeof playerStates)[number];
 
 export type SuccessMessage = string | null;
 
@@ -96,6 +99,7 @@ export interface LeaderboardEntry {
     pid: number;
     name: string;
     country: string | null;
+    isActive: boolean;
     currentRatingFree: number;
     currentRatingShadow: number;
     averageRating: number;
