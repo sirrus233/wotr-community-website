@@ -142,14 +142,14 @@ putS3Object_ :: (MonadIO m) => FilePath -> S3.ObjectKey -> m ()
 putS3Object_ path key = putS3Object path key >> pass
 
 insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Url -> DBAction m ReportInsertion
-insertReport timestamp rawReport logFilePath = do
+insertReport timestamp rawReport s3Url = do
   winner <- insertPlayerIfNotExists rawReport.winner
   loser <- insertPlayerIfNotExists rawReport.loser
-  report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) logFilePath rawReport
+  report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) s3Url rawReport
   pure (report, winner, loser)
 
 insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Url -> DBAction m ()
-insertReport_ timestamp rawReport logFilePath = insertReport timestamp rawReport logFilePath >> pass
+insertReport_ timestamp rawReport s3Url = insertReport timestamp rawReport s3Url >> pass
 
 processReport :: (MonadIO m, MonadLogger m) => ReportInsertion -> DBAction m (ProcessedGameReport, Rating, Rating)
 processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId winner), loserPlayer@(Entity loserId loser)) = do
