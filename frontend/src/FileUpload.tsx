@@ -5,22 +5,27 @@ import Button from "@mui/joy/Button";
 import ClearIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/joy/IconButton";
 import Typography from "@mui/joy/Typography";
-import { MAX_GAME_LOG_SIZE_MB } from "./constants";
-
-const INPUT_ID = "game-log-upload";
 
 interface Props {
     value: File | null;
+    id: string;
+    constraintText: string;
     onChange: (file: File | null) => void;
     validate: () => void;
 }
 
-export default function FileUpload({ value, onChange, validate }: Props) {
+export default function FileUpload({
+    value,
+    id,
+    constraintText,
+    onChange,
+    validate,
+}: Props) {
     return (
         <Box>
             <Box display="flex" alignItems="center" gap={1}>
                 <input
-                    id={INPUT_ID}
+                    id={id}
                     style={{ display: "none" }}
                     type="file"
                     accept="text/plain"
@@ -30,7 +35,7 @@ export default function FileUpload({ value, onChange, validate }: Props) {
                     onBlur={validate}
                 />
 
-                <label htmlFor={INPUT_ID}>
+                <label htmlFor={id}>
                     <Button component="span" sx={{ whiteSpace: "nowrap" }}>
                         Choose file
                     </Button>
@@ -56,7 +61,7 @@ export default function FileUpload({ value, onChange, validate }: Props) {
             </Box>
 
             <Typography level="body-xs" mt={1}>
-                Max {MAX_GAME_LOG_SIZE_MB} MB
+                {constraintText}
             </Typography>
         </Box>
     );

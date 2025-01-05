@@ -15,6 +15,7 @@ import {
     leagues,
     matchTypes,
     MAX_GAME_LOG_SIZE_BYTES,
+    MAX_GAME_LOG_SIZE_MB,
     optionalFields,
     serverValidationErrors,
     sides,
@@ -464,6 +465,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             >
                 <FileUpload
                     value={formData.logFile.value}
+                    id="game-log-upload"
+                    constraintText={`Max ${MAX_GAME_LOG_SIZE_MB} MB`}
                     validate={validateField("logFile")}
                     onChange={handleInputChange(
                         "logFile",
