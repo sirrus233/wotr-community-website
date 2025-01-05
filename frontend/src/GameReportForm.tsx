@@ -1,4 +1,5 @@
 import "@fontsource/inter";
+import axios from "axios";
 import React from "react";
 import CircularProgress from "@mui/joy/CircularProgress";
 import Modal from "@mui/joy/Modal";
@@ -13,15 +14,26 @@ import {
     expansions,
     leagues,
     matchTypes,
+    optionalFields,
+    serverValidationErrors,
     sides,
     strongholds,
     victoryTypes,
 } from "./constants";
-import { Stronghold } from "./types";
+import {
+    FormData,
+    GameReportPayload,
+    LeaderboardEntry,
+    ServerErrorBody,
+    ServerValidationError,
+    Stronghold,
+    ValidFormData,
+} from "./types";
 import {
     getExpansionLabel,
     getLeagueLabel,
     getStrongholdLabel,
+    isStrongholdInPlay,
     strongholdSide,
 } from "./utils";
 import useFormData from "./hooks/useFormData";
@@ -32,19 +44,40 @@ import SelectNumericOptionInput from "./SelectNumericOptionInput";
 import SingleOptionInput from "./SingleOptionInput";
 import TextInput from "./TextInput";
 import VictoryPoints from "./VictoryPoints";
+import initialGameReportFormData from "./initialGameReportFormData";
+import useGameReportClearEffects from "./hooks/useGameReportFormEffects";
 
-function GameReportForm() {
+interface Props {
+    leaderboard: LeaderboardEntry[];
+    loadingLeaderboard: boolean;
+}
+
+function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
     const [
         formData,
-        { errorOnSubmit, successMessage, loading, loadingPlayers, playerNames },
+        { errorOnSubmit, successMessage, loading },
         {
+            setFormData,
             handleInputChange,
             validateField,
             handleSubmit,
-            isStrongholdInPlay,
             setSuccessMessage,
         },
-    ] = useFormData();
+    ] = useFormData<FormData, ValidFormData>({
+        initialFormData: initialGameReportFormData,
+        optionalFields: optionalFields.slice(),
+        submit,
+        toErrorMessage,
+    });
+
+    useGameReportClearEffects({
+        formData,
+        initialFormData: initialGameReportFormData,
+        setFormData,
+        successMessage,
+    });
+
+    const playerNames = leaderboard.map((entry) => entry.name);
 
     const { value: selectedExpansions } = formData.expansions;
 
@@ -94,7 +127,7 @@ function GameReportForm() {
                 <Autocomplete
                     options={playerNames}
                     current={formData.winner.value || ""}
-                    loading={loadingPlayers}
+                    loading={loadingLeaderboard}
                     alertText={
                         !!formData.winner.value &&
                         !playerNames.includes(formData.winner.value)
@@ -113,7 +146,7 @@ function GameReportForm() {
                 <Autocomplete
                     options={playerNames}
                     current={formData.loser.value || ""}
-                    loading={loadingPlayers}
+                    loading={loadingLeaderboard}
                     alertText={
                         !!formData.loser.value &&
                         !playerNames.includes(formData.loser.value)
@@ -435,3 +468,110 @@ function GameReportForm() {
 }
 
 export default GameReportForm;
+
+async function submit(validatedResult: ValidFormData) {
+    return await axios.post(
+        //"http://localhost:8081/submitReport",
+        "https://api.waroftheringcommunity.net:8080/submitReport",
+        toPayload(validatedResult),
+        { headers: { "Content-Type": "application/json" } }
+    );
+}
+
+function toPayload(formData: ValidFormData): GameReportPayload {
+    return {
+        winner: formData.winner.value,
+        loser: formData.loser.value,
+        side: formData.side.value,
+        victory: formData.victory.value,
+        match: formData.match.value,
+        competition: formData.competition.value,
+        league: formData.league.value,
+        expansions: formData.expansions.value,
+        treebeard: formData.treebeard.value,
+        actionTokens: formData.actionTokens.value,
+        dwarvenRings: formData.dwarvenRings.value,
+        turns: formData.turns.value,
+        corruption: formData.corruption.value,
+        mordor: formData.mordor.value,
+        initialEyes: formData.initialEyes.value,
+        aragornTurn: formData.aragornTurn.value,
+        strongholds: formData.strongholds.value,
+        interestRating: formData.interestRating.value,
+        comment: formData.comment.value,
+    };
+}
+
+function toErrorMessage(error: ServerErrorBody): string {
+    if (error.status === 422) {
+        const parsedResult = parseValidationResult(error.response.data);
+        if (parsedResult.length) {
+            const errorMessage = parsedResult
+                .map(validationErrorToMessage)
+                .join(", ");
+            return (
+                errorMessage.slice(0, 1).toUpperCase() + errorMessage.slice(1)
+            );
+        }
+    }
+    return "Something went wrong.";
+}
+
+function parseValidationResult(
+    serverValidationResult: string
+): ServerValidationError[] {
+    const parsedResult = serverValidationResult
+        .slice(1, serverValidationResult.length - 1)
+        .split(",");
+
+    return parsedResult.every((error) =>
+        serverValidationErrors.includes(error as ServerValidationError)
+    )
+        ? (parsedResult as ServerValidationError[])
+        : [];
+}
+
+function validationErrorToMessage(
+    validationError: ServerValidationError
+): string {
+    switch (validationError) {
+        case "VictoryConditionConflictSPRV":
+            return "conditions met for Shadow ring victory instead of selected victory type";
+        case "VictoryConditionConflictFPRV":
+            return "conditions met for Free Peoples ring victory instead of selected victory type";
+        case "VictoryConditionConflictSPMV":
+            return "conditions met for Shadow military victory instead of selected victory type";
+        case "VictoryConditionConflictFPMV":
+            return "conditions met for Free Peoples military victory instead of selected victory type";
+        case "VictoryConditionConflictConcession":
+            return "conditions met for Concession victory type instead of selected victory type";
+        case "NoVictoryConditionMet":
+            return "no victory conditions met";
+        case "InvalidSPMV":
+            return "invalid Shadow military victory";
+        case "InvalidFPMV":
+            return "invalid Free Peoples military victory";
+        case "InvalidSPRV":
+            return "invalid Shadow ring victory";
+        case "InvalidFPRV":
+            return "invalid Free Peoples ring victory";
+        case "CompetitionMismatch":
+            return "reported competition type does not match reported league";
+        case "LeagueExpansionMismatch":
+            return "reported league does not match reported expansions";
+        case "TreebeardExpansionMismatch":
+            return "reported Treebeard muster does not match reported expansions";
+        case "TurnsOutOfRange":
+            return "invalid ending game turn selection";
+        case "CorruptionOutOfRange":
+            return "invalid fellowship corruption selection";
+        case "MordorOutOfRange":
+            return "invalid Mordor track selection";
+        case "InitialEyesOutOfRange":
+            return "invalid number of eyes allocated by Shadow on turn 1";
+        case "InterestRatingOutOfRange":
+            return "invalid interest rating selection";
+        case "InvalidStronghold":
+            return "invalid stronghold selections for the indicated expansions";
+    }
+}

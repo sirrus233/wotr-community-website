@@ -1,4 +1,5 @@
 import {
+    availableYears,
     competitionTypes,
     expansions,
     leagues,
@@ -29,6 +30,8 @@ export type OptionalField = (typeof optionalFields)[number];
 
 export type PayloadField = (typeof payloadFields)[number];
 
+export type Year = (typeof availableYears)[number];
+
 export type SuccessMessage = string | null;
 
 export type ServerErrorBody = {
@@ -48,6 +51,10 @@ export interface FieldData<T> {
     error: FieldError;
     validate: () => FieldError;
 }
+
+export type ConstrainedFormData<F> = {
+    [K in keyof F]: F[K] extends FieldData<unknown> ? F[K] : never;
+};
 
 export interface FormData {
     winner: FieldData<string | null>;

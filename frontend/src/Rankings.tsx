@@ -1,9 +1,9 @@
-import axios from "axios";
-import React, { CSSProperties, ReactNode, useEffect, useState } from "react";
+import React, { CSSProperties, ReactNode, useState } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import ButtonGroup from "@mui/joy/ButtonGroup";
-import { LeaderboardEntry, Side } from "./types";
+import { LeaderboardEntry, Side, Year } from "./types";
+import { availableYears } from "./constants";
 import { FREE_PRIMARY_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
 import {
     HEADER_HEIGHT_PX,
@@ -13,9 +13,13 @@ import {
 } from "./styles/sizes";
 import TableView from "./TableView";
 
-const DEFAULT_YEAR = 2024;
-const AVAILABLE_YEARS = [DEFAULT_YEAR, 2023];
-const COMING_SOON_YEARS = [2022];
+interface Props {
+    leaderboard: LeaderboardEntry[];
+    year: Year;
+    loading: boolean;
+    getLeaderboard: () => void;
+    setYear: (year: Year) => void;
+}
 
 const YEAR_SELECTOR_HEIGHT = 36;
 const HEADER_ROW_HEIGHT = 32;
@@ -27,34 +31,19 @@ const TABLE_TOP_POSITION =
     TABLE_REFRESH_BTN_HEIGHT_PX +
     TABLE_ELEMENTS_GAP * 2;
 
-function Rankings() {
-    const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-    const [loading, setLoading] = useState(false);
+function Rankings({
+    leaderboard,
+    year,
+    loading,
+    getLeaderboard,
+    setYear,
+}: Props) {
     const [error, setError] = useState<string | null>(null);
-    const [year, setYear] = useState(DEFAULT_YEAR);
-
-    const getLeaderboard = async () => {
-        try {
-            const response = await axios.get(
-                // "http://localhost:8081/leaderboard"
-                "https://api.waroftheringcommunity.net:8080/leaderboard",
-                { params: { year } }
-            );
-            setEntries(response.data.entries);
-        } catch (error) {
-            setError("Something went wrong");
-            console.error(error);
-        }
-        setLoading(false);
-    };
 
     const refresh = () => {
         setError(null);
-        setLoading(true);
         getLeaderboard();
     };
-
-    useEffect(refresh, [year]);
 
     return (
         <Box>
@@ -66,7 +55,7 @@ function Rankings() {
                 }}
             >
                 <ButtonGroup style={{ height: `${YEAR_SELECTOR_HEIGHT}px` }}>
-                    {AVAILABLE_YEARS.map((yearOption) => (
+                    {availableYears.map((yearOption) => (
                         <Button
                             key={yearOption}
                             variant="plain"
@@ -76,11 +65,6 @@ function Rankings() {
                                     year === yearOption ? "bold" : "normal",
                             }}
                         >
-                            {yearOption}
-                        </Button>
-                    ))}
-                    {COMING_SOON_YEARS.map((yearOption) => (
-                        <Button key={yearOption} disabled variant="plain">
                             {yearOption}
                         </Button>
                     ))}
@@ -173,7 +157,7 @@ function Rankings() {
                         </TableHeaderRow>
                     </>
                 }
-                body={entries.map((entry, i) => (
+                body={leaderboard.map((entry, i) => (
                     <tr key={entry.pid}>
                         <TableCell>{i + 1}</TableCell>
                         <TableCell>{entry.country}</TableCell>

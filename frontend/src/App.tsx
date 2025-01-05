@@ -1,6 +1,7 @@
+import axios from "axios";
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import GameReportForm from "./GameReportForm";
 import GameReports from "./GameReports";
 import Rankings from "./Rankings";
@@ -16,8 +17,32 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
+import { Year, LeaderboardEntry } from "./types";
+import { DEFAULT_YEAR } from "./constants";
 
 export default function App() {
+    const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+    const [leaderboardYear, setLeaderboardYear] = useState<Year>(DEFAULT_YEAR);
+    const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+
+    const getLeaderboard = () => {
+        setLoadingLeaderboard(true);
+
+        axios
+            .get("https://api.waroftheringcommunity.net:8080/leaderboard", {
+                params: { year: leaderboardYear },
+            })
+            .then((response) => {
+                setLeaderboard(response.data.entries as LeaderboardEntry[]);
+            })
+            .catch(console.error)
+            .finally(() => {
+                setLoadingLeaderboard(false);
+            });
+    };
+
+    useEffect(getLeaderboard, [leaderboardYear]);
+
     return (
         <CssVarsProvider>
             <CssBaseline />
@@ -52,9 +77,28 @@ export default function App() {
                 </header>
                 <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="/game-report" element={<GameReportForm />} />
+                    <Route
+                        path="/game-report"
+                        element={
+                            <GameReportForm
+                                leaderboard={leaderboard}
+                                loadingLeaderboard={loadingLeaderboard}
+                            />
+                        }
+                    />
                     <Route path="/game-reports" element={<GameReports />} />
-                    <Route path="/rankings" element={<Rankings />} />
+                    <Route
+                        path="/rankings"
+                        element={
+                            <Rankings
+                                leaderboard={leaderboard}
+                                year={leaderboardYear}
+                                loading={loadingLeaderboard}
+                                getLeaderboard={getLeaderboard}
+                                setYear={setLeaderboardYear}
+                            />
+                        }
+                    />
                 </Routes>
             </BrowserRouter>
         </CssVarsProvider>

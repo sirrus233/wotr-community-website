@@ -106,3 +106,5 @@ export enum ErrorMessage {
 }
 
 export const INFINITE = 100;
+export const DEFAULT_YEAR = 2024;
+export const availableYears = [DEFAULT_YEAR, 2023, 2022] as const;
