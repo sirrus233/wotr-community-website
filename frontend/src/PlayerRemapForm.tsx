@@ -124,7 +124,7 @@ export default function PlayerRemapForm({
                                 handleSubmit();
                             } else {
                                 setWarningAlert(
-                                    `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. Continue?`
+                                    `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "Submit" again to continue.`
                                 );
                             }
                         }}
