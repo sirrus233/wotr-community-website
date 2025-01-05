@@ -1,5 +1,6 @@
 module Main where
 
+import Amazonka qualified as AWS
 import AppConfig (AppM, Env (..), databaseFile, redisConfig, runAppLogger)
 import AppServer (insertReport_, reprocessReports)
 import Control.Monad.Logger (LogLevel (..))
@@ -61,11 +62,13 @@ main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
+  awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
   logger <- stdoutLogger
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
+  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
 
-  let env = Env {dbPool, redisPool, logger}
+  let env = Env {dbPool, redisPool, logger, aws}
 
   legacyEntries <- tryParse "migration/legacy-ladder.csv" logger toParsedLegacyLadderEntry
   reports <- tryParse "migration/reports.csv" logger toParsedGameReport
