@@ -40,7 +40,7 @@ share
     aragornTurn Int Maybe
     strongholds [Stronghold]
     interestRating Int
-    comments Text Maybe
+    comment Text Maybe
     deriving Show
 
    PlayerStatsYear

@@ -69,7 +69,7 @@ data GameReportWithTrash = GameReportWithTrash
     dA :: Maybe Int,
     eredLuin :: Maybe Int,
     gameRating :: Text,
-    gameComments :: Maybe Text,
+    gameComment :: Maybe Text,
     gameLog :: Maybe Text,
     dolGuldur :: Maybe Int,
     morannon :: Maybe Int,
@@ -153,7 +153,7 @@ data ParsedGameReport = ParsedGameReport
     aragornTurn :: Maybe Int,
     strongholds :: [Stronghold],
     interestRating :: Int,
-    comments :: Maybe Text
+    comment :: Maybe Text
   }
 
 toParsedGameReport :: GameReportWithTrash -> ParsedGameReport
@@ -178,7 +178,7 @@ toParsedGameReport report =
       aragornTurn,
       strongholds,
       interestRating,
-      comments
+      comment
     }
   where
     timestamp = case T.splitOn "/" (report.timestamp) of
@@ -333,7 +333,7 @@ toParsedGameReport report =
     interestRating = if interest == 0 then 1 else interest
       where
         interest = fromMaybe 1 (readMaybe . toString $ report.gameRating)
-    comments = report.gameComments
+    comment = report.gameComment
 
 toRawGameReport :: ParsedGameReport -> RawGameReport
 toRawGameReport (ParsedGameReport {..}) = RawGameReport {..}

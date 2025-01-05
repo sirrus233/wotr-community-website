@@ -25,7 +25,7 @@ data RawGameReport = RawGameReport
     aragornTurn :: Maybe Int,
     strongholds :: [Stronghold],
     interestRating :: Int,
-    comments :: Maybe Text
+    comment :: Maybe Text
   }
   deriving (Generic, Show)
 
@@ -53,7 +53,7 @@ toGameReport timestamp winnerId loserId r =
       gameReportAragornTurn = r.aragornTurn,
       gameReportStrongholds = r.strongholds,
       gameReportInterestRating = r.interestRating,
-      gameReportComments = r.comments
+      gameReportComment = r.comment
     }
 
 data ProcessedGameReport = ProcessedGameReport
@@ -79,7 +79,7 @@ data ProcessedGameReport = ProcessedGameReport
     aragornTurn :: Maybe Int,
     strongholds :: [Stronghold],
     interestRating :: Int,
-    comments :: Maybe Text
+    comment :: Maybe Text
   }
   deriving (Generic)
 
@@ -110,7 +110,7 @@ fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
       aragornTurn = r.gameReportAragornTurn,
       strongholds = r.gameReportStrongholds,
       interestRating = r.gameReportInterestRating,
-      comments = r.gameReportComments
+      comment = r.gameReportComment
     }
 
 data SubmitGameReportResponse = SubmitGameReportResponse
