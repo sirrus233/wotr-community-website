@@ -44,7 +44,7 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
     const [
         formData,
         { errorOnSubmit, successMessage, loading },
-        { handleInputChange, validateField, handleSubmit, setSuccessMessage },
+        { handleInputChange, validateField, handleSubmit },
     ] = useFormData<PlayerEditFormData, ValidPlayerEditFormData>({
         initialFormData,
         optionalFields: [],
