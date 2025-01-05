@@ -17,12 +17,13 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
-import { Year, LeaderboardEntry } from "./types";
-import { DEFAULT_YEAR } from "./constants";
+import { LeaderboardEntry } from "./types";
 
 export default function App() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-    const [leaderboardYear, setLeaderboardYear] = useState<Year>(DEFAULT_YEAR);
+    const [leaderboardYear, setLeaderboardYear] = useState(
+        new Date().getFullYear()
+    );
     const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
     const getLeaderboard = () => {

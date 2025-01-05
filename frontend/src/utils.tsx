@@ -195,3 +195,9 @@ export function isServerError(error: unknown): error is ServerErrorBody {
 export function objectKeys<T extends object>(obj: T): Array<keyof T> {
     return Object.keys(obj) as Array<keyof T>;
 }
+
+export function range(start: number = 0, end: number): number[] {
+    return end > start
+        ? [...Array(end - start).keys()].map((i) => i + start)
+        : [];
+}

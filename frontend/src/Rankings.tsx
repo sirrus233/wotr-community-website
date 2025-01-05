@@ -2,8 +2,7 @@ import React, { CSSProperties, ReactNode, useState } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import ButtonGroup from "@mui/joy/ButtonGroup";
-import { LeaderboardEntry, Side, Year } from "./types";
-import { availableYears } from "./constants";
+import { LeaderboardEntry, Side } from "./types";
 import { FREE_PRIMARY_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
 import {
     HEADER_HEIGHT_PX,
@@ -12,13 +11,15 @@ import {
     TABLE_ELEMENTS_GAP,
 } from "./styles/sizes";
 import TableView from "./TableView";
+import { range } from "./utils";
+import { START_YEAR } from "./constants";
 
 interface Props {
     leaderboard: LeaderboardEntry[];
-    year: Year;
+    year: number;
     loading: boolean;
     getLeaderboard: () => void;
-    setYear: (year: Year) => void;
+    setYear: (year: number) => void;
 }
 
 const YEAR_SELECTOR_HEIGHT = 36;
@@ -45,6 +46,8 @@ function Rankings({
         getLeaderboard();
     };
 
+    const availableYears = range(START_YEAR, new Date().getFullYear() + 1);
+
     return (
         <Box>
             <Box
@@ -55,7 +58,7 @@ function Rankings({
                 }}
             >
                 <ButtonGroup style={{ height: `${YEAR_SELECTOR_HEIGHT}px` }}>
-                    {availableYears.map((yearOption) => (
+                    {availableYears.reverse().map((yearOption) => (
                         <Button
                             key={yearOption}
                             variant="plain"

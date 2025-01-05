@@ -1,5 +1,4 @@
 import {
-    availableYears,
     competitionTypes,
     expansions,
     leagues,
@@ -29,8 +28,6 @@ export type Stronghold = (typeof strongholds)[number];
 export type OptionalField = (typeof optionalFields)[number];
 
 export type PayloadField = (typeof payloadFields)[number];
-
-export type Year = (typeof availableYears)[number];
 
 export type SuccessMessage = string | null;
 
