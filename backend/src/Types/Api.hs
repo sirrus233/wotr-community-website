@@ -20,7 +20,7 @@ type S3Path = Text
 
 data SubmitReportRequest = SubmitReportRequest
   { report :: RawGameReport,
-    logFile :: FileData Tmp
+    logFile :: Maybe (FileData Tmp)
   }
   deriving (Generic)
 
@@ -31,7 +31,9 @@ instance FromMultipart Tmp SubmitReportRequest where
     report <- case eitherDecodeStrict (encodeUtf8 rawJson) of
       Left err -> Left $ "Error parsing RawGameReport JSON: " <> err
       Right a -> Right a
-    logFile <- lookupFile "logFile" multipartData
+    logFile <- case lookupFile "logFile" multipartData of
+      Left _ -> Right Nothing
+      Right f -> Right . Just $ f
     pure $ SubmitReportRequest {..}
 
 data RawGameReport = RawGameReport
@@ -109,7 +111,8 @@ data ProcessedGameReport = ProcessedGameReport
     aragornTurn :: Maybe Int,
     strongholds :: [Stronghold],
     interestRating :: Int,
-    comment :: Maybe Text
+    comment :: Maybe Text,
+    logFile :: Maybe S3Path
   }
   deriving (Generic)
 
@@ -140,7 +143,8 @@ fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
       aragornTurn = r.gameReportAragornTurn,
       strongholds = r.gameReportStrongholds,
       interestRating = r.gameReportInterestRating,
-      comment = r.gameReportComment
+      comment = r.gameReportComment,
+      logFile = r.gameReportLogFile
     }
 
 data SubmitGameReportResponse = SubmitGameReportResponse

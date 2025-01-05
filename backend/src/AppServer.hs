@@ -6,8 +6,7 @@ import Api (Api)
 import AppConfig (AppM, gameLogBucket)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
-import Data.Time (UTCTime (..), toGregorian)
-import Data.Time.Clock (getCurrentTime)
+import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
@@ -48,7 +47,7 @@ import Types.Api
     fromPlayerStats,
     toGameReport,
   )
-import Types.DataField (Match (..), Rating, Side (..), Year)
+import Types.DataField (Match (..), PlayerName, Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
     MaybePlayerStats,
@@ -120,14 +119,26 @@ readOrError errMsg action =
       logErrorN errMsg
       throwError err404 {errBody = show errMsg}
 
-putS3Object :: FilePath -> S3.ObjectKey -> IO S3.PutObjectResponse
+toS3Key :: UTCTime -> PlayerName -> PlayerName -> S3.ObjectKey
+toS3Key timestamp freePlayer shadowPlayer =
+  S3.ObjectKey $ show y <> "/" <>: m <> "/" <>: d <> "/" <> ts <> "_FP_" <> freePlayer <> "_SP_" <> shadowPlayer <> ".log"
+  where
+    (y, m, d) = toGregorian . utctDay $ timestamp
+    ts = toText . formatTime defaultTimeLocale "%Y-%m-%d_%H%M%S" $ timestamp
+
+toS3Path :: S3.ObjectKey -> S3Path
+toS3Path (S3.ObjectKey key) =
+  "https://" <> S3.fromBucketName gameLogBucket <> ".s3." <> AWS.fromRegion AWS.Oregon <> ".amazonaws.com/" <> key
+
+putS3Object :: (MonadIO m) => FilePath -> S3.ObjectKey -> m S3.PutObjectResponse
 putS3Object path key = do
   awsLogger <- AWS.newLogger AWS.Debug stdout
-  discoveredEnv <- AWS.newEnv AWS.discover
-
+  discoveredEnv <- liftIO $ AWS.newEnv AWS.discover
   let env = discoveredEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
+  liftIO $ AWS.chunkedFile AWS.defaultChunkSize path >>= AWS.runResourceT . AWS.send env . S3.newPutObject gameLogBucket key
 
-  AWS.chunkedFile AWS.defaultChunkSize path >>= AWS.runResourceT . AWS.send env . S3.newPutObject gameLogBucket key
+putS3Object_ :: (MonadIO m) => FilePath -> S3.ObjectKey -> m ()
+putS3Object_ path key = putS3Object path key >> pass
 
 insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Path -> DBAction m ReportInsertion
 insertReport timestamp rawReport logFilePath = do
@@ -181,7 +192,14 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = case validateR
   Success (RawGameReport {..}) -> runDb $ do
     logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
     timestamp <- liftIO getCurrentTime
-    (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport (Just "") -- FIXME
+
+    let key = toS3Key timestamp rawReport.winner rawReport.loser
+    let s3Path = case logFileData of
+          Nothing -> Nothing
+          Just _ -> Just $ toS3Path key
+
+    (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport s3Path
+    when (isJust s3Path) (putS3Object_ "" key)
     pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: AppM GetReportsResponse
