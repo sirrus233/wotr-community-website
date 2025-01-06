@@ -2,18 +2,17 @@ import axios from "axios";
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
 import React, { ReactNode, useEffect, useState } from "react";
+import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
 import GameReports from "./GameReports";
 import Rankings from "./Rankings";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
-import DownloadIcon from "@mui/icons-material/Download";
 import Drawer from "@mui/joy/Drawer";
 import MuiLink from "@mui/joy/Link";
 import List from "@mui/joy/List";
 import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
@@ -310,25 +309,5 @@ function Section({ children }: SectionProps) {
         >
             {children}
         </Box>
-    );
-}
-
-interface ExternalLinkProps {
-    href: string;
-    isDownload?: boolean;
-    children: ReactNode;
-}
-
-function ExternalLink({
-    href,
-    isDownload = false,
-    children,
-}: ExternalLinkProps) {
-    const Icon = isDownload ? DownloadIcon : OpenInNewIcon;
-    return (
-        <MuiLink href={href} target="_blank" rel="noopener noreferrer">
-            <Icon sx={{ paddingRight: "5px" }} />
-            {children}
-        </MuiLink>
     );
 }
