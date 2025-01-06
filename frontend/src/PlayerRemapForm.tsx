@@ -12,12 +12,12 @@ import Typography from "@mui/joy/Typography";
 import {
     PlayerOption,
     PlayerRemapFormData,
-    ServerErrorBody,
     ValidPlayerRemapFormData,
 } from "./types";
 import Autocomplete from "./Autocomplete";
 import useFormData from "./hooks/useFormData";
 import { ErrorMessage } from "./constants";
+import { toErrorMessage } from "./utils";
 
 interface Props {
     pid: number;
@@ -169,11 +169,4 @@ function toPayload(
         fromPid: validFormData.fromPlayer.value.pid,
         toPid: validFormData.toPlayer.value.pid,
     };
-}
-
-function toErrorMessage(error: ServerErrorBody): string {
-    if (error.status === 422) {
-        return error.response.data;
-    }
-    return "Something went wrong.";
 }

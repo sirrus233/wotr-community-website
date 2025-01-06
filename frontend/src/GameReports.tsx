@@ -1,6 +1,11 @@
 import axios from "axios";
 import React, { ReactNode, useEffect, useState } from "react";
 import Box from "@mui/joy/Box";
+import DeleteIcon from "@mui/icons-material/DeleteTwoTone";
+import IconButton from "@mui/joy/IconButton";
+import Modal from "@mui/joy/Modal";
+import ModalClose from "@mui/joy/ModalClose";
+import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
 import {
     Competition,
@@ -8,6 +13,7 @@ import {
     League,
     Match,
     ProcessedGameReport,
+    ReportEditMode,
     Side,
     Stronghold,
     Victory,
@@ -20,6 +26,7 @@ import {
     TABLE_ELEMENTS_GAP,
 } from "./styles/sizes";
 import {
+    displayTime,
     getExpansionLabel,
     getLeagueLabel,
     getStrongholdLabel,
@@ -28,6 +35,9 @@ import {
 } from "./utils";
 import TableView from "./TableView";
 import ExternalLink from "./ExternalLink";
+import ReportDeleteForm from "./ReportDeleteForm";
+
+type ReportEditParams = ProcessedGameReport & { mode: ReportEditMode };
 
 const TABLE_TOP_POSITION =
     HEADER_HEIGHT_PX +
@@ -39,6 +49,8 @@ export default function GameReports() {
     const [reports, setReports] = useState<ProcessedGameReport[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [reportEditParams, setReportEditParams] =
+        useState<ReportEditParams | null>(null);
 
     const getReports = async () => {
         try {
@@ -64,6 +76,23 @@ export default function GameReports() {
 
     return (
         <Box>
+            {reportEditParams && (
+                <Modal open onClose={() => setReportEditParams(null)}>
+                    <ModalDialog>
+                        <ModalClose />
+                        {reportEditParams.mode === "delete" ? (
+                            <ReportDeleteForm
+                                report={reportEditParams}
+                                refresh={refresh}
+                            />
+                        ) : (
+                            // TODO: ReportEditForm
+                            <></>
+                        )}
+                    </ModalDialog>
+                </Modal>
+            )}
+
             <TableView
                 refresh={refresh}
                 error={error}
@@ -86,6 +115,7 @@ export default function GameReports() {
                     <tr>
                         <th />
                         <th />
+                        <th>Edit</th>
                         <th>No.</th>
                         <th>Pairing</th>
                         <th>Timestamp</th>
@@ -115,8 +145,24 @@ export default function GameReports() {
                 body={reports.map((report, i) => (
                     <tr key={report.rid}>
                         <RowAccent side={report.side} />
-                        <td style={{ padding: "0 10px 0 0" }}>
+                        <td style={{ padding: "0 8px 0 0" }}>
                             {report.side === "Free" ? "💍" : "🌋"}
+                        </td>
+
+                        <td>
+                            <IconButton
+                                size="sm"
+                                sx={{ minWidth: 0 }}
+                                disabled={loading}
+                                onClick={() =>
+                                    setReportEditParams({
+                                        ...report,
+                                        mode: "delete",
+                                    })
+                                }
+                            >
+                                <DeleteIcon />
+                            </IconButton>
                         </td>
 
                         {/* TODO: account for pagination */}
@@ -127,11 +173,7 @@ export default function GameReports() {
                         <td>
                             {[report.winner, report.loser].sort().join("-")}
                         </td>
-                        <td>
-                            {Intl.DateTimeFormat("en-GB").format(
-                                new Date(Date.parse(report.timestamp))
-                            )}
-                        </td>
+                        <td>{displayTime(report.timestamp)}</td>
                         <td>{report.turns}</td>
                         <td>{report.winner}</td>
                         <td>{report.loser}</td>

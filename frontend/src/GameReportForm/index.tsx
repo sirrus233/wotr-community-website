@@ -70,6 +70,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
     ] = useFormData<GameFormData, ValidGameFormData>({
         initialFormData,
         optionalFields: optionalFields.slice(),
+        successMessageText: "Report submitted. Thank you!",
         submit,
         toErrorMessage,
     });
