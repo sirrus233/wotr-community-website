@@ -147,7 +147,7 @@ export interface ProcessedGameReport {
     aragornTurn: number | null;
     strongholds: Stronghold[];
     interestRating: number;
-    comments: string | null;
+    comment: string | null;
 }
 
 export type PlayerEditMode = "edit" | "remap";

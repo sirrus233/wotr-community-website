@@ -177,7 +177,7 @@ export default function GameReports() {
                         )}
                     </td>
                     <td>{report.interestRating}</td>
-                    <WrappedCell>{report.comments}</WrappedCell>
+                    <WrappedCell>{report.comment}</WrappedCell>
                     <td></td>
                 </tr>
             ))}
