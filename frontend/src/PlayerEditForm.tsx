@@ -14,6 +14,7 @@ import {
     ValidPlayerEditFormData,
 } from "./types";
 import TextInput from "./TextInput";
+import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData from "./hooks/useFormData";
 
 interface Props {
@@ -52,14 +53,7 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
         toErrorMessage,
     });
 
-    useEffect(
-        function refreshOnSubmit() {
-            if (successMessage) {
-                refresh();
-            }
-        },
-        [successMessage]
-    );
+    useConditionalActionEffect(!!successMessage, refresh);
 
     return (
         <Sheet
