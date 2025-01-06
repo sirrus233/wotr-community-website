@@ -538,25 +538,7 @@ function toFormData(unencodedPayload: GameReportPayload): FormData {
     const formData = new FormData();
 
     if (logFile) formData.append("logFile", logFile);
-
-    objectKeys(report).forEach((field) => {
-        const value = report[field];
-
-        if (value !== null) {
-            if (Array.isArray(value)) {
-                value.forEach((element, i) =>
-                    formData.append(`${field}[${i}]`, element)
-                );
-            } else if (
-                typeof value === "boolean" ||
-                typeof value === "number"
-            ) {
-                formData.append(field, value.toString());
-            } else {
-                formData.append(field, value);
-            }
-        }
-    });
+    formData.append("report", JSON.stringify(report));
 
     return formData;
 }
