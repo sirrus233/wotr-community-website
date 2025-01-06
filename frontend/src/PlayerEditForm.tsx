@@ -10,6 +10,7 @@ import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
 import { PlayerEditFormData, ValidPlayerEditFormData } from "./types";
 import TextInput from "./TextInput";
+import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData from "./hooks/useFormData";
 import { toErrorMessage } from "./utils";
 
@@ -49,14 +50,7 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
         toErrorMessage,
     });
 
-    useEffect(
-        function refreshOnSubmit() {
-            if (successMessage) {
-                refresh();
-            }
-        },
-        [successMessage]
-    );
+    useConditionalActionEffect(!!successMessage, refresh);
 
     return (
         <Sheet

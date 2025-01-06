@@ -15,6 +15,7 @@ import {
     ValidPlayerRemapFormData,
 } from "./types";
 import Autocomplete from "./Autocomplete";
+import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData from "./hooks/useFormData";
 import { ErrorMessage } from "./constants";
 import { toErrorMessage } from "./utils";
@@ -65,14 +66,7 @@ export default function PlayerRemapForm({
 
     const [warningAlert, setWarningAlert] = useState<string | null>(null);
 
-    useEffect(
-        function refreshOnSubmit() {
-            if (successMessage) {
-                refresh();
-            }
-        },
-        [successMessage]
-    );
+    useConditionalActionEffect(!!successMessage, refresh);
 
     return (
         <Sheet
