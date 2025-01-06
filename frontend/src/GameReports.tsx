@@ -63,132 +63,142 @@ export default function GameReports() {
     useEffect(refresh, []);
 
     return (
-        <TableView
-            refresh={refresh}
-            error={error}
-            loading={loading}
-            label="Game Reports"
-            containerStyle={{
-                maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
-            }}
-            tableStyle={{
-                "& thead > tr:first-child > *:first-child": {
-                    pl: 2,
-                },
-                "& tbody > tr > *:first-child": { pl: 2 },
-                "& thead > tr:first-child > *:last-child": {
-                    pr: 2,
-                },
-                "& tbody > tr > *:last-child": { pr: 2 },
-            }}
-            header={
-                <tr>
-                    <th />
-                    <th />
-                    <th>No.</th>
-                    <th>Pairing</th>
-                    <th>Timestamp</th>
-                    <th>Turn</th>
-                    <th>Winner</th>
-                    <th>Loser</th>
-                    <th>Game Type</th>
-                    <th>Victory Type</th>
-                    <th>Competition Type</th>
-                    <th>Expansions</th>
-                    <th>Tokens</th>
-                    <th>Dwarven Rings</th>
-                    <th>Corruption</th>
-                    <th>Mordor</th>
-                    <th>Aragorn</th>
-                    <th>Treebeard</th>
-                    <th>Initial Eyes</th>
-                    <th>SP-Captured Settlements</th>
-                    <th>SPVP</th>
-                    <th>FP-Captured Settlements</th>
-                    <th>FPVP</th>
-                    <th>Interest Rating</th>
-                    <th>Comments</th>
-                    <th>Game Log</th>
-                </tr>
-            }
-            body={reports.map((report, i) => (
-                <tr key={report.rid}>
-                    <RowAccent side={report.side} />
-                    <td style={{ padding: "0 10px 0 0" }}>
-                        {report.side === "Free" ? "💍" : "🌋"}
-                    </td>
+        <Box>
+            <TableView
+                refresh={refresh}
+                error={error}
+                loading={loading}
+                label="Game Reports"
+                containerStyle={{
+                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
+                }}
+                tableStyle={{
+                    "& thead > tr:first-child > *:first-child": {
+                        pl: 2,
+                    },
+                    "& tbody > tr > *:first-child": { pl: 2 },
+                    "& thead > tr:first-child > *:last-child": {
+                        pr: 2,
+                    },
+                    "& tbody > tr > *:last-child": { pr: 2 },
+                }}
+                header={
+                    <tr>
+                        <th />
+                        <th />
+                        <th>No.</th>
+                        <th>Pairing</th>
+                        <th>Timestamp</th>
+                        <th>Turn</th>
+                        <th>Winner</th>
+                        <th>Loser</th>
+                        <th>Game Type</th>
+                        <th>Victory Type</th>
+                        <th>Competition Type</th>
+                        <th>Expansions</th>
+                        <th>Tokens</th>
+                        <th>Dwarven Rings</th>
+                        <th>Corruption</th>
+                        <th>Mordor</th>
+                        <th>Aragorn</th>
+                        <th>Treebeard</th>
+                        <th>Initial Eyes</th>
+                        <th>SP-Captured Settlements</th>
+                        <th>SPVP</th>
+                        <th>FP-Captured Settlements</th>
+                        <th>FPVP</th>
+                        <th>Interest Rating</th>
+                        <th>Comments</th>
+                        <th>Game Log</th>
+                    </tr>
+                }
+                body={reports.map((report, i) => (
+                    <tr key={report.rid}>
+                        <RowAccent side={report.side} />
+                        <td style={{ padding: "0 10px 0 0" }}>
+                            {report.side === "Free" ? "💍" : "🌋"}
+                        </td>
 
-                    {/* TODO: account for pagination */}
-                    <td style={{ fontWeight: "bold" }}>{reports.length - i}</td>
+                        {/* TODO: account for pagination */}
+                        <td style={{ fontWeight: "bold" }}>
+                            {reports.length - i}
+                        </td>
 
-                    <td>{[report.winner, report.loser].sort().join("-")}</td>
-                    <td>
-                        {Intl.DateTimeFormat("en-GB").format(
-                            new Date(Date.parse(report.timestamp))
-                        )}
-                    </td>
-                    <td>{report.turns}</td>
-                    <td>{report.winner}</td>
-                    <td>{report.loser}</td>
-                    <td>{summarizeGameType(report.expansions)}</td>
-                    <td>{summarizeVictoryType(report.side, report.victory)}</td>
-                    <td>
-                        {summarizeCompetitionType(
-                            report.match,
-                            report.competition,
-                            report.league
-                        )}
-                    </td>
-                    <td>
-                        {report.expansions.map(getExpansionLabel).join(", ")}
-                    </td>
-                    <td>{report.actionTokens}</td>
-                    <td>{report.dwarvenRings}</td>
-                    <td>{report.corruption}</td>
-                    <td>{report.mordor}</td>
-                    <td>{report.aragornTurn}</td>
-                    <td>{report.treebeard && "✓"}</td>
-                    <td>{report.initialEyes}</td>
-                    <td>
-                        {summarizeCapturedSettlements(
-                            report.strongholds,
-                            report.expansions,
-                            "Free"
-                        )}
-                    </td>
-                    <td>
-                        {countVictoryPoints(
-                            report.strongholds,
-                            report.expansions,
-                            "Free"
-                        )}
-                    </td>
-                    <td>
-                        {summarizeCapturedSettlements(
-                            report.strongholds,
-                            report.expansions,
-                            "Shadow"
-                        )}
-                    </td>
-                    <td>
-                        {countVictoryPoints(
-                            report.strongholds,
-                            report.expansions,
-                            "Shadow"
-                        )}
-                    </td>
-                    <td>{report.interestRating}</td>
-                    <WrappedCell>{report.comment}</WrappedCell>
-                    <td>
-                        {report.logFile && (
-                            <ExternalLink isDownload href={report.logFile}>
-                                Download Report
-                            </ExternalLink>
-                        )}
-                    </td>
-                </tr>
-            ))}
-        />
+                        <td>
+                            {[report.winner, report.loser].sort().join("-")}
+                        </td>
+                        <td>
+                            {Intl.DateTimeFormat("en-GB").format(
+                                new Date(Date.parse(report.timestamp))
+                            )}
+                        </td>
+                        <td>{report.turns}</td>
+                        <td>{report.winner}</td>
+                        <td>{report.loser}</td>
+                        <td>{summarizeGameType(report.expansions)}</td>
+                        <td>
+                            {summarizeVictoryType(report.side, report.victory)}
+                        </td>
+                        <td>
+                            {summarizeCompetitionType(
+                                report.match,
+                                report.competition,
+                                report.league
+                            )}
+                        </td>
+                        <td>
+                            {report.expansions
+                                .map(getExpansionLabel)
+                                .join(", ")}
+                        </td>
+                        <td>{report.actionTokens}</td>
+                        <td>{report.dwarvenRings}</td>
+                        <td>{report.corruption}</td>
+                        <td>{report.mordor}</td>
+                        <td>{report.aragornTurn}</td>
+                        <td>{report.treebeard && "✓"}</td>
+                        <td>{report.initialEyes}</td>
+                        <td>
+                            {summarizeCapturedSettlements(
+                                report.strongholds,
+                                report.expansions,
+                                "Free"
+                            )}
+                        </td>
+                        <td>
+                            {countVictoryPoints(
+                                report.strongholds,
+                                report.expansions,
+                                "Free"
+                            )}
+                        </td>
+                        <td>
+                            {summarizeCapturedSettlements(
+                                report.strongholds,
+                                report.expansions,
+                                "Shadow"
+                            )}
+                        </td>
+                        <td>
+                            {countVictoryPoints(
+                                report.strongholds,
+                                report.expansions,
+                                "Shadow"
+                            )}
+                        </td>
+                        <td>{report.interestRating}</td>
+                        <WrappedCell>{report.comment}</WrappedCell>
+                        <td>
+                            {report.logFile && (
+                                <ExternalLink isDownload href={report.logFile}>
+                                    Download Report
+                                </ExternalLink>
+                            )}
+                        </td>
+                    </tr>
+                ))}
+            />
+        </Box>
     );
 }
 
