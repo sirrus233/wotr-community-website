@@ -125,7 +125,7 @@ function Home() {
                     Community Resources*
                 </Typography>
 
-                <Typography level="title-sm" mb={1}>
+                <Typography level="title-sm" mb={1} textAlign="center">
                     *Not affiliated with the official War of the Ring board game
                     produced by Ares Games
                 </Typography>
