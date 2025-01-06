@@ -8,13 +8,10 @@ import FormHelperText from "@mui/joy/FormHelperText";
 import FormLabel from "@mui/joy/FormLabel";
 import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
-import {
-    PlayerEditFormData,
-    ServerErrorBody,
-    ValidPlayerEditFormData,
-} from "./types";
+import { PlayerEditFormData, ValidPlayerEditFormData } from "./types";
 import TextInput from "./TextInput";
 import useFormData from "./hooks/useFormData";
+import { toErrorMessage } from "./utils";
 
 interface Props {
     pid: number;
@@ -136,11 +133,4 @@ function toPayload(formData: ValidPlayerEditFormData): PlayerRenamePayload {
         pid: formData.pid.value,
         newName: formData.newName.value,
     };
-}
-
-function toErrorMessage(error: ServerErrorBody): string {
-    if (error.status === 422) {
-        return error.response.data;
-    }
-    return "Something went wrong.";
 }

@@ -186,4 +186,19 @@ export type ValidPlayerRemapFormData = {
     };
 };
 
+export type ReportEditMode = "edit" | "delete";
+
+export interface ReportDeleteFormData {
+    rid: FieldData<number>;
+}
+
+export type ValidReportDeleteFormData = {
+    [K in keyof ReportDeleteFormData]: {
+        [J in keyof ReportDeleteFormData[K]]: Exclude<
+            ReportDeleteFormData[K][J],
+            null
+        >;
+    };
+};
+
 export type ValueOf<T> = T[keyof T];

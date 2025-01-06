@@ -192,6 +192,17 @@ export function isServerError(error: unknown): error is ServerErrorBody {
     );
 }
 
+export function toErrorMessage(error: ServerErrorBody): string {
+    if (error.status === 422) {
+        return error.response.data;
+    }
+    return "Something went wrong.";
+}
+
+export function displayTime(timestamp: string) {
+    return Intl.DateTimeFormat("en-GB").format(new Date(Date.parse(timestamp)));
+}
+
 export function objectKeys<T extends object>(obj: T): Array<keyof T> {
     return Object.keys(obj) as Array<keyof T>;
 }

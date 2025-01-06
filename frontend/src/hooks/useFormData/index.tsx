@@ -31,6 +31,7 @@ interface Args<F, V> {
     initialFormData: ConstrainedFormData<F>;
     optionalFields: string[];
     missingFieldErrorMessage?: ErrorMessage;
+    successMessageText?: string;
     submit: (validatedFormData: ConstrainedFormData<V>) => Promise<any>;
     toErrorMessage: (error: ServerErrorBody) => string;
 }
@@ -39,6 +40,7 @@ export default function useFormData<F, V extends F>({
     initialFormData,
     optionalFields,
     missingFieldErrorMessage = ErrorMessage.Required,
+    successMessageText = "Success",
     submit,
     toErrorMessage,
 }: Args<F, V>): [ConstrainedFormData<F>, Meta, Helpers<F>] {
@@ -139,7 +141,7 @@ export default function useFormData<F, V extends F>({
                 console.log("Form submitted successfully:", response);
                 // Handle the response data as needed
 
-                setSuccessMessage("Report submitted. Thank you!");
+                setSuccessMessage(successMessageText);
             }
         } catch (error) {
             console.error("Error submitting form:", error);
