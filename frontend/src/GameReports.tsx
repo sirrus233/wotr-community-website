@@ -27,6 +27,7 @@ import {
     strongholdSide,
 } from "./utils";
 import TableView from "./TableView";
+import ExternalLink from "./ExternalLink";
 
 const TABLE_TOP_POSITION =
     HEADER_HEIGHT_PX +
@@ -178,7 +179,13 @@ export default function GameReports() {
                     </td>
                     <td>{report.interestRating}</td>
                     <WrappedCell>{report.comment}</WrappedCell>
-                    <td></td>
+                    <td>
+                        {report.logFile && (
+                            <ExternalLink isDownload href={report.logFile}>
+                                Download Report
+                            </ExternalLink>
+                        )}
+                    </td>
                 </tr>
             ))}
         />
