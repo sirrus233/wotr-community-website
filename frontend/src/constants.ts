@@ -117,5 +117,5 @@ export enum ErrorMessage {
 
 export const INFINITE = 100;
 export const START_YEAR = 2023;
-export const MAX_GAME_LOG_SIZE_MB = 10;
+export const MAX_GAME_LOG_SIZE_MB = 1;
 export const MAX_GAME_LOG_SIZE_BYTES = MAX_GAME_LOG_SIZE_MB * 1024 * 1024;
