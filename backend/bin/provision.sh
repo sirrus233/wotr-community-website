@@ -8,7 +8,7 @@ source "${BIN_DIR}/config.sh"
 ssh "$SERVER_USER@$SERVER_HOST" <<EOF
   set -e
   
-  mkdir -p wotr-server
+  mkdir -p ${APP_DIR}
   
   echo "Acquiring SSL certificate..."
   sudo yum install -y certbot

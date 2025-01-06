@@ -99,6 +99,15 @@ export class InfrastructureStack extends cdk.Stack {
             machineImage: ami,
             vpc,
             role,
+            // TODO Add a volume for persistent storage
+            // blockDevices: [
+            //     {
+            //         deviceName: "/dev/sda2",
+            //         volume: ec2.BlockDeviceVolume.ebs(50, {
+            //             volumeType: ec2.EbsDeviceVolumeType.GP3,
+            //         }),
+            //     },
+            // ],
             keyPair: ec2.KeyPair.fromKeyPairName(
                 this,
                 "ServerKey",
