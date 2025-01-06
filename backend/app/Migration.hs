@@ -1,5 +1,6 @@
 module Main where
 
+import Amazonka qualified as AWS
 import AppConfig (AppM, Env (..), databaseFile, redisConfig, runAppLogger)
 import AppServer (insertReport_, reprocessReports)
 import Control.Monad.Logger (LogLevel (..))
@@ -14,7 +15,7 @@ import Logging (Logger, log, stdoutLogger, (<>:))
 import Servant (ServerError (errBody), err500, runHandler, throwError)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
-import Types.Api (RawGameReport (..))
+import Types.Api (RawGameReport (victory))
 import Types.DataField (Victory (..))
 import Types.Database (migrateAll)
 import Types.Migration
@@ -37,9 +38,9 @@ migrate legacyEntries reports = runDb $ do
   forM_ (map (\r -> (r.timestamp, toRawGameReport r)) reports) $ \(timestamp, report) -> do
     case validateReport report of
       Failure errs -> case errs of
-        [NoVictoryConditionMet] -> insertReport_ timestamp (report {victory = Concession})
+        [NoVictoryConditionMet] -> insertReport_ timestamp (report {victory = Concession}) Nothing
         _ -> throwError $ err500 {errBody = "Unrecognized failure: " <>: errs <> " for report: " <>: report}
-      Success _ -> insertReport_ timestamp report
+      Success _ -> insertReport_ timestamp report Nothing
 
   reprocessReports
 
@@ -61,11 +62,13 @@ main :: IO ()
 main = do
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
+  awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
   logger <- stdoutLogger
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
+  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
 
-  let env = Env {dbPool, redisPool, logger}
+  let env = Env {dbPool, redisPool, logger, aws}
 
   legacyEntries <- tryParse "migration/legacy-ladder.csv" logger toParsedLegacyLadderEntry
   reports <- tryParse "migration/reports.csv" logger toParsedGameReport

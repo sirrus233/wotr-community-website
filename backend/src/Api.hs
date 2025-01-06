@@ -1,19 +1,20 @@
 module Api where
 
 import Servant (Get, JSON, Post, PostNoContent, QueryParam', ReqBody, Required, (:<|>), (:>))
+import Servant.Multipart (MultipartForm, Tmp)
 import Types.Api
   ( DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
     ModifyReportRequest,
-    RawGameReport,
     RemapPlayerRequest,
     RemapPlayerResponse,
     RenamePlayerRequest,
     SubmitGameReportResponse,
+    SubmitReportRequest,
   )
 
-type SubmitReportAPI = "submitReport" :> ReqBody '[JSON] RawGameReport :> Post '[JSON] SubmitGameReportResponse
+type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
 
 type GetReportsAPI = "reports" :> Get '[JSON] GetReportsResponse
 

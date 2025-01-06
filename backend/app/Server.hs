@@ -1,5 +1,6 @@
 module Main where
 
+import Amazonka qualified as AWS
 import Api (api)
 import AppConfig (Env (..), databaseFile, logFile, nt, redisConfig, runAppLogger)
 import AppServer (server)
@@ -47,10 +48,12 @@ main = do
   createDirectoryIfMissing True . takeDirectory $ logFile
 
   logger <- fileLogger logFile
+  awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
+  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
 
-  let env = Env {dbPool, redisPool, logger}
+  let env = Env {dbPool, redisPool, logger, aws}
 
   -- TODO Disable/handle auto-migration
   migrations <- runSqlPool (runMigrationQuiet migrateAll) dbPool

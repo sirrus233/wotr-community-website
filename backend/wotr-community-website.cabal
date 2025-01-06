@@ -39,6 +39,7 @@ common dependencies
         aeson               ^>=2.2.3.0,
         servant             ^>=0.20.2,
         servant-server      ^>=0.20.2,
+        servant-multipart   ^>=0.12.1,
         monad-logger        ^>=0.3.40,
         warp                ^>=3.4.7,
         persistent          ^>=2.14.6.3,
@@ -52,6 +53,8 @@ common dependencies
         warp-tls            ^>=3.4.12,
         cassava             ^>=0.5.3.2,
         vector              ^>=0.13.2.0,
+        amazonka            ^>=2.0,
+        amazonka-s3         ^>=2.0,
 
 library
     import:           warnings,

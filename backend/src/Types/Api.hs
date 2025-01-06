@@ -1,10 +1,40 @@
 module Types.Api where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
+import Servant.Multipart (FileData (..), FromMultipart (..), MultipartData (..), Tmp, lookupFile, lookupInput)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
-import Types.Database (GameReport (..), GameReportId, Player (..), PlayerId, PlayerStats, PlayerStatsTotal (..), PlayerStatsYear (..), ReportInsertion)
+import Types.Database
+  ( GameReport (..),
+    GameReportId,
+    Player (..),
+    PlayerId,
+    PlayerStats,
+    PlayerStatsTotal (..),
+    PlayerStatsYear (..),
+    ReportInsertion,
+  )
+
+type S3Url = Text
+
+data SubmitReportRequest = SubmitReportRequest
+  { report :: RawGameReport,
+    logFile :: Maybe (FileData Tmp)
+  }
+  deriving (Generic)
+
+instance FromMultipart Tmp SubmitReportRequest where
+  fromMultipart :: MultipartData Tmp -> Either String SubmitReportRequest
+  fromMultipart multipartData = do
+    rawJson <- lookupInput "report" multipartData
+    report <- case eitherDecodeStrict (encodeUtf8 rawJson) of
+      Left err -> Left $ "Error parsing RawGameReport JSON: " <> err
+      Right a -> Right a
+    logFile <- case lookupFile "logFile" multipartData of
+      Left _ -> Right Nothing
+      Right f -> Right . Just $ f
+    pure $ SubmitReportRequest {..}
 
 data RawGameReport = RawGameReport
   { winner :: PlayerName,
@@ -31,8 +61,8 @@ data RawGameReport = RawGameReport
 
 instance FromJSON RawGameReport
 
-toGameReport :: UTCTime -> PlayerId -> PlayerId -> RawGameReport -> GameReport
-toGameReport timestamp winnerId loserId r =
+toGameReport :: UTCTime -> PlayerId -> PlayerId -> Maybe S3Url -> RawGameReport -> GameReport
+toGameReport timestamp winnerId loserId logFile r =
   GameReport
     { gameReportTimestamp = timestamp,
       gameReportWinnerId = winnerId,
@@ -53,7 +83,8 @@ toGameReport timestamp winnerId loserId r =
       gameReportAragornTurn = r.aragornTurn,
       gameReportStrongholds = r.strongholds,
       gameReportInterestRating = r.interestRating,
-      gameReportComment = r.comment
+      gameReportComment = r.comment,
+      gameReportLogFile = logFile
     }
 
 data ProcessedGameReport = ProcessedGameReport
@@ -79,7 +110,8 @@ data ProcessedGameReport = ProcessedGameReport
     aragornTurn :: Maybe Int,
     strongholds :: [Stronghold],
     interestRating :: Int,
-    comment :: Maybe Text
+    comment :: Maybe Text,
+    logFile :: Maybe S3Url
   }
   deriving (Generic)
 
@@ -110,7 +142,8 @@ fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
       aragornTurn = r.gameReportAragornTurn,
       strongholds = r.gameReportStrongholds,
       interestRating = r.gameReportInterestRating,
-      comment = r.gameReportComment
+      comment = r.gameReportComment,
+      logFile = r.gameReportLogFile
     }
 
 data SubmitGameReportResponse = SubmitGameReportResponse
@@ -214,5 +247,3 @@ newtype DeleteReportRequest = DeleteReportRequest
   deriving (Generic)
 
 instance FromJSON DeleteReportRequest
-
--- TODO Game Logs

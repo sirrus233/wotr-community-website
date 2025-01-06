@@ -1,11 +1,12 @@
 module AppServer where
 
+import Amazonka qualified as AWS
+import Amazonka.S3 qualified as S3
 import Api (Api)
-import AppConfig (AppM)
+import AppConfig (AppM, Env (..), gameLogBucket)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
-import Data.Time (UTCTime (..), toGregorian)
-import Data.Time.Clock (getCurrentTime)
+import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
@@ -28,6 +29,7 @@ import Database
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
 import Servant (NoContent (..), ServerError (errBody), ServerT, err404, err422, throwError, type (:<|>) (..))
+import Servant.Multipart (FileData (..))
 import Types.Api
   ( DeleteReportRequest (..),
     GetLeaderboardResponse (GetLeaderboardResponse),
@@ -39,12 +41,14 @@ import Types.Api
     RemapPlayerRequest (..),
     RemapPlayerResponse (..),
     RenamePlayerRequest (..),
+    S3Url,
     SubmitGameReportResponse (..),
+    SubmitReportRequest (..),
     fromGameReport,
     fromPlayerStats,
     toGameReport,
   )
-import Types.DataField (Match (..), Rating, Side (..), Year)
+import Types.DataField (Match (..), PlayerName, Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
     MaybePlayerStats,
@@ -116,15 +120,33 @@ readOrError errMsg action =
       logErrorN errMsg
       throwError err404 {errBody = show errMsg}
 
-insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> DBAction m ReportInsertion
-insertReport timestamp rawReport = do
+toS3Key :: UTCTime -> PlayerName -> PlayerName -> S3.ObjectKey
+toS3Key timestamp freePlayer shadowPlayer =
+  S3.ObjectKey $ formattedPath <> formattedFilename
+  where
+    (y, m, d) = toGregorian . utctDay $ timestamp
+    formattedPath = show y <> "/" <>: m <> "/" <>: d <> "/"
+    formattedTimestamp = toText . formatTime defaultTimeLocale "%Y-%m-%d_%H%M%S" $ timestamp
+    formattedFilename = formattedTimestamp <> "_FP_" <> freePlayer <> "_SP_" <> shadowPlayer <> ".log"
+
+toS3Url :: AWS.Region -> S3.ObjectKey -> S3Url
+toS3Url region (S3.ObjectKey key) =
+  "https://" <> S3.fromBucketName gameLogBucket <> ".s3." <> AWS.fromRegion region <> ".amazonaws.com/" <> key
+
+putS3Object :: (MonadIO m) => AWS.Env -> S3.ObjectKey -> FilePath -> m S3.PutObjectResponse
+putS3Object awsEnv key path =
+  liftIO $
+    AWS.chunkedFile AWS.defaultChunkSize path >>= AWS.runResourceT . AWS.send awsEnv . S3.newPutObject gameLogBucket key
+
+insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Url -> DBAction m ReportInsertion
+insertReport timestamp rawReport s3Url = do
   winner <- insertPlayerIfNotExists rawReport.winner
   loser <- insertPlayerIfNotExists rawReport.loser
-  report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) rawReport
+  report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) s3Url rawReport
   pure (report, winner, loser)
 
-insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> DBAction m ()
-insertReport_ timestamp rawReport = insertReport timestamp rawReport >> pass
+insertReport_ :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Url -> DBAction m ()
+insertReport_ timestamp rawReport s3Url = insertReport timestamp rawReport s3Url >> pass
 
 processReport :: (MonadIO m, MonadLogger m) => ReportInsertion -> DBAction m (ProcessedGameReport, Rating, Rating)
 processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId winner), loserPlayer@(Entity loserId loser)) = do
@@ -162,14 +184,19 @@ reprocessReports = do
   forM_ (reverse reports) processReport
   updateActiveStatus
 
-submitReportHandler :: RawGameReport -> AppM SubmitGameReportResponse
-submitReportHandler rawReport = case validateReport rawReport of
-  Failure errors -> throwError $ err422 {errBody = show errors}
-  Success (RawGameReport {..}) -> runDb $ do
-    logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
-    timestamp <- liftIO getCurrentTime
-    (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport
-    pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
+submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
+submitReportHandler (SubmitReportRequest rawReport logFileData) = do
+  awsEnv <- asks aws
+  case validateReport rawReport of
+    Failure errors -> throwError $ err422 {errBody = show errors}
+    Success (RawGameReport {..}) -> runDb $ do
+      logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
+      timestamp <- liftIO getCurrentTime
+      let key = toS3Key timestamp rawReport.winner rawReport.loser
+      let s3Path = toS3Url awsEnv.region key <$ logFileData
+      (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport s3Path
+      mapM_ (putS3Object awsEnv key . fdPayload) logFileData
+      pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: AppM GetReportsResponse
 getReportsHandler = runDb $ getGameReports 500 0 <&> GetReportsResponse . map fromGameReport
@@ -210,7 +237,7 @@ adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport
     Entity newWinnerId _ <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner
     Entity newLoserId _ <- readOrError ("Cannot find player " <>: report.loser) $ getPlayerByName report.loser
 
-    let newReport = toGameReport oldReport.gameReportTimestamp newWinnerId newLoserId report
+    let newReport = toGameReport oldReport.gameReportTimestamp newWinnerId newLoserId oldReport.gameReportLogFile report
     lift $ replace rid newReport
 
     when (mustReprocess oldReport newReport) reprocessReports
