@@ -78,8 +78,8 @@ export default function ReportDeleteForm({
 
 async function submit({ rid }: ValidReportDeleteFormData) {
     return await axios.post(
-        // "https://api.waroftheringcommunity.net:8080/deleteReport",
-        "http://localhost:8081/deleteReport",
+        "https://api.waroftheringcommunity.net:8080/deleteReport",
+        // "http://localhost:8081/deleteReport",
         { rid: rid.value },
         { headers: { "Content-Type": "application/json" } }
     );
