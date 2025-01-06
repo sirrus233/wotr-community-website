@@ -51,7 +51,9 @@ export const strongholds = [
     "Erebor",
 ] as const;
 
-export const optionalFields = [
+export const optionalFormFields = ["logFile"] as const;
+
+export const optionalPayloadFields = [
     "competition",
     "league",
     "expansions",
@@ -64,8 +66,13 @@ export const optionalFields = [
     "comment",
 ] as const;
 
+export const optionalFields = [
+    ...optionalFormFields,
+    ...optionalPayloadFields,
+] as const;
+
 export const payloadFields = [
-    ...optionalFields,
+    ...optionalPayloadFields,
     "winner",
     "loser",
     "side",
@@ -110,3 +117,5 @@ export enum ErrorMessage {
 
 export const INFINITE = 100;
 export const START_YEAR = 2023;
+export const MAX_GAME_LOG_SIZE_MB = 1;
+export const MAX_GAME_LOG_SIZE_BYTES = MAX_GAME_LOG_SIZE_MB * 1024 * 1024;
