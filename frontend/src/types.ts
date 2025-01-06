@@ -148,6 +148,7 @@ export interface ProcessedGameReport {
     strongholds: Stronghold[];
     interestRating: number;
     comment: string | null;
+    logFile: string | null;
 }
 
 export type PlayerEditMode = "edit" | "remap";
