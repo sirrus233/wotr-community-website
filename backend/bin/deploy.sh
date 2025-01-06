@@ -6,12 +6,13 @@ BACKEND_DIR=$(dirname "$0")/..
 source "${BACKEND_DIR}/bin/config.sh"
 
 echo "Building the Haskell binary..."
-mkdir -p $BUILD_DIR
-pushd "${BACKEND_DIR}" > /dev/null
-cabal build --builddir=$BUILD_DIR
-popd > /dev/null
+mkdir -p "${BIN_PATH}"
+docker build --tag wotr-server-build "${BACKEND_DIR}/."
+docker create --name wotr-server-build wotr-server-build
+docker cp "wotr-server-build:${BIN_PATH}" "${BIN_PATH}"
+docker rm wotr-server-build
 
-if [[ ! -f "$BIN_PATH" ]]; then
+if [[ ! -f "${BIN_PATH}/${BIN_NAME}" ]]; then
   echo "Error: Binary not found at ${BIN_PATH}"
   exit 1
 fi
@@ -24,12 +25,11 @@ ssh "$SERVER_USER@$SERVER_HOST" <<EOF
 EOF
 
 echo "Transferring new binary to the server..."
-scp "$BIN_PATH" "$SERVER_USER@$SERVER_HOST:$APP_DIR/$BIN_NAME"
+scp "$BIN_PATH/$BIN_NAME" "$SERVER_USER@$SERVER_HOST:$APP_DIR/$BIN_NAME"
 
 echo "Restarting the server application..."
 ssh "$SERVER_USER@$SERVER_HOST" <<EOF
   set -e
-  chmod +x "$APP_DIR/$BINARY_NAME"
   sudo systemctl restart $SERVICE_NAME
   sudo systemctl status $SERVICE_NAME --no-pager
 EOF
