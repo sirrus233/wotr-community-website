@@ -28,7 +28,6 @@ export default function FileUpload({
                     id={id}
                     style={{ display: "none" }}
                     type="file"
-                    accept="text/plain"
                     onChange={(event) =>
                         onChange(event.target.files?.[0] || null)
                     }
