@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import {
     ConstrainedFormData,
+    FieldData,
     FieldError,
     ServerErrorBody,
     SuccessMessage,
@@ -171,6 +172,14 @@ export default function useFormData<F, V extends F>({
     ];
 }
 
+export function initializeToDefaults<T>(initialValue: T): FieldData<T> {
+    return {
+        value: initialValue,
+        error: null,
+        validate: alwaysValid,
+    };
+}
+
 function isFieldMissing<F>(
     field: keyof ConstrainedFormData<F>,
     formData: ConstrainedFormData<F>,
@@ -184,4 +193,8 @@ function isFieldMissing<F>(
         value === "" ||
         (Array.isArray(value) && !value.length);
     return isEmpty && isRequired;
+}
+
+function alwaysValid() {
+    return null;
 }

@@ -9,7 +9,7 @@ import {
 import AdminFormLayout from "./AdminFormLayout";
 import Autocomplete from "./Autocomplete";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
-import useFormData from "./hooks/useFormData";
+import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import { ErrorMessage } from "./constants";
 import { toErrorMessage } from "./utils";
 
@@ -27,11 +27,7 @@ export default function PlayerRemapForm({
     refresh,
 }: Props) {
     const initialFormData: PlayerRemapFormData = {
-        fromPlayer: {
-            value: { pid, label: name },
-            error: null,
-            validate: () => null,
-        },
+        fromPlayer: initializeToDefaults({ pid, label: name }),
         toPlayer: {
             value: null,
             error: null,
