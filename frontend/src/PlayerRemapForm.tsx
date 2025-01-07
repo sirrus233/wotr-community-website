@@ -61,13 +61,15 @@ export default function PlayerRemapForm({
 
     useConditionalActionEffect(!!successMessage, refresh);
 
+    const buttonText = "Remap player";
+
     return (
         <>
             <AdminFormLayout
                 header={name}
                 submitting={loading}
                 errorOnSubmit={errorOnSubmit}
-                buttonText="Remap player"
+                buttonText={buttonText}
                 successMessage={successMessage}
                 shouldHideFormOnSuccess
                 formElementsProps={[
@@ -91,13 +93,13 @@ export default function PlayerRemapForm({
                         handleSubmit();
                     } else {
                         setWarningAlert(
-                            `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "Submit" again to continue.`
+                            `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "${buttonText}" again to continue.`
                         );
                     }
                 }}
             />
 
-            {warningAlert && (
+            {!successMessage && warningAlert && (
                 <Alert color="warning" sx={{ my: "10px" }}>
                     {warningAlert}
                 </Alert>
