@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -11,5 +11,5 @@ export BIN_PATH="${BUILD_DIR}/build/x86_64-linux/ghc-9.10.1/${PROJECT_NAME}-0.1.
 export SERVER_USER="ec2-user"
 export SERVER_HOST="api.waroftheringcommunity.net"
 export SERVICE_NAME="wotr-server"
-export APP_DIR="/home/${SERVER_USER}/${SERVICE_NAME}"
+export APP_DIR="/${SERVICE_NAME}"
 export SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"

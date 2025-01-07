@@ -91,6 +91,11 @@ export class InfrastructureStack extends cdk.Stack {
         });
         gameReportBucket.grantPut(role);
 
+        const storageVolume = ec2.BlockDeviceVolume.ebs(8, {
+            volumeType: ec2.EbsDeviceVolumeType.GP3,
+            deleteOnTermination: false,
+        });
+
         const instance = new ec2.Instance(this, "ServerInstance", {
             instanceType: ec2.InstanceType.of(
                 ec2.InstanceClass.T3,
@@ -99,15 +104,12 @@ export class InfrastructureStack extends cdk.Stack {
             machineImage: ami,
             vpc,
             role,
-            // TODO Add a volume for persistent storage
-            // blockDevices: [
-            //     {
-            //         deviceName: "/dev/sda2",
-            //         volume: ec2.BlockDeviceVolume.ebs(50, {
-            //             volumeType: ec2.EbsDeviceVolumeType.GP3,
-            //         }),
-            //     },
-            // ],
+            blockDevices: [
+                {
+                    deviceName: "/dev/sda2",
+                    volume: storageVolume,
+                },
+            ],
             keyPair: ec2.KeyPair.fromKeyPairName(
                 this,
                 "ServerKey",
