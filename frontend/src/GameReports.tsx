@@ -33,7 +33,7 @@ import {
     strongholdPoints,
     strongholdSide,
 } from "./utils";
-import TableView from "./TableView";
+import TableLayout from "./TableLayout";
 import ExternalLink from "./ExternalLink";
 import ReportDeleteForm from "./ReportDeleteForm";
 
@@ -93,7 +93,7 @@ export default function GameReports() {
                 </Modal>
             )}
 
-            <TableView
+            <TableLayout
                 refresh={refresh}
                 error={error}
                 loading={loading}

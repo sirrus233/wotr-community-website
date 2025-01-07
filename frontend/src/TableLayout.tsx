@@ -18,7 +18,7 @@ interface Props {
     tableStyle?: SxProps;
 }
 
-export default function TableView({
+export default function TableLayout({
     refresh,
     error,
     loading,
