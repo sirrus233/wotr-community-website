@@ -201,12 +201,14 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
 getReportsHandler :: AppM GetReportsResponse
 getReportsHandler = runDb $ getGameReports 500 0 <&> GetReportsResponse . map fromGameReport
 
-getLeaderboardHandler :: Int -> AppM GetLeaderboardResponse
-getLeaderboardHandler year =
-  runDb (getAllStats year)
+getLeaderboardHandler :: Maybe Year -> AppM GetLeaderboardResponse
+getLeaderboardHandler year = do
+  currentYear <- liftIO $ yearOf <$> getCurrentTime
+  let year' = fromMaybe currentYear year
+  runDb (getAllStats year')
     <&> ( GetLeaderboardResponse
             . sortOn (Down . averageRating)
-            . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year stats)))
+            . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year' stats)))
         )
 
 adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent

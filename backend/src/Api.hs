@@ -1,6 +1,15 @@
 module Api where
 
-import Servant (Get, JSON, Post, PostNoContent, QueryParam', ReqBody, Required, (:<|>), (:>))
+import Servant
+  ( Get,
+    JSON,
+    Post,
+    PostNoContent,
+    QueryParam,
+    ReqBody,
+    (:<|>),
+    (:>),
+  )
 import Servant.Multipart (MultipartForm, Tmp)
 import Types.Api
   ( DeleteReportRequest,
@@ -18,7 +27,7 @@ type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :
 
 type GetReportsAPI = "reports" :> Get '[JSON] GetReportsResponse
 
-type GetLeaderboardAPI = "leaderboard" :> QueryParam' '[Required] "year" Int :> Get '[JSON] GetLeaderboardResponse
+type GetLeaderboardAPI = "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse
 
 type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
