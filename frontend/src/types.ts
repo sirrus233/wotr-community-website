@@ -99,6 +99,14 @@ export type GameReportPayload = {
     };
 };
 
+export type ProcessedGameReport = GameReportPayload["report"] & {
+    rid: number;
+    timestamp: string;
+    winnerId: number;
+    loserId: number;
+    logFile: string | null;
+};
+
 export interface LeaderboardEntry {
     pid: number;
     name: string;
@@ -122,33 +130,6 @@ export interface LeaderboardEntry {
     yearlyLossesShadow: number;
     yearlyWinRateFree: number;
     yearlyWinRateShadow: number;
-}
-
-export interface ProcessedGameReport {
-    rid: number;
-    timestamp: string;
-    winnerId: number;
-    winner: string;
-    loserId: number;
-    loser: string;
-    side: Side;
-    victory: Victory;
-    match: Match;
-    competition: Competition[];
-    league: League | null;
-    expansions: Expansion[];
-    treebeard: boolean | null;
-    actionTokens: number;
-    dwarvenRings: number;
-    turns: number;
-    corruption: number;
-    mordor: number | null;
-    initialEyes: number;
-    aragornTurn: number | null;
-    strongholds: Stronghold[];
-    interestRating: number;
-    comment: string | null;
-    logFile: string | null;
 }
 
 export type PlayerEditMode = "edit" | "remap";
