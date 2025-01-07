@@ -1,14 +1,7 @@
 import axios from "axios";
-import React, { useEffect } from "react";
-import Box from "@mui/joy/Box";
-import Button from "@mui/joy/Button";
-import CircularProgress from "@mui/joy/CircularProgress";
-import FormControl from "@mui/joy/FormControl";
-import FormHelperText from "@mui/joy/FormHelperText";
-import FormLabel from "@mui/joy/FormLabel";
-import Sheet from "@mui/joy/Sheet";
-import Typography from "@mui/joy/Typography";
+import React from "react";
 import { PlayerEditFormData, ValidPlayerEditFormData } from "./types";
+import AdminFormLayout from "./AdminFormLayout";
 import TextInput from "./TextInput";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData from "./hooks/useFormData";
@@ -53,57 +46,28 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
     useConditionalActionEffect(!!successMessage, refresh);
 
     return (
-        <Sheet
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            {successMessage ? (
-                <Typography color="success">{successMessage}</Typography>
-            ) : (
-                <>
-                    <Typography level="title-lg">{name}</Typography>
-
-                    <Box sx={{ my: 2, width: "100%" }}>
-                        <FormControl error={!!formData.newName.error}>
-                            <FormLabel>New player name</FormLabel>
-
-                            <TextInput
-                                value={formData.newName.value || ""}
-                                placeholder="New player name"
-                                onChange={handleInputChange("newName")}
-                                validate={validateField("newName")}
-                            />
-
-                            {formData.newName.error && (
-                                <FormHelperText>
-                                    {formData.newName.error}
-                                </FormHelperText>
-                            )}
-                        </FormControl>
-                    </Box>
-
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        startDecorator={
-                            loading ? <CircularProgress /> : undefined
-                        }
-                    >
-                        {loading ? "Submitting..." : "Submit"}
-                    </Button>
-
-                    {errorOnSubmit && (
-                        <Typography color="danger" mt={1}>
-                            {errorOnSubmit}
-                        </Typography>
-                    )}
-                </>
-            )}
-        </Sheet>
+        <AdminFormLayout
+            header={name}
+            handleSubmit={handleSubmit}
+            submitting={loading}
+            errorOnSubmit={errorOnSubmit}
+            successMessage={successMessage}
+            shouldHideFormOnSuccess
+            formElementsProps={[
+                {
+                    label: "New player name",
+                    error: formData.newName.error,
+                    element: (
+                        <TextInput
+                            value={formData.newName.value || ""}
+                            placeholder="New player name"
+                            onChange={handleInputChange("newName")}
+                            validate={validateField("newName")}
+                        />
+                    ),
+                },
+            ]}
+        />
     );
 }
 

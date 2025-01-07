@@ -1,19 +1,12 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Alert from "@mui/joy/Alert";
-import Box from "@mui/joy/Box";
-import Button from "@mui/joy/Button";
-import CircularProgress from "@mui/joy/CircularProgress";
-import FormControl from "@mui/joy/FormControl";
-import FormHelperText from "@mui/joy/FormHelperText";
-import FormLabel from "@mui/joy/FormLabel";
-import Sheet from "@mui/joy/Sheet";
-import Typography from "@mui/joy/Typography";
 import {
     PlayerOption,
     PlayerRemapFormData,
     ValidPlayerRemapFormData,
 } from "./types";
+import AdminFormLayout from "./AdminFormLayout";
 import Autocomplete from "./Autocomplete";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData from "./hooks/useFormData";
@@ -69,26 +62,19 @@ export default function PlayerRemapForm({
     useConditionalActionEffect(!!successMessage, refresh);
 
     return (
-        <Sheet
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            {successMessage ? (
-                <Typography color="success">{successMessage}</Typography>
-            ) : (
-                <>
-                    <Typography level="title-lg">{name}</Typography>
-
-                    <Box sx={{ my: 2, width: "100%" }}>
-                        <FormControl error={!!formData.toPlayer.error}>
-                            <FormLabel>
-                                Reassign this player's games to:
-                            </FormLabel>
-
+        <>
+            <AdminFormLayout
+                header={name}
+                submitting={loading}
+                errorOnSubmit={errorOnSubmit}
+                buttonText="Remap player"
+                successMessage={successMessage}
+                shouldHideFormOnSuccess
+                formElementsProps={[
+                    {
+                        label: "Reassign this player's games to:",
+                        error: formData.toPlayer.error,
+                        element: (
                             <Autocomplete
                                 current={formData.toPlayer.value}
                                 options={playerOptions}
@@ -97,47 +83,26 @@ export default function PlayerRemapForm({
                                 onChange={handleInputChange("toPlayer")}
                                 validate={validateField("toPlayer")}
                             />
+                        ),
+                    },
+                ]}
+                handleSubmit={() => {
+                    if (warningAlert || formData.toPlayer.error) {
+                        handleSubmit();
+                    } else {
+                        setWarningAlert(
+                            `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "Submit" again to continue.`
+                        );
+                    }
+                }}
+            />
 
-                            {formData.toPlayer.error && (
-                                <FormHelperText>
-                                    {formData.toPlayer.error}
-                                </FormHelperText>
-                            )}
-                        </FormControl>
-
-                        {warningAlert && (
-                            <Alert color="warning" sx={{ my: "10px" }}>
-                                {warningAlert}
-                            </Alert>
-                        )}
-                    </Box>
-
-                    <Button
-                        onClick={() => {
-                            if (warningAlert || formData.toPlayer.error) {
-                                handleSubmit();
-                            } else {
-                                setWarningAlert(
-                                    `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "Submit" again to continue.`
-                                );
-                            }
-                        }}
-                        disabled={loading}
-                        startDecorator={
-                            loading ? <CircularProgress /> : undefined
-                        }
-                    >
-                        {loading ? "Submitting..." : "Submit"}
-                    </Button>
-
-                    {errorOnSubmit && (
-                        <Typography color="danger" mt={1}>
-                            {errorOnSubmit}
-                        </Typography>
-                    )}
-                </>
+            {warningAlert && (
+                <Alert color="warning" sx={{ my: "10px" }}>
+                    {warningAlert}
+                </Alert>
             )}
-        </Sheet>
+        </>
     );
 }
 
