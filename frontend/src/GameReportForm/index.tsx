@@ -59,7 +59,7 @@ interface Props {
 function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
     const [
         formData,
-        { errorOnSubmit, successMessage, loading },
+        { errorOnSubmit, successMessage, submitting },
         {
             setFormData,
             handleInputChange,
@@ -477,10 +477,10 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             </FormElement>
             <Button
                 onClick={handleSubmit}
-                disabled={loading}
-                startDecorator={loading ? <CircularProgress /> : undefined}
+                disabled={submitting}
+                startDecorator={submitting ? <CircularProgress /> : undefined}
             >
-                {loading ? "Submitting..." : "Submit"}
+                {submitting ? "Submitting..." : "Submit"}
             </Button>
             {errorOnSubmit && (
                 <Typography color="danger">{errorOnSubmit}</Typography>

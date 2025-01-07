@@ -34,7 +34,7 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
 
     const [
         formData,
-        { errorOnSubmit, successMessage, loading },
+        { errorOnSubmit, successMessage, submitting },
         { handleInputChange, validateField, handleSubmit },
     ] = useFormData<PlayerEditFormData, ValidPlayerEditFormData>({
         initialFormData,
@@ -49,7 +49,7 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
         <AdminFormLayout
             header={name}
             handleSubmit={handleSubmit}
-            submitting={loading}
+            submitting={submitting}
             errorOnSubmit={errorOnSubmit}
             successMessage={successMessage}
             shouldHideFormOnSuccess

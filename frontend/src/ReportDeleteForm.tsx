@@ -19,19 +19,16 @@ export default function ReportDeleteForm({
     report: { rid, winner, loser, timestamp },
     refresh,
 }: Props) {
-    const [
-        _,
-        { errorOnSubmit, successMessage, loading: submitting },
-        { handleSubmit },
-    ] = useFormData<ReportDeleteFormData, ValidReportDeleteFormData>({
-        initialFormData: {
-            rid: { value: rid, error: null, validate: () => null },
-        },
-        optionalFields: [],
-        successMessageText: "Report deleted",
-        submit,
-        toErrorMessage,
-    });
+    const [_, { errorOnSubmit, successMessage, submitting }, { handleSubmit }] =
+        useFormData<ReportDeleteFormData, ValidReportDeleteFormData>({
+            initialFormData: {
+                rid: { value: rid, error: null, validate: () => null },
+            },
+            optionalFields: [],
+            successMessageText: "Report deleted",
+            submit,
+            toErrorMessage,
+        });
 
     useConditionalActionEffect(!!successMessage, refresh);
 

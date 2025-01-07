@@ -24,7 +24,7 @@ type Helpers<F> = {
 type Meta = {
     errorOnSubmit: FieldError;
     successMessage: SuccessMessage;
-    loading: boolean;
+    submitting: boolean;
 };
 
 interface Args<F, V> {
@@ -48,7 +48,7 @@ export default function useFormData<F, V extends F>({
         useState<ConstrainedFormData<F>>(initialFormData);
     const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
     const [successMessage, setSuccessMessage] = useState<SuccessMessage>(null);
-    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     const handleInputChange = <K extends keyof ConstrainedFormData<F>>(
         field: K,
@@ -134,7 +134,7 @@ export default function useFormData<F, V extends F>({
                 setErrorOnSubmit(validatedResult as ErrorMessage.OnSubmit);
             } else {
                 setErrorOnSubmit(null);
-                setLoading(true);
+                setSubmitting(true);
 
                 const response = await submit(validatedResult);
 
@@ -151,7 +151,7 @@ export default function useFormData<F, V extends F>({
                 setErrorOnSubmit("Something went wrong.");
             }
         }
-        setLoading(false);
+        setSubmitting(false);
     };
 
     return [
@@ -159,7 +159,7 @@ export default function useFormData<F, V extends F>({
         {
             errorOnSubmit,
             successMessage,
-            loading,
+            submitting,
         },
         {
             setFormData,

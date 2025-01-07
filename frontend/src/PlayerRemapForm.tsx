@@ -47,7 +47,7 @@ export default function PlayerRemapForm({
 
     const [
         formData,
-        { errorOnSubmit, successMessage, loading },
+        { errorOnSubmit, successMessage, submitting },
         { handleInputChange, validateField, handleSubmit },
     ] = useFormData<PlayerRemapFormData, ValidPlayerRemapFormData>({
         initialFormData,
@@ -67,7 +67,7 @@ export default function PlayerRemapForm({
         <>
             <AdminFormLayout
                 header={name}
-                submitting={loading}
+                submitting={submitting}
                 errorOnSubmit={errorOnSubmit}
                 buttonText={buttonText}
                 successMessage={successMessage}
