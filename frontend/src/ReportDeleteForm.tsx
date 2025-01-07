@@ -2,7 +2,7 @@ import axios from "axios";
 import React from "react";
 import AdminFormLayout from "./AdminFormLayout";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
-import useFormData from "./hooks/useFormData";
+import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import {
     ProcessedGameReport,
     ReportDeleteFormData,
@@ -21,9 +21,7 @@ export default function ReportDeleteForm({
 }: Props) {
     const [_, { errorOnSubmit, successMessage, submitting }, { handleSubmit }] =
         useFormData<ReportDeleteFormData, ValidReportDeleteFormData>({
-            initialFormData: {
-                rid: { value: rid, error: null, validate: () => null },
-            },
+            initialFormData: { rid: initializeToDefaults(rid) },
             optionalFields: [],
             successMessageText: "Report deleted",
             submit,

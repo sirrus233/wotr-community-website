@@ -4,7 +4,7 @@ import { PlayerEditFormData, ValidPlayerEditFormData } from "./types";
 import AdminFormLayout from "./AdminFormLayout";
 import TextInput from "./TextInput";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
-import useFormData from "./hooks/useFormData";
+import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import { toErrorMessage } from "./utils";
 
 interface Props {
@@ -15,11 +15,7 @@ interface Props {
 
 export default function PlayerEditForm({ pid, name, refresh }: Props) {
     const initialFormData: PlayerEditFormData = {
-        pid: {
-            value: pid,
-            error: null,
-            validate: () => null,
-        },
+        pid: initializeToDefaults(pid),
         newName: {
             value: null,
             error: null,
