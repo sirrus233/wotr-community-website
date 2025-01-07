@@ -74,6 +74,7 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
 async function submit(validFormData: ValidPlayerEditFormData) {
     return await axios.post(
         "https://api.waroftheringcommunity.net:8080/renamePlayer",
+        // "http://localhost:8081/renamePlayer",
         toPayload(validFormData),
         {
             headers: { "Content-Type": "application/json" },

@@ -55,7 +55,7 @@ export default function GameReports() {
     const getReports = async () => {
         try {
             const response = await axios.get(
-                // "http://localhost:8081/leaderboard"
+                // "http://localhost:8081/reports"
                 "https://api.waroftheringcommunity.net:8080/reports"
             );
             setReports(response.data.reports);

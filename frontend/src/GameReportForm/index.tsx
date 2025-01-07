@@ -493,7 +493,7 @@ export default GameReportForm;
 
 async function submit(validatedResult: ValidGameFormData) {
     return await axios.post(
-        //"http://localhost:8081/submitReport",
+        // "http://localhost:8081/submitReport",
         "https://api.waroftheringcommunity.net:8080/submitReport",
         toPayload(validatedResult),
         { headers: { "Content-Type": "multipart/form-data" } }

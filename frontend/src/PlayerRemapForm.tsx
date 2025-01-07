@@ -111,6 +111,7 @@ export default function PlayerRemapForm({
 async function submit(validFormData: ValidPlayerRemapFormData) {
     return await axios.post(
         "https://api.waroftheringcommunity.net:8080/remapPlayer",
+        // "http://localhost:8081/remapPlayer",
         toPayload(validFormData),
         {
             headers: { "Content-Type": "application/json" },

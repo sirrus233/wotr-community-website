@@ -29,6 +29,7 @@ export default function App() {
         setLoadingLeaderboard(true);
 
         axios
+            // .get("http://localhost:8081/leaderboard", {
             .get("https://api.waroftheringcommunity.net:8080/leaderboard", {
                 params: { year: leaderboardYear },
             })
