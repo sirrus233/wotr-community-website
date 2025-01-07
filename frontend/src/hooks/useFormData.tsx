@@ -4,9 +4,9 @@ import {
     FieldError,
     ServerErrorBody,
     SuccessMessage,
-} from "../../types";
-import { ErrorMessage } from "../../constants";
-import { isServerError, objectKeys } from "../../utils";
+} from "../types";
+import { ErrorMessage } from "../constants";
+import { isServerError, objectKeys } from "../utils";
 
 type Helpers<F> = {
     setFormData: Dispatch<SetStateAction<ConstrainedFormData<F>>>;
