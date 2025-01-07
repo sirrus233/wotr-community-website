@@ -149,7 +149,7 @@ export default function useFormData<F, V extends F>({
             if (isServerError(error)) {
                 setErrorOnSubmit(toErrorMessage(error));
             } else {
-                setErrorOnSubmit("Something went wrong.");
+                setErrorOnSubmit(ErrorMessage.Default);
             }
         }
         setSubmitting(false);

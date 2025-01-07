@@ -1,3 +1,4 @@
+import { ErrorMessage } from "./constants";
 import { Expansion, League, ServerErrorBody, Side, Stronghold } from "./types";
 
 export function strongholdSide(
@@ -196,7 +197,7 @@ export function toErrorMessage(error: ServerErrorBody): string {
     if (error.status === 422) {
         return error.response.data;
     }
-    return "Something went wrong.";
+    return ErrorMessage.Default;
 }
 
 export function displayTime(timestamp: string) {

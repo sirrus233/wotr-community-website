@@ -7,6 +7,7 @@ import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
+import { ErrorMessage } from "./constants";
 import {
     Competition,
     Expansion,
@@ -60,7 +61,7 @@ export default function GameReports() {
             );
             setReports(response.data.reports);
         } catch (error) {
-            setError("Something went wrong");
+            setError(ErrorMessage.Default);
             console.error(error);
         }
         setLoading(false);

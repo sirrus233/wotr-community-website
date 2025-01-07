@@ -2,9 +2,9 @@ import React, { CSSProperties, ReactNode } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import Table from "@mui/joy/Table";
-import Typography from "@mui/joy/Typography";
 import { SxProps } from "@mui/joy/styles/types";
 import { TABLE_BTN_HEIGHT_PX, TABLE_ELEMENTS_GAP } from "./styles/sizes";
+import ErrorDisplay from "./ErrorDisplay";
 
 interface Props {
     refresh: () => void;
@@ -70,7 +70,7 @@ export default function TableLayout({
                 </Box>
             )}
 
-            {error && <Typography color="danger">{error}</Typography>}
+            {error && <ErrorDisplay message={error} sx={{ pb: 2 }} />}
 
             {loading ? (
                 "Loading..."

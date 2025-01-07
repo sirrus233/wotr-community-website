@@ -41,6 +41,7 @@ import {
 } from "../utils";
 import useFormData from "../hooks/useFormData";
 import Autocomplete from "../Autocomplete";
+import ErrorDisplay from "../ErrorDisplay";
 import FileUpload from "../FileUpload";
 import FormElement from "../FormElement";
 import MultiOptionInput from "../MultiOptionInput";
@@ -482,9 +483,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             >
                 {submitting ? "Submitting..." : "Submit"}
             </Button>
-            {errorOnSubmit && (
-                <Typography color="danger">{errorOnSubmit}</Typography>
-            )}
+            {errorOnSubmit && <ErrorDisplay message={errorOnSubmit} />}
         </Sheet>
     );
 }
@@ -550,7 +549,7 @@ function toErrorMessage(error: ServerErrorBody): string {
             );
         }
     }
-    return "Something went wrong.";
+    return ErrorMessage.Default;
 }
 
 function parseValidationResult(
