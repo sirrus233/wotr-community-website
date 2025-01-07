@@ -1,10 +1,11 @@
 import axios from "axios";
-import React, { useEffect } from "react";
+import React from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import CircularProgress from "@mui/joy/CircularProgress";
 import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
+import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData from "./hooks/useFormData";
 import {
     ProcessedGameReport,
@@ -36,12 +37,7 @@ export default function ReportDeleteForm({
         toErrorMessage,
     });
 
-    useEffect(
-        function refreshOnSubmit() {
-            if (successMessage) refresh();
-        },
-        [successMessage]
-    );
+    useConditionalActionEffect(!!successMessage, refresh);
 
     return successMessage ? (
         <Typography color="success">{successMessage}</Typography>
