@@ -8,16 +8,17 @@ import Data.Csv (FromRecord, HasHeader (..), decode)
 import Data.Validation (Validation (..))
 import Data.Vector qualified as V
 import Database (insertLegacyEntry, runDb)
-import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigration, runSqlPool)
+import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
 import Logging (Logger, log, stdoutLogger, (<>:))
 import Servant (ServerError (errBody), err500, runHandler, throwError)
 import System.Directory (createDirectoryIfMissing)
+import System.Environment (setEnv)
 import System.FilePath (takeDirectory)
 import Types.Api (RawGameReport (victory))
 import Types.DataField (Victory (..))
-import Types.Database (migrateAll)
+import Types.Database (migrateSchema)
 import Types.Migration
   ( ParsedGameReport (timestamp),
     ParsedLegacyLadderEntry (..),
@@ -60,6 +61,7 @@ tryParse path logger mapper = do
 
 main :: IO ()
 main = do
+  setEnv "AWS_PROFILE" "wotrcommunity"
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
   awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
@@ -75,7 +77,7 @@ main = do
 
   case (legacyEntries, reports) of
     (Just es, Just rs) -> do
-      runSqlPool (runMigration migrateAll) dbPool
+      migrateSchema dbPool logger
       migrationResult <- runHandler . runAppLogger logger . usingReaderT env $ migrate es (reverse rs)
       case migrationResult of
         Left err -> log logger LevelError $ "Migration failed: " <>: err

@@ -4,8 +4,8 @@ import Amazonka qualified as AWS
 import Api (api)
 import AppConfig (Env (..), databaseFile, logFile, nt, redisConfig, runAppLogger)
 import AppServer (server)
-import Control.Monad.Logger (LogLevel (..), ToLogStr (toLogStr))
-import Database.Esqueleto.Experimental (defaultConnectionPoolConfig, runMigrationQuiet, runSqlPool)
+import Control.Monad.Logger (LogLevel (..))
+import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
 import Logging (fileLogger, log)
@@ -16,8 +16,9 @@ import Network.Wai.Middleware.Gzip (defaultGzipSettings, gzip)
 import Servant (Application, hoistServer)
 import Servant.Server (serve)
 import System.Directory (createDirectoryIfMissing)
+import System.Environment (setEnv)
 import System.FilePath (takeDirectory)
-import Types.Database (migrateAll)
+import Types.Database (migrateSchema)
 
 type Middleware = Application -> Application
 
@@ -44,6 +45,8 @@ app env = gzipMiddleware . corsMiddleware . serve api . hoistServer api (nt env)
 
 main :: IO ()
 main = do
+  args <- getArgs
+  setEnv "AWS_PROFILE" "wotrcommunity"
   createDirectoryIfMissing True . takeDirectory $ databaseFile
   createDirectoryIfMissing True . takeDirectory $ logFile
 
@@ -55,10 +58,7 @@ main = do
 
   let env = Env {dbPool, redisPool, logger, aws}
 
-  -- TODO Disable/handle auto-migration
-  migrations <- runSqlPool (runMigrationQuiet migrateAll) dbPool
-  unless (null migrations) (log logger LevelWarn "Database schema changed. Running migrations.")
-  mapM_ (log logger LevelDebug . toLogStr) migrations
+  when ("migrate" `elem` args) $ migrateSchema dbPool logger
 
   log logger LevelInfo "Starting server."
 
