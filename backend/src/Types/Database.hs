@@ -5,7 +5,7 @@ module Types.Database where
 
 import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
 import Data.Time (UTCTime)
-import Database.Esqueleto.Experimental (Entity, runMigrationQuiet, runSqlPool)
+import Database.Esqueleto.Experimental (Entity, rawExecute, runMigrationQuiet, runSqlPool)
 import Database.Esqueleto.Experimental qualified as SQL
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Logging (Logger, log)
@@ -79,6 +79,15 @@ migrateSchema dbPool logger = do
   migrations <- runSqlPool (runMigrationQuiet migrateAll) dbPool
   unless (null migrations) (log logger LevelWarn "Database schema changed. Running migrations.")
   mapM_ (log logger LevelDebug . toLogStr) migrations
+
+  let index_statements =
+        [ "CREATE INDEX IF NOT EXISTS idx_game_report_winner_id ON game_report (winner_id);",
+          "CREATE INDEX IF NOT EXISTS idx_game_report_loser_id ON game_report (loser_id);",
+          "CREATE INDEX IF NOT EXISTS idx_game_report_timestamp ON game_report (timestamp);",
+          "CREATE INDEX IF NOT EXISTS idx_game_report_winner_loser_timestamp ON game_report (winner_id, loser_id, timestamp);"
+        ]
+
+  foldMapM ((`runSqlPool` dbPool) . (`rawExecute` [])) index_statements
 
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 
