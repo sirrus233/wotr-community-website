@@ -2,7 +2,7 @@ module Main where
 
 import Amazonka qualified as AWS
 import Api (api)
-import AppConfig (Env (..), databaseFile, logFile, nt, redisConfig, runAppLogger)
+import AppConfig (Env (..), databaseFile, logFile, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
 import Control.Monad.Logger (LogLevel (..))
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
@@ -13,8 +13,8 @@ import Network.Wai.Handler.Warp (defaultSettings, setPort)
 import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Network.Wai.Middleware.Gzip (defaultGzipSettings, gzip)
-import Servant (Application, hoistServer)
-import Servant.Server (serve)
+import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
+import Servant (Application, Context (..), hoistServer, serveWithContext)
 import System.Directory (createDirectoryIfMissing)
 import System.Environment (setEnv)
 import System.FilePath (takeDirectory)
@@ -41,7 +41,11 @@ gzipMiddleware :: Middleware
 gzipMiddleware = gzip defaultGzipSettings
 
 app :: Env -> Application
-app env = gzipMiddleware . corsMiddleware . serve api . hoistServer api (nt env) $ server
+app env = gzipMiddleware . corsMiddleware . serveWithContext api context . hoistServer api (nt env) $ server
+  where
+    maxSizeBytes = maxGameLogSizeMB * 1024 * 1024
+    multipartOpts = setMaxRequestFileSize maxSizeBytes defaultParseRequestBodyOptions
+    context = multipartOpts :. EmptyContext
 
 main :: IO ()
 main = do
