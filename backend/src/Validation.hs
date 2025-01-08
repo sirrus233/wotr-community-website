@@ -3,9 +3,9 @@ module Validation where
 import AppConfig (AppM)
 import Control.Monad.Logger (logErrorN)
 import Data.Text qualified as T
+import Data.Text.Encoding (decodeLatin1)
 import Data.Validation (Validation (..))
-import Logging ((<>:))
-import Servant (ServerError (..), err415, throwError)
+import Servant (ServerError (..), err422, throwError)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Side (..), Stronghold (..), Victory (..))
 
@@ -190,16 +190,9 @@ validateReport report =
 
 validateLogFile :: FilePath -> AppM ()
 validateLogFile fp = do
-  bs <- readFileBS fp
-  decoded <- either handleDecodeError pure (decodeUtf8' bs)
-  unless (logFileHeader `T.isPrefixOf` decoded) handleHeaderError
+  logFileText <- decodeLatin1 <$> readFileBS fp
+  unless (logFileHeader `T.isPrefixOf` logFileText) $ do
+    logErrorN "Log file missing header."
+    throwError $ err422 {errBody = "Invalid log file."}
   where
     logFileHeader = "<auto> silent null\n"
-
-    handleDecodeError exc = do
-      logErrorN $ "Unicode decode error: " <>: exc
-      throwError $ err415 {errBody = "Invalid log file."}
-
-    handleHeaderError = do
-      logErrorN "Log file missing header."
-      throwError $ err415 {errBody = "Invalid log file."}
