@@ -6,9 +6,7 @@ import Servant
     Post,
     PostNoContent,
     QueryParam,
-    QueryParam',
     ReqBody,
-    Required,
     (:<|>),
     (:>),
   )
@@ -29,7 +27,7 @@ type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :
 
 type GetReportsAPI = "reports" :> QueryParam "limit" Int64 :> QueryParam "offset" Int64 :> Get '[JSON] GetReportsResponse
 
-type GetLeaderboardAPI = "leaderboard" :> QueryParam' '[Required] "year" Int :> Get '[JSON] GetLeaderboardResponse
+type GetLeaderboardAPI = "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse
 
 type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 

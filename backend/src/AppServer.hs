@@ -207,12 +207,14 @@ getReportsHandler limit offset = GetReportsResponse . map fromGameReport <$> run
       (Just lim, Nothing) -> (lim, 0)
       (Just lim, Just off) -> (lim, off)
 
-getLeaderboardHandler :: Int -> AppM GetLeaderboardResponse
-getLeaderboardHandler year =
-  runDb (getAllStats year)
+getLeaderboardHandler :: Maybe Year -> AppM GetLeaderboardResponse
+getLeaderboardHandler year = do
+  currentYear <- liftIO $ yearOf <$> getCurrentTime
+  let year' = fromMaybe currentYear year
+  runDb (getAllStats year')
     <&> ( GetLeaderboardResponse
             . sortOn (Down . averageRating)
-            . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year stats)))
+            . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year' stats)))
         )
 
 adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
