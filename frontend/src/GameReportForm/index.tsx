@@ -34,6 +34,7 @@ import {
 import {
     getExpansionLabel,
     getLeagueLabel,
+    getMatchLabel,
     getStrongholdLabel,
     isStrongholdInPlay,
     objectKeys,
@@ -189,6 +190,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     current={formData.match.value}
                     onChange={handleInputChange("match")}
                     validate={validateField("match")}
+                    getLabel={getMatchLabel}
                 />
             </FormElement>
             {formData.match.value === "Ranked" && (

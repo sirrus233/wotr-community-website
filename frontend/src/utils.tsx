@@ -1,5 +1,12 @@
 import { ErrorMessage } from "./constants";
-import { Expansion, League, ServerErrorBody, Side, Stronghold } from "./types";
+import {
+    Expansion,
+    League,
+    Match,
+    ServerErrorBody,
+    Side,
+    Stronghold,
+} from "./types";
 
 export function strongholdSide(
     expansions: Expansion[],
@@ -107,6 +114,15 @@ export function getLeagueLabel(league: League): string {
             return "Super";
         case "TTSLeague":
             return "TTS";
+    }
+}
+
+export function getMatchLabel(match: Match): string {
+    switch (match) {
+        case "Ranked":
+            return "Rated";
+        case "Unranked":
+            return "Unrated";
     }
 }
 
