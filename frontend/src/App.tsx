@@ -15,6 +15,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { ErrorMessage } from "./constants";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import { LeaderboardEntry } from "./types";
 
@@ -24,6 +25,9 @@ export default function App() {
         new Date().getFullYear()
     );
     const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+    const [leaderboardError, setLeaderboardError] = useState<string | null>(
+        null
+    );
 
     const getLeaderboard = () => {
         setLoadingLeaderboard(true);
@@ -36,7 +40,10 @@ export default function App() {
             .then((response) => {
                 setLeaderboard(response.data.entries as LeaderboardEntry[]);
             })
-            .catch(console.error)
+            .catch((error) => {
+                setLeaderboardError(ErrorMessage.Default);
+                console.error(error);
+            })
             .finally(() => {
                 setLoadingLeaderboard(false);
             });
@@ -95,8 +102,10 @@ export default function App() {
                                 leaderboard={leaderboard}
                                 year={leaderboardYear}
                                 loading={loadingLeaderboard}
+                                error={leaderboardError}
                                 getLeaderboard={getLeaderboard}
                                 setYear={setLeaderboardYear}
+                                setError={setLeaderboardError}
                             />
                         }
                     />

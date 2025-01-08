@@ -109,6 +109,7 @@ export const serverValidationErrors = [
 export const playerStates = ["Active", "Inactive"] as const;
 
 export enum ErrorMessage {
+    Default = "Something went wrong. Please contact an admin for assistance.",
     Required = "Required",
     OnSubmit = "Could not submit, please resolve errors",
     MissingPlayerName = "This player does not exist in the database. Unless it's a new player, please check the spelling.",

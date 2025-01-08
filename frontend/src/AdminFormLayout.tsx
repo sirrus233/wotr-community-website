@@ -5,6 +5,7 @@ import CircularProgress from "@mui/joy/CircularProgress";
 import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
 import { FieldError } from "./types";
+import ErrorDisplay from "./ErrorDisplay";
 import FormElement from "./FormElement";
 
 interface FormElementProps {
@@ -85,9 +86,7 @@ export default function AdminFormLayout({
                     </Button>
 
                     {errorOnSubmit && (
-                        <Typography color="danger" mt={1}>
-                            {errorOnSubmit}
-                        </Typography>
+                        <ErrorDisplay message={errorOnSubmit} sx={{ mt: 1 }} />
                     )}
                 </>
             )}
