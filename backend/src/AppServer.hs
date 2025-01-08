@@ -238,14 +238,15 @@ adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
   pure $ RemapPlayerResponse player.playerDisplayName
 
 adminModifyReportHandler :: ModifyReportRequest -> AppM NoContent
-adminModifyReportHandler ModifyReportRequest {rid, report} = case validateReport report of
+adminModifyReportHandler ModifyReportRequest {rid, timestamp, report} = case validateReport report of
   Failure errors -> throwError $ err422 {errBody = show errors}
   Success _ -> runDb $ do
     oldReport <- readOrError ("Cannot find report " <>: rid) $ lift . get $ rid
     Entity newWinnerId _ <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner
     Entity newLoserId _ <- readOrError ("Cannot find player " <>: report.loser) $ getPlayerByName report.loser
+    let newTimestamp = fromMaybe oldReport.gameReportTimestamp timestamp
 
-    let newReport = toGameReport oldReport.gameReportTimestamp newWinnerId newLoserId oldReport.gameReportLogFile report
+    let newReport = toGameReport newTimestamp newWinnerId newLoserId oldReport.gameReportLogFile report
     lift $ replace rid newReport
 
     when (mustReprocess oldReport newReport) reprocessReports
