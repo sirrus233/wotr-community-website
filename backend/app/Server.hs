@@ -15,6 +15,7 @@ import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Network.Wai.Middleware.Gzip (defaultGzipSettings, gzip)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
 import Servant (Application, Context (..), hoistServer, serveWithContext)
+import Servant.Multipart (MultipartOptions (..), Tmp, defaultMultipartOptions)
 import System.Directory (createDirectoryIfMissing)
 import System.Environment (setEnv)
 import System.FilePath (takeDirectory)
@@ -44,7 +45,11 @@ app :: Env -> Application
 app env = gzipMiddleware . corsMiddleware . serveWithContext api context . hoistServer api (nt env) $ server
   where
     maxSizeBytes = maxGameLogSizeMB * 1024 * 1024
-    multipartOpts = setMaxRequestFileSize maxSizeBytes defaultParseRequestBodyOptions
+    multipartOpts :: MultipartOptions Tmp
+    multipartOpts =
+      (defaultMultipartOptions (Proxy :: Proxy Tmp))
+        { generalOptions = setMaxRequestFileSize maxSizeBytes defaultParseRequestBodyOptions
+        }
     context = multipartOpts :. EmptyContext
 
 main :: IO ()
