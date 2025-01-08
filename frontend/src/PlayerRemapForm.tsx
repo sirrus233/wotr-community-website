@@ -1,23 +1,17 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Alert from "@mui/joy/Alert";
-import Box from "@mui/joy/Box";
-import Button from "@mui/joy/Button";
-import CircularProgress from "@mui/joy/CircularProgress";
-import FormControl from "@mui/joy/FormControl";
-import FormHelperText from "@mui/joy/FormHelperText";
-import FormLabel from "@mui/joy/FormLabel";
-import Sheet from "@mui/joy/Sheet";
-import Typography from "@mui/joy/Typography";
 import {
     PlayerOption,
     PlayerRemapFormData,
-    ServerErrorBody,
     ValidPlayerRemapFormData,
 } from "./types";
+import AdminFormLayout from "./AdminFormLayout";
 import Autocomplete from "./Autocomplete";
-import useFormData from "./hooks/useFormData";
+import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
+import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import { ErrorMessage } from "./constants";
+import { toErrorMessage } from "./utils";
 
 interface Props {
     pid: number;
@@ -33,11 +27,7 @@ export default function PlayerRemapForm({
     refresh,
 }: Props) {
     const initialFormData: PlayerRemapFormData = {
-        fromPlayer: {
-            value: { pid, label: name },
-            error: null,
-            validate: () => null,
-        },
+        fromPlayer: initializeToDefaults({ pid, label: name }),
         toPlayer: {
             value: null,
             error: null,
@@ -53,7 +43,7 @@ export default function PlayerRemapForm({
 
     const [
         formData,
-        { errorOnSubmit, successMessage, loading },
+        { errorOnSubmit, successMessage, submitting },
         { handleInputChange, validateField, handleSubmit },
     ] = useFormData<PlayerRemapFormData, ValidPlayerRemapFormData>({
         initialFormData,
@@ -65,36 +55,24 @@ export default function PlayerRemapForm({
 
     const [warningAlert, setWarningAlert] = useState<string | null>(null);
 
-    useEffect(
-        function refreshOnSubmit() {
-            if (successMessage) {
-                refresh();
-            }
-        },
-        [successMessage]
-    );
+    useConditionalActionEffect(!!successMessage, refresh);
+
+    const buttonText = "Remap player";
 
     return (
-        <Sheet
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            {successMessage ? (
-                <Typography color="success">{successMessage}</Typography>
-            ) : (
-                <>
-                    <Typography level="title-lg">{name}</Typography>
-
-                    <Box sx={{ my: 2, width: "100%" }}>
-                        <FormControl error={!!formData.toPlayer.error}>
-                            <FormLabel>
-                                Reassign this player's games to:
-                            </FormLabel>
-
+        <>
+            <AdminFormLayout
+                header={name}
+                submitting={submitting}
+                errorOnSubmit={errorOnSubmit}
+                buttonText={buttonText}
+                successMessage={successMessage}
+                shouldHideFormOnSuccess
+                formElementsProps={[
+                    {
+                        label: "Reassign this player's games to:",
+                        error: formData.toPlayer.error,
+                        element: (
                             <Autocomplete
                                 current={formData.toPlayer.value}
                                 options={playerOptions}
@@ -103,53 +81,33 @@ export default function PlayerRemapForm({
                                 onChange={handleInputChange("toPlayer")}
                                 validate={validateField("toPlayer")}
                             />
+                        ),
+                    },
+                ]}
+                handleSubmit={() => {
+                    if (warningAlert || formData.toPlayer.error) {
+                        handleSubmit();
+                    } else {
+                        setWarningAlert(
+                            `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "${buttonText}" again to continue.`
+                        );
+                    }
+                }}
+            />
 
-                            {formData.toPlayer.error && (
-                                <FormHelperText>
-                                    {formData.toPlayer.error}
-                                </FormHelperText>
-                            )}
-                        </FormControl>
-
-                        {warningAlert && (
-                            <Alert color="warning" sx={{ my: "10px" }}>
-                                {warningAlert}
-                            </Alert>
-                        )}
-                    </Box>
-
-                    <Button
-                        onClick={() => {
-                            if (warningAlert || formData.toPlayer.error) {
-                                handleSubmit();
-                            } else {
-                                setWarningAlert(
-                                    `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "Submit" again to continue.`
-                                );
-                            }
-                        }}
-                        disabled={loading}
-                        startDecorator={
-                            loading ? <CircularProgress /> : undefined
-                        }
-                    >
-                        {loading ? "Submitting..." : "Submit"}
-                    </Button>
-
-                    {errorOnSubmit && (
-                        <Typography color="danger" mt={1}>
-                            {errorOnSubmit}
-                        </Typography>
-                    )}
-                </>
+            {!successMessage && warningAlert && (
+                <Alert color="warning" sx={{ my: "10px" }}>
+                    {warningAlert}
+                </Alert>
             )}
-        </Sheet>
+        </>
     );
 }
 
 async function submit(validFormData: ValidPlayerRemapFormData) {
     return await axios.post(
         "https://api.waroftheringcommunity.net:8080/remapPlayer",
+        // "http://localhost:8081/remapPlayer",
         toPayload(validFormData),
         {
             headers: { "Content-Type": "application/json" },
@@ -169,11 +127,4 @@ function toPayload(
         fromPid: validFormData.fromPlayer.value.pid,
         toPid: validFormData.toPlayer.value.pid,
     };
-}
-
-function toErrorMessage(error: ServerErrorBody): string {
-    if (error.status === 422) {
-        return error.response.data;
-    }
-    return "Something went wrong.";
 }

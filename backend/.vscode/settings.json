@@ -51,7 +51,8 @@
         "utct",
         "waroftheringcommunity",
         "wome",
-        "wotr"
+        "wotr",
+        "wotrcommunity"
     ],
     "cSpell.ignorePaths": [".vscode", "wotr-community-website.cabal"]
 }

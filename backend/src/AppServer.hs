@@ -198,8 +198,14 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
       mapM_ (putS3Object awsEnv key . fdPayload) logFileData
       pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
-getReportsHandler :: AppM GetReportsResponse
-getReportsHandler = runDb $ getGameReports 500 0 <&> GetReportsResponse . map fromGameReport
+getReportsHandler :: Maybe Int64 -> Maybe Int64 -> AppM GetReportsResponse
+getReportsHandler limit offset = GetReportsResponse . map fromGameReport <$> runDb (getGameReports limit' offset')
+  where
+    maxLimit = 500
+    (limit', offset') = case (limit, offset) of
+      (Nothing, _) -> (maxLimit, 0)
+      (Just lim, Nothing) -> (lim, 0)
+      (Just lim, Just off) -> (lim, off)
 
 getLeaderboardHandler :: Maybe Year -> AppM GetLeaderboardResponse
 getLeaderboardHandler year = do

@@ -15,6 +15,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { ErrorMessage } from "./constants";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import { LeaderboardEntry } from "./types";
 
@@ -24,18 +25,25 @@ export default function App() {
         new Date().getFullYear()
     );
     const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+    const [leaderboardError, setLeaderboardError] = useState<string | null>(
+        null
+    );
 
     const getLeaderboard = () => {
         setLoadingLeaderboard(true);
 
         axios
+            // .get("http://localhost:8081/leaderboard", {
             .get("https://api.waroftheringcommunity.net:8080/leaderboard", {
                 params: { year: leaderboardYear },
             })
             .then((response) => {
                 setLeaderboard(response.data.entries as LeaderboardEntry[]);
             })
-            .catch(console.error)
+            .catch((error) => {
+                setLeaderboardError(ErrorMessage.Default);
+                console.error(error);
+            })
             .finally(() => {
                 setLoadingLeaderboard(false);
             });
@@ -94,8 +102,10 @@ export default function App() {
                                 leaderboard={leaderboard}
                                 year={leaderboardYear}
                                 loading={loadingLeaderboard}
+                                error={leaderboardError}
                                 getLeaderboard={getLeaderboard}
                                 setYear={setLeaderboardYear}
+                                setError={setLeaderboardError}
                             />
                         }
                     />
@@ -125,7 +135,7 @@ function Home() {
                     Community Resources*
                 </Typography>
 
-                <Typography level="title-sm" mb={1}>
+                <Typography level="title-sm" mb={1} textAlign="center">
                     *Not affiliated with the official War of the Ring board game
                     produced by Ares Games
                 </Typography>

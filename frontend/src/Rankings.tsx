@@ -19,7 +19,7 @@ import {
 import Filters from "./Filters";
 import PlayerEditForm from "./PlayerEditForm";
 import PlayerRemapForm from "./PlayerRemapForm";
-import TableView from "./TableView";
+import TableLayout from "./TableLayout";
 import { range } from "./utils";
 import { playerStates, START_YEAR } from "./constants";
 
@@ -33,8 +33,10 @@ interface Props {
     leaderboard: LeaderboardEntry[];
     year: number;
     loading: boolean;
+    error: string | null;
     getLeaderboard: () => void;
     setYear: (year: number) => void;
+    setError: (error: string | null) => void;
 }
 
 const YEAR_SELECTOR_HEIGHT = 36;
@@ -51,11 +53,12 @@ function Rankings({
     leaderboard,
     year,
     loading,
+    error,
     getLeaderboard,
     setYear,
+    setError,
 }: Props) {
     const [filters, setFilters] = useState<PlayerState[]>(["Active"]);
-    const [error, setError] = useState<string | null>(null);
 
     const [playerEditParams, setPlayerEditParams] =
         useState<PlayerEditParams | null>(null);
@@ -116,7 +119,7 @@ function Rankings({
                 </ButtonGroup>
             </Box>
 
-            <TableView
+            <TableLayout
                 refresh={refresh}
                 error={error}
                 loading={loading}

@@ -1,12 +1,13 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import {
     ConstrainedFormData,
+    FieldData,
     FieldError,
     ServerErrorBody,
     SuccessMessage,
-} from "../../types";
-import { ErrorMessage } from "../../constants";
-import { isServerError, objectKeys } from "../../utils";
+} from "../types";
+import { ErrorMessage } from "../constants";
+import { isServerError, objectKeys } from "../utils";
 
 type Helpers<F> = {
     setFormData: Dispatch<SetStateAction<ConstrainedFormData<F>>>;
@@ -24,13 +25,14 @@ type Helpers<F> = {
 type Meta = {
     errorOnSubmit: FieldError;
     successMessage: SuccessMessage;
-    loading: boolean;
+    submitting: boolean;
 };
 
 interface Args<F, V> {
     initialFormData: ConstrainedFormData<F>;
     optionalFields: string[];
     missingFieldErrorMessage?: ErrorMessage;
+    successMessageText?: string;
     submit: (validatedFormData: ConstrainedFormData<V>) => Promise<any>;
     toErrorMessage: (error: ServerErrorBody) => string;
 }
@@ -39,6 +41,7 @@ export default function useFormData<F, V extends F>({
     initialFormData,
     optionalFields,
     missingFieldErrorMessage = ErrorMessage.Required,
+    successMessageText = "Success",
     submit,
     toErrorMessage,
 }: Args<F, V>): [ConstrainedFormData<F>, Meta, Helpers<F>] {
@@ -46,7 +49,7 @@ export default function useFormData<F, V extends F>({
         useState<ConstrainedFormData<F>>(initialFormData);
     const [errorOnSubmit, setErrorOnSubmit] = useState<FieldError>(null);
     const [successMessage, setSuccessMessage] = useState<SuccessMessage>(null);
-    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     const handleInputChange = <K extends keyof ConstrainedFormData<F>>(
         field: K,
@@ -132,24 +135,24 @@ export default function useFormData<F, V extends F>({
                 setErrorOnSubmit(validatedResult as ErrorMessage.OnSubmit);
             } else {
                 setErrorOnSubmit(null);
-                setLoading(true);
+                setSubmitting(true);
 
                 const response = await submit(validatedResult);
 
                 console.log("Form submitted successfully:", response);
                 // Handle the response data as needed
 
-                setSuccessMessage("Report submitted. Thank you!");
+                setSuccessMessage(successMessageText);
             }
         } catch (error) {
             console.error("Error submitting form:", error);
             if (isServerError(error)) {
                 setErrorOnSubmit(toErrorMessage(error));
             } else {
-                setErrorOnSubmit("Something went wrong.");
+                setErrorOnSubmit(ErrorMessage.Default);
             }
         }
-        setLoading(false);
+        setSubmitting(false);
     };
 
     return [
@@ -157,7 +160,7 @@ export default function useFormData<F, V extends F>({
         {
             errorOnSubmit,
             successMessage,
-            loading,
+            submitting,
         },
         {
             setFormData,
@@ -167,6 +170,14 @@ export default function useFormData<F, V extends F>({
             setSuccessMessage,
         },
     ];
+}
+
+export function initializeToDefaults<T>(initialValue: T): FieldData<T> {
+    return {
+        value: initialValue,
+        error: null,
+        validate: alwaysValid,
+    };
 }
 
 function isFieldMissing<F>(
@@ -182,4 +193,8 @@ function isFieldMissing<F>(
         value === "" ||
         (Array.isArray(value) && !value.length);
     return isEmpty && isRequired;
+}
+
+function alwaysValid() {
+    return null;
 }

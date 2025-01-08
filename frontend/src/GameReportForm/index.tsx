@@ -41,8 +41,9 @@ import {
 } from "../utils";
 import useFormData from "../hooks/useFormData";
 import Autocomplete from "../Autocomplete";
+import ErrorDisplay from "../ErrorDisplay";
 import FileUpload from "../FileUpload";
-import GameReportFormElement from "../GameReportFormElement";
+import FormElement from "../FormElement";
 import MultiOptionInput from "../MultiOptionInput";
 import SelectNumericOptionInput from "../SelectNumericOptionInput";
 import SingleOptionInput from "../SingleOptionInput";
@@ -59,7 +60,7 @@ interface Props {
 function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
     const [
         formData,
-        { errorOnSubmit, successMessage, loading },
+        { errorOnSubmit, successMessage, submitting },
         {
             setFormData,
             handleInputChange,
@@ -70,6 +71,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
     ] = useFormData<GameFormData, ValidGameFormData>({
         initialFormData,
         optionalFields: optionalFields.slice(),
+        successMessageText: "Report submitted. Thank you!",
         submit,
         toErrorMessage,
     });
@@ -124,10 +126,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                 </ModalDialog>
             </Modal>
 
-            <GameReportFormElement
-                label={"Who won?"}
-                error={formData.winner.error}
-            >
+            <FormElement label={"Who won?"} error={formData.winner.error}>
                 <Autocomplete
                     options={playerNames}
                     current={formData.winner.value || ""}
@@ -142,11 +141,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onInputValueChange={handleInputChange("winner")}
                     validate={validateField("winner")}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
-                label={"Who lost?"}
-                error={formData.loser.error}
-            >
+            </FormElement>
+            <FormElement label={"Who lost?"} error={formData.loser.error}>
                 <Autocomplete
                     options={playerNames}
                     current={formData.loser.value || ""}
@@ -161,8 +157,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onInputValueChange={handleInputChange("loser")}
                     validate={validateField("loser")}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 label={"What side did the winner play?"}
                 error={formData.side.error}
             >
@@ -172,8 +168,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("side")}
                     validate={validateField("side")}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 label={"How did you win?"}
                 error={formData.victory.error}
             >
@@ -183,8 +179,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("victory")}
                     validate={validateField("victory")}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 label={"What type of game did you play?"}
                 error={formData.match.error}
             >
@@ -194,9 +190,9 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("match")}
                     validate={validateField("match")}
                 />
-            </GameReportFormElement>
+            </FormElement>
             {formData.match.value === "Ranked" && (
-                <GameReportFormElement
+                <FormElement
                     label={"Was this for a specific competition?"}
                     error={formData.competition.error}
                     hasSingleControl={false}
@@ -207,11 +203,11 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                         onChange={handleInputChange("competition")}
                         validate={validateField("competition")}
                     />
-                </GameReportFormElement>
+                </FormElement>
             )}
             {formData.match.value === "Ranked" &&
                 formData.competition.value.includes("League") && (
-                    <GameReportFormElement
+                    <FormElement
                         label={"Which League?"}
                         error={formData.league.error}
                     >
@@ -222,9 +218,9 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                             validate={validateField("league")}
                             getLabel={getLeagueLabel}
                         />
-                    </GameReportFormElement>
+                    </FormElement>
                 )}
-            <GameReportFormElement
+            <FormElement
                 label={"Did you use any expansions?"}
                 error={formData.usedExpansions.error}
             >
@@ -235,9 +231,9 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("usedExpansions")}
                     validate={validateField("usedExpansions")}
                 />
-            </GameReportFormElement>
+            </FormElement>
             {formData.usedExpansions.value && (
-                <GameReportFormElement
+                <FormElement
                     label={"What expansions did you use?"}
                     error={formData.expansions.error}
                     hasSingleControl={false}
@@ -249,11 +245,11 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                         validate={validateField("expansions")}
                         getLabel={getExpansionLabel}
                     />
-                </GameReportFormElement>
+                </FormElement>
             )}
             {formData.usedExpansions.value &&
                 formData.expansions.value.includes("Treebeard") && (
-                    <GameReportFormElement
+                    <FormElement
                         label={"Was Treebeard mustered?"}
                         error={formData.treebeard.error}
                     >
@@ -264,9 +260,9 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                             onChange={handleInputChange("treebeard")}
                             validate={validateField("treebeard")}
                         />
-                    </GameReportFormElement>
+                    </FormElement>
                 )}
-            <GameReportFormElement
+            <FormElement
                 label={"Did you use a handicap mechanism (e.g. Action Tokens)?"}
                 error={formData.usedHandicap.error}
             >
@@ -277,10 +273,10 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("usedHandicap")}
                     validate={validateField("usedHandicap")}
                 />
-            </GameReportFormElement>
+            </FormElement>
             {formData.usedHandicap.value && (
                 <>
-                    <GameReportFormElement
+                    <FormElement
                         label="How many Action Tokens?"
                         error={formData.actionTokens.error}
                     >
@@ -293,8 +289,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                             onChange={handleInputChange("actionTokens")}
                             validate={validateField("actionTokens")}
                         />
-                    </GameReportFormElement>
-                    <GameReportFormElement
+                    </FormElement>
+                    <FormElement
                         label="How many Dwarven Rings?"
                         error={formData.dwarvenRings.error}
                     >
@@ -307,10 +303,10 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                             onChange={handleInputChange("dwarvenRings")}
                             validate={validateField("dwarvenRings")}
                         />
-                    </GameReportFormElement>
+                    </FormElement>
                 </>
             )}
-            <GameReportFormElement
+            <FormElement
                 label="On what turn did the game end?"
                 error={formData.turns.error}
             >
@@ -321,8 +317,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("turns")}
                     validate={validateField("turns")}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 label="How much corruption did the Fellowship have?"
                 error={formData.corruption.error}
             >
@@ -333,8 +329,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("corruption")}
                     validate={validateField("corruption")}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 label={"Did the Fellowship reach Mordor?"}
                 error={formData.didFellowshipReachMordor.error}
             >
@@ -345,9 +341,9 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("didFellowshipReachMordor")}
                     validate={validateField("didFellowshipReachMordor")}
                 />
-            </GameReportFormElement>
+            </FormElement>
             {formData.didFellowshipReachMordor.value && (
-                <GameReportFormElement
+                <FormElement
                     label="Where did the Fellowship reach on the Mordor track?"
                     error={formData.mordor.error}
                 >
@@ -358,9 +354,9 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                         onChange={handleInputChange("mordor")}
                         validate={validateField("mordor")}
                     />
-                </GameReportFormElement>
+                </FormElement>
             )}
-            <GameReportFormElement
+            <FormElement
                 label="How many eyes did Shadow allocate on turn 1? (Before action dice were rolled)"
                 error={formData.initialEyes.error}
             >
@@ -371,8 +367,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("initialEyes")}
                     validate={validateField("initialEyes")}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 label={"Was Aragorn crowned King?"}
                 error={formData.wasAragornCrowned.error}
             >
@@ -383,9 +379,9 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("wasAragornCrowned")}
                     validate={validateField("wasAragornCrowned")}
                 />
-            </GameReportFormElement>
+            </FormElement>
             {formData.wasAragornCrowned.value && (
-                <GameReportFormElement
+                <FormElement
                     label="On what turn was Aragorn crowned King?"
                     error={formData.aragornTurn.error}
                 >
@@ -396,9 +392,9 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                         onChange={handleInputChange("aragornTurn")}
                         validate={validateField("aragornTurn")}
                     />
-                </GameReportFormElement>
+                </FormElement>
             )}
-            <GameReportFormElement
+            <FormElement
                 label={"What strongholds were captured by Shadow?"}
                 error={formData.strongholds.error}
                 hasSingleControl={false}
@@ -414,8 +410,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     validate={validateField("strongholds")}
                     getLabel={getStrongholdLabel}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 label={"What strongholds were captured by Free?"}
                 error={formData.strongholds.error}
                 hasSingleControl={false}
@@ -431,8 +427,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     validate={validateField("strongholds")}
                     getLabel={getStrongholdLabel}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 label={
                     "On a scale from 1-10, how interesting did you find this game?"
                 }
@@ -445,8 +441,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("interestRating")}
                     validate={validateField("interestRating")}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 label={"Do you have any comments or questions?"}
                 error={formData.comment.error}
             >
@@ -456,8 +452,8 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     onChange={handleInputChange("comment")}
                     validate={validateField("comment")}
                 />
-            </GameReportFormElement>
-            <GameReportFormElement
+            </FormElement>
+            <FormElement
                 error={formData.logFile.error}
                 label={
                     "Game log (mandatory for rank 30 and higher, or for tournament and league games):"
@@ -479,17 +475,15 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                         }
                     )}
                 />
-            </GameReportFormElement>
+            </FormElement>
             <Button
                 onClick={handleSubmit}
-                disabled={loading}
-                startDecorator={loading ? <CircularProgress /> : undefined}
+                disabled={submitting}
+                startDecorator={submitting ? <CircularProgress /> : undefined}
             >
-                {loading ? "Submitting..." : "Submit"}
+                {submitting ? "Submitting..." : "Submit"}
             </Button>
-            {errorOnSubmit && (
-                <Typography color="danger">{errorOnSubmit}</Typography>
-            )}
+            {errorOnSubmit && <ErrorDisplay message={errorOnSubmit} />}
         </Sheet>
     );
 }
@@ -498,7 +492,7 @@ export default GameReportForm;
 
 async function submit(validatedResult: ValidGameFormData) {
     return await axios.post(
-        //"http://localhost:8081/submitReport",
+        // "http://localhost:8081/submitReport",
         "https://api.waroftheringcommunity.net:8080/submitReport",
         toPayload(validatedResult),
         { headers: { "Content-Type": "multipart/form-data" } }
@@ -555,7 +549,7 @@ function toErrorMessage(error: ServerErrorBody): string {
             );
         }
     }
-    return "Something went wrong.";
+    return ErrorMessage.Default;
 }
 
 function parseValidationResult(
