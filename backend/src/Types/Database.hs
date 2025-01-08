@@ -3,9 +3,12 @@
 
 module Types.Database where
 
+import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
 import Data.Time (UTCTime)
-import Database.Esqueleto.Experimental (Entity)
+import Database.Esqueleto.Experimental (Entity, runMigrationQuiet, runSqlPool)
+import Database.Esqueleto.Experimental qualified as SQL
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
+import Logging (Logger, log)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side (..), Stronghold, Victory, Year)
 
 share
@@ -70,6 +73,12 @@ share
     Primary playerId
     deriving Show
 |]
+
+migrateSchema :: SQL.ConnectionPool -> Logger -> IO ()
+migrateSchema dbPool logger = do
+  migrations <- runSqlPool (runMigrationQuiet migrateAll) dbPool
+  unless (null migrations) (log logger LevelWarn "Database schema changed. Running migrations.")
+  mapM_ (log logger LevelDebug . toLogStr) migrations
 
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 
