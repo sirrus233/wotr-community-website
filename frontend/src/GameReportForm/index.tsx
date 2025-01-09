@@ -191,7 +191,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     validate={validateField("match")}
                 />
             </FormElement>
-            {formData.match.value === "Ranked" && (
+            {formData.match.value === "Rated" && (
                 <FormElement
                     label={"Was this for a specific competition?"}
                     error={formData.competition.error}
@@ -205,7 +205,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     />
                 </FormElement>
             )}
-            {formData.match.value === "Ranked" &&
+            {formData.match.value === "Rated" &&
                 formData.competition.value.includes("League") && (
                     <FormElement
                         label={"Which League?"}

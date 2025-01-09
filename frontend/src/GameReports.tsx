@@ -317,7 +317,7 @@ function summarizeCompetitionType(
     league: League | null
 ) {
     return [
-        match === "Ranked" ? "Ladder" : "Friendly",
+        match === "Rated" ? "Ladder" : "Friendly",
         competition.includes("Tournament") ? "Tournament" : "",
         competition.includes("League")
             ? `League${league ? ` (${getLeagueLabel(league)})` : ""}`
