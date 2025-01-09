@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 BACKEND_DIR=$(dirname "$0")/..
 source "${BACKEND_DIR}/bin/config.sh"

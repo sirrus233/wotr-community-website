@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 BIN_DIR=$(dirname "$0")
 source "${BIN_DIR}/config.sh"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 export SSL_EMAIL="sirrus233@gmail.com"
 
