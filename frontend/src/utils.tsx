@@ -117,15 +117,6 @@ export function getLeagueLabel(league: League): string {
     }
 }
 
-export function getMatchLabel(match: Match): string {
-    switch (match) {
-        case "Ranked":
-            return "Rated";
-        case "Unranked":
-            return "Unrated";
-    }
-}
-
 export function strongholdPoints(stronghold: Stronghold): 1 | 2 {
     switch (stronghold) {
         case "Shire":

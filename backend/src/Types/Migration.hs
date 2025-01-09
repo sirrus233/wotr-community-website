@@ -209,18 +209,18 @@ toParsedGameReport report =
       "Conceded SP won" -> Concession
       _ -> error $ "Invalid victory: " <> report.typeOfVictory
     match = case report.competitive of
-      "Ladder" -> Ranked
-      "Friendly" -> Unranked
-      "Ladder and tournament" -> Ranked
-      "Ladder and league (wome)" -> Ranked
-      "Ladder and league (lome)" -> Ranked
-      "Ladder and league (general)" -> Ranked
-      "Ladder and league (super)" -> Ranked
-      "Ladder and league (TTS)" -> Ranked
-      "ladder and league (wome) 2023" -> Ranked
-      "ladder and league (general) 2023" -> Ranked
-      "ladder and league (lome) 2023 2023" -> Ranked
-      "ladder and league (TTS) 2023 2023" -> Ranked
+      "Ladder" -> Rated
+      "Friendly" -> Unrated
+      "Ladder and tournament" -> Rated
+      "Ladder and league (wome)" -> Rated
+      "Ladder and league (lome)" -> Rated
+      "Ladder and league (general)" -> Rated
+      "Ladder and league (super)" -> Rated
+      "Ladder and league (TTS)" -> Rated
+      "ladder and league (wome) 2023" -> Rated
+      "ladder and league (general) 2023" -> Rated
+      "ladder and league (lome) 2023 2023" -> Rated
+      "ladder and league (TTS) 2023 2023" -> Rated
       _ -> error $ "Invalid match: " <> report.competitive
     competition = case report.competitive of
       "Ladder" -> []

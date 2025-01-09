@@ -66,12 +66,12 @@ export default function useGameReportClearEffects({
     useControlledClearEffect(
         formData.match.value,
         "competition",
-        (match) => match === "Ranked"
+        (match) => match === "Rated"
     );
     useControlledClearEffect(
         formData.match.value,
         "league",
-        (match) => match === "Ranked"
+        (match) => match === "Rated"
     );
     useControlledClearEffect(
         formData.competition.value,

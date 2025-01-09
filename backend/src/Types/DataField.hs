@@ -56,7 +56,7 @@ instance ToJSON Victory
 
 instance FromJSON Victory
 
-data Match = Ranked | Unranked deriving (Eq, Generic, Read, Show)
+data Match = Rated | Unrated deriving (Eq, Generic, Read, Show)
 
 instance PersistField Match where
   toPersistValue = defaultToPersistValue

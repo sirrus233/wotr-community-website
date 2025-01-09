@@ -159,7 +159,7 @@ processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId 
     readStats loserId year <$> readOrError ("Missing stats for " <>: loser) (getPlayerStats loserId year)
 
   let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
-  let adjustment = if gameReportMatch == Ranked then ratingAdjustment winnerRatingOld loserRatingOld else 0
+  let adjustment = if gameReportMatch == Rated then ratingAdjustment winnerRatingOld loserRatingOld else 0
   let (winnerRating, loserRating) = (winnerRatingOld + adjustment, loserRatingOld - adjustment)
 
   logInfoN $ "Rating diff: " <>: adjustment
