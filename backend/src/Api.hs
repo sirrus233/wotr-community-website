@@ -7,6 +7,8 @@ import Servant
     PostNoContent,
     QueryParam,
     ReqBody,
+    StdMethod (..),
+    Verb,
     (:<|>),
     (:>),
   )
@@ -17,6 +19,8 @@ import Types.Api
     DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
+    LoginRequest,
+    LoginResponse,
     ModifyReportRequest,
     RemapPlayerRequest,
     RemapPlayerResponse,
@@ -24,6 +28,8 @@ import Types.Api
     SubmitGameReportResponse,
     SubmitReportRequest,
   )
+
+type Login = "login" :> ReqBody '[JSON] LoginRequest :> Verb 'POST 204 '[JSON] LoginResponse
 
 type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
 
@@ -38,6 +44,9 @@ type AdminRemapPlayerAPI = "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :
 type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
 
 type AdminDeleteReportAPI = "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
+
+login :: Proxy Login
+login = Proxy
 
 submitReportAPI :: Proxy SubmitReportAPI
 submitReportAPI = Proxy
@@ -60,7 +69,7 @@ adminModifyReportAPI = Proxy
 adminDeleteReportAPI :: Proxy AdminDeleteReportAPI
 adminDeleteReportAPI = Proxy
 
-type Unprotected = SubmitReportAPI :<|> GetReportsAPI :<|> GetLeaderboardAPI
+type Unprotected = Login :<|> SubmitReportAPI :<|> GetReportsAPI :<|> GetLeaderboardAPI
 
 type Protected = AdminRenamePlayerAPI :<|> AdminRemapPlayerAPI :<|> AdminModifyReportAPI :<|> AdminDeleteReportAPI
 

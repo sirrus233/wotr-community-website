@@ -30,7 +30,7 @@ import Database
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
 import Servant (NoContent (..), ServerError (errBody), ServerT, err401, err404, err422, throwError, type (:<|>) (..))
-import Servant.Auth.Server (AuthResult (..), throwAll)
+import Servant.Auth.Server (AuthResult (..), CookieSettings, JWTSettings, throwAll)
 import Servant.Multipart (FileData (..))
 import Types.Api
   ( AdminUser,
@@ -38,6 +38,8 @@ import Types.Api
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
+    LoginRequest,
+    LoginResponse,
     ModifyReportRequest (..),
     ProcessedGameReport,
     RawGameReport (..),
@@ -187,6 +189,9 @@ reprocessReports = do
   forM_ reports processReport
   updateActiveStatus
 
+loginHandler :: CookieSettings -> JWTSettings -> LoginRequest -> AppM LoginResponse
+loginHandler = undefined
+
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do
   awsEnv <- asks aws
@@ -277,9 +282,10 @@ adminDeleteReportHandler DeleteReportRequest {rid} = runDb $ do
   reprocessReports
   pure NoContent
 
-unprotected :: ServerT Unprotected AppM
-unprotected =
-  submitReportHandler
+unprotected :: CookieSettings -> JWTSettings -> ServerT Unprotected AppM
+unprotected cs jwts =
+  loginHandler cs jwts
+    :<|> submitReportHandler
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
 
@@ -291,5 +297,5 @@ protected (Authenticated _) =
     :<|> adminDeleteReportHandler
 protected _ = throwAll err401
 
-server :: ServerT (Api auths) AppM
-server = protected :<|> unprotected
+server :: CookieSettings -> JWTSettings -> ServerT (Api auths) AppM
+server cs jwts = protected :<|> unprotected cs jwts
