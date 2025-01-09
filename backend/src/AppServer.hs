@@ -10,6 +10,7 @@ import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, t
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
+    SortOrder (..),
     deleteGameReport,
     deletePlayer,
     getAllGameReports,
@@ -180,8 +181,8 @@ processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId 
 reprocessReports :: (MonadIO m, MonadLogger m) => DBAction m ()
 reprocessReports = do
   resetStats
-  reports <- getAllGameReports
-  forM_ (reverse reports) processReport
+  reports <- getAllGameReports OldestToNewest
+  forM_ reports processReport
   updateActiveStatus
 
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse

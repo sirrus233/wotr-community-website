@@ -10,6 +10,7 @@ import Database.Esqueleto.Experimental
     PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
+    asc,
     case_,
     delete,
     desc,
@@ -65,6 +66,8 @@ import Types.Migration (ParsedLegacyLadderEntry (..))
 import Prelude hiding (get, on)
 
 type DBAction m = ExceptT ServerError (SqlPersistT m)
+
+data SortOrder = OldestToNewest | NewestToOldest
 
 runDb :: DBAction (LoggingT IO) a -> AppM a
 runDb dbAction = do
@@ -124,10 +127,13 @@ getGameReports limit' offset' = lift . select $ do
   offset offset'
   pure (report, winner, loser)
 
-getAllGameReports :: (MonadIO m, MonadLogger m) => DBAction m [(Entity GameReport, Entity Player, Entity Player)]
-getAllGameReports = lift . select $ do
+getAllGameReports :: (MonadIO m, MonadLogger m) => SortOrder -> DBAction m [(Entity GameReport, Entity Player, Entity Player)]
+getAllGameReports sortOrder = lift . select $ do
   (report :& winner :& loser) <- from joinedGameReports
-  orderBy [desc (report ^. GameReportTimestamp)]
+  let sortOrder' = case sortOrder of
+        OldestToNewest -> asc
+        NewestToOldest -> desc
+  orderBy [sortOrder' (report ^. GameReportTimestamp)]
   pure (report, winner, loser)
 
 insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Entity Player)
