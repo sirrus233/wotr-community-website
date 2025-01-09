@@ -1,12 +1,5 @@
 import { ErrorMessage } from "./constants";
-import {
-    Expansion,
-    League,
-    Match,
-    ServerErrorBody,
-    Side,
-    Stronghold,
-} from "./types";
+import { Expansion, League, ServerErrorBody, Side, Stronghold } from "./types";
 
 export function strongholdSide(
     expansions: Expansion[],
