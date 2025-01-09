@@ -19,6 +19,9 @@ databaseFile = "data/db.sqlite"
 logFile :: FilePath
 logFile = "logs/app.log"
 
+maxGameLogSizeMB :: Int64
+maxGameLogSizeMB = 1
+
 gameLogBucket :: S3.BucketName
 gameLogBucket = "infrastructurestack-gamereportbucket21a257d2-v7okzv3x39a9"
 

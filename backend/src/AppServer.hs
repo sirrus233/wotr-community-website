@@ -63,7 +63,7 @@ import Types.Database
     updatedPlayerStatsLose,
     updatedPlayerStatsWin,
   )
-import Validation (validateReport)
+import Validation (validateLogFile, validateReport)
 import Prelude hiding (get, on)
 
 defaultRating :: Rating
@@ -188,6 +188,9 @@ reprocessReports = do
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do
   awsEnv <- asks aws
+
+  whenJust logFileData (validateLogFile . fdPayload)
+
   case validateReport rawReport of
     Failure errors -> throwError $ err422 {errBody = show errors}
     Success (RawGameReport {..}) -> runDb $ do

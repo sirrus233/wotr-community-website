@@ -1,6 +1,11 @@
 module Validation where
 
+import AppConfig (AppM)
+import Control.Monad.Logger (logErrorN)
+import Data.Text qualified as T
+import Data.Text.Encoding (decodeLatin1)
 import Data.Validation (Validation (..))
+import Servant (ServerError (..), err422, throwError)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Side (..), Stronghold (..), Victory (..))
 
@@ -182,3 +187,12 @@ validateReport report =
     <* validateInitialEyes report
     <* validateInterestRating report
     <* validateStrongholds report
+
+validateLogFile :: FilePath -> AppM ()
+validateLogFile fp = do
+  logFileText <- decodeLatin1 <$> readFileBS fp
+  unless (logFileHeader `T.isPrefixOf` logFileText) $ do
+    logErrorN "Log file missing header."
+    throwError $ err422 {errBody = "Invalid log file."}
+  where
+    logFileHeader = "<auto> silent null\n"
