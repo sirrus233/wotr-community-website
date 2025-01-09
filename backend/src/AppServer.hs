@@ -2,7 +2,7 @@ module AppServer where
 
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
-import Api (Api)
+import Api (Api, Protected, Unprotected)
 import AppConfig (AppM, Env (..), gameLogBucket)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
@@ -29,10 +29,12 @@ import Database
   )
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
-import Servant (NoContent (..), ServerError (errBody), ServerT, err404, err422, throwError, type (:<|>) (..))
+import Servant (NoContent (..), ServerError (errBody), ServerT, err401, err404, err422, throwError, type (:<|>) (..))
+import Servant.Auth.Server (AuthResult (..), throwAll)
 import Servant.Multipart (FileData (..))
 import Types.Api
-  ( DeleteReportRequest (..),
+  ( AdminUser,
+    DeleteReportRequest (..),
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
@@ -275,12 +277,19 @@ adminDeleteReportHandler DeleteReportRequest {rid} = runDb $ do
   reprocessReports
   pure NoContent
 
-server :: ServerT Api AppM
-server =
+unprotected :: ServerT Unprotected AppM
+unprotected =
   submitReportHandler
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
-    :<|> adminRenamePlayerHandler
+
+protected :: AuthResult AdminUser -> ServerT Protected AppM
+protected (Authenticated _) =
+  adminRenamePlayerHandler
     :<|> adminRemapPlayerHandler
     :<|> adminModifyReportHandler
     :<|> adminDeleteReportHandler
+protected _ = throwAll err401
+
+server :: ServerT (Api auths) AppM
+server = protected :<|> unprotected

@@ -10,9 +10,11 @@ import Servant
     (:<|>),
     (:>),
   )
+import Servant.Auth (Auth)
 import Servant.Multipart (MultipartForm, Tmp)
 import Types.Api
-  ( DeleteReportRequest,
+  ( AdminUser,
+    DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
     ModifyReportRequest,
@@ -58,14 +60,11 @@ adminModifyReportAPI = Proxy
 adminDeleteReportAPI :: Proxy AdminDeleteReportAPI
 adminDeleteReportAPI = Proxy
 
-type Api =
-  SubmitReportAPI
-    :<|> GetReportsAPI
-    :<|> GetLeaderboardAPI
-    :<|> AdminRenamePlayerAPI
-    :<|> AdminRemapPlayerAPI
-    :<|> AdminModifyReportAPI
-    :<|> AdminDeleteReportAPI
+type Unprotected = SubmitReportAPI :<|> GetReportsAPI :<|> GetLeaderboardAPI
 
-api :: Proxy Api
+type Protected = AdminRenamePlayerAPI :<|> AdminRemapPlayerAPI :<|> AdminModifyReportAPI :<|> AdminDeleteReportAPI
+
+type Api auths = (Auth auths AdminUser :> Protected) :<|> Unprotected
+
+api :: Proxy (Api auths)
 api = Proxy

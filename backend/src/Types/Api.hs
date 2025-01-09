@@ -18,6 +18,8 @@ import Types.Database
 
 type S3Url = Text
 
+data AdminUser = AdminUser {name :: String, email :: String} deriving (Eq, Show, Read, Generic)
+
 data SubmitReportRequest = SubmitReportRequest
   { report :: RawGameReport,
     logFile :: Maybe (FileData Tmp)
