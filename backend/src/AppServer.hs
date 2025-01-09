@@ -255,6 +255,7 @@ adminModifyReportHandler ModifyReportRequest {rid, timestamp, report} = case val
   where
     mustReprocess :: GameReport -> GameReport -> Bool
     mustReprocess old new
+      | old.gameReportTimestamp /= new.gameReportTimestamp = True
       | old.gameReportWinnerId /= new.gameReportWinnerId = True
       | old.gameReportLoserId /= new.gameReportLoserId = True
       | old.gameReportSide /= new.gameReportSide = True
