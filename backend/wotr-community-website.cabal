@@ -43,6 +43,7 @@ common dependencies
         servant-multipart   ^>=0.12.1,
         servant-auth        ^>=0.4.2.0,
         servant-auth-server ^>=0.4.9.0,
+        jose                ^>=0.11,
         monad-logger        ^>=0.3.40,
         warp                ^>=3.4.7,
         persistent          ^>=2.14.6.3,

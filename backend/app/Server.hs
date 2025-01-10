@@ -1,10 +1,11 @@
 module Main where
 
 import Amazonka qualified as AWS
-import Api (api)
+import Api (API)
 import AppConfig (Env (..), databaseFile, logFile, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
 import Control.Monad.Logger (LogLevel (..))
+import Crypto.JWT (JWK)
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
@@ -14,7 +15,8 @@ import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Network.Wai.Middleware.Gzip (defaultGzipSettings, gzip)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
-import Servant (Application, Context (..), hoistServer, serveWithContext)
+import Servant (Application, Context (..), serveWithContextT)
+import Servant.Auth.Server (Cookie, CookieSettings, JWTSettings, defaultCookieSettings, defaultJWTSettings, generateKey)
 import Servant.Multipart (MultipartOptions (..), Tmp, defaultMultipartOptions)
 import System.Directory (createDirectoryIfMissing)
 import System.Environment (setEnv)
@@ -22,6 +24,8 @@ import System.FilePath (takeDirectory)
 import Types.Database (migrateSchema)
 
 type Middleware = Application -> Application
+
+type ServerContext = '[MultipartOptions Tmp, CookieSettings, JWTSettings]
 
 corsMiddleware :: Middleware
 corsMiddleware = cors $ const $ Just policy
@@ -41,16 +45,20 @@ corsMiddleware = cors $ const $ Just policy
 gzipMiddleware :: Middleware
 gzipMiddleware = gzip defaultGzipSettings
 
-app :: Env -> Application
-app env = gzipMiddleware . corsMiddleware . serveWithContext api context . hoistServer api (nt env) $ server
+app :: Env -> JWK -> Application
+app env key =
+  gzipMiddleware . corsMiddleware $
+    serveWithContextT (Proxy :: Proxy (API '[Cookie])) context (nt env) (server cookieCfg jwtCfg)
   where
+    jwtCfg = defaultJWTSettings key
+    cookieCfg = defaultCookieSettings
     maxSizeBytes = maxGameLogSizeMB * 1024 * 1024
     multipartOpts :: MultipartOptions Tmp
     multipartOpts =
       (defaultMultipartOptions (Proxy :: Proxy Tmp))
         { generalOptions = setMaxRequestFileSize maxSizeBytes defaultParseRequestBodyOptions
         }
-    context = multipartOpts :. EmptyContext
+    context = multipartOpts :. defaultCookieSettings :. defaultJWTSettings key :. EmptyContext
 
 main :: IO ()
 main = do
@@ -75,4 +83,5 @@ main = do
   let keyFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/privkey.pem"
   let tlsSettings_ = tlsSettings certFile keyFile
   let settings = setPort 8080 defaultSettings
-  runTLS tlsSettings_ settings $ app env
+
+  generateKey >>= runTLS tlsSettings_ settings . app env

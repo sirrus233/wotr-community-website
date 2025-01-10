@@ -35,7 +35,7 @@ data LoginRequest = LoginRequest {username :: Text, password :: Text} deriving (
 
 instance FromJSON LoginRequest
 
-type LoginResponse = (Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] NoContent)
+type LoginResponse = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] NoContent
 
 data SubmitReportRequest = SubmitReportRequest
   { report :: RawGameReport,

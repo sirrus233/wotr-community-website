@@ -2,7 +2,7 @@ module AppServer where
 
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
-import Api (Api, Protected, Unprotected)
+import Api (API, Protected, Unprotected)
 import AppConfig (AppM, Env (..), gameLogBucket)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
@@ -30,15 +30,15 @@ import Database
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
 import Servant (NoContent (..), ServerError (errBody), ServerT, err401, err404, err422, throwError, type (:<|>) (..))
-import Servant.Auth.Server (AuthResult (..), CookieSettings, JWTSettings, throwAll)
+import Servant.Auth.Server (AuthResult (..), CookieSettings, JWTSettings, acceptLogin, throwAll)
 import Servant.Multipart (FileData (..))
 import Types.Api
-  ( AdminUser,
+  ( AdminUser (..),
     DeleteReportRequest (..),
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
-    LoginRequest,
+    LoginRequest (LoginRequest),
     LoginResponse,
     ModifyReportRequest (..),
     ProcessedGameReport,
@@ -190,7 +190,13 @@ reprocessReports = do
   updateActiveStatus
 
 loginHandler :: CookieSettings -> JWTSettings -> LoginRequest -> AppM LoginResponse
-loginHandler = undefined
+loginHandler cs jwts (LoginRequest username password) = do
+  throwError err401 -- Lookup credentials in database
+  let user = AdminUser "Frodo Baggins" "gandalf@shire.com"
+  mApplyCookies <- liftIO $ acceptLogin cs jwts user
+  case mApplyCookies of
+    Nothing -> throwError err401
+    Just applyCookies -> return $ applyCookies NoContent
 
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do
@@ -297,5 +303,5 @@ protected (Authenticated _) =
     :<|> adminDeleteReportHandler
 protected _ = throwAll err401
 
-server :: CookieSettings -> JWTSettings -> ServerT (Api auths) AppM
+server :: CookieSettings -> JWTSettings -> ServerT (API auths) AppM
 server cs jwts = protected :<|> unprotected cs jwts

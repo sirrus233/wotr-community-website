@@ -7,12 +7,10 @@ import Servant
     PostNoContent,
     QueryParam,
     ReqBody,
-    StdMethod (..),
-    Verb,
     (:<|>),
     (:>),
   )
-import Servant.Auth (Auth)
+import Servant.Auth (Auth, Cookie)
 import Servant.Multipart (MultipartForm, Tmp)
 import Types.Api
   ( AdminUser,
@@ -29,7 +27,7 @@ import Types.Api
     SubmitReportRequest,
   )
 
-type Login = "login" :> ReqBody '[JSON] LoginRequest :> Verb 'POST 204 '[JSON] LoginResponse
+type LoginAPI = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
 
 type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
 
@@ -45,35 +43,11 @@ type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportReques
 
 type AdminDeleteReportAPI = "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
 
-login :: Proxy Login
-login = Proxy
-
-submitReportAPI :: Proxy SubmitReportAPI
-submitReportAPI = Proxy
-
-getReportsAPI :: Proxy GetReportsAPI
-getReportsAPI = Proxy
-
-getLeaderboardAPI :: Proxy GetLeaderboardAPI
-getLeaderboardAPI = Proxy
-
-adminRenamePlayerAPI :: Proxy AdminRenamePlayerAPI
-adminRenamePlayerAPI = Proxy
-
-adminRemapPlayerAPI :: Proxy AdminRemapPlayerAPI
-adminRemapPlayerAPI = Proxy
-
-adminModifyReportAPI :: Proxy AdminModifyReportAPI
-adminModifyReportAPI = Proxy
-
-adminDeleteReportAPI :: Proxy AdminDeleteReportAPI
-adminDeleteReportAPI = Proxy
-
-type Unprotected = Login :<|> SubmitReportAPI :<|> GetReportsAPI :<|> GetLeaderboardAPI
+type Unprotected = LoginAPI :<|> SubmitReportAPI :<|> GetReportsAPI :<|> GetLeaderboardAPI
 
 type Protected = AdminRenamePlayerAPI :<|> AdminRemapPlayerAPI :<|> AdminModifyReportAPI :<|> AdminDeleteReportAPI
 
-type Api auths = (Auth auths AdminUser :> Protected) :<|> Unprotected
+type API auths = (Auth auths AdminUser :> Protected) :<|> Unprotected
 
-api :: Proxy (Api auths)
+api :: Proxy (API '[Cookie])
 api = Proxy
