@@ -69,7 +69,11 @@ function GameReportForm({
     refreshGameReports = () => {},
     exit,
 }: Props) {
-    const initialFormData = getInitialFormData(report);
+    const playerNames = leaderboard.map((entry) => entry.name);
+    const initialFormData = getInitialFormData(
+        report,
+        report ? playerNames : undefined
+    );
     const emptyFormData = getInitialFormData();
 
     const [
@@ -100,8 +104,6 @@ function GameReportForm({
     });
 
     useConditionalActionEffect(!!successMessage, refreshGameReports);
-
-    const playerNames = leaderboard.map((entry) => entry.name);
 
     const { value: selectedExpansions } = formData.expansions;
 
@@ -173,12 +175,16 @@ function GameReportForm({
                     current={formData.winner.value || ""}
                     loading={loadingLeaderboard}
                     alertText={
-                        !!formData.winner.value &&
-                        !playerNames.includes(formData.winner.value)
+                        report
+                            ? undefined
+                            : !!formData.winner.value &&
+                              !playerNames.includes(formData.winner.value)
                             ? ErrorMessage.MissingPlayerName
                             : ""
                     }
-                    placeholder="Player Name - Please check spelling!"
+                    placeholder={`Player Name${
+                        report ? "" : " - Please check spelling!"
+                    }`}
                     onInputValueChange={handleInputChange("winner")}
                     validate={validateField("winner")}
                 />
@@ -193,12 +199,16 @@ function GameReportForm({
                     current={formData.loser.value || ""}
                     loading={loadingLeaderboard}
                     alertText={
-                        !!formData.loser.value &&
-                        !playerNames.includes(formData.loser.value)
+                        report
+                            ? undefined
+                            : !!formData.loser.value &&
+                              !playerNames.includes(formData.loser.value)
                             ? ErrorMessage.MissingPlayerName
                             : ""
                     }
-                    placeholder="Player Name - Please check spelling!"
+                    placeholder={`Player Name${
+                        report ? "" : " - Please check spelling!"
+                    }`}
                     onInputValueChange={handleInputChange("loser")}
                     validate={validateField("loser")}
                 />

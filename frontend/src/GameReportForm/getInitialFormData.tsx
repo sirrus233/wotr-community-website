@@ -1,14 +1,36 @@
 import { GameFormData, ProcessedGameReport } from "../types";
 import { initializeToDefaults } from "../hooks/useFormData";
+import { ErrorMessage } from "../constants";
 
 export default function getInitialFormData(
-    report?: ProcessedGameReport
+    report?: ProcessedGameReport,
+    allowedPlayerNames?: string[]
 ): GameFormData {
     return {
         rid: initializeToDefaults(fromMaybe(null, report?.rid)),
         timestamp: initializeToDefaults(fromMaybe(null, report?.timestamp)),
-        winner: initializeToDefaults(fromMaybe(null, report?.winner)),
-        loser: initializeToDefaults(fromMaybe(null, report?.loser)),
+        winner: {
+            value: fromMaybe(null, report?.winner),
+            error: null,
+            validate: function _() {
+                return allowedPlayerNames &&
+                    this.value &&
+                    !allowedPlayerNames.includes(this.value)
+                    ? ErrorMessage.ExistingPlayerRequired
+                    : null;
+            },
+        },
+        loser: {
+            value: fromMaybe(null, report?.loser),
+            error: null,
+            validate: function _() {
+                return allowedPlayerNames &&
+                    this.value &&
+                    !allowedPlayerNames.includes(this.value)
+                    ? ErrorMessage.ExistingPlayerRequired
+                    : null;
+            },
+        },
         side: initializeToDefaults(fromMaybe(null, report?.side)),
         victory: initializeToDefaults(fromMaybe(null, report?.victory)),
         match: initializeToDefaults(fromMaybe(null, report?.match)),
