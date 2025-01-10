@@ -27,6 +27,8 @@ import Types.Api
     SubmitReportRequest,
   )
 
+-- TODO What are the response status codes of the NoContent requests now? Still 204? Or 200?
+
 type LoginAPI = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
 
 type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
