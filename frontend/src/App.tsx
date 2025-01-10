@@ -94,7 +94,15 @@ export default function App() {
                             />
                         }
                     />
-                    <Route path="/game-reports" element={<GameReports />} />
+                    <Route
+                        path="/game-reports"
+                        element={
+                            <GameReports
+                                leaderboard={leaderboard}
+                                loadingLeaderboard={loadingLeaderboard}
+                            />
+                        }
+                    />
                     <Route
                         path="/rankings"
                         element={

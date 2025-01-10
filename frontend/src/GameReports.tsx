@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { ReactNode, useEffect, useState } from "react";
 import Box from "@mui/joy/Box";
+import EditIcon from "@mui/icons-material/EditTwoTone";
 import DeleteIcon from "@mui/icons-material/DeleteTwoTone";
 import IconButton from "@mui/joy/IconButton";
 import Modal from "@mui/joy/Modal";
@@ -11,6 +12,7 @@ import { ErrorMessage } from "./constants";
 import {
     Competition,
     Expansion,
+    LeaderboardEntry,
     League,
     Match,
     ProcessedGameReport,
@@ -36,6 +38,7 @@ import {
 } from "./utils";
 import TableLayout from "./TableLayout";
 import ExternalLink from "./ExternalLink";
+import GameReportForm from "./GameReportForm";
 import ReportDeleteForm from "./ReportDeleteForm";
 
 type ReportEditParams = ProcessedGameReport & { mode: ReportEditMode };
@@ -46,7 +49,15 @@ const TABLE_TOP_POSITION =
     TABLE_BTN_HEIGHT_PX +
     TABLE_ELEMENTS_GAP * 2;
 
-export default function GameReports() {
+interface Props {
+    leaderboard: LeaderboardEntry[];
+    loadingLeaderboard: boolean;
+}
+
+export default function GameReports({
+    leaderboard,
+    loadingLeaderboard,
+}: Props) {
     const [reports, setReports] = useState<ProcessedGameReport[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -87,8 +98,15 @@ export default function GameReports() {
                                 refresh={refresh}
                             />
                         ) : (
-                            // TODO: ReportEditForm
-                            <></>
+                            <Box overflow="auto" mt={3}>
+                                <GameReportForm
+                                    report={reportEditParams}
+                                    leaderboard={leaderboard}
+                                    loadingLeaderboard={loadingLeaderboard}
+                                    refreshGameReports={refresh}
+                                    exit={() => setReportEditParams(null)}
+                                />
+                            </Box>
                         )}
                     </ModalDialog>
                 </Modal>
@@ -151,6 +169,20 @@ export default function GameReports() {
                         </td>
 
                         <td>
+                            <IconButton
+                                size="sm"
+                                sx={{ minWidth: 0 }}
+                                disabled={loading}
+                                onClick={() =>
+                                    setReportEditParams({
+                                        ...report,
+                                        mode: "edit",
+                                    })
+                                }
+                            >
+                                <EditIcon />
+                            </IconButton>
+
                             <IconButton
                                 size="sm"
                                 sx={{ minWidth: 0 }}
