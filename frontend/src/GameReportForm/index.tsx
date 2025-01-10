@@ -70,10 +70,7 @@ function GameReportForm({
     exit,
 }: Props) {
     const playerNames = leaderboard.map((entry) => entry.name);
-    const initialFormData = getInitialFormData(
-        report,
-        report ? playerNames : undefined
-    );
+    const initialFormData = getInitialFormData(report, report && playerNames);
     const emptyFormData = getInitialFormData();
 
     const [
