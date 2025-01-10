@@ -3,8 +3,8 @@ module Api where
 import Servant
   ( Get,
     JSON,
+    NoContent,
     Post,
-    PostNoContent,
     QueryParam,
     ReqBody,
     (:<|>),
@@ -35,13 +35,13 @@ type GetReportsAPI = "reports" :> QueryParam "limit" Int64 :> QueryParam "offset
 
 type GetLeaderboardAPI = "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse
 
-type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
+type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> Post '[JSON] NoContent
 
 type AdminRemapPlayerAPI = "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :> Post '[JSON] RemapPlayerResponse
 
-type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
+type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> Post '[JSON] NoContent
 
-type AdminDeleteReportAPI = "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
+type AdminDeleteReportAPI = "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> Post '[JSON] NoContent
 
 type Unprotected = LoginAPI :<|> SubmitReportAPI :<|> GetReportsAPI :<|> GetLeaderboardAPI
 
