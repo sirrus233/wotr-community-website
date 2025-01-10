@@ -190,8 +190,8 @@ reprocessReports = do
   updateActiveStatus
 
 loginHandler :: CookieSettings -> JWTSettings -> LoginRequest -> AppM LoginResponse
-loginHandler cs jwts (LoginRequest username password) = do
-  throwError err401 -- Lookup credentials in database
+loginHandler cs jwts (LoginRequest _ _) = do
+  -- Lookup credentials in database or throwError err401
   let user = AdminUser "Frodo Baggins" "gandalf@shire.com"
   mApplyCookies <- liftIO $ acceptLogin cs jwts user
   case mApplyCookies of
