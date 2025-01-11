@@ -29,8 +29,9 @@ import Database
   )
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
-import Servant (NoContent (..), ServerError (errBody), ServerT, err401, err404, err422, throwError, type (:<|>) (..))
-import Servant.Auth.Server (AuthResult (..), CookieSettings, JWTSettings, acceptLogin, throwAll)
+import Network.HTTP.Client.Conduit (newManager)
+import Network.OAuth2.Experiment (conduitTokenRequest, mkAuthorizationRequest)
+import Servant (NoContent (..), ServerError (..), ServerT, err302, err400, err404, err422, err500, throwError, type (:<|>) (..))
 import Servant.Multipart (FileData (..))
 import Types.Api
   ( AdminUser (..),
@@ -38,8 +39,6 @@ import Types.Api
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
-    LoginRequest (LoginRequest),
-    LoginResponse,
     ModifyReportRequest (..),
     ProcessedGameReport,
     RawGameReport (..),
@@ -67,6 +66,7 @@ import Types.Database
     updatedPlayerStatsLose,
     updatedPlayerStatsWin,
   )
+import URI.ByteString (serializeURIRef')
 import Validation (validateLogFile, validateReport)
 import Prelude hiding (get, on)
 
@@ -189,14 +189,61 @@ reprocessReports = do
   forM_ reports processReport
   updateActiveStatus
 
-loginHandler :: CookieSettings -> JWTSettings -> LoginRequest -> AppM LoginResponse
-loginHandler cs jwts (LoginRequest _ _) = do
-  -- Lookup credentials in database or throwError err401
-  let user = AdminUser "Frodo Baggins" "gandalf@shire.com"
-  mApplyCookies <- liftIO $ acceptLogin cs jwts user
-  case mApplyCookies of
-    Nothing -> throwError err401
-    Just applyCookies -> return $ applyCookies NoContent
+authGoogleLoginHandler :: AppM NoContent
+authGoogleLoginHandler = do
+  oauth <- asks googleOAuth
+  throwError $ err302 {errHeaders = [("Location", authorizeUrl oauth)]}
+  where
+    authorizeUrl = serializeURIRef' . mkAuthorizationRequest
+
+authGoogleCallbackHandler :: AppM NoContent
+authGoogleCallbackHandler = do
+  oauth <- asks googleOAuth
+  httpConnMgr <- newManager
+  tokenResp <- conduitTokenRequest oauth httpConnMgr authorizeCode
+  mCode <- lookupQueryParam "code"
+  case mCode of
+    Nothing -> throwError err400 {errBody = "Missing code parameter."}
+    Just code -> do
+      -- 1. Exchange code for tokens
+      tokenResp <- liftIO $ exchangeCodeForToken code
+
+      case tokenResp of
+        Left err -> throwError err500 {errBody = "Token exchange failed."}
+        Right tokenData -> do
+          -- 2. Validate the ID token (JWT) and parse user info
+          userInfo <- validateAndParseIDToken (idToken tokenData)
+
+          -- 3. Create a session or set an auth cookie
+          setSessionCookie userInfo
+
+          -- 4. Redirect somewhere, e.g. the frontend home, now “logged in”
+          throwError $ err302 {errHeaders = [("Location", "https://frontend-app.com/")]}
+
+-- Example pseudo-code
+data TokenResponse = TokenResponse
+  { idToken :: Text,
+    accessToken :: Text
+  }
+
+exchangeCodeForToken :: Text -> IO (Either () TokenResponse) -- TODO Add error type
+exchangeCodeForToken code = do
+  -- Make a POST request to:
+  -- https://oauth2.googleapis.com/token
+  -- with form fields: code, client_id, client_secret, redirect_uri, grant_type=authorization_code
+  -- parse JSON, return Right TokenResponse if success, Left on failure
+  pure $ Right (TokenResponse "fake-id-token" "fake-access-token")
+
+validateAndParseIDToken :: Text -> AppM (Text, Text)
+validateAndParseIDToken idToken = do
+  -- decode JWT, verify signature, check "aud" == your client ID, check "iss" is Google, etc.
+  -- if valid, extract sub/email, etc.
+  pure ("some-user-id", "alice@example.com")
+
+setSessionCookie :: (Text, Text) -> AppM ()
+setSessionCookie userInfo = do
+  -- e.g. set a cookie with a session ID referencing the user’s record, or set a JWT cookie
+  pass
 
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do
@@ -288,20 +335,20 @@ adminDeleteReportHandler DeleteReportRequest {rid} = runDb $ do
   reprocessReports
   pure NoContent
 
-unprotected :: CookieSettings -> JWTSettings -> ServerT Unprotected AppM
-unprotected cs jwts =
-  loginHandler cs jwts
+unprotected :: ServerT Unprotected AppM
+unprotected =
+  authGoogleLoginHandler
+    :<|> authGoogleCallbackHandler
     :<|> submitReportHandler
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
 
-protected :: AuthResult AdminUser -> ServerT Protected AppM
-protected (Authenticated _) =
+protected :: AdminUser -> ServerT Protected AppM
+protected _ =
   adminRenamePlayerHandler
     :<|> adminRemapPlayerHandler
     :<|> adminModifyReportHandler
     :<|> adminDeleteReportHandler
-protected _ = throwAll err401
 
-server :: CookieSettings -> JWTSettings -> ServerT (API auths) AppM
-server cs jwts = protected :<|> unprotected cs jwts
+server :: ServerT API AppM
+server = protected :<|> unprotected

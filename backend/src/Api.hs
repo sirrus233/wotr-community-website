@@ -1,24 +1,24 @@
 module Api where
 
 import Servant
-  ( Get,
+  ( AuthProtect,
+    Get,
     JSON,
     NoContent,
+    PlainText,
     Post,
     QueryParam,
     ReqBody,
+    StdMethod (..),
+    Verb,
     (:<|>),
     (:>),
   )
-import Servant.Auth (Auth, Cookie)
 import Servant.Multipart (MultipartForm, Tmp)
 import Types.Api
-  ( AdminUser,
-    DeleteReportRequest,
+  ( DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
-    LoginRequest,
-    LoginResponse,
     ModifyReportRequest,
     RemapPlayerRequest,
     RemapPlayerResponse,
@@ -28,8 +28,11 @@ import Types.Api
   )
 
 -- TODO What are the response status codes of the NoContent requests now? Still 204? Or 200?
+type Get302 = Verb 'GET 302 '[PlainText] NoContent
 
-type LoginAPI = "login" :> ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
+type AuthGoogleLoginAPI = "auth" :> "google" :> "login" :> Get302
+
+type AuthGoogleCallbackAPI = "auth" :> "google" :> "callback" :> Get302
 
 type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
 
@@ -45,11 +48,11 @@ type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportReques
 
 type AdminDeleteReportAPI = "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> Post '[JSON] NoContent
 
-type Unprotected = LoginAPI :<|> SubmitReportAPI :<|> GetReportsAPI :<|> GetLeaderboardAPI
+type Unprotected = AuthGoogleLoginAPI :<|> AuthGoogleCallbackAPI :<|> SubmitReportAPI :<|> GetReportsAPI :<|> GetLeaderboardAPI
 
 type Protected = AdminRenamePlayerAPI :<|> AdminRemapPlayerAPI :<|> AdminModifyReportAPI :<|> AdminDeleteReportAPI
 
-type API auths = (Auth auths AdminUser :> Protected) :<|> Unprotected
+type API = (AuthProtect "cookie-auth" :> Protected) :<|> Unprotected
 
-api :: Proxy (API '[Cookie])
+api :: Proxy API
 api = Proxy

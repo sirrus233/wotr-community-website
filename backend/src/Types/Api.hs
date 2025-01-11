@@ -21,8 +21,9 @@ import Types.Database
 
 type S3Url = Text
 
-data AdminUser = AdminUser {name :: Text, email :: Text} deriving (Eq, Show, Read, Generic)
+newtype AdminUser = AdminUser {username :: Text} deriving (Eq, Show, Read, Generic)
 
+-- TODO Don't think we actually need these instances anymore
 instance ToJSON AdminUser
 
 instance ToJWT AdminUser
