@@ -30,13 +30,24 @@ import Database
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
-import Network.OAuth.OAuth2 (ExchangeToken (..), OAuth2Token (..))
+import Network.OAuth.OAuth2 (ExchangeToken (..))
 import Network.OAuth2.Experiment (AuthorizeState (..), conduitTokenRequest, mkAuthorizationRequest)
-import Servant (NoContent (..), ServerError (..), ServerT, err302, err400, err404, err422, err500, throwError, type (:<|>) (..))
+import Servant
+  ( AuthProtect,
+    NoContent (..),
+    ServerError (..),
+    ServerT,
+    err302,
+    err404,
+    err422,
+    err500,
+    throwError,
+    type (:<|>) (..),
+  )
 import Servant.Multipart (FileData (..))
+import Servant.Server.Experimental.Auth (AuthServerData)
 import Types.Api
-  ( AdminUser (..),
-    DeleteReportRequest (..),
+  ( DeleteReportRequest (..),
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
     LeaderboardEntry (..),
@@ -314,7 +325,7 @@ unprotected =
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
 
-protected :: AdminUser -> ServerT Protected AppM
+protected :: AuthServerData (AuthProtect "cookie-auth") -> ServerT Protected AppM
 protected _ =
   adminRenamePlayerHandler
     :<|> adminRemapPlayerHandler

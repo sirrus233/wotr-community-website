@@ -79,6 +79,7 @@ type Protected =
     :<|> AdminModifyReportAPI
     :<|> AdminDeleteReportAPI
 
+-- TODO Weird type tag?
 type API = (AuthProtect "cookie-auth" :> Protected) :<|> Unprotected
 
 api :: Proxy API
