@@ -254,10 +254,9 @@ function Home() {
 
             <Section>
                 <button
-                    onClick={async () =>
-                        await axios.post(
-                            "https://api.waroftheringcommunity.net:8080/auth/google/login"
-                        )
+                    onClick={() =>
+                        (window.location.href =
+                            "https://api.waroftheringcommunity.net:8080/auth/google/login")
                     }
                 >
                     Login

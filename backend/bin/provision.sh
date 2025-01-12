@@ -91,7 +91,7 @@ END_UNIT
   sudo systemctl enable $SERVICE_NAME
 
   echo "Installing sqlite dependency..."
-  sudo yum install sqlite
+  sudo yum install -y sqlite
 
   echo "Generating database backup service file..."
   cat <<END_UNIT | sudo tee $BACKUP_SERVICE_FILE
