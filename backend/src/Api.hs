@@ -1,5 +1,7 @@
 module Api where
 
+import Network.OAuth.OAuth2 (ExchangeToken)
+import Network.OAuth2.Experiment (AuthorizeState)
 import Servant
   ( AuthProtect,
     Get,
@@ -32,7 +34,7 @@ type Get302 = Verb 'GET 302 '[PlainText] NoContent
 
 type AuthGoogleLoginAPI = "auth" :> "google" :> "login" :> Get302
 
-type AuthGoogleCallbackAPI = "auth" :> "google" :> "callback" :> Get302
+type AuthGoogleCallbackAPI = "auth" :> "google" :> "callback" :> QueryParam "code" ExchangeToken :> QueryParam "state" AuthorizeState :> Get302
 
 type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
 

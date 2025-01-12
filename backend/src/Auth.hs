@@ -19,7 +19,7 @@ import URI.ByteString.QQ (uri)
 
 data Google = Google deriving (Eq, Show)
 
-type GoogleOAuth = IdpApplication AuthorizationCodeApplication Google
+type GoogleOAuth = IdpApplication Google AuthorizationCodeApplication
 
 googleIdp :: Idp Google
 googleIdp =

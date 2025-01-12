@@ -30,7 +30,8 @@ import Database
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
-import Network.OAuth2.Experiment (conduitTokenRequest, mkAuthorizationRequest)
+import Network.OAuth.OAuth2 (ExchangeToken (..), OAuth2Token (..))
+import Network.OAuth2.Experiment (AuthorizeState (..), conduitTokenRequest, mkAuthorizationRequest)
 import Servant (NoContent (..), ServerError (..), ServerT, err302, err400, err404, err422, err500, throwError, type (:<|>) (..))
 import Servant.Multipart (FileData (..))
 import Types.Api
@@ -196,54 +197,24 @@ authGoogleLoginHandler = do
   where
     authorizeUrl = serializeURIRef' . mkAuthorizationRequest
 
-authGoogleCallbackHandler :: AppM NoContent
-authGoogleCallbackHandler = do
+authGoogleCallbackHandler :: ExchangeToken -> AuthorizeState -> AppM NoContent
+authGoogleCallbackHandler code state = do
   oauth <- asks googleOAuth
   httpConnMgr <- newManager
-  tokenResp <- conduitTokenRequest oauth httpConnMgr authorizeCode
-  mCode <- lookupQueryParam "code"
-  case mCode of
-    Nothing -> throwError err400 {errBody = "Missing code parameter."}
-    Just code -> do
-      -- 1. Exchange code for tokens
-      tokenResp <- liftIO $ exchangeCodeForToken code
+  tokenResp <- runExceptT (conduitTokenRequest oauth httpConnMgr code)
 
-      case tokenResp of
-        Left err -> throwError err500 {errBody = "Token exchange failed."}
-        Right tokenData -> do
-          -- 2. Validate the ID token (JWT) and parse user info
-          userInfo <- validateAndParseIDToken (idToken tokenData)
-
-          -- 3. Create a session or set an auth cookie
-          setSessionCookie userInfo
-
-          -- 4. Redirect somewhere, e.g. the frontend home, now “logged in”
-          throwError $ err302 {errHeaders = [("Location", "https://frontend-app.com/")]}
-
--- Example pseudo-code
-data TokenResponse = TokenResponse
-  { idToken :: Text,
-    accessToken :: Text
-  }
-
-exchangeCodeForToken :: Text -> IO (Either () TokenResponse) -- TODO Add error type
-exchangeCodeForToken code = do
-  -- Make a POST request to:
-  -- https://oauth2.googleapis.com/token
-  -- with form fields: code, client_id, client_secret, redirect_uri, grant_type=authorization_code
-  -- parse JSON, return Right TokenResponse if success, Left on failure
-  pure $ Right (TokenResponse "fake-id-token" "fake-access-token")
-
-validateAndParseIDToken :: Text -> AppM (Text, Text)
-validateAndParseIDToken idToken = do
-  -- decode JWT, verify signature, check "aud" == your client ID, check "iss" is Google, etc.
-  -- if valid, extract sub/email, etc.
-  pure ("some-user-id", "alice@example.com")
-
-setSessionCookie :: (Text, Text) -> AppM ()
-setSessionCookie userInfo = do
-  -- e.g. set a cookie with a session ID referencing the user’s record, or set a JWT cookie
-  pass
+  case tokenResp of
+    Left err -> throwError err500
+    Right token -> do
+      -- Create or lookup user based on token
+      -- If using Id token, need to verify it
+      -- - Check the signature.
+      -- - Check the aud claim matches your client_id.
+      -- - Check iss is "accounts.google.com" or "https://accounts.google.com".
+      -- - Check exp and iat are valid.
+      -- Generate JWT for that user
+      -- Return a Set-Cookie header in the 302
+      throwError $ err302 {errHeaders = [("Location", "https://waroftheringcommunity.net/")]}
 
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do
