@@ -198,7 +198,7 @@ authGoogleLoginHandler = do
     authorizeUrl = serializeURIRef' . mkAuthorizationRequest
 
 authGoogleCallbackHandler :: ExchangeToken -> AuthorizeState -> AppM NoContent
-authGoogleCallbackHandler code state = do
+authGoogleCallbackHandler code authState = do
   oauth <- asks googleOAuth
   httpConnMgr <- newManager
   tokenResp <- runExceptT (conduitTokenRequest oauth httpConnMgr code)

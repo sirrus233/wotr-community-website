@@ -4,10 +4,11 @@ module Auth where
 
 import Data.ByteString qualified as BS
 import Data.List (lookup)
-import Data.Map.Strict qualified as Map
 import Network.OAuth2.Experiment
   ( AuthorizationCodeApplication (..),
+    AuthorizeState,
     ClientAuthenticationMethod (..),
+    ClientSecret,
     Idp (..),
     IdpApplication,
   )
@@ -26,26 +27,27 @@ googleIdp =
   Idp
     { idpAuthorizeEndpoint = [uri|https://accounts.google.com/o/oauth2/v2/auth|],
       idpTokenEndpoint = [uri|https://oauth2.googleapis.com/token|],
-      idpUserInfoEndpoint = [uri|https://www.googleapis.com/oauth2/v2/userinfo|],
+      idpUserInfoEndpoint = [uri|https://openidconnect.googleapis.com/v1/userinfo|],
       idpDeviceAuthorizationEndpoint = Just [uri|https://oauth2.googleapis.com/device/code|]
     }
 
-googleOauthAppConfig :: AuthorizationCodeApplication
-googleOauthAppConfig =
+googleOauthAppConfig :: ClientSecret -> AuthorizationCodeApplication
+googleOauthAppConfig secret =
   AuthorizationCodeApplication
-    { acClientId = "xxxxx",
-      acClientSecret = "xxxxx",
-      acScope =
-        fromList
-          [ "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile"
-          ],
-      acAuthorizeState = "CHANGE_ME",
-      acAuthorizeRequestExtraParams = Map.empty,
-      acRedirectUri = [uri|http://localhost/oauth2/callback|],
-      acName = "sample-google-authorization-code-app",
+    { acClientId = "331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com",
+      acClientSecret = secret,
+      acScope = fromList ["openid", "profile", "email"],
+      acAuthorizeRequestExtraParams = fromList [("access_type", "offline")],
+      acAuthorizeState = "",
+      acRedirectUri = [uri|https://api.waroftheringcommunity.net/auth/google/callback|],
+      acName = "GoogleOAuthApp",
       acTokenRequestAuthenticationMethod = ClientSecretBasic
     }
+
+withState :: AuthorizeState -> AuthorizationCodeApplication -> AuthorizationCodeApplication
+withState authState oauth = oauth {acAuthorizeState = authState}
+
+--- TODO BELOW THIS LINE ---
 
 validateBearerToken :: Text -> IO (Maybe Text)
 validateBearerToken token = do
