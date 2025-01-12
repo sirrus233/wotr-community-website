@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 export SSL_EMAIL="sirrus233@gmail.com"
 
@@ -12,4 +12,10 @@ export SERVER_USER="ec2-user"
 export SERVER_HOST="api.waroftheringcommunity.net"
 export SERVICE_NAME="wotr-server"
 export APP_DIR="/${SERVICE_NAME}"
-export SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+export DATA_DIR="${APP_DIR}/data"
+export DB_PATH="${DATA_DIR}/db.sqlite"
+export DB_BACKUP_BUCKET="infrastructurestack-databasebackupbucket98c63f1e-6jcdj87gvycx"
+export SERVER_SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+export BACKUP_SCRIPT_FILE="${APP_DIR}/bin/backup_sqlite.sh"
+export BACKUP_SERVICE_FILE="/etc/systemd/system/backup-${SERVICE_NAME}.service"
+export BACKUP_TIMER_FILE="/etc/systemd/system/backup-${SERVICE_NAME}.timer"

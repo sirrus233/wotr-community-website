@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 BIN_DIR=$(dirname "$0")
 source "${BIN_DIR}/config.sh"
@@ -50,7 +50,8 @@ ssh "$SERVER_USER@$SERVER_HOST" <<EOF
   fi
 
   mkdir -p ${APP_DIR}
-  sudo chown ${SERVER_USER}:${SERVER_USER} ${APP_DIR}
+  mkdir -p "${APP_DIR}/bin"
+  sudo chown -R ${SERVER_USER}:${SERVER_USER} ${APP_DIR}
 
   echo "Acquiring SSL certificate..."
   sudo yum install -y certbot
@@ -65,8 +66,8 @@ ssh "$SERVER_USER@$SERVER_HOST" <<EOF
   sudo chmod -R 750 "/etc/letsencrypt/live"
   sudo chmod -R 750 "/etc/letsencrypt/archive"
   
-  echo "Generating service file..."
-  cat <<END_UNIT | sudo tee $SERVICE_FILE
+  echo "Generating server startup service file..."
+  cat <<END_UNIT | sudo tee $SERVER_SERVICE_FILE
 [Unit]
 Description=War of the Ring API Server
 After=network.target
@@ -85,9 +86,42 @@ Environment="SSL_KEY_PATH=/etc/letsencrypt/live/${SERVER_HOST}/privkey.pem"
 WantedBy=multi-user.target
 END_UNIT
 
-  echo "Enabling service..."
+  echo "Enabling server startup service..."
   sudo systemctl daemon-reload
   sudo systemctl enable $SERVICE_NAME
-  
-  echo "Provisioning complete!"
+
+  echo "Installing sqlite dependency..."
+  sudo yum install sqlite
+
+  echo "Generating database backup service file..."
+  cat <<END_UNIT | sudo tee $BACKUP_SERVICE_FILE
+[Unit]
+Description=Backup the WotR SQLite database to S3
+
+[Service]
+Type=oneshot
+ExecStart=${BACKUP_SCRIPT_FILE} ${DB_PATH} ${DB_BACKUP_BUCKET}
+END_UNIT
+
+  echo "Generating database backup timer file..."
+  cat <<END_UNIT | sudo tee $BACKUP_TIMER_FILE
+[Unit]
+Description=Database backup timer
+
+[Timer]
+OnCalendar=*-*-* *:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+END_UNIT
+
+  echo "Staring backup service timer..."
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now backup-${SERVICE_NAME}.timer
 EOF
+
+echo "Uploading database backup script..."
+scp ${BIN_DIR}/backup_sqlite.sh ${SERVER_USER}@${SERVER_HOST}:${BACKUP_SCRIPT_FILE}
+
+echo "Provisioning complete!"
