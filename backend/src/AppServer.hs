@@ -2,7 +2,7 @@ module AppServer where
 
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
-import Api (API, Protected, Unprotected)
+import Api (API, CookieAuth, Protected, Unprotected)
 import AppConfig (AppM, Env (..), gameLogBucket)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
@@ -31,7 +31,7 @@ import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), Pers
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
 import Network.OAuth.OAuth2 (ExchangeToken (..))
-import Network.OAuth2.Experiment (AuthorizeState (..), conduitTokenRequest, mkAuthorizationRequest)
+import Network.OAuth2.Experiment (conduitTokenRequest, mkAuthorizationRequest)
 import Servant
   ( AuthProtect,
     NoContent (..),
@@ -208,11 +208,13 @@ authGoogleLoginHandler = do
   where
     authorizeUrl = serializeURIRef' . mkAuthorizationRequest
 
-authGoogleCallbackHandler :: ExchangeToken -> AuthorizeState -> AppM NoContent
+authGoogleCallbackHandler :: Text -> Text -> AppM NoContent
 authGoogleCallbackHandler code authState = do
   oauth <- asks googleOAuth
   httpConnMgr <- newManager
-  tokenResp <- runExceptT (conduitTokenRequest oauth httpConnMgr code)
+  tokenResp <- runExceptT (conduitTokenRequest oauth httpConnMgr (ExchangeToken code))
+
+  logInfoN $ show tokenResp
 
   case tokenResp of
     Left err -> throwError err500
@@ -325,7 +327,7 @@ unprotected =
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
 
-protected :: AuthServerData (AuthProtect "cookie-auth") -> ServerT Protected AppM
+protected :: AuthServerData (AuthProtect CookieAuth) -> ServerT Protected AppM
 protected _ =
   adminRenamePlayerHandler
     :<|> adminRemapPlayerHandler

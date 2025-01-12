@@ -1,22 +1,27 @@
 module Main where
 
 import Amazonka qualified as AWS
+import Amazonka.SecretsManager qualified as SecretsManager
+import Amazonka.SecretsManager.GetSecretValue (GetSecretValueResponse (secretString))
 import Api (API)
 import AppConfig (Env (..), databaseFile, logFile, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
+import Auth (authHandler, googleIdp, googleOauthAppConfig)
 import Control.Monad.Logger (LogLevel (..))
 import Crypto.JWT (JWK)
+import Data.Maybe (fromJust)
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
 import Logging (fileLogger, log)
+import Network.OAuth2.Experiment (ClientSecret (ClientSecret), IdpApplication (..))
 import Network.Wai.Handler.Warp (defaultSettings, setPort)
 import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Network.Wai.Middleware.Gzip (defaultGzipSettings, gzip)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
 import Servant (Application, Context (..), serveWithContextT)
-import Servant.Auth.Server (Cookie, CookieSettings, JWTSettings, defaultCookieSettings, defaultJWTSettings, generateKey)
+import Servant.Auth.Server (generateKey)
 import Servant.Multipart (MultipartOptions (..), Tmp, defaultMultipartOptions)
 import System.Directory (createDirectoryIfMissing)
 import System.Environment (setEnv)
@@ -24,8 +29,6 @@ import System.FilePath (takeDirectory)
 import Types.Database (migrateSchema)
 
 type Middleware = Application -> Application
-
-type ServerContext = '[MultipartOptions Tmp, CookieSettings, JWTSettings]
 
 corsMiddleware :: Middleware
 corsMiddleware = cors $ const $ Just policy
@@ -45,20 +48,18 @@ corsMiddleware = cors $ const $ Just policy
 gzipMiddleware :: Middleware
 gzipMiddleware = gzip defaultGzipSettings
 
-app :: Env -> JWK -> Application
-app env key =
-  gzipMiddleware . corsMiddleware $
-    serveWithContextT (Proxy :: Proxy (API '[Cookie])) context (nt env) (server cookieCfg jwtCfg)
+multipartOpts :: MultipartOptions Tmp
+multipartOpts =
+  (defaultMultipartOptions (Proxy :: Proxy Tmp))
+    { generalOptions = setMaxRequestFileSize maxSizeBytes defaultParseRequestBodyOptions
+    }
   where
-    jwtCfg = defaultJWTSettings key
-    cookieCfg = defaultCookieSettings
     maxSizeBytes = maxGameLogSizeMB * 1024 * 1024
-    multipartOpts :: MultipartOptions Tmp
-    multipartOpts =
-      (defaultMultipartOptions (Proxy :: Proxy Tmp))
-        { generalOptions = setMaxRequestFileSize maxSizeBytes defaultParseRequestBodyOptions
-        }
-    context = multipartOpts :. defaultCookieSettings :. defaultJWTSettings key :. EmptyContext
+
+app :: Env -> JWK -> Application
+app env key = gzipMiddleware . corsMiddleware $ serveWithContextT (Proxy :: Proxy API) context (nt env) server
+  where
+    context = authHandler :. multipartOpts :. EmptyContext
 
 main :: IO ()
 main = do
@@ -73,7 +74,11 @@ main = do
   redisPool <- connect redisConfig
   aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
 
-  let env = Env {dbPool, redisPool, logger, aws}
+  secret <- AWS.runResourceT . AWS.send aws . SecretsManager.newGetSecretValue $ "abc"
+  let ss = toLazy . toText . AWS.fromSensitive . fromJust $ (secret.secretString)
+  let googleOAuth = IdpApplication googleIdp (googleOauthAppConfig $ ClientSecret ss)
+
+  let env = Env {dbPool, redisPool, logger, aws, googleOAuth}
 
   when ("migrate" `elem` args) $ migrateSchema dbPool logger
 

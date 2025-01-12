@@ -251,6 +251,18 @@ function Home() {
                     </ExternalLink>
                 ))}
             </Section>
+
+            <Section>
+                <button
+                    onClick={async () =>
+                        await axios.post(
+                            "https://api.waroftheringcommunity.net:8080/auth/google/login"
+                        )
+                    }
+                >
+                    Login
+                </button>
+            </Section>
         </Box>
     );
 }

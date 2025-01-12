@@ -39,7 +39,7 @@ googleOauthAppConfig secret =
       acScope = fromList ["openid", "profile", "email"],
       acAuthorizeRequestExtraParams = fromList [("access_type", "offline")],
       acAuthorizeState = "",
-      acRedirectUri = [uri|https://api.waroftheringcommunity.net/auth/google/callback|],
+      acRedirectUri = [uri|https://api.waroftheringcommunity.net:8080/auth/google/callback|],
       acName = "GoogleOAuthApp",
       acTokenRequestAuthenticationMethod = ClientSecretBasic
     }

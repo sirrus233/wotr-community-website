@@ -1,7 +1,5 @@
 module Api where
 
-import Network.OAuth.OAuth2 (ExchangeToken)
-import Network.OAuth2.Experiment (AuthorizeState)
 import Servant
   ( AuthProtect,
     Get,
@@ -19,8 +17,10 @@ import Servant
     (:>),
   )
 import Servant.Multipart (MultipartForm, Tmp)
+import Servant.Server.Experimental.Auth (AuthServerData)
 import Types.Api
-  ( DeleteReportRequest,
+  ( AdminUser,
+    DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
     ModifyReportRequest,
@@ -41,8 +41,8 @@ type AuthGoogleCallbackAPI =
   "auth"
     :> "google"
     :> "callback"
-    :> QueryParam' '[Required] "code" ExchangeToken
-    :> QueryParam' '[Required] "state" AuthorizeState
+    :> QueryParam' '[Required] "code" Text
+    :> QueryParam' '[Required] "state" Text
     :> Get302
 
 type SubmitReportAPI =
@@ -80,7 +80,8 @@ type Protected =
     :<|> AdminDeleteReportAPI
 
 -- TODO Weird type tag?
-type API = (AuthProtect "cookie-auth" :> Protected) :<|> Unprotected
+data CookieAuth = CookieAuth
 
-api :: Proxy API
-api = Proxy
+type instance AuthServerData (AuthProtect CookieAuth) = AdminUser
+
+type API = (AuthProtect CookieAuth :> Protected) :<|> Unprotected

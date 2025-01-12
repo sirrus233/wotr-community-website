@@ -6,6 +6,7 @@ import * as cloudfront_origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 
 export class InfrastructureStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -95,6 +96,13 @@ export class InfrastructureStack extends cdk.Stack {
             assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
         });
         writeableBuckets.forEach((bucket) => bucket.grantPut(role));
+
+        const googleOAuthClientSecret = secretsmanager.Secret.fromSecretNameV2(
+            this,
+            "GoogleOAuthClientSecret",
+            "GoogleOAuthClientSecret"
+        );
+        googleOAuthClientSecret.grantRead(role);
 
         const instance = new ec2.Instance(this, "ServerInstance", {
             instanceType: ec2.InstanceType.of(
