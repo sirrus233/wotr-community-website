@@ -1,9 +1,11 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Auth where
 
 import Data.ByteString qualified as BS
 import Data.List (lookup)
+import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Network.OAuth2.Experiment
   ( AuthorizationCodeApplication (..),
     AuthorizeState,
@@ -17,6 +19,19 @@ import Servant (err401, err403, throwError)
 import Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler)
 import Types.Api (AdminUser (..))
 import URI.ByteString.QQ (uri)
+
+share
+  [mkPersist sqlSettings, mkMigrate "migrateAll"]
+  [persistLowerCase|
+   Admin
+    email Text
+    sessionId Text
+    refreshToken Text
+    UniqueAdminEmail email 
+    UniqueAdminSessionId sessionId
+    UniqueAdminRefreshToken refreshToken
+    deriving Show
+|]
 
 data Google = Google deriving (Eq, Show)
 
@@ -38,7 +53,7 @@ googleOauthAppConfig secret =
       acClientSecret = secret,
       acScope = fromList ["openid", "profile", "email"],
       acAuthorizeRequestExtraParams = fromList [("access_type", "offline")],
-      acAuthorizeState = "CHANGE_THIS", -- TODO
+      acAuthorizeState = "",
       acRedirectUri = [uri|https://api.waroftheringcommunity.net:8080/auth/google/callback|],
       acName = "GoogleOAuthApp",
       acTokenRequestAuthenticationMethod = ClientSecretBasic
@@ -72,3 +87,37 @@ authHandler = mkAuthHandler $ \req -> do
       liftIO (validateBearerToken token) >>= \case
         Nothing -> throwError err403
         Just userId -> pure $ AdminUser userId
+
+-- import Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler)
+-- import Network.Wai (requestHeaders)
+-- import Crypto.JWT (verifyJWT, JWTValidationSettings, defaultJWTValidationSettings, JWSError)
+
+-- jwtAuthHandler :: JWK -> AuthHandler Request User
+-- jwtAuthHandler signingKey = mkAuthHandler $ \req -> do
+--   let maybeCookie = lookup "Cookie" (requestHeaders req)
+--   case maybeCookie >>= lookupJWTInCookie of
+--     Nothing    -> throwError err401 { errBody = "Missing JWT cookie" }
+--     Just token -> do
+--       user <- verifyJwtToken signingKey token
+--       pure user
+
+-- lookupJWTInCookie :: ByteString -> Maybe Text
+-- lookupJWTInCookie cookieHeaderVal = do
+--   let cookies = parseCookies cookieHeaderVal
+--   tokenBS <- lookup "session_jwt" cookies
+--   pure (decodeUtf8 tokenBS)
+
+-- verifyJwtToken :: JWK -> Text -> Handler User
+-- verifyJwtToken key tokenText = do
+--   case decodeCompact (encodeUtf8 tokenText) of
+--     Left _err -> throwError err401 { errBody = "Invalid token format" }
+--     Right jwt -> do
+--       let validationSettings = defaultJWTValidationSettings (const True)
+--           -- you'd normally pass a 'StringOrURI' representing your 'aud' or something similar
+--       res <- runExceptT (verifyJWT validationSettings key jwt)
+--       case res of
+--         Left jwserr -> throwError err401 { errBody = "Bad token: " <> fromString (show jwserr) }
+--         Right claims -> do
+--           -- parse claims, get 'sub' or 'email'
+--           -- for example: let sub = preview (claimSub . _Just) claims
+--           pure (User "alice" ... )  -- your custom user type

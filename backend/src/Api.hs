@@ -3,15 +3,19 @@ module Api where
 import Servant
   ( AuthProtect,
     Get,
+    Header,
+    Header',
     JSON,
     NoContent,
     PlainText,
     Post,
+    PostNoContent,
     QueryParam,
     QueryParam',
     ReqBody,
     Required,
     StdMethod (..),
+    Strict,
     Verb,
     (:<|>),
     (:>),
@@ -31,7 +35,6 @@ import Types.Api
     SubmitReportRequest,
   )
 
--- TODO What are the response status codes of the NoContent requests now? Still 204? Or 200?
 type Get302 = Verb 'GET 302 '[PlainText] NoContent
 
 type AuthGoogleLoginAPI =
@@ -41,6 +44,7 @@ type AuthGoogleCallbackAPI =
   "auth"
     :> "google"
     :> "callback"
+    :> Header' '[Required] "Cookie" Text
     :> QueryParam' '[Required] "code" Text
     :> QueryParam' '[Required] "state" Text
     :> Get302
@@ -55,16 +59,16 @@ type GetLeaderboardAPI =
   "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse
 
 type AdminRenamePlayerAPI =
-  "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> Post '[JSON] NoContent
+  "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
 type AdminRemapPlayerAPI =
   "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :> Post '[JSON] RemapPlayerResponse
 
 type AdminModifyReportAPI =
-  "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> Post '[JSON] NoContent
+  "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
 
 type AdminDeleteReportAPI =
-  "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> Post '[JSON] NoContent
+  "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
 
 type Unprotected =
   AuthGoogleLoginAPI

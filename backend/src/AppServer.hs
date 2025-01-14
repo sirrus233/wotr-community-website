@@ -2,11 +2,16 @@ module AppServer where
 
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
+import Amazonka.S3.WriteGetObjectResponse (WriteGetObjectResponse (errorMessage))
 import Api (API, CookieAuth, Protected, Unprotected)
 import AppConfig (AppM, Env (..), gameLogBucket)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
+import Crypto.Hash.SHA256 (hash)
 import Data.IntMap.Strict qualified as Map
+import Data.List (lookup)
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
+import Data.UUID (toByteString)
+import Data.UUID.V4 qualified as UUID
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
@@ -31,13 +36,14 @@ import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), Pers
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
 import Network.OAuth.OAuth2 (ExchangeToken (..))
-import Network.OAuth2.Experiment (conduitTokenRequest, mkAuthorizationRequest)
+import Network.OAuth2.Experiment (AuthorizationCodeApplication (..), AuthorizeState (..), IdpApplication (..), conduitTokenRequest, mkAuthorizationRequest)
 import Servant
   ( AuthProtect,
     NoContent (..),
     ServerError (..),
     ServerT,
     err302,
+    err401,
     err404,
     err422,
     err500,
@@ -80,6 +86,7 @@ import Types.Database
   )
 import URI.ByteString (serializeURIRef')
 import Validation (validateLogFile, validateReport)
+import Web.Cookie (SetCookie (..), defaultSetCookie, parseCookiesText, renderSetCookieBS, sameSiteNone, sameSiteStrict)
 import Prelude hiding (get, on)
 
 defaultRating :: Rating
@@ -204,21 +211,36 @@ reprocessReports = do
 authGoogleLoginHandler :: AppM NoContent
 authGoogleLoginHandler = do
   oauth <- asks googleOAuth
-  throwError $ err302 {errHeaders = [("Location", authorizeUrl oauth)]}
+  sessionId <- liftIO UUID.nextRandom
+  let oauth' = oauth {application = oauth.application {acAuthorizeState = AuthorizeState $ hashedSessionId sessionId}}
+  let cookie =
+        defaultSetCookie
+          { setCookieName = "wotr_session_id",
+            setCookieValue = toStrict . toByteString $ sessionId,
+            setCookiePath = Nothing,
+            setCookieMaxAge = Just (60 * 60 * 24 * 365),
+            setCookieHttpOnly = True,
+            setCookieSecure = True,
+            setCookieSameSite = Just sameSiteNone
+          }
+  throwError $ err302 {errHeaders = [("Location", authorizeUrl oauth'), ("Set-Cookie", renderSetCookieBS cookie)]}
   where
+    hashedSessionId = decodeUtf8 . hash . toStrict . toByteString
     authorizeUrl = serializeURIRef' . mkAuthorizationRequest
 
-authGoogleCallbackHandler :: Text -> Text -> AppM NoContent
-authGoogleCallbackHandler code authState = do
+authGoogleCallbackHandler :: Text -> Text -> Text -> AppM NoContent
+authGoogleCallbackHandler cookie code authState = do
   oauth <- asks googleOAuth
   httpConnMgr <- newManager
   tokenResp <- runExceptT (conduitTokenRequest oauth httpConnMgr (ExchangeToken code))
 
-  logInfoN $ show tokenResp
+  let sessionId = fromMaybe "" . lookup "wotr_session_id" . parseCookiesText . encodeUtf8 $ cookie
+  let hashedSessionId = decodeUtf8 . hash . encodeUtf8 $ sessionId
 
   case tokenResp of
     Left err -> throwError err500
     Right token -> do
+      unless (hashedSessionId == authState) (throwError $ err401 {errBody = "Bad state."})
       -- Create or lookup user based on token
       -- If using Id token, need to verify it
       -- - Check the signature.

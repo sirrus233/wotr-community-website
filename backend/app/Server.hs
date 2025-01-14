@@ -4,7 +4,7 @@ import Amazonka qualified as AWS
 import Amazonka.SecretsManager qualified as SecretsManager
 import Amazonka.SecretsManager.GetSecretValue (GetSecretValueResponse (secretString))
 import Api (API)
-import AppConfig (Env (..), databaseFile, logFile, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
+import AppConfig (Env (..), authDatabaseFile, databaseFile, logFile, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
 import Auth (authHandler, googleIdp, googleOauthAppConfig)
 import Control.Monad.Logger (LogLevel (..))
@@ -71,6 +71,7 @@ main = do
   logger <- fileLogger logFile
   awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
+  authDbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText authDatabaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
   aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
 
@@ -78,7 +79,7 @@ main = do
   let ss = toLazy . toText . AWS.fromSensitive . fromJust $ (secret.secretString)
   let googleOAuth = IdpApplication googleIdp (googleOauthAppConfig $ ClientSecret ss)
 
-  let env = Env {dbPool, redisPool, logger, aws, googleOAuth}
+  let env = Env {dbPool, authDbPool, redisPool, logger, aws, googleOAuth}
 
   when ("migrate" `elem` args) $ migrateSchema dbPool logger
 

@@ -12,6 +12,7 @@ import Servant (Handler)
 
 data Env = Env
   { dbPool :: SQL.ConnectionPool,
+    authDbPool :: SQL.ConnectionPool,
     redisPool :: Redis.Connection,
     logger :: Logger,
     aws :: AWS.Env,
@@ -22,6 +23,9 @@ type AppM = ReaderT Env (LoggingT Handler)
 
 databaseFile :: FilePath
 databaseFile = "data/db.sqlite"
+
+authDatabaseFile :: FilePath
+authDatabaseFile = "data/auth-db.sqlite"
 
 logFile :: FilePath
 logFile = "logs/app.log"
