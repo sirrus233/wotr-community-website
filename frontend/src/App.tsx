@@ -18,6 +18,7 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ErrorMessage } from "./constants";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import { LeaderboardEntry } from "./types";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function App() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -253,14 +254,16 @@ function Home() {
             </Section>
 
             <Section>
-                <button
-                    onClick={() =>
-                        (window.location.href =
-                            "https://api.waroftheringcommunity.net:8080/auth/google/login")
-                    }
-                >
-                    Login
-                </button>
+                <GoogleOAuthProvider clientId="331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com">
+                    <GoogleLogin
+                        onSuccess={(response) => {
+                            const token = response.credential;
+                        }}
+                        onError={() => {
+                            console.log("Login Failed");
+                        }}
+                    />
+                </GoogleOAuthProvider>
             </Section>
         </Box>
     );
