@@ -8,12 +8,17 @@ export default function GoogleLoginButton() {
             .post(
                 "https://api.waroftheringcommunity.net:8080/auth/google/login",
                 response.credential,
-                { headers: { "Content-Type": "text/plain" } }
+                { headers: { "Content-Type": "text/plain;charset=utf-8" } }
             )
             .catch((error) => {
                 console.error(error);
             });
     };
 
-    return <GoogleLogin onSuccess={handleLoginSuccess} />;
+    return (
+        <GoogleLogin
+            onSuccess={handleLoginSuccess}
+            onError={() => console.log("Error logging in.")}
+        />
+    );
 }

@@ -37,7 +37,7 @@ import Types.Api
   )
 
 type AuthGoogleLoginAPI =
-  "auth" :> "google" :> "login" :> ReqBody '[OctetStream] ByteString :> PostNoContent
+  "auth" :> "google" :> "login" :> ReqBody '[PlainText] Text :> PostNoContent
 
 type SubmitReportAPI =
   "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse

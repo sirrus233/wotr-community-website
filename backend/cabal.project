@@ -19,7 +19,3 @@ package amazonka-sts
 allow-newer: amazonka-sso:base
 package amazonka-sso
   ghc-options: -XDuplicateRecordFields
-
-allow-newer: amazonka-secretsmanager:base
-package amazonka-secretsmanager
-  ghc-options: -XDuplicateRecordFields

@@ -67,8 +67,7 @@ common dependencies
         cassava             ^>=0.5.3.2,
         vector              ^>=0.13.2.0,
         amazonka            ^>=2.0,
-        amazonka-s3         ^>=2.0,
-        amazonka-secretsmanager ^>=2.0,
+        amazonka-s3         ^>=2.0
 
 library
     import:           warnings,

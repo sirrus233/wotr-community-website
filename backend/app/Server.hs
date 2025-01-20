@@ -1,8 +1,6 @@
 module Main where
 
 import Amazonka qualified as AWS
-import Amazonka.SecretsManager qualified as SecretsManager
-import Amazonka.SecretsManager.GetSecretValue (GetSecretValueResponse (secretString))
 import Api (API)
 import AppConfig (Env (..), authDatabaseFile, databaseFile, logFile, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
@@ -35,13 +33,13 @@ corsMiddleware = cors $ const $ Just policy
   where
     policy =
       CorsResourcePolicy
-        { corsOrigins = Nothing,
-          corsMethods = ["HEAD", "GET", "POST"],
+        { corsOrigins = Just (["https://waroftheringcommunity.net"], True),
+          corsMethods = [],
           corsRequestHeaders = ["content-type"],
           corsExposedHeaders = Nothing,
           corsMaxAge = Nothing,
-          corsVaryOrigin = True,
-          corsRequireOrigin = False,
+          corsVaryOrigin = False,
+          corsRequireOrigin = True,
           corsIgnoreFailures = True
         }
 

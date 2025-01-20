@@ -4,11 +4,11 @@
 module Auth where
 
 import AppConfig (AppM)
-import Crypto.JWT (JWKSet)
 import Data.Aeson (eitherDecode)
 import Data.ByteString qualified as BS
 import Data.List (lookup)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
+import Jose.Jwk (JwkSet)
 import Network.HTTP.Conduit (Manager, Response (..), httpLbs, parseRequest)
 import Network.OAuth2.Experiment
   ( AuthorizationCodeApplication (..),
@@ -37,7 +37,7 @@ share
     deriving Show
 |]
 
-fetchGoogleJWKSet :: Manager -> IO (Either String JWKSet)
+fetchGoogleJWKSet :: Manager -> IO (Either String JwkSet)
 fetchGoogleJWKSet mgr = do
   request <- parseRequest "https://www.googleapis.com/oauth2/v3/certs"
   response <- httpLbs request mgr

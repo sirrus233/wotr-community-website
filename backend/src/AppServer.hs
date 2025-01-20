@@ -37,7 +37,7 @@ import Database
   )
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Jose.Jwa (JwsAlg (..))
-import Jose.Jwk (Jwk)
+import Jose.Jwk (Jwk, JwkSet (..))
 import Jose.Jwt (Jwt (..), JwtEncoding (..), Payload (..), decode, decodeClaims, encode)
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
@@ -214,19 +214,18 @@ reprocessReports = do
   forM_ reports processReport
   updateActiveStatus
 
-authGoogleLoginHandler :: ByteString -> AppM NoContent
+authGoogleLoginHandler :: Text -> AppM NoContent
 authGoogleLoginHandler idToken = do
-  -- httpConnMgr <- newManager
-  -- cache this
-  -- JWKSet jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (const $ throwError err401) pure
+  httpConnMgr <- newManager
+  -- TODO cache this
+  JwkSet jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (const $ throwError err401) pure
   sessionId <- liftIO UUID.nextRandom
-  let Just jwk = decodeStrict idToken :: Maybe Jwk
-  -- Right (Jwt jwtEncoded) <- encode [jwk] (JwsEncoding RS256) (Claims "public claims")
   drg <- liftIO getSystemDRG
-  let (Right jwtDecoded, _) = withDRG drg (decode [jwk] (Just (JwsEncoding RS256)) idToken)
-  -- jwtDecoded <- liftIO . evalRandIO $ decode [jwk] (Just (JwsEncoding RS256)) idToken
-  logInfoN $ show jwtDecoded
-  pure NoContent
+  case withDRG drg (decode jwks (Just (JwsEncoding RS256)) (encodeUtf8 idToken)) of
+    (Left err, _) -> throwError $ err401 {errBody = show err}
+    (Right jwtDecoded, _) -> do
+      logInfoN $ show jwtDecoded
+      pure NoContent
 
 -- let oauth' = oauth {application = oauth.application {acAuthorizeState = AuthorizeState $ hashedSessionId sessionId}}
 -- let cookie =
