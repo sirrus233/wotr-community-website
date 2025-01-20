@@ -75,7 +75,17 @@ export default function App() {
                                 "var(--joy-palette-primary-solidBg)",
                         }}
                     >
-                        <Typography>WotR Community Ladder</Typography>
+                        <DrawerNavigation />
+                        <Typography
+                            level="title-lg"
+                            sx={{
+                                color: "white",
+                                width: "100%",
+                                textAlign: "center",
+                            }}
+                        >
+                            WotR Community Ladder
+                        </Typography>
                     </header>
                     <Routes>
                         <Route path="/" element={<Home />} />
@@ -246,7 +256,6 @@ function Home() {
                     </ExternalLink>
                 ))}
             </Section>
-
             <Section>
                 <GoogleLoginButton />
             </Section>
