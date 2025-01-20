@@ -6,7 +6,7 @@ export default function GoogleLoginButton() {
     const handleLoginSuccess = async (response: CredentialResponse) => {
         await axios
             .post(
-                "https://api.waroftheringcommunity.net:8080/login",
+                "https://api.waroftheringcommunity.net:8080/auth/google/login",
                 response.credential,
                 { headers: { "Content-Type": "text/plain" } }
             )

@@ -5,8 +5,11 @@ import Amazonka.S3 qualified as S3
 import Amazonka.S3.WriteGetObjectResponse (WriteGetObjectResponse (errorMessage))
 import Api (API, CookieAuth, Protected, Unprotected)
 import AppConfig (AppM, Env (..), gameLogBucket)
+import Auth (fetchGoogleJWKSet)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Crypto.Hash.SHA256 (hash)
+import Crypto.JOSE (getSystemDRG, withDRG)
+import Data.Aeson (decodeStrict)
 import Data.IntMap.Strict qualified as Map
 import Data.List (lookup)
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
@@ -33,6 +36,9 @@ import Database
     updateReports,
   )
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
+import Jose.Jwa (JwsAlg (..))
+import Jose.Jwk (Jwk)
+import Jose.Jwt (Jwt (..), JwtEncoding (..), Payload (..), decode, decodeClaims, encode)
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
 import Network.OAuth.OAuth2 (ExchangeToken (..))
@@ -208,48 +214,35 @@ reprocessReports = do
   forM_ reports processReport
   updateActiveStatus
 
-authGoogleLoginHandler :: AppM NoContent
-authGoogleLoginHandler = do
-  oauth <- asks googleOAuth
+authGoogleLoginHandler :: ByteString -> AppM NoContent
+authGoogleLoginHandler idToken = do
+  -- httpConnMgr <- newManager
+  -- cache this
+  -- JWKSet jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (const $ throwError err401) pure
   sessionId <- liftIO UUID.nextRandom
-  let oauth' = oauth {application = oauth.application {acAuthorizeState = AuthorizeState $ hashedSessionId sessionId}}
-  let cookie =
-        defaultSetCookie
-          { setCookieName = "wotr_session_id",
-            setCookieValue = toStrict . toByteString $ sessionId,
-            setCookiePath = Nothing,
-            setCookieMaxAge = Just (60 * 60 * 24 * 365),
-            setCookieHttpOnly = True,
-            setCookieSecure = True,
-            setCookieSameSite = Just sameSiteNone
-          }
-  throwError $ err302 {errHeaders = [("Location", authorizeUrl oauth'), ("Set-Cookie", renderSetCookieBS cookie)]}
-  where
-    hashedSessionId = decodeUtf8 . hash . toStrict . toByteString
-    authorizeUrl = serializeURIRef' . mkAuthorizationRequest
+  let Just jwk = decodeStrict idToken :: Maybe Jwk
+  -- Right (Jwt jwtEncoded) <- encode [jwk] (JwsEncoding RS256) (Claims "public claims")
+  drg <- liftIO getSystemDRG
+  let (Right jwtDecoded, _) = withDRG drg (decode [jwk] (Just (JwsEncoding RS256)) idToken)
+  -- jwtDecoded <- liftIO . evalRandIO $ decode [jwk] (Just (JwsEncoding RS256)) idToken
+  logInfoN $ show jwtDecoded
+  pure NoContent
 
-authGoogleCallbackHandler :: Text -> Text -> Text -> AppM NoContent
-authGoogleCallbackHandler cookie code authState = do
-  oauth <- asks googleOAuth
-  httpConnMgr <- newManager
-  tokenResp <- runExceptT (conduitTokenRequest oauth httpConnMgr (ExchangeToken code))
-
-  let sessionId = fromMaybe "" . lookup "wotr_session_id" . parseCookiesText . encodeUtf8 $ cookie
-  let hashedSessionId = decodeUtf8 . hash . encodeUtf8 $ sessionId
-
-  case tokenResp of
-    Left err -> throwError err500
-    Right token -> do
-      unless (hashedSessionId == authState) (throwError $ err401 {errBody = "Bad state."})
-      -- Create or lookup user based on token
-      -- If using Id token, need to verify it
-      -- - Check the signature.
-      -- - Check the aud claim matches your client_id.
-      -- - Check iss is "accounts.google.com" or "https://accounts.google.com".
-      -- - Check exp and iat are valid.
-      -- Generate JWT for that user
-      -- Return a Set-Cookie header in the 302
-      throwError $ err302 {errHeaders = [("Location", "https://waroftheringcommunity.net/")]}
+-- let oauth' = oauth {application = oauth.application {acAuthorizeState = AuthorizeState $ hashedSessionId sessionId}}
+-- let cookie =
+--       defaultSetCookie
+--         { setCookieName = "wotr_session_id",
+--           setCookieValue = toStrict . toByteString $ sessionId,
+--           setCookiePath = Nothing,
+--           setCookieMaxAge = Just (60 * 60 * 24 * 365),
+--           setCookieHttpOnly = True,
+--           setCookieSecure = True,
+--           setCookieSameSite = Just sameSiteNone
+--         }
+-- throwError $ err302 {errHeaders = [("Location", authorizeUrl oauth'), ("Set-Cookie", renderSetCookieBS cookie)]}
+-- where
+--   hashedSessionId = decodeUtf8 . hash . toStrict . toByteString
+--   authorizeUrl = serializeURIRef' . mkAuthorizationRequest
 
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do
@@ -344,7 +337,6 @@ adminDeleteReportHandler DeleteReportRequest {rid} = runDb $ do
 unprotected :: ServerT Unprotected AppM
 unprotected =
   authGoogleLoginHandler
-    :<|> authGoogleCallbackHandler
     :<|> submitReportHandler
     :<|> getReportsHandler
     :<|> getLeaderboardHandler

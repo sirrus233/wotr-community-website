@@ -7,6 +7,7 @@ import Servant
     Header',
     JSON,
     NoContent,
+    OctetStream,
     PlainText,
     Post,
     PostNoContent,
@@ -35,19 +36,8 @@ import Types.Api
     SubmitReportRequest,
   )
 
-type Get302 = Verb 'GET 302 '[PlainText] NoContent
-
 type AuthGoogleLoginAPI =
-  "auth" :> "google" :> "login" :> Get302
-
-type AuthGoogleCallbackAPI =
-  "auth"
-    :> "google"
-    :> "callback"
-    :> Header' '[Required] "Cookie" Text
-    :> QueryParam' '[Required] "code" Text
-    :> QueryParam' '[Required] "state" Text
-    :> Get302
+  "auth" :> "google" :> "login" :> ReqBody '[OctetStream] ByteString :> PostNoContent
 
 type SubmitReportAPI =
   "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
@@ -72,7 +62,6 @@ type AdminDeleteReportAPI =
 
 type Unprotected =
   AuthGoogleLoginAPI
-    :<|> AuthGoogleCallbackAPI
     :<|> SubmitReportAPI
     :<|> GetReportsAPI
     :<|> GetLeaderboardAPI

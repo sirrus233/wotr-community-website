@@ -2,7 +2,6 @@ module AppConfig where
 
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
-import Auth (GoogleOAuth)
 import Control.Monad.Logger (LoggingT (runLoggingT), filterLogger)
 import Database.Esqueleto.Experimental qualified as SQL
 import Database.Redis (ConnectInfo, defaultConnectInfo)
@@ -15,8 +14,7 @@ data Env = Env
     authDbPool :: SQL.ConnectionPool,
     redisPool :: Redis.Connection,
     logger :: Logger,
-    aws :: AWS.Env,
-    googleOAuth :: GoogleOAuth
+    aws :: AWS.Env
   }
 
 type AppM = ReaderT Env (LoggingT Handler)

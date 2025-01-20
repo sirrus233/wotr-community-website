@@ -75,11 +75,11 @@ main = do
   redisPool <- connect redisConfig
   aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
 
-  secret <- AWS.runResourceT . AWS.send aws . SecretsManager.newGetSecretValue $ "GoogleOAuthClientSecret"
-  let ss = toLazy . toText . AWS.fromSensitive . fromJust $ (secret.secretString)
-  let googleOAuth = IdpApplication googleIdp (googleOauthAppConfig $ ClientSecret ss)
+  -- secret <- AWS.runResourceT . AWS.send aws . SecretsManager.newGetSecretValue $ "GoogleOAuthClientSecret"
+  -- let ss = toLazy . toText . AWS.fromSensitive . fromJust $ (secret.secretString)
+  -- let googleOAuth = IdpApplication googleIdp (googleOauthAppConfig $ ClientSecret ss)
 
-  let env = Env {dbPool, authDbPool, redisPool, logger, aws, googleOAuth}
+  let env = Env {dbPool, authDbPool, redisPool, logger, aws}
 
   when ("migrate" `elem` args) $ migrateSchema dbPool logger
 

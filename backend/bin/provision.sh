@@ -49,8 +49,8 @@ ssh "$SERVER_USER@$SERVER_HOST" <<EOF
     sudo mount -a
   fi
 
-  mkdir -p ${APP_DIR}
-  mkdir -p "${APP_DIR}/bin"
+  sudo mkdir -p ${APP_DIR}
+  sudo mkdir -p "${APP_DIR}/bin"
   sudo chown -R ${SERVER_USER}:${SERVER_USER} ${APP_DIR}
 
   echo "Acquiring SSL certificate..."
