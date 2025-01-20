@@ -7,7 +7,7 @@ source "${BACKEND_DIR}/bin/config.sh"
 
 echo "Building the Haskell binary..."
 mkdir -p "${BIN_PATH}"
-docker build --tag wotr-server-build "${BACKEND_DIR}/."
+docker buildx build --platform linux/amd64 --tag wotr-server-build "${BACKEND_DIR}/."
 docker create --name wotr-server-build wotr-server-build
 docker cp "wotr-server-build:${BIN_PATH}" "${BIN_PATH}"
 docker rm wotr-server-build
@@ -34,4 +34,4 @@ ssh "$SERVER_USER@$SERVER_HOST" <<EOF
   sudo systemctl status $SERVICE_NAME --no-pager
 EOF
 
-echo "Deployment complete!"
+echo "✅ Deployment complete!"
