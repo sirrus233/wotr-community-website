@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { CSSProperties, ReactNode } from "react";
 import Box from "@mui/joy/Box";
 import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
@@ -6,6 +6,7 @@ import FormLabel from "@mui/joy/FormLabel";
 import Sheet from "@mui/joy/Sheet";
 import { useTheme } from "@mui/joy/styles";
 import { FieldError } from "./types";
+import HelpIcon from "./HelpIcon";
 
 type LayoutTheme = "minimal" | "default";
 
@@ -13,6 +14,10 @@ interface Props {
     children: React.ReactNode;
     label: string;
     error?: FieldError;
+    helpProps?: {
+        content: ReactNode;
+        iconStyle?: CSSProperties;
+    };
     hasSingleControl?: boolean;
     layoutTheme?: LayoutTheme;
 }
@@ -21,6 +26,7 @@ export default function FormElement({
     children,
     label,
     error,
+    helpProps,
     hasSingleControl = true,
     layoutTheme = "default",
 }: Props) {
@@ -37,6 +43,7 @@ export default function FormElement({
                 sx={layoutTheme === "minimal" ? {} : { fontSize: 16, pb: 2 }}
             >
                 {label}
+                {helpProps && <HelpIcon {...helpProps} />}
             </FormLabel>
             {children}
             {error && (

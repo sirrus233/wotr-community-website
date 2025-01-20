@@ -8,6 +8,7 @@ import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
 import Sheet from "@mui/joy/Sheet";
 import Button from "@mui/joy/Button";
+import mordorStepsPath from "../assets/mordor-steps.png";
 import {
     competitionTypes,
     ErrorMessage,
@@ -22,6 +23,7 @@ import {
     strongholds,
     victoryTypes,
 } from "../constants";
+import { GAME_FORM_BOLD } from "../styles/colors";
 import {
     GameFormData,
     GameReportPayload,
@@ -345,6 +347,14 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             {formData.didFellowshipReachMordor.value && (
                 <FormElement
                     label="Where did the Fellowship reach on the Mordor track?"
+                    helpProps={{
+                        content: <img src={mordorStepsPath} />,
+                        iconStyle: {
+                            paddingLeft: "5px",
+                            fontSize: "23px",
+                            color: GAME_FORM_BOLD,
+                        },
+                    }}
                     error={formData.mordor.error}
                 >
                     <SelectNumericOptionInput
