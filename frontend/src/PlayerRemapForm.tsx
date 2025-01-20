@@ -89,7 +89,7 @@ export default function PlayerRemapForm({
                         handleSubmit();
                     } else {
                         setWarningAlert(
-                            `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "${buttonText}" again to continue.`
+                            `Danger: ${name} will cease to exist, unless they were present in the ladder before 2022. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history after the year 2022. ${name}'s history cannot be recovered. If you're sure, press "${buttonText}" again to continue.`
                         );
                     }
                 }}
