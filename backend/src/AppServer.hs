@@ -228,6 +228,7 @@ adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do
     Nothing -> updatePlayerName pid newName >> pure NoContent
     Just _ -> throwError err422 {errBody = "Name " <>: newName <> " already taken."}
 
+
 adminRemapPlayerHandler :: RemapPlayerRequest -> AppM RemapPlayerResponse
 adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
   when (fromPid == toPid) (throwError err422 {errBody = "Cannot remap identical player IDs."})
@@ -237,6 +238,7 @@ adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
 
   updateReports fromPid toPid
   deletePlayer fromPid
+  -- deleted player that existed in pre-2022 data will be reintroduced via reprocessReports
   reprocessReports
 
   pure $ RemapPlayerResponse player.playerDisplayName
