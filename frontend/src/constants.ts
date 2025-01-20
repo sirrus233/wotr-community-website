@@ -51,7 +51,7 @@ export const strongholds = [
     "Erebor",
 ] as const;
 
-export const optionalFormFields = ["logFile"] as const;
+export const optionalFormFields = ["rid", "timestamp", "logFile"] as const;
 
 export const optionalPayloadFields = [
     "competition",

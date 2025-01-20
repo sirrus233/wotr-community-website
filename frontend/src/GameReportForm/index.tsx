@@ -7,6 +7,7 @@ import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
 import Sheet from "@mui/joy/Sheet";
+import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import mordorStepsPath from "../assets/mordor-steps.png";
 import {
@@ -28,6 +29,7 @@ import {
     GameFormData,
     GameReportPayload,
     LeaderboardEntry,
+    ProcessedGameReport,
     ServerErrorBody,
     ServerValidationError,
     Stronghold,
@@ -38,7 +40,6 @@ import {
     getLeagueLabel,
     getStrongholdLabel,
     isStrongholdInPlay,
-    objectKeys,
     strongholdSide,
 } from "../utils";
 import useFormData from "../hooks/useFormData";
@@ -51,15 +52,29 @@ import SelectNumericOptionInput from "../SelectNumericOptionInput";
 import SingleOptionInput from "../SingleOptionInput";
 import TextInput from "../TextInput";
 import VictoryPoints from "../VictoryPoints";
-import initialFormData from "./initialFormData";
+import getInitialFormData from "./getInitialFormData";
+import useConditionalActionEffect from "../hooks/useConditionalActionEffect";
 import useGameReportClearEffects from "../hooks/useGameReportFormEffects";
 
 interface Props {
+    report?: ProcessedGameReport;
     leaderboard: LeaderboardEntry[];
     loadingLeaderboard: boolean;
+    refreshGameReports?: () => void;
+    exit?: () => void;
 }
 
-function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
+function GameReportForm({
+    report,
+    leaderboard,
+    loadingLeaderboard,
+    refreshGameReports = () => {},
+    exit,
+}: Props) {
+    const playerNames = leaderboard.map((entry) => entry.name);
+    const initialFormData = getInitialFormData(report, report && playerNames);
+    const emptyFormData = getInitialFormData();
+
     const [
         formData,
         { errorOnSubmit, successMessage, submitting },
@@ -73,19 +88,21 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
     ] = useFormData<GameFormData, ValidGameFormData>({
         initialFormData,
         optionalFields: optionalFields.slice(),
-        successMessageText: "Report submitted. Thank you!",
+        successMessageText: `${
+            report ? "Modifications" : "Report"
+        } submitted. Thank you!`,
         submit,
         toErrorMessage,
     });
 
     useGameReportClearEffects({
         formData,
-        initialFormData,
+        initialFormData: emptyFormData,
         setFormData,
         successMessage,
     });
 
-    const playerNames = leaderboard.map((entry) => entry.name);
+    useConditionalActionEffect(!!successMessage, refreshGameReports);
 
     const { value: selectedExpansions } = formData.expansions;
 
@@ -101,61 +118,96 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             isStrongholdInPlay(selectedExpansions, stronghold)
     );
 
+    const layoutTheme = report ? "minimal" : "default";
+
+    const containerStyle = {
+        display: "flex",
+        flexDirection: "column",
+        px: 8,
+        py: 3,
+    };
+
     return (
         <Sheet
-            sx={{
-                mx: 10,
-                my: 4,
-                px: 8,
-                py: 3,
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                borderRadius: "lg",
-                boxShadow: "lg",
-                backgroundColor: "lavender",
-            }}
+            sx={
+                report
+                    ? {
+                          ...containerStyle,
+                          gap: 3,
+                          fontSize: "sm",
+                      }
+                    : {
+                          ...containerStyle,
+                          gap: 2,
+                          mx: 10,
+                          my: 4,
+                          borderRadius: "lg",
+                          boxShadow: "lg",
+                          backgroundColor: "lavender",
+                      }
+            }
         >
-            <h1>War of the Ring Game Report</h1>
+            <h1>
+                {report ? "Edit Game Report" : "War of the Ring Game Report"}
+            </h1>
 
             <Modal
                 open={!!successMessage}
-                onClose={() => setSuccessMessage(null)}
+                onClose={() => {
+                    setSuccessMessage(null);
+                    if (exit) exit();
+                }}
             >
                 <ModalDialog>
                     <ModalClose />
-                    <Typography>{successMessage}</Typography>
+                    <Typography mt={2}>{successMessage}</Typography>
                 </ModalDialog>
             </Modal>
 
-            <FormElement label={"Who won?"} error={formData.winner.error}>
+            <FormElement
+                label={"Who won?"}
+                error={formData.winner.error}
+                layoutTheme={layoutTheme}
+            >
                 <Autocomplete
                     options={playerNames}
                     current={formData.winner.value || ""}
                     loading={loadingLeaderboard}
                     alertText={
-                        !!formData.winner.value &&
-                        !playerNames.includes(formData.winner.value)
+                        report
+                            ? undefined
+                            : !!formData.winner.value &&
+                              !playerNames.includes(formData.winner.value)
                             ? ErrorMessage.MissingPlayerName
                             : ""
                     }
-                    placeholder="Player Name - Please check spelling!"
+                    placeholder={`Player Name${
+                        report ? "" : " - Please check spelling!"
+                    }`}
                     onInputValueChange={handleInputChange("winner")}
                     validate={validateField("winner")}
                 />
             </FormElement>
-            <FormElement label={"Who lost?"} error={formData.loser.error}>
+            <FormElement
+                label={"Who lost?"}
+                error={formData.loser.error}
+                layoutTheme={layoutTheme}
+            >
                 <Autocomplete
                     options={playerNames}
                     current={formData.loser.value || ""}
                     loading={loadingLeaderboard}
                     alertText={
-                        !!formData.loser.value &&
-                        !playerNames.includes(formData.loser.value)
+                        report
+                            ? undefined
+                            : !!formData.loser.value &&
+                              !playerNames.includes(formData.loser.value)
                             ? ErrorMessage.MissingPlayerName
                             : ""
                     }
-                    placeholder="Player Name - Please check spelling!"
+                    placeholder={`Player Name${
+                        report ? "" : " - Please check spelling!"
+                    }`}
                     onInputValueChange={handleInputChange("loser")}
                     validate={validateField("loser")}
                 />
@@ -163,6 +215,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label={"What side did the winner play?"}
                 error={formData.side.error}
+                layoutTheme={layoutTheme}
             >
                 <SingleOptionInput
                     values={sides.slice()}
@@ -174,6 +227,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label={"How did you win?"}
                 error={formData.victory.error}
+                layoutTheme={layoutTheme}
             >
                 <SingleOptionInput
                     values={victoryTypes.slice()}
@@ -185,6 +239,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label={"What type of game did you play?"}
                 error={formData.match.error}
+                layoutTheme={layoutTheme}
             >
                 <SingleOptionInput
                     values={matchTypes.slice()}
@@ -198,6 +253,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     label={"Was this for a specific competition?"}
                     error={formData.competition.error}
                     hasSingleControl={false}
+                    layoutTheme={layoutTheme}
                 >
                     <MultiOptionInput
                         values={competitionTypes.slice()}
@@ -212,6 +268,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     <FormElement
                         label={"Which League?"}
                         error={formData.league.error}
+                        layoutTheme={layoutTheme}
                     >
                         <SingleOptionInput
                             values={leagues.slice()}
@@ -225,6 +282,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label={"Did you use any expansions?"}
                 error={formData.usedExpansions.error}
+                layoutTheme={layoutTheme}
             >
                 <SingleOptionInput
                     values={[true, false]}
@@ -239,6 +297,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     label={"What expansions did you use?"}
                     error={formData.expansions.error}
                     hasSingleControl={false}
+                    layoutTheme={layoutTheme}
                 >
                     <MultiOptionInput
                         values={expansions.slice()}
@@ -254,6 +313,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     <FormElement
                         label={"Was Treebeard mustered?"}
                         error={formData.treebeard.error}
+                        layoutTheme={layoutTheme}
                     >
                         <SingleOptionInput
                             values={[true, false]}
@@ -267,6 +327,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label={"Did you use a handicap mechanism (e.g. Action Tokens)?"}
                 error={formData.usedHandicap.error}
+                layoutTheme={layoutTheme}
             >
                 <SingleOptionInput
                     values={[true, false]}
@@ -281,6 +342,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     <FormElement
                         label="How many Action Tokens?"
                         error={formData.actionTokens.error}
+                        layoutTheme={layoutTheme}
                     >
                         <SelectNumericOptionInput
                             start={0}
@@ -295,6 +357,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     <FormElement
                         label="How many Dwarven Rings?"
                         error={formData.dwarvenRings.error}
+                        layoutTheme={layoutTheme}
                     >
                         <SelectNumericOptionInput
                             start={0}
@@ -311,6 +374,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label="On what turn did the game end?"
                 error={formData.turns.error}
+                layoutTheme={layoutTheme}
             >
                 <SelectNumericOptionInput
                     start={1}
@@ -323,6 +387,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label="How much corruption did the Fellowship have?"
                 error={formData.corruption.error}
+                layoutTheme={layoutTheme}
             >
                 <SelectNumericOptionInput
                     start={0}
@@ -335,6 +400,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label={"Did the Fellowship reach Mordor?"}
                 error={formData.didFellowshipReachMordor.error}
+                layoutTheme={layoutTheme}
             >
                 <SingleOptionInput
                     values={[true, false]}
@@ -356,6 +422,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                         },
                     }}
                     error={formData.mordor.error}
+                    layoutTheme={layoutTheme}
                 >
                     <SelectNumericOptionInput
                         start={0}
@@ -369,6 +436,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label="How many eyes did Shadow allocate on turn 1? (Before action dice were rolled)"
                 error={formData.initialEyes.error}
+                layoutTheme={layoutTheme}
             >
                 <SelectNumericOptionInput
                     start={0}
@@ -381,6 +449,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label={"Was Aragorn crowned King?"}
                 error={formData.wasAragornCrowned.error}
+                layoutTheme={layoutTheme}
             >
                 <SingleOptionInput
                     values={[true, false]}
@@ -394,6 +463,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                 <FormElement
                     label="On what turn was Aragorn crowned King?"
                     error={formData.aragornTurn.error}
+                    layoutTheme={layoutTheme}
                 >
                     <SelectNumericOptionInput
                         start={1}
@@ -408,6 +478,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                 label={"What strongholds were captured by Shadow?"}
                 error={formData.strongholds.error}
                 hasSingleControl={false}
+                layoutTheme={layoutTheme}
             >
                 <VictoryPoints
                     strongholds={formData.strongholds.value}
@@ -425,6 +496,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                 label={"What strongholds were captured by Free?"}
                 error={formData.strongholds.error}
                 hasSingleControl={false}
+                layoutTheme={layoutTheme}
             >
                 <VictoryPoints
                     strongholds={formData.strongholds.value}
@@ -443,6 +515,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     "On a scale from 1-10, how interesting did you find this game?"
                 }
                 error={formData.interestRating.error}
+                layoutTheme={layoutTheme}
             >
                 <SelectNumericOptionInput
                     start={1}
@@ -455,6 +528,7 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
             <FormElement
                 label={"Do you have any comments or questions?"}
                 error={formData.comment.error}
+                layoutTheme={layoutTheme}
             >
                 <TextInput
                     value={formData.comment.value || ""}
@@ -463,37 +537,59 @@ function GameReportForm({ leaderboard, loadingLeaderboard }: Props) {
                     validate={validateField("comment")}
                 />
             </FormElement>
-            <FormElement
-                error={formData.logFile.error}
-                label={
-                    "Game log (mandatory for rank 30 and higher, or for tournament and league games):"
+            {!report && (
+                <FormElement
+                    error={formData.logFile.error}
+                    label={
+                        "Game log (mandatory for rank 30 and higher, or for tournament and league games):"
+                    }
+                >
+                    <FileUpload
+                        value={formData.logFile.value}
+                        id="game-log-upload"
+                        constraintText={`Max ${MAX_GAME_LOG_SIZE_MB} MB`}
+                        validate={validateField("logFile")}
+                        onChange={handleInputChange(
+                            "logFile",
+                            (file: File | null) => {
+                                return file
+                                    ? file.size <= MAX_GAME_LOG_SIZE_BYTES
+                                        ? null
+                                        : "File too large"
+                                    : null;
+                            }
+                        )}
+                    />
+                </FormElement>
+            )}
+            {errorOnSubmit && <ErrorDisplay message={errorOnSubmit} />}
+            <Box
+                sx={
+                    report
+                        ? {
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "end",
+                              width: "100%",
+                              gap: 2,
+                          }
+                        : {
+                              display: "flex",
+                              flexDirection: "column",
+                          }
                 }
             >
-                <FileUpload
-                    value={formData.logFile.value}
-                    id="game-log-upload"
-                    constraintText={`Max ${MAX_GAME_LOG_SIZE_MB} MB`}
-                    validate={validateField("logFile")}
-                    onChange={handleInputChange(
-                        "logFile",
-                        (file: File | null) => {
-                            return file
-                                ? file.size <= MAX_GAME_LOG_SIZE_BYTES
-                                    ? null
-                                    : "File too large"
-                                : null;
-                        }
-                    )}
-                />
-            </FormElement>
-            <Button
-                onClick={handleSubmit}
-                disabled={submitting}
-                startDecorator={submitting ? <CircularProgress /> : undefined}
-            >
-                {submitting ? "Submitting..." : "Submit"}
-            </Button>
-            {errorOnSubmit && <ErrorDisplay message={errorOnSubmit} />}
+                {exit && <Button onClick={exit}>Cancel</Button>}
+                <Button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    startDecorator={
+                        submitting ? <CircularProgress /> : undefined
+                    }
+                >
+                    {submitting ? "Submitting..." : "Submit"}
+                </Button>
+            </Box>
         </Sheet>
     );
 }
@@ -502,16 +598,28 @@ export default GameReportForm;
 
 async function submit(validatedResult: ValidGameFormData) {
     return await axios.post(
-        // "http://localhost:8081/submitReport",
-        "https://api.waroftheringcommunity.net:8080/submitReport",
+        // `http://localhost:8081/${
+        `https://api.waroftheringcommunity.net:8080/${
+            typeof validatedResult.rid.value === "number"
+                ? "modifyReport"
+                : "submitReport"
+        }`,
         toPayload(validatedResult),
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+            headers: {
+                "Content-Type": validatedResult.rid.value
+                    ? "application/json"
+                    : "multipart/form-data",
+            },
+        }
     );
 }
 
-function toPayload(formData: ValidGameFormData): FormData {
+function toPayload(formData: ValidGameFormData): GameReportPayload | FormData {
     const unencodedPayload: GameReportPayload = {
+        rid: formData.rid.value,
         logFile: formData.logFile.value,
+        timestamp: formData.timestamp.value,
         report: {
             winner: formData.winner.value,
             loser: formData.loser.value,
@@ -534,7 +642,9 @@ function toPayload(formData: ValidGameFormData): FormData {
             comment: formData.comment.value,
         },
     };
-    return toFormData(unencodedPayload);
+    return typeof formData.rid.value === "number"
+        ? unencodedPayload
+        : toFormData(unencodedPayload);
 }
 
 function toFormData(unencodedPayload: GameReportPayload): FormData {

@@ -40,7 +40,11 @@ export default function FormElement({
     const formComponents = (
         <>
             <FormLabel
-                sx={layoutTheme === "minimal" ? {} : { fontSize: 16, pb: 2 }}
+                sx={
+                    layoutTheme === "minimal"
+                        ? { pb: 1 }
+                        : { fontSize: 16, pb: 2 }
+                }
             >
                 {label}
                 {helpProps && <HelpIcon {...helpProps} />}

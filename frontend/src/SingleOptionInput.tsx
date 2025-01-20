@@ -34,7 +34,12 @@ export default function SingleOptionInput<T>({
             onChange={handleChange}
         >
             {values.map((value, i) => (
-                <Radio key={i} value={value} label={getLabel(value)} />
+                <Radio
+                    key={i}
+                    value={value}
+                    label={getLabel(value)}
+                    sx={{ fontSize: "inherit" }}
+                />
             ))}
         </RadioGroup>
     );

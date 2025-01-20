@@ -57,6 +57,8 @@ export type ConstrainedFormData<F> = {
 };
 
 export interface GameFormData {
+    rid: FieldData<number | null>;
+    timestamp: FieldData<string | null>;
     winner: FieldData<string | null>;
     loser: FieldData<string | null>;
     side: FieldData<Side | null>;
@@ -90,6 +92,8 @@ export type ValidGameFormData = {
 };
 
 export type GameReportPayload = {
+    rid: ValidGameFormData["rid"]["value"];
+    timestamp: ValidGameFormData["timestamp"]["value"];
     logFile: ValidGameFormData["logFile"]["value"];
     report: {
         [K in keyof Pick<ValidGameFormData, PayloadField>]: Pick<
