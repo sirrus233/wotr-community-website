@@ -286,7 +286,6 @@ adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do
     Nothing -> updatePlayerName pid newName >> pure NoContent
     Just _ -> throwError err422 {errBody = "Name " <>: newName <> " already taken."}
 
-
 adminRemapPlayerHandler :: RemapPlayerRequest -> AppM RemapPlayerResponse
 adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
   when (fromPid == toPid) (throwError err422 {errBody = "Cannot remap identical player IDs."})
