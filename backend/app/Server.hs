@@ -4,22 +4,18 @@ import Amazonka qualified as AWS
 import Api (API)
 import AppConfig (Env (..), authDatabaseFile, databaseFile, logFile, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
-import Auth (authHandler, googleIdp, googleOauthAppConfig)
+import Auth (authHandler)
 import Control.Monad.Logger (LogLevel (..))
-import Crypto.JWT (JWK)
-import Data.Maybe (fromJust)
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
 import Logging (fileLogger, log)
-import Network.OAuth2.Experiment (ClientSecret (ClientSecret), IdpApplication (..))
 import Network.Wai.Handler.Warp (defaultSettings, setPort)
 import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Network.Wai.Middleware.Gzip (defaultGzipSettings, gzip)
 import Network.Wai.Parse (defaultParseRequestBodyOptions, setMaxRequestFileSize)
 import Servant (Application, Context (..), serveWithContextT)
-import Servant.Auth.Server (generateKey)
 import Servant.Multipart (MultipartOptions (..), Tmp, defaultMultipartOptions)
 import System.Directory (createDirectoryIfMissing)
 import System.Environment (setEnv)
@@ -37,10 +33,10 @@ corsMiddleware = cors $ const $ Just policy
           corsMethods = [],
           corsRequestHeaders = ["content-type"],
           corsExposedHeaders = Nothing,
-          corsMaxAge = Nothing,
+          corsMaxAge = Nothing, -- TODO Set to 3600 or 7200 prior to launch
           corsVaryOrigin = False,
           corsRequireOrigin = True,
-          corsIgnoreFailures = True
+          corsIgnoreFailures = False
         }
 
 gzipMiddleware :: Middleware
@@ -54,8 +50,8 @@ multipartOpts =
   where
     maxSizeBytes = maxGameLogSizeMB * 1024 * 1024
 
-app :: Env -> JWK -> Application
-app env key = gzipMiddleware . corsMiddleware $ serveWithContextT (Proxy :: Proxy API) context (nt env) server
+app :: Env -> Application
+app env = gzipMiddleware . corsMiddleware $ serveWithContextT (Proxy :: Proxy API) context (nt env) server
   where
     context = authHandler :. multipartOpts :. EmptyContext
 
@@ -73,10 +69,6 @@ main = do
   redisPool <- connect redisConfig
   aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
 
-  -- secret <- AWS.runResourceT . AWS.send aws . SecretsManager.newGetSecretValue $ "GoogleOAuthClientSecret"
-  -- let ss = toLazy . toText . AWS.fromSensitive . fromJust $ (secret.secretString)
-  -- let googleOAuth = IdpApplication googleIdp (googleOauthAppConfig $ ClientSecret ss)
-
   let env = Env {dbPool, authDbPool, redisPool, logger, aws}
 
   when ("migrate" `elem` args) $ migrateSchema dbPool logger
@@ -88,4 +80,4 @@ main = do
   let tlsSettings_ = tlsSettings certFile keyFile
   let settings = setPort 8080 defaultSettings
 
-  generateKey >>= runTLS tlsSettings_ settings . app env
+  runTLS tlsSettings_ settings . app $ env

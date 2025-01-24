@@ -1,31 +1,21 @@
 module Api where
 
+import Auth (SessionIdCookie)
 import Servant
   ( AuthProtect,
     Get,
-    Header,
-    Header',
     JSON,
-    NoContent,
-    OctetStream,
     PlainText,
     Post,
     PostNoContent,
     QueryParam,
-    QueryParam',
     ReqBody,
-    Required,
-    StdMethod (..),
-    Strict,
-    Verb,
     (:<|>),
     (:>),
   )
 import Servant.Multipart (MultipartForm, Tmp)
-import Servant.Server.Experimental.Auth (AuthServerData)
 import Types.Api
-  ( AdminUser,
-    DeleteReportRequest,
+  ( DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
     ModifyReportRequest,
@@ -60,6 +50,8 @@ type AdminModifyReportAPI =
 type AdminDeleteReportAPI =
   "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
 
+-- TODO Add logout and logged-in verification APIs
+
 type Unprotected =
   AuthGoogleLoginAPI
     :<|> SubmitReportAPI
@@ -72,9 +64,4 @@ type Protected =
     :<|> AdminModifyReportAPI
     :<|> AdminDeleteReportAPI
 
--- TODO Weird type tag?
-data CookieAuth = CookieAuth
-
-type instance AuthServerData (AuthProtect CookieAuth) = AdminUser
-
-type API = (AuthProtect CookieAuth :> Protected) :<|> Unprotected
+type API = (AuthProtect SessionIdCookie :> Protected) :<|> Unprotected

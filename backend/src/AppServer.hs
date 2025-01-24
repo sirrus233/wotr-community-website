@@ -2,18 +2,13 @@ module AppServer where
 
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
-import Amazonka.S3.WriteGetObjectResponse (WriteGetObjectResponse (errorMessage))
-import Api (API, CookieAuth, Protected, Unprotected)
+import Api (API, Protected, Unprotected)
 import AppConfig (AppM, Env (..), gameLogBucket)
-import Auth (fetchGoogleJWKSet)
+import Auth (SessionIdCookie, fetchGoogleJWKSet)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
-import Crypto.Hash.SHA256 (hash)
-import Crypto.JOSE (getSystemDRG, withDRG)
-import Data.Aeson (decodeStrict)
+import Crypto.Random (getSystemDRG, withDRG)
 import Data.IntMap.Strict qualified as Map
-import Data.List (lookup)
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
-import Data.UUID (toByteString)
 import Data.UUID.V4 qualified as UUID
 import Data.Validation (Validation (..))
 import Database
@@ -37,22 +32,18 @@ import Database
   )
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Jose.Jwa (JwsAlg (..))
-import Jose.Jwk (Jwk, JwkSet (..))
-import Jose.Jwt (Jwt (..), JwtEncoding (..), Payload (..), decode, decodeClaims, encode)
+import Jose.Jwk (JwkSet (..))
+import Jose.Jwt (JwtEncoding (..), decode)
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
-import Network.OAuth.OAuth2 (ExchangeToken (..))
-import Network.OAuth2.Experiment (AuthorizationCodeApplication (..), AuthorizeState (..), IdpApplication (..), conduitTokenRequest, mkAuthorizationRequest)
 import Servant
   ( AuthProtect,
     NoContent (..),
     ServerError (..),
     ServerT,
-    err302,
     err401,
     err404,
     err422,
-    err500,
     throwError,
     type (:<|>) (..),
   )
@@ -90,9 +81,7 @@ import Types.Database
     updatedPlayerStatsLose,
     updatedPlayerStatsWin,
   )
-import URI.ByteString (serializeURIRef')
 import Validation (validateLogFile, validateReport)
-import Web.Cookie (SetCookie (..), defaultSetCookie, parseCookiesText, renderSetCookieBS, sameSiteNone, sameSiteStrict)
 import Prelude hiding (get, on)
 
 defaultRating :: Rating
@@ -339,7 +328,7 @@ unprotected =
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
 
-protected :: AuthServerData (AuthProtect CookieAuth) -> ServerT Protected AppM
+protected :: AuthServerData (AuthProtect SessionIdCookie) -> ServerT Protected AppM
 protected _ =
   adminRenamePlayerHandler
     :<|> adminRemapPlayerHandler

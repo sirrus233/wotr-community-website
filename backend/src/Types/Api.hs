@@ -3,9 +3,6 @@ module Types.Api where
 import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
-import Servant (Header, Headers, NoContent)
-import Servant.Auth.JWT (FromJWT, ToJWT)
-import Servant.Auth.Server (SetCookie)
 import Servant.Multipart (FileData (..), FromMultipart (..), MultipartData (..), Tmp, lookupFile, lookupInput)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
 import Types.Database
@@ -20,23 +17,6 @@ import Types.Database
   )
 
 type S3Url = Text
-
-newtype AdminUser = AdminUser {username :: Text} deriving (Eq, Show, Read, Generic)
-
--- TODO Don't think we actually need these instances anymore
-instance ToJSON AdminUser
-
-instance ToJWT AdminUser
-
-instance FromJSON AdminUser
-
-instance FromJWT AdminUser
-
-data LoginRequest = LoginRequest {username :: Text, password :: Text} deriving (Eq, Show, Read, Generic)
-
-instance FromJSON LoginRequest
-
-type LoginResponse = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] NoContent
 
 data SubmitReportRequest = SubmitReportRequest
   { report :: RawGameReport,
