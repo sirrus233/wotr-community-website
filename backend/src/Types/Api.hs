@@ -18,6 +18,8 @@ import Types.Database
 
 type S3Url = Text
 
+newtype IdToken = IdToken Text
+
 data SubmitReportRequest = SubmitReportRequest
   { report :: RawGameReport,
     logFile :: Maybe (FileData Tmp)

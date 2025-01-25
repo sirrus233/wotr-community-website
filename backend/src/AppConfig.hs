@@ -25,6 +25,9 @@ databaseFile = "data/db.sqlite"
 authDatabaseFile :: FilePath
 authDatabaseFile = "data/auth-db.sqlite"
 
+googleClientId :: Text
+googleClientId = "331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com"
+
 logFile :: FilePath
 logFile = "logs/app.log"
 

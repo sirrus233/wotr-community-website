@@ -18,6 +18,7 @@ import Types.Api
   ( DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
+    IdToken,
     ModifyReportRequest,
     RemapPlayerRequest,
     RemapPlayerResponse,
@@ -27,7 +28,7 @@ import Types.Api
   )
 
 type AuthGoogleLoginAPI =
-  "auth" :> "google" :> "login" :> ReqBody '[PlainText] Text :> PostNoContent
+  "auth" :> "google" :> "login" :> ReqBody '[PlainText] IdToken :> PostNoContent
 
 type SubmitReportAPI =
   "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse

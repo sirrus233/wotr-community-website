@@ -4,9 +4,8 @@ import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
 import Api (API, Protected, Unprotected)
 import AppConfig (AppM, Env (..), gameLogBucket)
-import Auth (SessionIdCookie, fetchGoogleJWKSet)
+import Auth (SessionIdCookie, fetchGoogleJWKSet, validateToken)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
-import Crypto.Random (getSystemDRG, withDRG)
 import Data.IntMap.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
 import Data.UUID.V4 qualified as UUID
@@ -31,9 +30,6 @@ import Database
     updateReports,
   )
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
-import Jose.Jwa (JwsAlg (..))
-import Jose.Jwk (JwkSet (..))
-import Jose.Jwt (JwtEncoding (..), decode)
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
 import Servant
@@ -53,6 +49,7 @@ import Types.Api
   ( DeleteReportRequest (..),
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
+    IdToken,
     LeaderboardEntry (..),
     ModifyReportRequest (..),
     ProcessedGameReport,
@@ -203,17 +200,14 @@ reprocessReports = do
   forM_ reports processReport
   updateActiveStatus
 
-authGoogleLoginHandler :: Text -> AppM NoContent
+authGoogleLoginHandler :: IdToken -> AppM NoContent
 authGoogleLoginHandler idToken = do
   httpConnMgr <- newManager
-  -- TODO cache this
-  JwkSet jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (const $ throwError err401) pure
-  sessionId <- liftIO UUID.nextRandom
-  drg <- liftIO getSystemDRG
-  case withDRG drg (decode jwks (Just (JwsEncoding RS256)) (encodeUtf8 idToken)) of
-    (Left err, _) -> throwError $ err401 {errBody = show err}
-    (Right jwtDecoded, _) -> do
-      logInfoN $ show jwtDecoded
+  jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (const $ throwError err401) pure -- TODO cache this
+  liftIO (validateToken jwks idToken) >>= \case
+    Left err -> throwError $ err401 {errBody = show err}
+    Right user -> do
+      sessionId <- liftIO UUID.nextRandom
       pure NoContent
 
 -- let oauth' = oauth {application = oauth.application {acAuthorizeState = AuthorizeState $ hashedSessionId sessionId}}
