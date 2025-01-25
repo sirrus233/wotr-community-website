@@ -53,7 +53,7 @@ multipartOpts =
 app :: Env -> Application
 app env = gzipMiddleware . corsMiddleware $ serveWithContextT (Proxy :: Proxy API) context (nt env) server
   where
-    context = authHandler :. multipartOpts :. EmptyContext
+    context = authHandler env :. multipartOpts :. EmptyContext
 
 main :: IO ()
 main = do

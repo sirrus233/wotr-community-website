@@ -3,7 +3,7 @@ module AppServer where
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
 import Api (API, Protected, Unprotected)
-import AppConfig (AppM, Env (..), gameLogBucket)
+import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
 import Auth (Admin (..), SessionIdCookie, Subject (..), Unique (..), fetchGoogleJWKSet, validateToken)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
@@ -215,7 +215,7 @@ authGoogleLoginHandler idToken = do
   runAuthDb (lift . insert_ $ Admin {adminUserId = sub, adminSessionId = Just . UUID.toText $ sessionId})
   let cookie =
         defaultSetCookie
-          { setCookieName = "wotr_session_id",
+          { setCookieName = encodeUtf8 authCookieName,
             setCookieValue = toStrict . UUID.toByteString $ sessionId,
             setCookieMaxAge = Just (60 * 60 * 24 * 365),
             setCookieHttpOnly = True,

@@ -3,21 +3,25 @@
 
 module Auth where
 
-import AppConfig (googleClientId)
+import AppConfig (AppM, Env, authCookieName, googleClientId, nt)
 import Crypto.JWT (JWTError (JWTExpired, JWTNotInAudience, JWTNotInIssuer))
 import Crypto.Random (getSystemDRG, withDRG)
 import Data.Aeson (FromJSON, eitherDecode)
+import Data.List (lookup)
 import Data.Text (isSuffixOf)
 import Data.Time.Clock.POSIX (getCurrentTime, posixSecondsToUTCTime)
+import Database (runAuthDb)
+import Database.Esqueleto.Experimental (getBy)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Jose.Jwa (JwsAlg (RS256))
 import Jose.Jwk (JwkSet (..))
 import Jose.Jwt (JwtContent (..), JwtEncoding (..), JwtError, decode)
 import Network.HTTP.Conduit (Manager, Response (..), httpLbs, parseRequest)
 import Network.Wai (Request (..))
-import Servant (AuthProtect)
+import Servant (AuthProtect, ServerError (errBody), err401, throwError)
 import Servant.Server.Experimental.Auth (AuthHandler, AuthServerData, mkAuthHandler)
 import Types.Api (IdToken (..))
+import Web.Cookie (parseCookiesText)
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
@@ -32,9 +36,9 @@ share
 
 data SessionIdCookie = SessionIdCookie -- Type-level tag for the auth scheme
 
-type instance AuthServerData (AuthProtect SessionIdCookie) = AdminUser
+type instance AuthServerData (AuthProtect SessionIdCookie) = Authenticated
 
-newtype AdminUser = AdminUser {userId :: Text} deriving (Eq, Show, Read, Generic)
+data Authenticated = Authenticated
 
 newtype Subject = Subject Text
 
@@ -100,14 +104,17 @@ validateToken (JwkSet keys) (IdToken token) = do
       | claims.email_verified && isJust claims.hd = Right ()
       | otherwise = Left GoogleNotAuthoritativeError
 
-authHandler :: AuthHandler Request AdminUser
-authHandler = mkAuthHandler $ \req -> do
-  -- TODO
-  pure $ AdminUser "TODO"
-
--- case lookup "Authorization" (requestHeaders req) >>= stripBearer of
---   Nothing -> throwError err401
---   Just token ->
---     liftIO (validateBearerToken token) >>= \case
---       Nothing -> throwError err403
---       Just userId -> pure $ AdminUser userId
+authHandler :: Env -> AuthHandler Request Authenticated
+authHandler env = mkAuthHandler (nt env . handler)
+  where
+    handler :: Request -> AppM Authenticated
+    handler req = do
+      case parseCookiesText <$> lookup "Cookie" (requestHeaders req) of
+        Nothing -> throwError err401 {errBody = "Missing Cookie header."}
+        Just cookies -> do
+          case lookup authCookieName cookies of
+            Nothing -> throwError err401 {errBody = "Auth cookie not found."}
+            Just sessionId -> do
+              runAuthDb (lift . getBy . UniqueAdminSessionId $ Just sessionId) >>= \case
+                Nothing -> throwError err401 {errBody = "Invalid session."}
+                Just _ -> pure Authenticated
