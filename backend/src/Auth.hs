@@ -23,12 +23,10 @@ share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
   [persistLowerCase|
    Admin
-    email Text
-    sessionId Text
-    refreshToken Text
-    UniqueAdminEmail email 
-    UniqueAdminSessionId sessionId
-    UniqueAdminRefreshToken refreshToken
+    userId Text
+    sessionId Text Maybe
+    UniqueAdminUserId userId
+    UniqueAdminSessionId sessionId !force
     deriving Show
 |]
 
@@ -37,6 +35,8 @@ data SessionIdCookie = SessionIdCookie -- Type-level tag for the auth scheme
 type instance AuthServerData (AuthProtect SessionIdCookie) = AdminUser
 
 newtype AdminUser = AdminUser {userId :: Text} deriving (Eq, Show, Read, Generic)
+
+newtype Subject = Subject Text
 
 data GoogleIdTokenClaims = GoogleIdTokenClaims
   { iss :: Text,
@@ -66,7 +66,7 @@ data TokenValidationError
   | GoogleNotAuthoritativeError
   deriving (Show)
 
-validateToken :: JwkSet -> IdToken -> IO (Either TokenValidationError AdminUser)
+validateToken :: JwkSet -> IdToken -> IO (Either TokenValidationError Subject)
 validateToken (JwkSet keys) (IdToken token) = do
   drg <- getSystemDRG
   let (tokenDecodeResult, _) = withDRG drg (decode keys (Just (JwsEncoding RS256)) (encodeUtf8 token))
@@ -79,7 +79,7 @@ validateToken (JwkSet keys) (IdToken token) = do
         Left err -> pure $ Left (JwtDecodeClaimsError $ toText err)
         Right claims -> do
           now <- getCurrentTime
-          pure $ validAud *> validIss *> validExp now *> googleAuthoritative *> (Right . AdminUser . sub) $ claims
+          pure $ validAud *> validIss *> validExp now *> googleAuthoritative *> (Right . Subject . sub) $ claims
   where
     -- See: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
     validAud claims

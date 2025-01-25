@@ -10,6 +10,8 @@ import Servant
     PostNoContent,
     QueryParam,
     ReqBody,
+    StdMethod (..),
+    Verb,
     (:<|>),
     (:>),
   )
@@ -18,6 +20,7 @@ import Types.Api
   ( DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
+    GoogleLoginResponse,
     IdToken,
     ModifyReportRequest,
     RemapPlayerRequest,
@@ -27,8 +30,7 @@ import Types.Api
     SubmitReportRequest,
   )
 
-type AuthGoogleLoginAPI =
-  "auth" :> "google" :> "login" :> ReqBody '[PlainText] IdToken :> PostNoContent
+type AuthGoogleLoginAPI = "auth" :> "google" :> "login" :> ReqBody '[PlainText] IdToken :> Verb 'POST 204 '[JSON] GoogleLoginResponse
 
 type SubmitReportAPI =
   "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse

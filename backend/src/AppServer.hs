@@ -4,10 +4,11 @@ import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
 import Api (API, Protected, Unprotected)
 import AppConfig (AppM, Env (..), gameLogBucket)
-import Auth (SessionIdCookie, fetchGoogleJWKSet, validateToken)
+import Auth (Admin (..), SessionIdCookie, Subject (..), Unique (..), fetchGoogleJWKSet, validateToken)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
+import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Data.Validation (Validation (..))
 import Database
@@ -24,12 +25,13 @@ import Database
     insertPlayerIfNotExists,
     repsertPlayerStats,
     resetStats,
+    runAuthDb,
     runDb,
     updateActiveStatus,
     updatePlayerName,
     updateReports,
   )
-import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
+import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..), PersistUniqueRead (..))
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
 import Servant
@@ -37,6 +39,7 @@ import Servant
     NoContent (..),
     ServerError (..),
     ServerT,
+    addHeader,
     err401,
     err404,
     err422,
@@ -49,6 +52,7 @@ import Types.Api
   ( DeleteReportRequest (..),
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
+    GoogleLoginResponse,
     IdToken,
     LeaderboardEntry (..),
     ModifyReportRequest (..),
@@ -79,6 +83,7 @@ import Types.Database
     updatedPlayerStatsWin,
   )
 import Validation (validateLogFile, validateReport)
+import Web.Cookie (SetCookie (..), defaultSetCookie, sameSiteStrict)
 import Prelude hiding (get, on)
 
 defaultRating :: Rating
@@ -200,31 +205,24 @@ reprocessReports = do
   forM_ reports processReport
   updateActiveStatus
 
-authGoogleLoginHandler :: IdToken -> AppM NoContent
+authGoogleLoginHandler :: IdToken -> AppM GoogleLoginResponse
 authGoogleLoginHandler idToken = do
   httpConnMgr <- newManager
-  jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (const $ throwError err401) pure -- TODO cache this
-  liftIO (validateToken jwks idToken) >>= \case
-    Left err -> throwError $ err401 {errBody = show err}
-    Right user -> do
-      sessionId <- liftIO UUID.nextRandom
-      pure NoContent
-
--- let oauth' = oauth {application = oauth.application {acAuthorizeState = AuthorizeState $ hashedSessionId sessionId}}
--- let cookie =
---       defaultSetCookie
---         { setCookieName = "wotr_session_id",
---           setCookieValue = toStrict . toByteString $ sessionId,
---           setCookiePath = Nothing,
---           setCookieMaxAge = Just (60 * 60 * 24 * 365),
---           setCookieHttpOnly = True,
---           setCookieSecure = True,
---           setCookieSameSite = Just sameSiteNone
---         }
--- throwError $ err302 {errHeaders = [("Location", authorizeUrl oauth'), ("Set-Cookie", renderSetCookieBS cookie)]}
--- where
---   hashedSessionId = decodeUtf8 . hash . toStrict . toByteString
---   authorizeUrl = serializeURIRef' . mkAuthorizationRequest
+  jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (\err -> throwError err401 {errBody = show err}) pure -- TODO cache this
+  Subject sub <- liftIO (validateToken jwks idToken) >>= either (\err -> throwError err401 {errBody = show err}) pure
+  whenM (isNothing <$> runAuthDb (lift . getBy . UniqueAdminUserId $ sub)) (throwError err401 {errBody = "Non-admin login."})
+  sessionId <- liftIO UUID.nextRandom
+  runAuthDb (lift . insert_ $ Admin {adminUserId = sub, adminSessionId = Just . UUID.toText $ sessionId})
+  let cookie =
+        defaultSetCookie
+          { setCookieName = "wotr_session_id",
+            setCookieValue = toStrict . UUID.toByteString $ sessionId,
+            setCookieMaxAge = Just (60 * 60 * 24 * 365),
+            setCookieHttpOnly = True,
+            setCookieSecure = True,
+            setCookieSameSite = Just sameSiteStrict
+          }
+  pure (addHeader cookie NoContent)
 
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do

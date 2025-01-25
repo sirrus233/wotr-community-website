@@ -5,7 +5,8 @@ import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
 import Data.Text qualified as T
 import Data.Time (addUTCTime, getCurrentTime, nominalDay)
 import Database.Esqueleto.Experimental
-  ( Entity (..),
+  ( ConnectionPool,
+    Entity (..),
     From,
     PersistStoreWrite (..),
     SqlExpr,
@@ -69,13 +70,19 @@ type DBAction m = ExceptT ServerError (SqlPersistT m)
 
 data SortOrder = OldestToNewest | NewestToOldest
 
-runDb :: DBAction (LoggingT IO) a -> AppM a
-runDb dbAction = do
+runDbWithPool :: ConnectionPool -> DBAction (LoggingT IO) a -> AppM a
+runDbWithPool pool dbAction = do
   env <- ask
-  result <- liftIO . runAppLogger env.logger . runSqlPool (runExceptT dbAction) $ env.dbPool
+  result <- liftIO . runAppLogger env.logger . runSqlPool (runExceptT dbAction) $ pool
   case result of
     Left err -> throwError err
     Right a -> pure a
+
+runDb :: DBAction (LoggingT IO) a -> AppM a
+runDb dbAction = asks dbPool >>= \pool -> runDbWithPool pool dbAction
+
+runAuthDb :: DBAction (LoggingT IO) a -> AppM a
+runAuthDb dbAction = asks authDbPool >>= \pool -> runDbWithPool pool dbAction
 
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
