@@ -11,7 +11,7 @@ import Servant (Handler)
 
 data Env = Env
   { dbPool :: SQL.ConnectionPool,
-    authDbPool :: SQL.ConnectionPool, -- TODO Remove this if we can't get at it in the Auth handler
+    authDbPool :: SQL.ConnectionPool,
     redisPool :: Redis.Connection,
     logger :: Logger,
     aws :: AWS.Env
