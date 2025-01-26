@@ -4,6 +4,8 @@ import AppConfig (AppM, Env (..), runAppLogger)
 import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
 import Data.Text qualified as T
 import Data.Time (addUTCTime, getCurrentTime, nominalDay)
+import Data.UUID (UUID)
+import Data.UUID qualified as UUID
 import Database.Esqueleto.Experimental
   ( ConnectionPool,
     Entity (..),
@@ -33,6 +35,7 @@ import Database.Esqueleto.Experimental
     table,
     then_,
     update,
+    updateCount,
     val,
     when_,
     where_,
@@ -49,7 +52,8 @@ import Database.Esqueleto.Experimental
 import Servant (ServerError, throwError)
 import Types.DataField (PlayerName, Year)
 import Types.Database
-  ( EntityField (..),
+  ( Admin,
+    EntityField (..),
     GameReport (..),
     Key (..),
     MaybePlayerStats,
@@ -86,6 +90,9 @@ runAuthDb dbAction = asks authDbPool >>= \pool -> runDbWithPool pool dbAction
 
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
+
+getAdminBySessionId :: (MonadIO m, MonadLogger m) => Text -> DBAction m (Maybe (Entity Admin))
+getAdminBySessionId sessionId = lift . getBy . UniqueAdminSessionId $ Just sessionId
 
 getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Maybe (Entity Player))
 getPlayerByName = lift . getBy . UniquePlayerName . normalizeName
@@ -223,6 +230,11 @@ updateActiveStatus = do
             )
               &&. report ^. GameReportTimestamp >=. val cutoffDay
           )
+
+updateAdminSessionId :: (MonadIO m, MonadLogger m) => Text -> UUID -> DBAction m Int64
+updateAdminSessionId userId sessionId = lift $ updateCount $ \admin -> do
+  set admin [AdminSessionId =. val (Just $ UUID.toText sessionId)]
+  where_ (admin ^. AdminUserId ==. val userId)
 
 deletePlayer :: (MonadIO m, MonadLogger m) => PlayerId -> DBAction m ()
 deletePlayer pid = lift $ do

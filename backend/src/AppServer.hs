@@ -4,7 +4,7 @@ import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
 import Api (API, Protected, Unprotected)
 import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
-import Auth (Admin (..), SessionIdCookie, Unique (..), fetchGoogleJWKSet, validateToken)
+import Auth (SessionIdCookie, fetchGoogleJWKSet, validateToken)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
@@ -28,10 +28,11 @@ import Database
     runAuthDb,
     runDb,
     updateActiveStatus,
+    updateAdminSessionId,
     updatePlayerName,
     updateReports,
   )
-import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..), PersistUniqueRead (..))
+import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
 import Servant
@@ -83,7 +84,7 @@ import Types.Database
     updatedPlayerStatsWin,
   )
 import Validation (validateLogFile, validateReport)
-import Web.Cookie (SetCookie (..), defaultSetCookie, sameSiteStrict)
+import Web.Cookie (SetCookie (..), defaultSetCookie, sameSiteNone, sameSiteStrict)
 import Prelude hiding (get, on)
 
 defaultRating :: Rating
@@ -210,9 +211,10 @@ authGoogleLoginHandler idToken = do
   httpConnMgr <- newManager
   jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (\err -> throwError err401 {errBody = show err}) pure -- TODO cache this
   userId <- liftIO (validateToken jwks idToken) >>= either (\err -> throwError err401 {errBody = show err}) pure
-  whenM (isNothing <$> runAuthDb (lift . getBy . UniqueAdminUserId $ userId)) (throwError err401 {errBody = "Non-admin login."})
   sessionId <- liftIO UUID.nextRandom
-  runAuthDb (lift . insert_ $ Admin {adminUserId = userId, adminSessionId = Just . UUID.toText $ sessionId})
+  count <- runAuthDb $ updateAdminSessionId userId sessionId
+  when (count == 0) (throwError err401 {errBody = "Non-admin login."})
+  -- runAuthDb (lift . insert_ $ Admin {adminUserId = userId, adminSessionId = Just . UUID.toText $ sessionId})
   let cookie =
         defaultSetCookie
           { setCookieName = encodeUtf8 authCookieName,

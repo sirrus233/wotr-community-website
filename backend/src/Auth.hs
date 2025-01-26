@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 module Auth where
 
 import AppConfig (AppM, Env, authCookieName, googleClientId, nt)
@@ -10,9 +7,7 @@ import Data.Aeson (FromJSON, eitherDecode)
 import Data.List (lookup)
 import Data.Text (isSuffixOf)
 import Data.Time.Clock.POSIX (getCurrentTime, posixSecondsToUTCTime)
-import Database (runAuthDb)
-import Database.Esqueleto.Experimental (getBy)
-import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
+import Database (getAdminBySessionId, runAuthDb)
 import Jose.Jwa (JwsAlg (RS256))
 import Jose.Jwk (JwkSet (..))
 import Jose.Jwt (JwtContent (..), JwtEncoding (..), JwtError, decode)
@@ -22,17 +17,6 @@ import Servant (AuthProtect, ServerError (errBody), err401, throwError)
 import Servant.Server.Experimental.Auth (AuthHandler, AuthServerData, mkAuthHandler)
 import Types.Api (IdToken (..))
 import Web.Cookie (parseCookiesText)
-
-share
-  [mkPersist sqlSettings, mkMigrate "migrateAll"]
-  [persistLowerCase|
-   Admin
-    userId Text
-    sessionId Text Maybe
-    UniqueAdminUserId userId
-    UniqueAdminSessionId sessionId !force
-    deriving Show
-|]
 
 data SessionIdCookie = SessionIdCookie -- Type-level tag for the auth scheme
 
@@ -117,6 +101,6 @@ authHandler env = mkAuthHandler (nt env . handler)
           case lookup authCookieName cookies of
             Nothing -> throwError err401 {errBody = "Auth cookie not found."}
             Just sessionId -> do
-              runAuthDb (lift . getBy . UniqueAdminSessionId $ Just sessionId) >>= \case
+              runAuthDb (getAdminBySessionId sessionId) >>= \case
                 Nothing -> throwError err401 {errBody = "Invalid session."}
                 Just _ -> pure Authenticated
