@@ -4,7 +4,7 @@ import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
 import Api (API, Protected, Unprotected)
 import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
-import Auth (Admin (..), SessionIdCookie, Subject (..), Unique (..), fetchGoogleJWKSet, validateToken)
+import Auth (Admin (..), SessionIdCookie, Unique (..), fetchGoogleJWKSet, validateToken)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
@@ -209,10 +209,10 @@ authGoogleLoginHandler :: IdToken -> AppM GoogleLoginResponse
 authGoogleLoginHandler idToken = do
   httpConnMgr <- newManager
   jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (\err -> throwError err401 {errBody = show err}) pure -- TODO cache this
-  Subject sub <- liftIO (validateToken jwks idToken) >>= either (\err -> throwError err401 {errBody = show err}) pure
-  whenM (isNothing <$> runAuthDb (lift . getBy . UniqueAdminUserId $ sub)) (throwError err401 {errBody = "Non-admin login."})
+  userId <- liftIO (validateToken jwks idToken) >>= either (\err -> throwError err401 {errBody = show err}) pure
+  whenM (isNothing <$> runAuthDb (lift . getBy . UniqueAdminUserId $ userId)) (throwError err401 {errBody = "Non-admin login."})
   sessionId <- liftIO UUID.nextRandom
-  runAuthDb (lift . insert_ $ Admin {adminUserId = sub, adminSessionId = Just . UUID.toText $ sessionId})
+  runAuthDb (lift . insert_ $ Admin {adminUserId = userId, adminSessionId = Just . UUID.toText $ sessionId})
   let cookie =
         defaultSetCookie
           { setCookieName = encodeUtf8 authCookieName,

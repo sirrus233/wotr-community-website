@@ -40,7 +40,7 @@ type instance AuthServerData (AuthProtect SessionIdCookie) = Authenticated
 
 data Authenticated = Authenticated
 
-newtype Subject = Subject Text
+type UserId = Text
 
 data GoogleIdTokenClaims = GoogleIdTokenClaims
   { iss :: Text,
@@ -70,7 +70,7 @@ data TokenValidationError
   | GoogleNotAuthoritativeError
   deriving (Show)
 
-validateToken :: JwkSet -> IdToken -> IO (Either TokenValidationError Subject)
+validateToken :: JwkSet -> IdToken -> IO (Either TokenValidationError UserId)
 validateToken (JwkSet keys) (IdToken token) = do
   drg <- getSystemDRG
   let (tokenDecodeResult, _) = withDRG drg (decode keys (Just (JwsEncoding RS256)) (encodeUtf8 token))
@@ -83,7 +83,9 @@ validateToken (JwkSet keys) (IdToken token) = do
         Left err -> pure $ Left (JwtDecodeClaimsError $ toText err)
         Right claims -> do
           now <- getCurrentTime
-          pure $ validAud *> validIss *> validExp now *> googleAuthoritative *> (Right . Subject . sub) $ claims
+          -- Kinda bad, as a user may have multiple or zero email addresses. Per Google's recommendation,
+          -- we should be using `sub` as the canonical unique ID. But email works for our small use-case for now.
+          pure $ validAud *> validIss *> validExp now *> googleAuthoritative *> (Right . email) $ claims
   where
     -- See: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
     validAud claims

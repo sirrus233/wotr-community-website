@@ -9,8 +9,8 @@ import Control.Monad.Logger (LogLevel (..))
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
-import Logging (fileLogger, log)
-import Network.Wai.Handler.Warp (defaultSettings, setPort)
+import Logging (fileLogger, log, logException)
+import Network.Wai.Handler.Warp (defaultSettings, setOnException, setPort)
 import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Network.Wai.Middleware.Gzip (defaultGzipSettings, gzip)
@@ -78,6 +78,6 @@ main = do
   let certFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/fullchain.pem"
   let keyFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/privkey.pem"
   let tlsSettings_ = tlsSettings certFile keyFile
-  let settings = setPort 8080 defaultSettings
+  let settings = setPort 8080 . setOnException (logException logger) $ defaultSettings
 
   runTLS tlsSettings_ settings . app $ env
