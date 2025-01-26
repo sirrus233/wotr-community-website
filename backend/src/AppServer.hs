@@ -84,7 +84,7 @@ import Types.Database
     updatedPlayerStatsWin,
   )
 import Validation (validateLogFile, validateReport)
-import Web.Cookie (SetCookie (..), defaultSetCookie, sameSiteNone, sameSiteStrict)
+import Web.Cookie (SetCookie (..), defaultSetCookie, sameSiteStrict)
 import Prelude hiding (get, on)
 
 defaultRating :: Rating
@@ -214,15 +214,16 @@ authGoogleLoginHandler idToken = do
   sessionId <- liftIO UUID.nextRandom
   count <- runAuthDb $ updateAdminSessionId userId sessionId
   when (count == 0) (throwError err401 {errBody = "Non-admin login."})
-  -- runAuthDb (lift . insert_ $ Admin {adminUserId = userId, adminSessionId = Just . UUID.toText $ sessionId})
   let cookie =
         defaultSetCookie
           { setCookieName = encodeUtf8 authCookieName,
-            setCookieValue = toStrict . UUID.toByteString $ sessionId,
+            setCookieValue = encodeUtf8 . UUID.toText $ sessionId,
             setCookieMaxAge = Just (60 * 60 * 24 * 365),
             setCookieHttpOnly = True,
             setCookieSecure = True,
-            setCookieSameSite = Just sameSiteStrict
+            setCookieSameSite = Just sameSiteStrict,
+            setCookieDomain = Just ".waroftheringcommunity.net",
+            setCookiePath = Just "/"
           }
   pure (addHeader cookie NoContent)
 
