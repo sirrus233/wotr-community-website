@@ -276,7 +276,7 @@ adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
 
   updateReports fromPid toPid
   deletePlayer fromPid
-  -- deleted player that existed in pre-2022 data will be reintroduced via reprocessReports
+  -- Warning: a deleted player that existed in pre-2022 data will be reintroduced via reprocessReports
   reprocessReports
 
   pure $ RemapPlayerResponse player.playerDisplayName
