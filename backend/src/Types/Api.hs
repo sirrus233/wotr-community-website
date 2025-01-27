@@ -29,6 +29,10 @@ instance MimeUnrender PlainText IdToken where
 -- Defining here to reduce verbosity, needed to work around https://github.com/haskell-servant/servant/issues/1267
 type GoogleLoginResponse = Headers '[Header "Set-Cookie" SetCookie] NoContent
 
+newtype UserInfoResponse = UserInfoResponse {isAdmin :: Bool} deriving (Generic)
+
+instance ToJSON UserInfoResponse
+
 data SubmitReportRequest = SubmitReportRequest
   { report :: RawGameReport,
     logFile :: Maybe (FileData Tmp)
