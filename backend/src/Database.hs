@@ -29,6 +29,7 @@ import Database.Esqueleto.Experimental
     selectOne,
     set,
     subSelectCount,
+    subSelectUnsafe,
     table,
     then_,
     update,
@@ -36,6 +37,8 @@ import Database.Esqueleto.Experimental
     when_,
     where_,
     (&&.),
+    (+.),
+    (/.),
     (<.),
     (=.),
     (==.),
@@ -196,14 +199,20 @@ updateActiveStatus :: (MonadIO m, MonadLogger m) => DBAction m ()
 updateActiveStatus = do
   now <- liftIO getCurrentTime
   let cutoffDay = addUTCTime (negate $ 365 * nominalDay) now
-  let activeRequirement = 4 :: Int
+      stdActiveRequirement = 4 :: Int
+      highActiveRequirement = 12 :: Int
+      highActiveThreshold = 700 :: Int
 
   lift $ update $ \player -> do
+    let activeGames = countReports player cutoffDay
+    let avgRating = playerAvgRating player
     set
       player
       [ PlayerIsActive
           =. case_
-            [when_ (countReports player cutoffDay <. val activeRequirement) then_ (val False)]
+            [ when_ ((avgRating >=. val highActiveThreshold) &&. (activeGames <. val highActiveRequirement)) then_ (val False),
+              when_ (activeGames <. val stdActiveRequirement) then_ (val False)
+            ]
             (else_ val True)
       ]
   where
@@ -216,6 +225,15 @@ updateActiveStatus = do
             )
               &&. report ^. GameReportTimestamp >=. val cutoffDay
           )
+
+    playerAvgRating player =
+      -- Should only be a single stats entry per player, which would make this safe
+      subSelectUnsafe $ do
+        stats <- from $ table @PlayerStatsTotal
+        where_ (stats ^. PlayerStatsTotalPlayerId ==. player ^. PlayerId)
+        let freeRating = stats ^. PlayerStatsTotalRatingFree
+            shadowRating = stats ^. PlayerStatsTotalRatingShadow
+        pure $ (freeRating +. shadowRating) /. val 2
 
 deletePlayer :: (MonadIO m, MonadLogger m) => PlayerId -> DBAction m ()
 deletePlayer pid = lift $ do
