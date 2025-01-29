@@ -4,7 +4,7 @@ import Data.Aeson (FromJSON)
 import Servant (AuthProtect)
 import Servant.Server.Experimental.Auth (AuthServerData)
 
-data SessionIdCookie = SessionIdCookie -- Type-level tag for the auth scheme
+data SessionIdCookie = Proxy -- Type-level tag for the auth scheme
 
 type instance AuthServerData (AuthProtect SessionIdCookie) = Authenticated
 
