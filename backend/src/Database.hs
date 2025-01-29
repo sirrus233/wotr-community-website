@@ -83,10 +83,10 @@ runDbWithPool pool dbAction = do
     Right a -> pure a
 
 runDb :: DBAction (LoggingT IO) a -> AppM a
-runDb dbAction = asks dbPool >>= \pool -> runDbWithPool pool dbAction
+runDb dbAction = asks dbPool >>= (`runDbWithPool` dbAction)
 
 runAuthDb :: DBAction (LoggingT IO) a -> AppM a
-runAuthDb dbAction = asks authDbPool >>= \pool -> runDbWithPool pool dbAction
+runAuthDb dbAction = asks authDbPool >>= (`runDbWithPool` dbAction)
 
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
