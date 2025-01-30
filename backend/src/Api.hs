@@ -1,12 +1,17 @@
 module Api where
 
+import Auth (SessionIdCookie)
 import Servant
-  ( Get,
+  ( AuthProtect,
+    Get,
     JSON,
+    PlainText,
     Post,
     PostNoContent,
     QueryParam,
     ReqBody,
+    StdMethod (..),
+    Verb,
     (:<|>),
     (:>),
   )
@@ -15,6 +20,8 @@ import Types.Api
   ( DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
+    GoogleLoginResponse,
+    IdToken,
     ModifyReportRequest,
     RemapPlayerRequest,
     RemapPlayerResponse,
@@ -23,49 +30,41 @@ import Types.Api
     SubmitReportRequest,
   )
 
-type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
+type AuthGoogleLoginAPI = "auth" :> "google" :> "login" :> ReqBody '[PlainText] IdToken :> Verb 'POST 204 '[JSON] GoogleLoginResponse
 
-type GetReportsAPI = "reports" :> QueryParam "limit" Int64 :> QueryParam "offset" Int64 :> Get '[JSON] GetReportsResponse
+type SubmitReportAPI =
+  "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
 
-type GetLeaderboardAPI = "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse
+type GetReportsAPI =
+  "reports" :> QueryParam "limit" Int64 :> QueryParam "offset" Int64 :> Get '[JSON] GetReportsResponse
 
-type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
+type GetLeaderboardAPI =
+  "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse
 
-type AdminRemapPlayerAPI = "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :> Post '[JSON] RemapPlayerResponse
+type AdminRenamePlayerAPI =
+  "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
-type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
+type AdminRemapPlayerAPI =
+  "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :> Post '[JSON] RemapPlayerResponse
 
-type AdminDeleteReportAPI = "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
+type AdminModifyReportAPI =
+  "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
 
-submitReportAPI :: Proxy SubmitReportAPI
-submitReportAPI = Proxy
+type AdminDeleteReportAPI =
+  "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
 
-getReportsAPI :: Proxy GetReportsAPI
-getReportsAPI = Proxy
+-- TODO Add logout and logged-in verification APIs
 
-getLeaderboardAPI :: Proxy GetLeaderboardAPI
-getLeaderboardAPI = Proxy
-
-adminRenamePlayerAPI :: Proxy AdminRenamePlayerAPI
-adminRenamePlayerAPI = Proxy
-
-adminRemapPlayerAPI :: Proxy AdminRemapPlayerAPI
-adminRemapPlayerAPI = Proxy
-
-adminModifyReportAPI :: Proxy AdminModifyReportAPI
-adminModifyReportAPI = Proxy
-
-adminDeleteReportAPI :: Proxy AdminDeleteReportAPI
-adminDeleteReportAPI = Proxy
-
-type Api =
-  SubmitReportAPI
+type Unprotected =
+  AuthGoogleLoginAPI
+    :<|> SubmitReportAPI
     :<|> GetReportsAPI
     :<|> GetLeaderboardAPI
-    :<|> AdminRenamePlayerAPI
+
+type Protected =
+  AdminRenamePlayerAPI
     :<|> AdminRemapPlayerAPI
     :<|> AdminModifyReportAPI
     :<|> AdminDeleteReportAPI
 
-api :: Proxy Api
-api = Proxy
+type API = (AuthProtect SessionIdCookie :> Protected) :<|> Unprotected

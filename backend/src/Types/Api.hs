@@ -3,6 +3,7 @@ module Types.Api where
 import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
+import Servant (Header, Headers, MimeUnrender (..), NoContent, PlainText)
 import Servant.Multipart (FileData (..), FromMultipart (..), MultipartData (..), Tmp, lookupFile, lookupInput)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
 import Types.Database
@@ -15,8 +16,18 @@ import Types.Database
     PlayerStatsYear (..),
     ReportInsertion,
   )
+import Web.Cookie (SetCookie)
 
 type S3Url = Text
+
+newtype IdToken = IdToken Text
+
+instance MimeUnrender PlainText IdToken where
+  mimeUnrender :: Proxy PlainText -> LByteString -> Either String IdToken
+  mimeUnrender _ = Right . IdToken . decodeUtf8
+
+-- Defining here to reduce verbosity, needed to work around https://github.com/haskell-servant/servant/issues/1267
+type GoogleLoginResponse = Headers '[Header "Set-Cookie" SetCookie] NoContent
 
 data SubmitReportRequest = SubmitReportRequest
   { report :: RawGameReport,

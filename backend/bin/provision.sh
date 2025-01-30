@@ -49,8 +49,8 @@ ssh "$SERVER_USER@$SERVER_HOST" <<EOF
     sudo mount -a
   fi
 
-  mkdir -p ${APP_DIR}
-  mkdir -p "${APP_DIR}/bin"
+  sudo mkdir -p ${APP_DIR}
+  sudo mkdir -p "${APP_DIR}/bin"
   sudo chown -R ${SERVER_USER}:${SERVER_USER} ${APP_DIR}
 
   echo "Acquiring SSL certificate..."
@@ -91,7 +91,7 @@ END_UNIT
   sudo systemctl enable $SERVICE_NAME
 
   echo "Installing sqlite dependency..."
-  sudo yum install sqlite
+  sudo yum install -y sqlite
 
   echo "Generating database backup service file..."
   cat <<END_UNIT | sudo tee $BACKUP_SERVICE_FILE

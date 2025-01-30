@@ -18,6 +18,8 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ErrorMessage } from "./constants";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import { LeaderboardEntry } from "./types";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import GoogleLoginButton from "./GoogleLogin";
 
 export default function App() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -52,74 +54,77 @@ export default function App() {
     useEffect(getLeaderboard, [leaderboardYear]);
 
     return (
-        <CssVarsProvider>
-            <CssBaseline />
-            <BrowserRouter>
-                <header
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        width: "100%",
-                        height: `${HEADER_HEIGHT_PX}px`,
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 1000,
-                        margin: `0 0 ${HEADER_MARGIN_PX}px 0`,
-                        padding: "0 10px",
-                        boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.5)",
-                        color: "white",
-                        backgroundColor: "var(--joy-palette-primary-solidBg)",
-                    }}
-                >
-                    <DrawerNavigation />
-                    <Typography
-                        level="title-lg"
-                        sx={{
-                            color: "white",
+        <GoogleOAuthProvider clientId="331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com">
+            <CssVarsProvider>
+                <CssBaseline />
+                <BrowserRouter>
+                    <header
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
                             width: "100%",
-                            textAlign: "center",
+                            height: `${HEADER_HEIGHT_PX}px`,
+                            position: "sticky",
+                            top: 0,
+                            zIndex: 1000,
+                            margin: `0 0 ${HEADER_MARGIN_PX}px 0`,
+                            padding: "0 10px",
+                            boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.5)",
+                            color: "white",
+                            backgroundColor:
+                                "var(--joy-palette-primary-solidBg)",
                         }}
                     >
-                        WotR Community Ladder
-                    </Typography>
-                </header>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route
-                        path="/game-report"
-                        element={
-                            <GameReportForm
-                                leaderboard={leaderboard}
-                                loadingLeaderboard={loadingLeaderboard}
-                            />
-                        }
-                    />
-                    <Route
-                        path="/game-reports"
-                        element={
-                            <GameReports
-                                leaderboard={leaderboard}
-                                loadingLeaderboard={loadingLeaderboard}
-                            />
-                        }
-                    />
-                    <Route
-                        path="/rankings"
-                        element={
-                            <Rankings
-                                leaderboard={leaderboard}
-                                year={leaderboardYear}
-                                loading={loadingLeaderboard}
-                                error={leaderboardError}
-                                getLeaderboard={getLeaderboard}
-                                setYear={setLeaderboardYear}
-                                setError={setLeaderboardError}
-                            />
-                        }
-                    />
-                </Routes>
-            </BrowserRouter>
-        </CssVarsProvider>
+                        <DrawerNavigation />
+                        <Typography
+                            level="title-lg"
+                            sx={{
+                                color: "white",
+                                width: "100%",
+                                textAlign: "center",
+                            }}
+                        >
+                            WotR Community Ladder
+                        </Typography>
+                    </header>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route
+                            path="/game-report"
+                            element={
+                                <GameReportForm
+                                    leaderboard={leaderboard}
+                                    loadingLeaderboard={loadingLeaderboard}
+                                />
+                            }
+                        />
+                        <Route
+                            path="/game-reports"
+                            element={
+                                <GameReports
+                                    leaderboard={leaderboard}
+                                    loadingLeaderboard={loadingLeaderboard}
+                                />
+                            }
+                        />
+                        <Route
+                            path="/rankings"
+                            element={
+                                <Rankings
+                                    leaderboard={leaderboard}
+                                    year={leaderboardYear}
+                                    loading={loadingLeaderboard}
+                                    error={leaderboardError}
+                                    getLeaderboard={getLeaderboard}
+                                    setYear={setLeaderboardYear}
+                                    setError={setLeaderboardError}
+                                />
+                            }
+                        />
+                    </Routes>
+                </BrowserRouter>
+            </CssVarsProvider>
+        </GoogleOAuthProvider>
     );
 }
 
@@ -250,6 +255,9 @@ function Home() {
                         {label}
                     </ExternalLink>
                 ))}
+            </Section>
+            <Section>
+                <GoogleLoginButton />
             </Section>
         </Box>
     );
