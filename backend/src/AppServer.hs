@@ -2,11 +2,14 @@ module AppServer where
 
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
-import Api (Api)
-import AppConfig (AppM, Env (..), gameLogBucket)
+import Api (API, Protected, Unprotected)
+import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
+import Auth (fetchGoogleJWKSet, validateToken)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
+import Data.UUID qualified as UUID
+import Data.UUID.V4 qualified as UUID
 import Data.Validation (Validation (..))
 import Database
   ( DBAction,
@@ -22,19 +25,37 @@ import Database
     insertPlayerIfNotExists,
     repsertPlayerStats,
     resetStats,
+    runAuthDb,
     runDb,
     updateActiveStatus,
+    updateAdminSessionId,
     updatePlayerName,
     updateReports,
   )
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
 import Logging ((<>:))
-import Servant (NoContent (..), ServerError (errBody), ServerT, err404, err422, throwError, type (:<|>) (..))
+import Network.HTTP.Client.Conduit (newManager)
+import Servant
+  ( AuthProtect,
+    NoContent (..),
+    ServerError (..),
+    ServerT,
+    addHeader,
+    err401,
+    err404,
+    err422,
+    err500,
+    throwError,
+    type (:<|>) (..),
+  )
 import Servant.Multipart (FileData (..))
+import Servant.Server.Experimental.Auth (AuthServerData)
 import Types.Api
   ( DeleteReportRequest (..),
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (GetReportsResponse),
+    GoogleLoginResponse,
+    IdToken,
     LeaderboardEntry (..),
     ModifyReportRequest (..),
     ProcessedGameReport,
@@ -45,10 +66,12 @@ import Types.Api
     S3Url,
     SubmitGameReportResponse (..),
     SubmitReportRequest (..),
+    UserInfoResponse (..),
     fromGameReport,
     fromPlayerStats,
     toGameReport,
   )
+import Types.Auth (Authenticated (..), SessionId (..), SessionIdCookie)
 import Types.DataField (Match (..), PlayerName, Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
@@ -64,6 +87,7 @@ import Types.Database
     updatedPlayerStatsWin,
   )
 import Validation (validateLogFile, validateReport)
+import Web.Cookie (SetCookie (..), defaultSetCookie, sameSiteStrict)
 import Prelude hiding (get, on)
 
 defaultRating :: Rating
@@ -184,6 +208,35 @@ reprocessReports = do
   forM_ reports processReport
   updateActiveStatus
 
+authGoogleLoginHandler :: IdToken -> AppM GoogleLoginResponse
+authGoogleLoginHandler idToken = do
+  httpConnMgr <- newManager
+  jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (\err -> throwError err500 {errBody = show err}) pure -- TODO cache this
+  userId <- liftIO (validateToken jwks idToken) >>= either (\err -> throwError err401 {errBody = show err}) pure
+  sessionId <- liftIO $ UUID.toText <$> UUID.nextRandom
+  count <- runAuthDb $ updateAdminSessionId userId (Just . SessionId $ sessionId)
+  when (count == 0) (throwError err401 {errBody = "Non-admin login."})
+  let cookie =
+        defaultSetCookie
+          { setCookieName = encodeUtf8 authCookieName,
+            setCookieValue = encodeUtf8 sessionId,
+            setCookieMaxAge = Just (60 * 60 * 24 * 365),
+            setCookieHttpOnly = True,
+            setCookieSecure = True,
+            setCookieSameSite = Just sameSiteStrict,
+            setCookieDomain = Just ".waroftheringcommunity.net",
+            setCookiePath = Just "/"
+          }
+  pure (addHeader cookie NoContent)
+
+logoutHandler :: Authenticated -> AppM NoContent
+logoutHandler (Authenticated {userId}) = do
+  _ <- runAuthDb $ updateAdminSessionId userId Nothing
+  pure NoContent
+
+userInfoHandler :: AppM UserInfoResponse
+userInfoHandler = pure $ UserInfoResponse {isAdmin = True} -- True by default if this protected handler is reached
+
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do
   awsEnv <- asks aws
@@ -236,7 +289,7 @@ adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
 
   updateReports fromPid toPid
   deletePlayer fromPid
-  -- deleted player that existed in pre-2022 data will be reintroduced via reprocessReports
+  -- Warning: a deleted player that existed in pre-2022 data will be reintroduced via reprocessReports
   reprocessReports
 
   pure $ RemapPlayerResponse player.playerDisplayName
@@ -273,12 +326,21 @@ adminDeleteReportHandler DeleteReportRequest {rid} = runDb $ do
   reprocessReports
   pure NoContent
 
-server :: ServerT Api AppM
-server =
-  submitReportHandler
+unprotected :: ServerT Unprotected AppM
+unprotected =
+  authGoogleLoginHandler
+    :<|> submitReportHandler
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
+
+protected :: AuthServerData (AuthProtect SessionIdCookie) -> ServerT Protected AppM
+protected auth =
+  logoutHandler auth
+    :<|> userInfoHandler
     :<|> adminRenamePlayerHandler
     :<|> adminRemapPlayerHandler
     :<|> adminModifyReportHandler
     :<|> adminDeleteReportHandler
+
+server :: ServerT API AppM
+server = protected :<|> unprotected

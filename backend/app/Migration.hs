@@ -1,7 +1,7 @@
 module Main where
 
 import Amazonka qualified as AWS
-import AppConfig (AppM, Env (..), databaseFile, redisConfig, runAppLogger)
+import AppConfig (AppM, Env (..), authDatabaseFile, databaseFile, redisConfig, runAppLogger)
 import AppServer (insertReport_, reprocessReports)
 import Control.Monad.Logger (LogLevel (..))
 import Data.Csv (FromRecord, HasHeader (..), decode)
@@ -67,10 +67,11 @@ main = do
   awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
   logger <- stdoutLogger
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
+  authDbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText authDatabaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
   aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
 
-  let env = Env {dbPool, redisPool, logger, aws}
+  let env = Env {dbPool, authDbPool, redisPool, logger, aws}
 
   legacyEntries <- tryParse "migration/legacy-ladder.csv" logger toParsedLegacyLadderEntry
   reports <- tryParse "migration/reports.csv" logger toParsedGameReport

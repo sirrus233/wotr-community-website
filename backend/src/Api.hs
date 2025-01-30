@@ -1,12 +1,16 @@
 module Api where
 
 import Servant
-  ( Get,
+  ( AuthProtect,
+    Get,
     JSON,
+    PlainText,
     Post,
     PostNoContent,
     QueryParam,
     ReqBody,
+    StdMethod (..),
+    Verb,
     (:<|>),
     (:>),
   )
@@ -15,57 +19,57 @@ import Types.Api
   ( DeleteReportRequest,
     GetLeaderboardResponse,
     GetReportsResponse,
+    GoogleLoginResponse,
+    IdToken,
     ModifyReportRequest,
     RemapPlayerRequest,
     RemapPlayerResponse,
     RenamePlayerRequest,
     SubmitGameReportResponse,
     SubmitReportRequest,
+    UserInfoResponse,
   )
+import Types.Auth (SessionIdCookie)
 
-type SubmitReportAPI = "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
+type AuthGoogleLoginAPI = "auth" :> "google" :> "login" :> ReqBody '[PlainText] IdToken :> Verb 'POST 204 '[JSON] GoogleLoginResponse
 
-type GetReportsAPI = "reports" :> QueryParam "limit" Int64 :> QueryParam "offset" Int64 :> Get '[JSON] GetReportsResponse
+type LogoutAPI = "logout" :> PostNoContent
 
-type GetLeaderboardAPI = "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse
+type UserInfoAPI = "userInfo" :> Get '[JSON] UserInfoResponse
 
-type AdminRenamePlayerAPI = "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
+type SubmitReportAPI =
+  "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
 
-type AdminRemapPlayerAPI = "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :> Post '[JSON] RemapPlayerResponse
+type GetReportsAPI =
+  "reports" :> QueryParam "limit" Int64 :> QueryParam "offset" Int64 :> Get '[JSON] GetReportsResponse
 
-type AdminModifyReportAPI = "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
+type GetLeaderboardAPI =
+  "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse
 
-type AdminDeleteReportAPI = "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
+type AdminRenamePlayerAPI =
+  "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
-submitReportAPI :: Proxy SubmitReportAPI
-submitReportAPI = Proxy
+type AdminRemapPlayerAPI =
+  "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :> Post '[JSON] RemapPlayerResponse
 
-getReportsAPI :: Proxy GetReportsAPI
-getReportsAPI = Proxy
+type AdminModifyReportAPI =
+  "modifyReport" :> ReqBody '[JSON] ModifyReportRequest :> PostNoContent
 
-getLeaderboardAPI :: Proxy GetLeaderboardAPI
-getLeaderboardAPI = Proxy
+type AdminDeleteReportAPI =
+  "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
 
-adminRenamePlayerAPI :: Proxy AdminRenamePlayerAPI
-adminRenamePlayerAPI = Proxy
-
-adminRemapPlayerAPI :: Proxy AdminRemapPlayerAPI
-adminRemapPlayerAPI = Proxy
-
-adminModifyReportAPI :: Proxy AdminModifyReportAPI
-adminModifyReportAPI = Proxy
-
-adminDeleteReportAPI :: Proxy AdminDeleteReportAPI
-adminDeleteReportAPI = Proxy
-
-type Api =
-  SubmitReportAPI
+type Unprotected =
+  AuthGoogleLoginAPI
+    :<|> SubmitReportAPI
     :<|> GetReportsAPI
     :<|> GetLeaderboardAPI
+
+type Protected =
+  LogoutAPI
+    :<|> UserInfoAPI
     :<|> AdminRenamePlayerAPI
     :<|> AdminRemapPlayerAPI
     :<|> AdminModifyReportAPI
     :<|> AdminDeleteReportAPI
 
-api :: Proxy Api
-api = Proxy
+type API = (AuthProtect SessionIdCookie :> Protected) :<|> Unprotected
