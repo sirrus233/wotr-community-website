@@ -75,6 +75,7 @@ library
                       Database,
                       Logging,
                       Types.Api,
+                      Types.Auth,
                       Types.Database,
                       Types.DataField,
                       Types.Migration,

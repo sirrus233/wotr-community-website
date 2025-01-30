@@ -4,7 +4,7 @@ import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
 import Api (API, Protected, Unprotected)
 import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
-import Auth (SessionIdCookie, fetchGoogleJWKSet, validateToken)
+import Auth (fetchGoogleJWKSet, validateToken)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.IntMap.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
@@ -66,10 +66,12 @@ import Types.Api
     S3Url,
     SubmitGameReportResponse (..),
     SubmitReportRequest (..),
+    UserInfoResponse (..),
     fromGameReport,
     fromPlayerStats,
     toGameReport,
   )
+import Types.Auth (Authenticated (..), SessionId (..), SessionIdCookie)
 import Types.DataField (Match (..), PlayerName, Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
@@ -212,13 +214,13 @@ authGoogleLoginHandler idToken = do
   httpConnMgr <- newManager
   jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (\err -> throwError err500 {errBody = show err}) pure -- TODO cache this
   userId <- liftIO (validateToken jwks idToken) >>= either (\err -> throwError err401 {errBody = show err}) pure
-  sessionId <- liftIO UUID.nextRandom
-  count <- runAuthDb $ updateAdminSessionId userId sessionId
+  sessionId <- liftIO $ UUID.toText <$> UUID.nextRandom
+  count <- runAuthDb $ updateAdminSessionId userId (Just . SessionId $ sessionId)
   when (count == 0) (throwError err401 {errBody = "Non-admin login."})
   let cookie =
         defaultSetCookie
           { setCookieName = encodeUtf8 authCookieName,
-            setCookieValue = encodeUtf8 . UUID.toText $ sessionId,
+            setCookieValue = encodeUtf8 sessionId,
             setCookieMaxAge = Just (60 * 60 * 24 * 365),
             setCookieHttpOnly = True,
             setCookieSecure = True,
@@ -227,6 +229,14 @@ authGoogleLoginHandler idToken = do
             setCookiePath = Just "/"
           }
   pure (addHeader cookie NoContent)
+
+logoutHandler :: Authenticated -> AppM NoContent
+logoutHandler (Authenticated {userId}) = do
+  _ <- runAuthDb $ updateAdminSessionId userId Nothing
+  pure NoContent
+
+userInfoHandler :: AppM UserInfoResponse
+userInfoHandler = pure $ UserInfoResponse {isAdmin = True} -- True by default if this protected handler is reached
 
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do
@@ -325,8 +335,10 @@ unprotected =
     :<|> getLeaderboardHandler
 
 protected :: AuthServerData (AuthProtect SessionIdCookie) -> ServerT Protected AppM
-protected _ =
-  adminRenamePlayerHandler
+protected auth =
+  logoutHandler auth
+    :<|> userInfoHandler
+    :<|> adminRenamePlayerHandler
     :<|> adminRemapPlayerHandler
     :<|> adminModifyReportHandler
     :<|> adminDeleteReportHandler

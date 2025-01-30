@@ -3,42 +3,23 @@ module Auth where
 import AppConfig (AppM, Env, authCookieName, googleClientId, nt)
 import Crypto.JWT (JWTError (JWTExpired, JWTNotInAudience, JWTNotInIssuer))
 import Crypto.Random (getSystemDRG, withDRG)
-import Data.Aeson (FromJSON, eitherDecode)
+import Data.Aeson (eitherDecode)
 import Data.List (lookup)
 import Data.Text (isSuffixOf)
 import Data.Time.Clock.POSIX (getCurrentTime, posixSecondsToUTCTime)
 import Database (getAdminBySessionId, runAuthDb)
+import Database.Esqueleto.Experimental (Entity (..))
 import Jose.Jwa (JwsAlg (RS256))
 import Jose.Jwk (JwkSet (..))
 import Jose.Jwt (JwtContent (..), JwtEncoding (..), JwtError, decode)
 import Network.HTTP.Conduit (Manager, Response (..), httpLbs, parseRequest)
 import Network.Wai (Request (..))
-import Servant (AuthProtect, ServerError (errBody), err401, throwError)
-import Servant.Server.Experimental.Auth (AuthHandler, AuthServerData, mkAuthHandler)
+import Servant (ServerError (errBody), err401, throwError)
+import Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler)
 import Types.Api (IdToken (..))
+import Types.Auth (Authenticated (..), GoogleIdTokenClaims (..), SessionId (..), UserId (..))
+import Types.Database (Admin (..))
 import Web.Cookie (parseCookiesText)
-
-data SessionIdCookie = SessionIdCookie -- Type-level tag for the auth scheme
-
-type instance AuthServerData (AuthProtect SessionIdCookie) = Authenticated
-
-data Authenticated = Authenticated
-
-type UserId = Text
-
-data GoogleIdTokenClaims = GoogleIdTokenClaims
-  { iss :: Text,
-    sub :: Text,
-    aud :: Text,
-    hd :: Maybe Text,
-    exp :: Integer,
-    iat :: Integer,
-    email :: Text,
-    email_verified :: Bool
-  }
-  deriving (Generic)
-
-instance FromJSON GoogleIdTokenClaims
 
 fetchGoogleJWKSet :: Manager -> IO (Either String JwkSet)
 fetchGoogleJWKSet mgr = do
@@ -69,7 +50,7 @@ validateToken (JwkSet keys) (IdToken token) = do
           now <- getCurrentTime
           -- Kinda bad, as a user may have multiple or zero email addresses. Per Google's recommendation,
           -- we should be using `sub` as the canonical unique ID. But email works for our small use-case for now.
-          pure $ validAud *> validIss *> validExp now *> googleAuthoritative *> (Right . email) $ claims
+          pure $ validAud *> validIss *> validExp now *> googleAuthoritative *> (Right . UserId . email) $ claims
   where
     -- See: https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
     validAud claims
@@ -103,4 +84,5 @@ authHandler env = mkAuthHandler (nt env . handler)
             Just sessionId -> do
               runAuthDb (getAdminBySessionId sessionId) >>= \case
                 Nothing -> throwError err401 {errBody = "Invalid session."}
-                Just _ -> pure Authenticated
+                Just (Entity _ admin) ->
+                  pure $ Authenticated {userId = UserId admin.adminUserId, sessionId = SessionId sessionId}

@@ -1,6 +1,5 @@
 module Api where
 
-import Auth (SessionIdCookie)
 import Servant
   ( AuthProtect,
     Get,
@@ -28,9 +27,15 @@ import Types.Api
     RenamePlayerRequest,
     SubmitGameReportResponse,
     SubmitReportRequest,
+    UserInfoResponse,
   )
+import Types.Auth (SessionIdCookie)
 
 type AuthGoogleLoginAPI = "auth" :> "google" :> "login" :> ReqBody '[PlainText] IdToken :> Verb 'POST 204 '[JSON] GoogleLoginResponse
+
+type LogoutAPI = "logout" :> PostNoContent
+
+type UserInfoAPI = "userInfo" :> Get '[JSON] UserInfoResponse
 
 type SubmitReportAPI =
   "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
@@ -53,8 +58,6 @@ type AdminModifyReportAPI =
 type AdminDeleteReportAPI =
   "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
 
--- TODO Add logout and logged-in verification APIs
-
 type Unprotected =
   AuthGoogleLoginAPI
     :<|> SubmitReportAPI
@@ -62,7 +65,9 @@ type Unprotected =
     :<|> GetLeaderboardAPI
 
 type Protected =
-  AdminRenamePlayerAPI
+  LogoutAPI
+    :<|> UserInfoAPI
+    :<|> AdminRenamePlayerAPI
     :<|> AdminRemapPlayerAPI
     :<|> AdminModifyReportAPI
     :<|> AdminDeleteReportAPI
