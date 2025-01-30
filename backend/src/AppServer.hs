@@ -19,6 +19,7 @@ import Database
     getAllGameReports,
     getAllStats,
     getGameReports,
+    getNumGameReports,
     getPlayerByName,
     getPlayerStats,
     insertGameReport,
@@ -256,9 +257,9 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
 
 getReportsHandler :: Maybe Int64 -> Maybe Int64 -> AppM GetReportsResponse
 getReportsHandler limit offset = do
-    allReports <- runDb (getAllGameReports OldestToNewest)
+    total <- runDb getNumGameReports
     reports <- runDb (getGameReports limit' offset')
-    pure GetReportsResponse {reports = fromGameReport <$> reports, total = length allReports}
+    pure GetReportsResponse {reports = fromGameReport <$> reports, total}
     where
       maxLimit = 500
       (limit', offset') = case (limit, offset) of
