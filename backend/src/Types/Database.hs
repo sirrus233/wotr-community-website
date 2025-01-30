@@ -12,7 +12,18 @@ import Logging (Logger, log)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side (..), Stronghold, Victory, Year)
 
 share
-  [mkPersist sqlSettings, mkMigrate "migrateAll"]
+  [mkPersist sqlSettings, mkMigrate "migrateAdmin"]
+  [persistLowerCase|
+   Admin
+    userId Text
+    sessionId Text Maybe
+    UniqueAdminUserId userId
+    UniqueAdminSessionId sessionId !force
+    deriving Show
+|]
+
+share
+  [mkPersist sqlSettings, mkMigrate "migrateDb"]
   [persistLowerCase|
    Player
     name PlayerName
@@ -76,7 +87,7 @@ share
 
 migrateSchema :: SQL.ConnectionPool -> Logger -> IO ()
 migrateSchema dbPool logger = do
-  migrations <- runSqlPool (runMigrationQuiet migrateAll) dbPool
+  migrations <- runSqlPool (runMigrationQuiet migrateDb) dbPool
   unless (null migrations) (log logger LevelWarn "Database schema changed. Running migrations.")
   mapM_ (log logger LevelDebug . toLogStr) migrations
 

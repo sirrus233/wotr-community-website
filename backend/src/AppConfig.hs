@@ -9,12 +9,27 @@ import Database.Redis qualified as Redis
 import Logging (LogLevelFilter, Logger, filterInfo)
 import Servant (Handler)
 
-data Env = Env {dbPool :: SQL.ConnectionPool, redisPool :: Redis.Connection, logger :: Logger, aws :: AWS.Env}
+data Env = Env
+  { dbPool :: SQL.ConnectionPool,
+    authDbPool :: SQL.ConnectionPool,
+    redisPool :: Redis.Connection,
+    logger :: Logger,
+    aws :: AWS.Env
+  }
 
 type AppM = ReaderT Env (LoggingT Handler)
 
 databaseFile :: FilePath
 databaseFile = "data/db.sqlite"
+
+authDatabaseFile :: FilePath
+authDatabaseFile = "data/auth-db.sqlite"
+
+googleClientId :: Text
+googleClientId = "331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com"
+
+authCookieName :: Text
+authCookieName = "wotr_session_id"
 
 logFile :: FilePath
 logFile = "logs/app.log"

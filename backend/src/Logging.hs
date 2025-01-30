@@ -1,6 +1,7 @@
 module Logging where
 
 import Control.Monad.Logger (Loc, LogLevel (..), LogSource, LogStr, defaultLoc)
+import Network.Wai (Request)
 import System.Log.FastLogger
   ( FormattedTime,
     LogType' (..),
@@ -14,6 +15,12 @@ import System.Log.FastLogger
 type Logger = Loc -> LogSource -> LogLevel -> LogStr -> IO ()
 
 type LogLevelFilter = LogSource -> LogLevel -> Bool
+
+data LoggableException = LoggableException
+  { request :: Maybe Request,
+    exception :: SomeException
+  }
+  deriving (Show)
 
 formatLogMsg :: FormattedTime -> LogLevel -> LogStr -> LogStr
 formatLogMsg time level msg = "[" <> levelStr level <> "] " <> toLogStr time <> ": " <> msg <> "\n"
@@ -47,6 +54,9 @@ fileLogger path = do
 
 log :: Logger -> LogLevel -> LogStr -> IO ()
 log logger = logger defaultLoc ""
+
+logException :: Logger -> Maybe Request -> SomeException -> IO ()
+logException logger req exc = log logger LevelError . show $ LoggableException req exc
 
 (<>:) :: (Semigroup a, IsString a, Show b) => a -> b -> a
 (<>:) a b = a <> show b
