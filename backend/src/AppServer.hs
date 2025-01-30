@@ -256,10 +256,10 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
       pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: Maybe Int64 -> Maybe Int64 -> AppM GetReportsResponse
-getReportsHandler limit offset = do
-    total <- runDb getNumGameReports
-    reports <- runDb (getGameReports limit' offset')
-    pure GetReportsResponse {reports = fromGameReport <$> reports, total}
+getReportsHandler limit offset =
+    runDb getNumGameReports >>= \total ->
+      runDb (getGameReports limit' offset') >>= \reports ->
+        pure GetReportsResponse {reports = fromGameReport <$> reports, total}
     where
       maxLimit = 500
       (limit', offset') = case (limit, offset) of
