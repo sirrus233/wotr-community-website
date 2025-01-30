@@ -149,8 +149,7 @@ toS3Key :: UTCTime -> PlayerName -> PlayerName -> S3.ObjectKey
 toS3Key timestamp freePlayer shadowPlayer =
   S3.ObjectKey $ formattedPath <> formattedFilename
   where
-    (y, m, d) = toGregorian . utctDay $ timestamp
-    formattedPath = show y <> "/" <>: m <> "/" <>: d <> "/"
+    formattedPath = toText . formatTime defaultTimeLocale "%Y/%m/%d/" $ timestamp
     formattedTimestamp = toText . formatTime defaultTimeLocale "%Y-%m-%d_%H%M%S" $ timestamp
     formattedFilename = formattedTimestamp <> "_FP_" <> freePlayer <> "_SP_" <> shadowPlayer <> ".log"
 

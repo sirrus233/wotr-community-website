@@ -105,8 +105,9 @@ test-suite wotr-community-website-test
     import:           warnings,
                       extensions,
                       dependencies
-    main-is:          Main.hs
-    build-depends:    wotr-community-website
+    main-is:          Test.hs
+    build-depends:    hspec     ^>=2.11.10,
+                      wotr-community-website,
     hs-source-dirs:   test
     default-language: GHC2024
     type:             exitcode-stdio-1.0
