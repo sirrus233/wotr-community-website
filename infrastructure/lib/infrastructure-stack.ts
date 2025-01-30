@@ -104,20 +104,24 @@ export class InfrastructureStack extends cdk.Stack {
             machineImage: ami,
             vpc,
             role,
-            blockDevices: [
-                {
-                    deviceName: "/dev/sda2",
-                    volume: ec2.BlockDeviceVolume.ebs(8, {
-                        volumeType: ec2.EbsDeviceVolumeType.GP3,
-                        deleteOnTermination: false,
-                    }),
-                },
-            ],
             keyPair: ec2.KeyPair.fromKeyPairName(
                 this,
                 "ServerKey",
                 "ServerKey"
             ),
+        });
+
+        const ebsVolume = new ec2.Volume(this, "ServerStorage", {
+            availabilityZone: "us-west-2a",
+            size: cdk.Size.gibibytes(8),
+            volumeType: ec2.EbsDeviceVolumeType.GP3,
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
+        });
+
+        new ec2.CfnVolumeAttachment(this, "AttachServerStorage", {
+            volumeId: ebsVolume.volumeId,
+            instanceId: instance.instanceId,
+            device: "/dev/sda2",
         });
 
         instance.connections.allowFrom(
