@@ -19,6 +19,7 @@ import Database
     getAllGameReports,
     getAllStats,
     getGameReports,
+    getNumGameReports,
     getPlayerByName,
     getPlayerStats,
     insertGameReport,
@@ -53,7 +54,7 @@ import Servant.Server.Experimental.Auth (AuthServerData)
 import Types.Api
   ( DeleteReportRequest (..),
     GetLeaderboardResponse (GetLeaderboardResponse),
-    GetReportsResponse (GetReportsResponse),
+    GetReportsResponse (..),
     GoogleLoginResponse,
     IdToken,
     LeaderboardEntry (..),
@@ -255,13 +256,16 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
       pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
 getReportsHandler :: Maybe Int64 -> Maybe Int64 -> AppM GetReportsResponse
-getReportsHandler limit offset = GetReportsResponse . map fromGameReport <$> runDb (getGameReports limit' offset')
-  where
-    maxLimit = 500
-    (limit', offset') = case (limit, offset) of
-      (Nothing, _) -> (maxLimit, 0)
-      (Just lim, Nothing) -> (lim, 0)
-      (Just lim, Just off) -> (lim, off)
+getReportsHandler limit offset =
+    runDb getNumGameReports >>= \total ->
+      runDb (getGameReports limit' offset') >>= \reports ->
+        pure GetReportsResponse {reports = fromGameReport <$> reports, total}
+    where
+      maxLimit = 500
+      (limit', offset') = case (limit, offset) of
+        (Nothing, _) -> (maxLimit, 0)
+        (Just lim, Nothing) -> (lim, 0)
+        (Just lim, Just off) -> (lim, off)
 
 getLeaderboardHandler :: Maybe Year -> AppM GetLeaderboardResponse
 getLeaderboardHandler year = do

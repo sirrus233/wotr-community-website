@@ -40,6 +40,7 @@ import TableLayout from "./TableLayout";
 import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
 import ReportDeleteForm from "./ReportDeleteForm";
+import Pagination from "./Pagination";
 
 type ReportEditParams = ProcessedGameReport & { mode: ReportEditMode };
 
@@ -48,6 +49,8 @@ const TABLE_TOP_POSITION =
     HEADER_MARGIN_PX +
     TABLE_BTN_HEIGHT_PX +
     TABLE_ELEMENTS_GAP * 2;
+
+const PAGE_LIMIT = 100;
 
 interface Props {
     leaderboard: LeaderboardEntry[];
@@ -61,16 +64,25 @@ export default function GameReports({
     const [reports, setReports] = useState<ProcessedGameReport[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalReportCount, setTotalReportCount] = useState(0);
     const [reportEditParams, setReportEditParams] =
         useState<ReportEditParams | null>(null);
 
-    const getReports = async () => {
+    const getReports = async (page: number) => {
         try {
             const response = await axios.get(
                 // "http://localhost:8081/reports"
-                "https://api.waroftheringcommunity.net:8080/reports"
+                "https://api.waroftheringcommunity.net:8080/reports",
+                {
+                    params: {
+                        limit: PAGE_LIMIT,
+                        offset: (page - 1) * PAGE_LIMIT,
+                    },
+                }
             );
             setReports(response.data.reports);
+            setTotalReportCount(response.data.total);
         } catch (error) {
             setError(ErrorMessage.Default);
             console.error(error);
@@ -78,13 +90,13 @@ export default function GameReports({
         setLoading(false);
     };
 
-    const refresh = () => {
+    const refresh = (page: number) => {
         setError(null);
         setLoading(true);
-        getReports();
+        getReports(page);
     };
 
-    useEffect(refresh, []);
+    useEffect(() => refresh(currentPage), [currentPage]);
 
     return (
         <Box>
@@ -95,7 +107,7 @@ export default function GameReports({
                         {reportEditParams.mode === "delete" ? (
                             <ReportDeleteForm
                                 report={reportEditParams}
-                                refresh={refresh}
+                                refresh={() => refresh(currentPage)}
                             />
                         ) : (
                             <Box overflow="auto" mt={3}>
@@ -103,7 +115,9 @@ export default function GameReports({
                                     report={reportEditParams}
                                     leaderboard={leaderboard}
                                     loadingLeaderboard={loadingLeaderboard}
-                                    refreshGameReports={refresh}
+                                    refreshGameReports={() =>
+                                        refresh(currentPage)
+                                    }
                                     exit={() => setReportEditParams(null)}
                                 />
                             </Box>
@@ -113,7 +127,7 @@ export default function GameReports({
             )}
 
             <TableLayout
-                refresh={refresh}
+                refresh={() => refresh(currentPage)}
                 error={error}
                 loading={loading}
                 label="Game Reports"
@@ -272,6 +286,13 @@ export default function GameReports({
                         </td>
                     </tr>
                 ))}
+            />
+
+            <Pagination
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                totalCount={totalReportCount}
+                perPageCount={PAGE_LIMIT}
             />
         </Box>
     );

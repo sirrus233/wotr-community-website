@@ -11,8 +11,10 @@ import Database.Esqueleto.Experimental
     PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
+    Value (unValue, Value),
     asc,
     case_,
+    countRows,
     delete,
     desc,
     else_,
@@ -152,6 +154,13 @@ getAllGameReports sortOrder = lift . select $ do
   orderBy [sortOrder' (report ^. GameReportTimestamp)]
   pure (report, winner, loser)
 
+getNumGameReports :: (MonadIO m, MonadLogger m) => DBAction m Int
+getNumGameReports = do
+  count <- lift . selectOne $ do
+    _ <- from $ table @GameReport
+    pure countRows
+  pure $ unValue . fromMaybe (Value 0) $ count
+
 insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Entity Player)
 insertPlayerIfNotExists name = do
   player <- getPlayerByName name
@@ -247,7 +256,7 @@ updateActiveStatus = do
         let freeRating = stats ^. PlayerStatsTotalRatingFree
             shadowRating = stats ^. PlayerStatsTotalRatingShadow
         pure $ (freeRating +. shadowRating) /. val 2
-        
+
 updateAdminSessionId :: (MonadIO m, MonadLogger m) => UserId -> Maybe SessionId -> DBAction m Int64
 updateAdminSessionId (UserId userId) sessionId = lift $ updateCount $ \admin -> do
   set admin [AdminSessionId =. val (unSessionId <$> sessionId)]

@@ -170,7 +170,11 @@ data SubmitGameReportResponse = SubmitGameReportResponse
 
 instance ToJSON SubmitGameReportResponse
 
-newtype GetReportsResponse = GetReportsResponse {reports :: [ProcessedGameReport]} deriving (Generic)
+data GetReportsResponse = GetReportsResponse
+  { reports :: [ProcessedGameReport],
+    total :: Int
+  }
+  deriving (Generic)
 
 instance ToJSON GetReportsResponse
 
