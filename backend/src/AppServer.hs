@@ -44,6 +44,7 @@ import Servant
     err401,
     err404,
     err422,
+    err500,
     throwError,
     type (:<|>) (..),
   )
@@ -209,7 +210,7 @@ reprocessReports = do
 authGoogleLoginHandler :: IdToken -> AppM GoogleLoginResponse
 authGoogleLoginHandler idToken = do
   httpConnMgr <- newManager
-  jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (\err -> throwError err401 {errBody = show err}) pure -- TODO cache this
+  jwks <- liftIO (fetchGoogleJWKSet httpConnMgr) >>= either (\err -> throwError err500 {errBody = show err}) pure -- TODO cache this
   userId <- liftIO (validateToken jwks idToken) >>= either (\err -> throwError err401 {errBody = show err}) pure
   sessionId <- liftIO UUID.nextRandom
   count <- runAuthDb $ updateAdminSessionId userId sessionId
