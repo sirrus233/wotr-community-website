@@ -77,7 +77,7 @@ export default function GameReports({
                 {
                     params: {
                         limit: PAGE_LIMIT,
-                        offset: (page - 1) * PAGE_LIMIT,
+                        offset: getReportsOffset(page),
                     },
                 }
             );
@@ -212,9 +212,10 @@ export default function GameReports({
                             </IconButton>
                         </td>
 
-                        {/* TODO: account for pagination */}
                         <td style={{ fontWeight: "bold" }}>
-                            {reports.length - i}
+                            {totalReportCount -
+                                i -
+                                getReportsOffset(currentPage)}
                         </td>
 
                         <td>
@@ -330,6 +331,10 @@ function RowAccent({ side }: RowAccentProps) {
             />
         </td>
     );
+}
+
+function getReportsOffset(currentPage: number) {
+    return (currentPage - 1) * PAGE_LIMIT;
 }
 
 function summarizeGameType(expansions: Expansion[]) {
