@@ -50,6 +50,8 @@ const TABLE_TOP_POSITION =
     TABLE_BTN_HEIGHT_PX +
     TABLE_ELEMENTS_GAP * 2;
 
+const PAGE_FOOTER_HEIGHT = 50;
+
 const PAGE_LIMIT = 100;
 
 interface Props {
@@ -132,7 +134,7 @@ export default function GameReports({
                 loading={loading}
                 label="Game Reports"
                 containerStyle={{
-                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
+                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px - ${PAGE_FOOTER_HEIGHT}px)`,
                 }}
                 tableStyle={{
                     "& thead > tr:first-child > *:first-child": {
@@ -288,12 +290,14 @@ export default function GameReports({
                 ))}
             />
 
-            <Pagination
-                currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
-                totalCount={totalReportCount}
-                perPageCount={PAGE_LIMIT}
-            />
+            <Box height={`${PAGE_FOOTER_HEIGHT}px`}>
+                <Pagination
+                    currentPage={currentPage}
+                    setCurrentPage={setCurrentPage}
+                    totalCount={totalReportCount}
+                    perPageCount={PAGE_LIMIT}
+                />
+            </Box>
         </Box>
     );
 }
