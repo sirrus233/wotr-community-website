@@ -194,10 +194,14 @@ export function isServerError(error: unknown): error is ServerErrorBody {
 }
 
 export function toErrorMessage(error: ServerErrorBody): string {
-    if (error.status === 422) {
-        return error.response.data;
+    switch (error.status) {
+        case 401:
+            return ErrorMessage.NotAuthorized;
+        case 422:
+            return error.response.data;
+        default:
+            return ErrorMessage.Default;
     }
-    return ErrorMessage.Default;
 }
 
 export function displayTime(timestamp: string) {

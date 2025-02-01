@@ -41,6 +41,7 @@ import {
     getStrongholdLabel,
     isStrongholdInPlay,
     strongholdSide,
+    toErrorMessage,
 } from "../utils";
 import useFormData from "../hooks/useFormData";
 import Autocomplete from "../Autocomplete";
@@ -92,7 +93,7 @@ function GameReportForm({
             report ? "Modifications" : "Report"
         } submitted. Thank you!`,
         submit,
-        toErrorMessage,
+        toErrorMessage: toGameFormErrorMessage,
     });
 
     useGameReportClearEffects({
@@ -657,7 +658,7 @@ function toFormData(unencodedPayload: GameReportPayload): FormData {
     return formData;
 }
 
-function toErrorMessage(error: ServerErrorBody): string {
+function toGameFormErrorMessage(error: ServerErrorBody): string {
     if (error.status === 422) {
         const parsedResult = parseValidationResult(error.response.data);
         if (parsedResult.length) {
@@ -669,7 +670,7 @@ function toErrorMessage(error: ServerErrorBody): string {
             );
         }
     }
-    return ErrorMessage.Default;
+    return toErrorMessage(error);
 }
 
 function parseValidationResult(
