@@ -5,6 +5,7 @@ import Table from "@mui/joy/Table";
 import { SxProps } from "@mui/joy/styles/types";
 import { TABLE_BTN_HEIGHT_PX, TABLE_ELEMENTS_GAP } from "./styles/sizes";
 import ErrorDisplay from "./ErrorDisplay";
+import LoadingOverlay from "./LoadingOverlay";
 
 interface Props {
     refresh: () => void;
@@ -72,35 +73,34 @@ export default function TableLayout({
 
             {error && <ErrorDisplay message={error} sx={{ pb: 2 }} />}
 
-            {loading ? (
-                "Loading..."
-            ) : (
-                <Box
+            <Box
+                sx={{
+                    overflow: loading ? "hidden" : "auto",
+                    boxShadow: "lg",
+                    borderRadius: "sm",
+                    position: "relative",
+                    ...containerStyle,
+                }}
+            >
+                {loading && <LoadingOverlay />}
+
+                <Table
+                    aria-label={label}
+                    noWrap
+                    size="sm"
+                    variant="outlined"
+                    stickyHeader
                     sx={{
-                        overflow: "auto",
-                        boxShadow: "lg",
-                        borderRadius: "sm",
-                        ...containerStyle,
+                        tableLayout: "auto",
+                        border: "none",
+                        "& tr > *": { textAlign: "center" },
+                        ...tableStyle,
                     }}
                 >
-                    <Table
-                        aria-label={label}
-                        noWrap
-                        size="sm"
-                        variant="outlined"
-                        stickyHeader
-                        sx={{
-                            tableLayout: "auto",
-                            border: "none",
-                            "& tr > *": { textAlign: "center" },
-                            ...tableStyle,
-                        }}
-                    >
-                        <thead>{header}</thead>
-                        <tbody>{body}</tbody>
-                    </Table>
-                </Box>
-            )}
+                    <thead>{header}</thead>
+                    <tbody>{body}</tbody>
+                </Table>
+            </Box>
         </Box>
     );
 }
