@@ -6,6 +6,8 @@ import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
 import GameReports from "./GameReports";
 import Rankings from "./Rankings";
+import CheckIcon from "@mui/icons-material/Check";
+import CircularProgress from "@mui/joy/CircularProgress";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
 import Drawer from "@mui/joy/Drawer";
@@ -17,11 +19,14 @@ import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ErrorMessage } from "./constants";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
-import { LeaderboardEntry } from "./types";
+import { LeaderboardEntry, UserInfo } from "./types";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import GoogleLoginButton from "./GoogleLogin";
 
 export default function App() {
+    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+    const [loadingUserInfo, setLoadingUserInfo] = useState(false);
+
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [leaderboardYear, setLeaderboardYear] = useState(
         new Date().getFullYear()
@@ -30,6 +35,16 @@ export default function App() {
     const [leaderboardError, setLeaderboardError] = useState<string | null>(
         null
     );
+
+    const getUserInfo = () => {
+        setLoadingUserInfo(true);
+        axios
+            // .get("http://localhost:8081/userInfo")
+            .get("https://api.waroftheringcommunity.net:8080/userInfo")
+            .then((response) => setUserInfo(response.data))
+            .catch(console.error)
+            .finally(() => setLoadingUserInfo(false));
+    };
 
     const getLeaderboard = () => {
         setLoadingLeaderboard(true);
@@ -52,6 +67,7 @@ export default function App() {
     };
 
     useEffect(getLeaderboard, [leaderboardYear]);
+    useEffect(getUserInfo, []);
 
     return (
         <GoogleOAuthProvider clientId="331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com">
@@ -86,9 +102,33 @@ export default function App() {
                         >
                             WotR Community Ladder
                         </Typography>
+
+                        <Box
+                            position="absolute"
+                            right={0}
+                            pr="10px"
+                            display="flex"
+                            alignItems="center"
+                        >
+                            {userInfo?.isAdmin ? (
+                                <>
+                                    <CheckIcon
+                                        sx={{ color: "inherit", mx: "5px" }}
+                                    />
+                                    Signed in
+                                </>
+                            ) : (
+                                loadingUserInfo && (
+                                    <CircularProgress size="sm" />
+                                )
+                            )}
+                        </Box>
                     </header>
                     <Routes>
-                        <Route path="/" element={<Home />} />
+                        <Route
+                            path="/"
+                            element={<Home getUserInfo={getUserInfo} />}
+                        />
                         <Route
                             path="/game-report"
                             element={
@@ -128,7 +168,11 @@ export default function App() {
     );
 }
 
-function Home() {
+interface HomeProps {
+    getUserInfo: () => void;
+}
+
+function Home({ getUserInfo }: HomeProps) {
     return (
         <Box
             gap={4}
@@ -257,7 +301,7 @@ function Home() {
                 ))}
             </Section>
             <Section>
-                <GoogleLoginButton />
+                <GoogleLoginButton getUserInfo={getUserInfo} />
             </Section>
         </Box>
     );

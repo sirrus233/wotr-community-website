@@ -2,7 +2,11 @@ import React from "react";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 
-export default function GoogleLoginButton() {
+interface Props {
+    getUserInfo: () => void;
+}
+
+export default function GoogleLoginButton({ getUserInfo }: Props) {
     const handleLoginSuccess = async (response: CredentialResponse) => {
         await axios
             .post(
@@ -10,6 +14,7 @@ export default function GoogleLoginButton() {
                 response.credential,
                 { headers: { "Content-Type": "text/plain;charset=utf-8" } }
             )
+            .then(getUserInfo)
             .catch((error) => {
                 console.error(error);
             });

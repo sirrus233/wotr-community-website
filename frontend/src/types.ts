@@ -34,6 +34,10 @@ export type PlayerState = (typeof playerStates)[number];
 
 export type SuccessMessage = string | null;
 
+export type UserInfo = {
+    isAdmin: boolean;
+};
+
 export type ServerErrorBody = {
     message: string;
     status: number;
