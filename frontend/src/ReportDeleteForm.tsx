@@ -3,12 +3,13 @@ import React from "react";
 import AdminFormLayout from "./AdminFormLayout";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData, { initializeToDefaults } from "./hooks/useFormData";
+import { toErrorMessage } from "./networkErrorHandlers";
 import {
     ProcessedGameReport,
     ReportDeleteFormData,
     ValidReportDeleteFormData,
 } from "./types";
-import { displayTime, toErrorMessage } from "./utils";
+import { displayTime } from "./utils";
 
 interface Props {
     report: ProcessedGameReport;

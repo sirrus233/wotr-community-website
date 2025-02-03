@@ -1,6 +1,7 @@
 import React from "react";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
+import { logNetworkError } from "./networkErrorHandlers";
 
 interface Props {
     getUserInfo: () => void;
@@ -15,9 +16,7 @@ export default function GoogleLoginButton({ getUserInfo }: Props) {
                 { headers: { "Content-Type": "text/plain;charset=utf-8" } }
             )
             .then(getUserInfo)
-            .catch((error) => {
-                console.error(error);
-            });
+            .catch(logNetworkError);
     };
 
     return (

@@ -41,8 +41,10 @@ export type UserInfo = {
 export type ServerErrorBody = {
     message: string;
     status: number;
+    config: unknown;
     response: {
         data: string;
+        headers: unknown;
     };
 };
 

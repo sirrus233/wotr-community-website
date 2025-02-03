@@ -25,6 +25,7 @@ import {
     victoryTypes,
 } from "../constants";
 import { GAME_FORM_BOLD } from "../styles/colors";
+import { toErrorMessage } from "../networkErrorHandlers";
 import {
     GameFormData,
     GameReportPayload,
@@ -41,7 +42,6 @@ import {
     getStrongholdLabel,
     isStrongholdInPlay,
     strongholdSide,
-    toErrorMessage,
 } from "../utils";
 import useFormData from "../hooks/useFormData";
 import Autocomplete from "../Autocomplete";

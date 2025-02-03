@@ -1,5 +1,4 @@
-import { ErrorMessage } from "./constants";
-import { Expansion, League, ServerErrorBody, Side, Stronghold } from "./types";
+import { Expansion, League, Side, Stronghold } from "./types";
 
 export function strongholdSide(
     expansions: Expansion[],
@@ -176,31 +175,6 @@ export function isStrongholdInPlay(
         case "MinasMorgul":
         case "Umbar":
             return true;
-    }
-}
-
-export function isServerError(error: unknown): error is ServerErrorBody {
-    return (
-        typeof error === "object" &&
-        error !== null &&
-        "status" in error &&
-        typeof error.status === "number" &&
-        "response" in error &&
-        typeof error.response === "object" &&
-        error.response !== null &&
-        "data" in error.response &&
-        typeof error.response.data === "string"
-    );
-}
-
-export function toErrorMessage(error: ServerErrorBody): string {
-    switch (error.status) {
-        case 401:
-            return ErrorMessage.NotAuthorized;
-        case 422:
-            return error.response.data;
-        default:
-            return ErrorMessage.Default;
     }
 }
 

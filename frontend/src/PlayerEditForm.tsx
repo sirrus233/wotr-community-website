@@ -5,7 +5,7 @@ import AdminFormLayout from "./AdminFormLayout";
 import TextInput from "./TextInput";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData, { initializeToDefaults } from "./hooks/useFormData";
-import { toErrorMessage } from "./utils";
+import { toErrorMessage } from "./networkErrorHandlers";
 
 interface Props {
     pid: number;

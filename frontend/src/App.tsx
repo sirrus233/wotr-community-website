@@ -18,6 +18,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ErrorMessage } from "./constants";
+import { logNetworkError } from "./networkErrorHandlers";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import { LeaderboardEntry, UserInfo } from "./types";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -42,7 +43,7 @@ export default function App() {
             // .get("http://localhost:8081/userInfo")
             .get("https://api.waroftheringcommunity.net:8080/userInfo")
             .then((response) => setUserInfo(response.data))
-            .catch(console.error)
+            .catch(logNetworkError)
             .finally(() => setLoadingUserInfo(false));
     };
 
@@ -59,7 +60,7 @@ export default function App() {
             })
             .catch((error) => {
                 setLeaderboardError(ErrorMessage.Default);
-                console.error(error);
+                logNetworkError(error);
             })
             .finally(() => {
                 setLoadingLeaderboard(false);
