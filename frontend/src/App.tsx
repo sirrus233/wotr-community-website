@@ -171,6 +171,7 @@ export default function App() {
                                 <GameReports
                                     leaderboard={leaderboard}
                                     loadingLeaderboard={loadingLeaderboard}
+                                    isAdmin={userInfo?.isAdmin || false}
                                 />
                             }
                         />
@@ -182,6 +183,7 @@ export default function App() {
                                     year={leaderboardYear}
                                     loading={loadingLeaderboard}
                                     error={leaderboardError}
+                                    isAdmin={userInfo?.isAdmin || false}
                                     getLeaderboard={getLeaderboard}
                                     setYear={setLeaderboardYear}
                                     setError={setLeaderboardError}

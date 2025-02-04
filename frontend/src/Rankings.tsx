@@ -34,6 +34,7 @@ interface Props {
     year: number;
     loading: boolean;
     error: string | null;
+    isAdmin: boolean;
     getLeaderboard: () => void;
     setYear: (year: number) => void;
     setError: (error: string | null) => void;
@@ -54,6 +55,7 @@ function Rankings({
     year,
     loading,
     error,
+    isAdmin,
     getLeaderboard,
     setYear,
     setError,
@@ -137,9 +139,11 @@ function Rankings({
                 header={
                     <>
                         <TableHeaderRow>
-                            <TableHeaderCell level={0} rowSpan={3}>
-                                Edit Player
-                            </TableHeaderCell>
+                            {isAdmin && (
+                                <TableHeaderCell level={0} rowSpan={3}>
+                                    Edit Player
+                                </TableHeaderCell>
+                            )}
                             <TableHeaderCell level={0} rowSpan={3}>
                                 Rank
                             </TableHeaderCell>
@@ -223,35 +227,37 @@ function Rankings({
                     )
                     .map((entry, i) => (
                         <tr key={entry.pid}>
-                            <TableCell>
-                                <IconButton
-                                    size="sm"
-                                    disabled={loading}
-                                    onClick={() =>
-                                        setPlayerEditParams({
-                                            pid: entry.pid,
-                                            name: entry.name,
-                                            mode: "edit",
-                                        })
-                                    }
-                                >
-                                    <EditIcon />
-                                </IconButton>
+                            {isAdmin && (
+                                <TableCell>
+                                    <IconButton
+                                        size="sm"
+                                        disabled={loading}
+                                        onClick={() =>
+                                            setPlayerEditParams({
+                                                pid: entry.pid,
+                                                name: entry.name,
+                                                mode: "edit",
+                                            })
+                                        }
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
 
-                                <IconButton
-                                    size="sm"
-                                    disabled={loading}
-                                    onClick={() =>
-                                        setPlayerEditParams({
-                                            pid: entry.pid,
-                                            name: entry.name,
-                                            mode: "remap",
-                                        })
-                                    }
-                                >
-                                    <MergeIcon />
-                                </IconButton>
-                            </TableCell>
+                                    <IconButton
+                                        size="sm"
+                                        disabled={loading}
+                                        onClick={() =>
+                                            setPlayerEditParams({
+                                                pid: entry.pid,
+                                                name: entry.name,
+                                                mode: "remap",
+                                            })
+                                        }
+                                    >
+                                        <MergeIcon />
+                                    </IconButton>
+                                </TableCell>
+                            )}
 
                             <TableCell>{i + 1}</TableCell>
                             <TableCell>{entry.country}</TableCell>
