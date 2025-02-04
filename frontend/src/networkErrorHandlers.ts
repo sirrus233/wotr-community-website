@@ -12,6 +12,13 @@ export function toErrorMessage(error: ServerErrorBody): string {
     }
 }
 
+export function toAuthStatus(error: unknown): string {
+    if (isServerError(error) && error.status === 401) {
+        return ErrorMessage.NotAuthorizedStatus;
+    }
+    return ErrorMessage.UnknownAuthStatus;
+}
+
 export function logNetworkError(error: unknown) {
     if (isServerError(error)) {
         console.error({

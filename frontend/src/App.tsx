@@ -16,6 +16,7 @@ import List from "@mui/joy/List";
 import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/joy/Typography";
+import WarningIcon from "@mui/icons-material/Warning";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ErrorMessage } from "./constants";
 import { logNetworkError } from "./networkErrorHandlers";
@@ -27,6 +28,7 @@ import GoogleLoginButton from "./GoogleLogin";
 export default function App() {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
     const [loadingUserInfo, setLoadingUserInfo] = useState(false);
+    const [loginError, setLoginError] = useState<string | null>(null);
 
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [leaderboardYear, setLeaderboardYear] = useState(
@@ -37,13 +39,14 @@ export default function App() {
         null
     );
 
-    const getUserInfo = () => {
+    const getUserInfo = (onError: (error: unknown) => void) => {
         setLoadingUserInfo(true);
+        setLoginError(null);
         axios
             // .get("http://localhost:8081/userInfo")
             .get("https://api.waroftheringcommunity.net:8080/userInfo")
             .then((response) => setUserInfo(response.data))
-            .catch(logNetworkError)
+            .catch(onError)
             .finally(() => setLoadingUserInfo(false));
     };
 
@@ -67,8 +70,17 @@ export default function App() {
             });
     };
 
+    const clearUserInfo = () => setUserInfo(null);
+
     useEffect(getLeaderboard, [leaderboardYear]);
-    useEffect(getUserInfo, []);
+
+    useEffect(function getUserInfoOnMount() {
+        const onError = (error: unknown) => {
+            logNetworkError(error);
+            clearUserInfo();
+        };
+        getUserInfo(onError);
+    }, []);
 
     return (
         <GoogleOAuthProvider clientId="331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com">
@@ -111,16 +123,23 @@ export default function App() {
                             display="flex"
                             alignItems="center"
                         >
-                            {userInfo?.isAdmin ? (
+                            {loadingUserInfo ? (
+                                <CircularProgress size="sm" />
+                            ) : loginError ? (
                                 <>
-                                    <CheckIcon
+                                    <WarningIcon
                                         sx={{ color: "inherit", mx: "5px" }}
                                     />
-                                    Signed in
+                                    {loginError}
                                 </>
                             ) : (
-                                loadingUserInfo && (
-                                    <CircularProgress size="sm" />
+                                userInfo?.isAdmin && (
+                                    <>
+                                        <CheckIcon
+                                            sx={{ color: "inherit", mx: "5px" }}
+                                        />
+                                        Signed in
+                                    </>
                                 )
                             )}
                         </Box>
@@ -128,7 +147,14 @@ export default function App() {
                     <Routes>
                         <Route
                             path="/"
-                            element={<Home getUserInfo={getUserInfo} />}
+                            element={
+                                <Home
+                                    getUserInfo={getUserInfo}
+                                    clearUserInfo={clearUserInfo}
+                                    setLoginError={setLoginError}
+                                    setLoadingUserInfo={setLoadingUserInfo}
+                                />
+                            }
                         />
                         <Route
                             path="/game-report"
@@ -170,10 +196,18 @@ export default function App() {
 }
 
 interface HomeProps {
-    getUserInfo: () => void;
+    getUserInfo: (onError: (error: unknown) => void) => void;
+    clearUserInfo: () => void;
+    setLoginError: (error: string) => void;
+    setLoadingUserInfo: (loading: boolean) => void;
 }
 
-function Home({ getUserInfo }: HomeProps) {
+function Home({
+    getUserInfo,
+    clearUserInfo,
+    setLoginError,
+    setLoadingUserInfo,
+}: HomeProps) {
     return (
         <Box
             gap={4}
@@ -302,7 +336,12 @@ function Home({ getUserInfo }: HomeProps) {
                 ))}
             </Section>
             <Section>
-                <GoogleLoginButton getUserInfo={getUserInfo} />
+                <GoogleLoginButton
+                    getUserInfo={getUserInfo}
+                    clearUserInfo={clearUserInfo}
+                    setLoginError={setLoginError}
+                    setLoadingUserInfo={setLoadingUserInfo}
+                />
             </Section>
         </Box>
     );

@@ -111,6 +111,8 @@ export const playerStates = ["Active", "Inactive"] as const;
 export enum ErrorMessage {
     Default = "Something went wrong. Please contact an admin for assistance.",
     NotAuthorized = "You cannot pass! If you're an administrator, your session may have expired. Please log in and try again.",
+    NotAuthorizedStatus = "You cannot pass!",
+    UnknownAuthStatus = "Sign-in unavailable",
     Required = "Required",
     OnSubmit = "Could not submit, please resolve errors",
     MissingPlayerName = "This player does not exist in the database. Unless it's a new player, please check the spelling.",
