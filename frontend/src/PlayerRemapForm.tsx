@@ -11,7 +11,7 @@ import Autocomplete from "./Autocomplete";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import { ErrorMessage } from "./constants";
-import { toErrorMessage } from "./utils";
+import { toErrorMessage } from "./networkErrorHandlers";
 
 interface Props {
     pid: number;

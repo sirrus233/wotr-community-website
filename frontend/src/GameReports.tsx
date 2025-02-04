@@ -22,6 +22,7 @@ import {
     Victory,
 } from "./types";
 import { FREE_ACCENT_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
+import { logNetworkError } from "./networkErrorHandlers";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
@@ -87,7 +88,7 @@ export default function GameReports({
             setTotalReportCount(response.data.total);
         } catch (error) {
             setError(ErrorMessage.Default);
-            console.error(error);
+            logNetworkError(error);
         }
         setLoading(false);
     };

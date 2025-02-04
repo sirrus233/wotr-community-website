@@ -7,7 +7,8 @@ import {
     SuccessMessage,
 } from "../types";
 import { ErrorMessage } from "../constants";
-import { isServerError, objectKeys } from "../utils";
+import { isServerError, logNetworkError } from "../networkErrorHandlers";
+import { objectKeys } from "../utils";
 
 type Helpers<F> = {
     setFormData: Dispatch<SetStateAction<ConstrainedFormData<F>>>;
@@ -145,7 +146,7 @@ export default function useFormData<F, V extends F>({
                 setSuccessMessage(successMessageText);
             }
         } catch (error) {
-            console.error("Error submitting form:", error);
+            logNetworkError(error);
             if (isServerError(error)) {
                 setErrorOnSubmit(toErrorMessage(error));
             } else {

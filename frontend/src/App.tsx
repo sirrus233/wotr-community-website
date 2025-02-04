@@ -6,6 +6,8 @@ import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
 import GameReports from "./GameReports";
 import Rankings from "./Rankings";
+import CheckIcon from "@mui/icons-material/Check";
+import CircularProgress from "@mui/joy/CircularProgress";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
 import Drawer from "@mui/joy/Drawer";
@@ -14,14 +16,20 @@ import List from "@mui/joy/List";
 import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/joy/Typography";
+import WarningIcon from "@mui/icons-material/Warning";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ErrorMessage } from "./constants";
+import { logNetworkError } from "./networkErrorHandlers";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
-import { LeaderboardEntry } from "./types";
+import { LeaderboardEntry, UserInfo } from "./types";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import GoogleLoginButton from "./GoogleLogin";
 
 export default function App() {
+    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+    const [loadingUserInfo, setLoadingUserInfo] = useState(false);
+    const [loginError, setLoginError] = useState<string | null>(null);
+
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [leaderboardYear, setLeaderboardYear] = useState(
         new Date().getFullYear()
@@ -30,6 +38,17 @@ export default function App() {
     const [leaderboardError, setLeaderboardError] = useState<string | null>(
         null
     );
+
+    const getUserInfo = (onError: (error: unknown) => void) => {
+        setLoadingUserInfo(true);
+        setLoginError(null);
+        axios
+            // .get("http://localhost:8081/userInfo")
+            .get("https://api.waroftheringcommunity.net:8080/userInfo")
+            .then((response) => setUserInfo(response.data))
+            .catch(onError)
+            .finally(() => setLoadingUserInfo(false));
+    };
 
     const getLeaderboard = () => {
         setLoadingLeaderboard(true);
@@ -44,14 +63,24 @@ export default function App() {
             })
             .catch((error) => {
                 setLeaderboardError(ErrorMessage.Default);
-                console.error(error);
+                logNetworkError(error);
             })
             .finally(() => {
                 setLoadingLeaderboard(false);
             });
     };
 
+    const clearUserInfo = () => setUserInfo(null);
+
     useEffect(getLeaderboard, [leaderboardYear]);
+
+    useEffect(function getUserInfoOnMount() {
+        const onError = (error: unknown) => {
+            logNetworkError(error);
+            clearUserInfo();
+        };
+        getUserInfo(onError);
+    }, []);
 
     return (
         <GoogleOAuthProvider clientId="331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com">
@@ -86,9 +115,47 @@ export default function App() {
                         >
                             WotR Community Ladder
                         </Typography>
+
+                        <Box
+                            position="absolute"
+                            right={0}
+                            pr="10px"
+                            display="flex"
+                            alignItems="center"
+                        >
+                            {loadingUserInfo ? (
+                                <CircularProgress size="sm" />
+                            ) : loginError ? (
+                                <>
+                                    <WarningIcon
+                                        sx={{ color: "inherit", mx: "5px" }}
+                                    />
+                                    {loginError}
+                                </>
+                            ) : (
+                                userInfo?.isAdmin && (
+                                    <>
+                                        <CheckIcon
+                                            sx={{ color: "inherit", mx: "5px" }}
+                                        />
+                                        Signed in
+                                    </>
+                                )
+                            )}
+                        </Box>
                     </header>
                     <Routes>
-                        <Route path="/" element={<Home />} />
+                        <Route
+                            path="/"
+                            element={
+                                <Home
+                                    getUserInfo={getUserInfo}
+                                    clearUserInfo={clearUserInfo}
+                                    setLoginError={setLoginError}
+                                    setLoadingUserInfo={setLoadingUserInfo}
+                                />
+                            }
+                        />
                         <Route
                             path="/game-report"
                             element={
@@ -128,7 +195,19 @@ export default function App() {
     );
 }
 
-function Home() {
+interface HomeProps {
+    getUserInfo: (onError: (error: unknown) => void) => void;
+    clearUserInfo: () => void;
+    setLoginError: (error: string) => void;
+    setLoadingUserInfo: (loading: boolean) => void;
+}
+
+function Home({
+    getUserInfo,
+    clearUserInfo,
+    setLoginError,
+    setLoadingUserInfo,
+}: HomeProps) {
     return (
         <Box
             gap={4}
@@ -257,7 +336,12 @@ function Home() {
                 ))}
             </Section>
             <Section>
-                <GoogleLoginButton />
+                <GoogleLoginButton
+                    getUserInfo={getUserInfo}
+                    clearUserInfo={clearUserInfo}
+                    setLoginError={setLoginError}
+                    setLoadingUserInfo={setLoadingUserInfo}
+                />
             </Section>
         </Box>
     );
