@@ -58,11 +58,13 @@ const PAGE_LIMIT = 100;
 interface Props {
     leaderboard: LeaderboardEntry[];
     loadingLeaderboard: boolean;
+    isAdmin: boolean;
 }
 
 export default function GameReports({
     leaderboard,
     loadingLeaderboard,
+    isAdmin,
 }: Props) {
     const [reports, setReports] = useState<ProcessedGameReport[]>([]);
     const [loading, setLoading] = useState(false);
@@ -151,7 +153,7 @@ export default function GameReports({
                     <tr>
                         <th />
                         <th />
-                        <th>Edit</th>
+                        {isAdmin && <th>Edit</th>}
                         <th>No.</th>
                         <th>Pairing</th>
                         <th>Timestamp</th>
@@ -185,35 +187,37 @@ export default function GameReports({
                             {report.side === "Free" ? "💍" : "🌋"}
                         </td>
 
-                        <td>
-                            <IconButton
-                                size="sm"
-                                sx={{ minWidth: 0 }}
-                                disabled={loading}
-                                onClick={() =>
-                                    setReportEditParams({
-                                        ...report,
-                                        mode: "edit",
-                                    })
-                                }
-                            >
-                                <EditIcon />
-                            </IconButton>
+                        {isAdmin && (
+                            <td>
+                                <IconButton
+                                    size="sm"
+                                    sx={{ minWidth: 0 }}
+                                    disabled={loading}
+                                    onClick={() =>
+                                        setReportEditParams({
+                                            ...report,
+                                            mode: "edit",
+                                        })
+                                    }
+                                >
+                                    <EditIcon />
+                                </IconButton>
 
-                            <IconButton
-                                size="sm"
-                                sx={{ minWidth: 0 }}
-                                disabled={loading}
-                                onClick={() =>
-                                    setReportEditParams({
-                                        ...report,
-                                        mode: "delete",
-                                    })
-                                }
-                            >
-                                <DeleteIcon />
-                            </IconButton>
-                        </td>
+                                <IconButton
+                                    size="sm"
+                                    sx={{ minWidth: 0 }}
+                                    disabled={loading}
+                                    onClick={() =>
+                                        setReportEditParams({
+                                            ...report,
+                                            mode: "delete",
+                                        })
+                                    }
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </td>
+                        )}
 
                         <td style={{ fontWeight: "bold" }}>
                             {totalReportCount -
