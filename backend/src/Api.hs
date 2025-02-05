@@ -8,7 +8,9 @@ import Servant
     Post,
     PostNoContent,
     QueryParam,
+    QueryParam',
     ReqBody,
+    Required,
     StdMethod (..),
     Verb,
     (:<|>),
@@ -21,6 +23,7 @@ import Types.Api
     GetReportsResponse,
     GoogleLoginResponse,
     IdToken,
+    LeagueStatsResponse,
     ModifyReportRequest,
     RemapPlayerRequest,
     RemapPlayerResponse,
@@ -30,6 +33,9 @@ import Types.Api
     UserInfoResponse,
   )
 import Types.Auth (SessionIdCookie)
+import Types.DataField (League, LeagueTier, PlayerName)
+
+type RequiredQueryParam = QueryParam' '[Required]
 
 type AuthGoogleLoginAPI = "auth" :> "google" :> "login" :> ReqBody '[PlainText] IdToken :> Verb 'POST 204 '[JSON] GoogleLoginResponse
 
@@ -46,6 +52,13 @@ type GetReportsAPI =
 type GetLeaderboardAPI =
   "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse
 
+type GetLeagueStatsAPI =
+  "leagueStats"
+    :> RequiredQueryParam "league" League
+    :> RequiredQueryParam "tier" LeagueTier
+    :> RequiredQueryParam "year" Int
+    :> Get '[JSON] LeagueStatsResponse
+
 type AdminRenamePlayerAPI =
   "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
@@ -58,11 +71,21 @@ type AdminModifyReportAPI =
 type AdminDeleteReportAPI =
   "deleteReport" :> ReqBody '[JSON] DeleteReportRequest :> PostNoContent
 
+type AdminAddLeaguePlayerAPI =
+  "addLeaguePlayer"
+    :> RequiredQueryParam "league" League
+    :> RequiredQueryParam "tier" LeagueTier
+    :> RequiredQueryParam "year" Int
+    :> QueryParam "playerId" Int64
+    :> QueryParam "playerName" PlayerName
+    :> PostNoContent
+
 type Unprotected =
   AuthGoogleLoginAPI
     :<|> SubmitReportAPI
     :<|> GetReportsAPI
     :<|> GetLeaderboardAPI
+    :<|> GetLeagueStatsAPI
 
 type Protected =
   LogoutAPI
@@ -71,5 +94,6 @@ type Protected =
     :<|> AdminRemapPlayerAPI
     :<|> AdminModifyReportAPI
     :<|> AdminDeleteReportAPI
+    :<|> AdminAddLeaguePlayerAPI
 
 type API = (AuthProtect SessionIdCookie :> Protected) :<|> Unprotected

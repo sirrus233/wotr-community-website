@@ -5,11 +5,11 @@ module Types.Database where
 
 import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
 import Data.Time (UTCTime)
-import Database.Esqueleto.Experimental (Entity, rawExecute, runMigrationQuiet, runSqlPool)
+import Database.Esqueleto.Experimental (Entity, Value, rawExecute, runMigrationQuiet, runSqlPool)
 import Database.Esqueleto.Experimental qualified as SQL
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Logging (Logger, log)
-import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side (..), Stronghold, Victory, Year)
+import Types.DataField (Competition, Expansion, League, LeagueTier, Match, PlayerName, Rating, Side (..), Stronghold, Victory, Year)
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAdmin"]
@@ -83,6 +83,14 @@ share
     gameCount Int
     Primary playerId
     deriving Show
+
+  LeaguePlayer
+    league League
+    tier LeagueTier
+    year Int
+    playerId PlayerId
+    Primary league tier year playerId
+    deriving Show
 |]
 
 migrateSchema :: SQL.ConnectionPool -> Logger -> IO ()
@@ -105,6 +113,14 @@ type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerStatsYear))
 
 type ReportInsertion = (Entity GameReport, Entity Player, Entity Player)
+
+type LeagueGameSummaryRecord = (Value PlayerId, (Value Text, Value Int, Value Int))
+
+type LeagueGameSummaryMap = Map PlayerId (Text, Int, Int)
+
+type LeagueGameStatsRecord = (Value PlayerId, (Value PlayerId, Value Text, Value Int, Value Int))
+
+type LeagueGameStatsMap = Map PlayerId [(PlayerId, Text, Int, Int)]
 
 toPlayerStatsTotal :: PlayerStatsInitial -> PlayerStatsTotal
 toPlayerStatsTotal (PlayerStatsInitial {..}) =
