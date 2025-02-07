@@ -21,9 +21,10 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ErrorMessage } from "./constants";
 import { logNetworkError } from "./networkErrorHandlers";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
-import { LeaderboardEntry, UserInfo } from "./types";
+import { LeaderboardEntry, LeagueParams, LeagueStats, UserInfo } from "./types";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import GoogleLoginButton from "./GoogleLogin";
+import Leagues from "./Leagues";
 
 export default function App() {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -38,6 +39,15 @@ export default function App() {
     const [leaderboardError, setLeaderboardError] = useState<string | null>(
         null
     );
+
+    const [leagueParams, setLeagueParams] = useState<LeagueParams>({
+        league: "GeneralLeague",
+        tier: "tier1",
+        year: new Date().getFullYear(),
+    });
+    const [leagueStats, setLeagueStats] = useState<LeagueStats>({});
+    const [loadingLeague, setLoadingLeague] = useState(false);
+    const [leagueError, setLeagueError] = useState<string | null>(null);
 
     const getUserInfo = (onError: (error: unknown) => void) => {
         setLoadingUserInfo(true);
@@ -70,9 +80,31 @@ export default function App() {
             });
     };
 
+    const getLeagueStats = () => {
+        setLoadingLeague(true);
+
+        axios
+            // .get("http://localhost:8081/leagueStats", {
+            .get("https://api.waroftheringcommunity.net:8080/leagueStats", {
+                params: leagueParams,
+            })
+            .then((response) => setLeagueStats(response.data as LeagueStats))
+            .catch((error) => {
+                setLeagueError(ErrorMessage.Default);
+                logNetworkError(error);
+            })
+            .finally(() => setLoadingLeague(false));
+    };
+
     const clearUserInfo = () => setUserInfo(null);
 
     useEffect(getLeaderboard, [leaderboardYear]);
+
+    useEffect(getLeagueStats, [
+        leagueParams.year,
+        leagueParams.league,
+        leagueParams.tier,
+    ]);
 
     useEffect(function getUserInfoOnMount() {
         const onError = (error: unknown) => {
@@ -188,6 +220,19 @@ export default function App() {
                                     getLeaderboard={getLeaderboard}
                                     setYear={setLeaderboardYear}
                                     setError={setLeaderboardError}
+                                />
+                            }
+                        />
+                        <Route
+                            path="/leagues"
+                            element={
+                                <Leagues
+                                    params={leagueParams}
+                                    setParams={setLeagueParams}
+                                    stats={leagueStats}
+                                    loading={loadingLeague}
+                                    error={leagueError}
+                                    refresh={getLeagueStats}
                                 />
                             }
                         />
@@ -400,7 +445,13 @@ function DrawerNavigation() {
                     >
                         Game Reports
                     </ListItemButton>
-                    <ListItemButton>Leagues (Coming Soon!)</ListItemButton>
+                    <ListItemButton
+                        component={Link}
+                        to="/leagues"
+                        onClick={() => setOpen(false)}
+                    >
+                        Leagues
+                    </ListItemButton>
                 </List>
             </Drawer>
         </>

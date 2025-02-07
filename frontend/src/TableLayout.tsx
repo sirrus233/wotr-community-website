@@ -11,9 +11,10 @@ interface Props {
     refresh: () => void;
     error: string | null;
     loading: boolean;
-    label: string;
-    header: ReactNode;
-    body: ReactNode;
+    label?: string;
+    table?: ReactNode;
+    header?: ReactNode;
+    body?: ReactNode;
     filters?: ReactNode;
     containerStyle?: CSSProperties;
     tableStyle?: SxProps;
@@ -25,6 +26,7 @@ export default function TableLayout({
     loading,
     label,
     filters,
+    table,
     header,
     body,
     containerStyle = {},
@@ -84,22 +86,24 @@ export default function TableLayout({
             >
                 {loading && <LoadingOverlay />}
 
-                <Table
-                    aria-label={label}
-                    noWrap
-                    size="sm"
-                    variant="outlined"
-                    stickyHeader
-                    sx={{
-                        tableLayout: "auto",
-                        border: "none",
-                        "& tr > *": { textAlign: "center" },
-                        ...tableStyle,
-                    }}
-                >
-                    <thead>{header}</thead>
-                    <tbody>{body}</tbody>
-                </Table>
+                {table || (
+                    <Table
+                        aria-label={label}
+                        noWrap
+                        size="sm"
+                        variant="outlined"
+                        stickyHeader
+                        sx={{
+                            tableLayout: "auto",
+                            border: "none",
+                            "& tr > *": { textAlign: "center" },
+                            ...tableStyle,
+                        }}
+                    >
+                        <thead>{header}</thead>
+                        <tbody>{body}</tbody>
+                    </Table>
+                )}
             </Box>
         </Box>
     );
