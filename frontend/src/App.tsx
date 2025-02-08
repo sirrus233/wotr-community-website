@@ -284,6 +284,7 @@ function Home({
                     { to: "/game-report", label: "Game Report Form" },
                     { to: "/rankings", label: "Rankings" },
                     { to: "/game-reports", label: "Game Reports" },
+                    { to: "/leagues", label: "Leagues" },
                 ].map(({ to, label }) => (
                     <MuiLink component={Link} to={to} key={label}>
                         {label}
