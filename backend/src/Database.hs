@@ -16,7 +16,6 @@ import Database.Esqueleto.Experimental
     case_,
     coalesceDefault,
     countRows,
-    crossJoin,
     delete,
     desc,
     else_,
