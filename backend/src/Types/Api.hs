@@ -3,12 +3,14 @@ module Types.Api where
 import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
+import Relude.Extra (lookupDefault)
 import Servant (Header, Headers, MimeUnrender (..), NoContent, PlainText)
 import Servant.Multipart (FileData (..), FromMultipart (..), MultipartData (..), Tmp, lookupFile, lookupInput)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
 import Types.Database
   ( GameReport (..),
     GameReportId,
+    LeagueGameStatsMap,
     Player (..),
     PlayerId,
     PlayerStats,
@@ -267,3 +269,27 @@ newtype DeleteReportRequest = DeleteReportRequest
   deriving (Generic)
 
 instance FromJSON DeleteReportRequest
+
+data LeaguePlayerStats = LeaguePlayerStats
+  { name :: Text,
+    summary :: LeaguePlayerStatsSummary,
+    gameStatsByOpponent :: Map PlayerId LeagueGameStats
+  }
+
+data LeaguePlayerStatsSummary = LeaguePlayerStatsSummary
+  { totalWins :: Int,
+    totalGames :: Int,
+    points :: Double
+  }
+
+data LeagueGameStats = LeagueGameStats
+  { opponent :: Text,
+    wins :: Int,
+    losses :: Int
+  }
+
+type LeagueStatsResponse = Map PlayerId LeaguePlayerStats
+
+fromLeagueGameStatsMap :: PlayerId -> LeagueGameStatsMap -> Map PlayerId LeagueGameStats
+fromLeagueGameStatsMap playerId =
+  fromList . fmap (\(opponentId, opponent, wins, losses) -> (opponentId, LeagueGameStats {..})) . lookupDefault [] playerId

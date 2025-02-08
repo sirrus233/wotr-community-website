@@ -82,7 +82,7 @@ instance ToJSON Competition
 
 instance FromJSON Competition
 
-data League = GeneralLeague | LoMELeague | WoMELeague | SuperLeague | TTSLeague deriving (Eq, Generic, Read, Show)
+data League = GeneralLeague | LoMELeague | WoMELeague | SuperLeague | TTSLeague deriving (Eq, Generic, Ord, Read, Show)
 
 instance PersistField League where
   toPersistValue = defaultToPersistValue
@@ -94,6 +94,19 @@ instance PersistFieldSql League where
 instance ToJSON League
 
 instance FromJSON League
+
+data LeagueTier = Tier1 | Tier2 | Tier3 deriving (Eq, Generic, Ord, Read, Show)
+
+instance PersistField LeagueTier where
+  toPersistValue = defaultToPersistValue
+  fromPersistValue = defaultFromPersistValue
+
+instance PersistFieldSql LeagueTier where
+  sqlType _ = SqlString
+
+instance ToJSON LeagueTier
+
+instance FromJSON LeagueTier
 
 data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | Treebeard deriving (Eq, Generic, Read, Show)
 

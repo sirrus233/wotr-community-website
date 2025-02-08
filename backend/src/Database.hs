@@ -3,7 +3,7 @@ module Database where
 import AppConfig (AppM, Env (..), runAppLogger)
 import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
 import Data.Text qualified as T
-import Data.Time (addUTCTime, getCurrentTime, nominalDay)
+import Data.Time (UTCTime (..), addUTCTime, fromGregorian, getCurrentTime, nominalDay)
 import Database.Esqueleto.Experimental
   ( ConnectionPool,
     Entity (..),
@@ -11,19 +11,23 @@ import Database.Esqueleto.Experimental
     PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
-    Value (unValue, Value),
+    Value (..),
     asc,
     case_,
+    coalesceDefault,
     countRows,
     delete,
     desc,
     else_,
     from,
     getBy,
+    groupBy,
     innerJoin,
+    isNothing_,
     just,
     leftJoin,
     limit,
+    not_,
     offset,
     on,
     orderBy,
@@ -33,6 +37,7 @@ import Database.Esqueleto.Experimental
     set,
     subSelectCount,
     subSelectUnsafe,
+    sum_,
     table,
     then_,
     update,
@@ -40,6 +45,7 @@ import Database.Esqueleto.Experimental
     val,
     when_,
     where_,
+    (!=.),
     (&&.),
     (+.),
     (/.),
@@ -54,12 +60,15 @@ import Database.Esqueleto.Experimental
   )
 import Servant (ServerError, throwError)
 import Types.Auth (SessionId (..), UserId (..))
-import Types.DataField (PlayerName, Year)
+import Types.DataField (League, LeagueTier, PlayerName, Year)
 import Types.Database
   ( Admin,
     EntityField (..),
     GameReport (..),
     Key (..),
+    LeagueGameStatsRecord,
+    LeagueGameSummaryRecord,
+    LeaguePlayer (..),
     MaybePlayerStats,
     Player (..),
     PlayerId,
@@ -161,6 +170,80 @@ getNumGameReports = do
     pure countRows
   pure $ unValue . fromMaybe (Value 0) $ count
 
+joinedLeagueResults ::
+  League ->
+  LeagueTier ->
+  Year ->
+  From
+    ( SqlExpr (Entity LeaguePlayer)
+        :& SqlExpr (Entity LeaguePlayer)
+        :& SqlExpr (Entity Player)
+        :& SqlExpr (Entity Player)
+        :& SqlExpr (Maybe (Entity GameReport))
+    )
+joinedLeagueResults league tier year =
+  table @LeaguePlayer
+    `innerJoin` table @LeaguePlayer
+      `on` (\(leaguePlayer :& leagueOpponent) -> isInLeague leaguePlayer &&. isInLeague leagueOpponent)
+    `innerJoin` table @Player
+      `on` (\(leaguePlayer :& _ :& player) -> leaguePlayer ^. LeaguePlayerPlayerId ==. player ^. PlayerId)
+    `innerJoin` table @Player
+      `on` (\(_ :& leagueOpponent :& _ :& opponent) -> leagueOpponent ^. LeaguePlayerPlayerId ==. opponent ^. PlayerId)
+    `leftJoin` table @GameReport
+      `on` ( \(_ :& player :& opponent :& report) ->
+               isGamePlayedBy report player opponent
+                 &&. (report ?. GameReportLeague ==. just (val $ Just league))
+                 &&. (report ?. GameReportTimestamp >=. just (val startTime))
+                 &&. (report ?. GameReportTimestamp <. just (val endTime))
+           )
+  where
+    startTime = UTCTime (fromGregorian (fromIntegral year) 1 1) 0
+    endTime = UTCTime (fromGregorian (fromIntegral year + 1) 1 1) 0
+
+    isInLeague lp =
+      (lp ^. LeaguePlayerLeague ==. val league)
+        &&. lp ^. LeaguePlayerTier ==. val tier
+        &&. lp ^. LeaguePlayerYear ==. val year
+
+    playerWon report player = report ?. GameReportWinnerId ==. just (player ^. PlayerId)
+    playerLost report player = report ?. GameReportLoserId ==. just (player ^. PlayerId)
+
+    isGamePlayedBy report player opponent =
+      (playerWon report player &&. playerLost report opponent) ||. (playerWon report opponent &&. playerLost report player)
+
+getLeaguePlayerSummary :: (MonadIO m, MonadLogger m) => League -> LeagueTier -> Year -> DBAction m [LeagueGameSummaryRecord]
+getLeaguePlayerSummary league tier year = lift . select $ do
+  (_ :& player :& opponent :& report) <- from $ joinedLeagueResults league tier year
+  where_ $ (player ^. PlayerId) !=. (opponent ^. PlayerId) &&. not_ (isNothing_ (report ?. GameReportId))
+  groupBy (player ^. PlayerId)
+  let wins =
+        coalesceDefault
+          [sum_ $ case_ [when_ (playerWon report player) then_ (val (1 :: Int))] (else_ (val 0))]
+          (val 0)
+  pure (player ^. PlayerId, (player ^. PlayerDisplayName, wins, countRows))
+  where
+    playerWon report player = report ?. GameReportWinnerId ==. just (player ^. PlayerId)
+
+getLeagueGameStats :: (MonadIO m, MonadLogger m) => League -> LeagueTier -> Year -> DBAction m [LeagueGameStatsRecord]
+getLeagueGameStats league tier year = lift . select $ do
+  (_ :& player :& opponent :& report) <- from $ joinedLeagueResults league tier year
+  where_ $ (player ^. PlayerId) !=. (opponent ^. PlayerId)
+  groupBy (player ^. PlayerId, opponent ^. PlayerId)
+
+  let wins =
+        coalesceDefault
+          [sum_ $ case_ [when_ (playerWon report player) then_ (val (1 :: Int))] (else_ (val 0))]
+          (val 0)
+
+      losses =
+        coalesceDefault
+          [sum_ $ case_ [when_ (playerWon report opponent) then_ (val (1 :: Int))] (else_ (val 0))]
+          (val 0)
+
+  pure (player ^. PlayerId, (opponent ^. PlayerId, opponent ^. PlayerDisplayName, wins, losses))
+  where
+    playerWon report player = report ?. GameReportWinnerId ==. just (player ^. PlayerId)
+
 insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Entity Player)
 insertPlayerIfNotExists name = do
   player <- getPlayerByName name
@@ -190,6 +273,9 @@ insertLegacyEntry entry = do
 
   insertInitialStats initialStats
   repsertPlayerStats (totalStats, yearStats)
+
+insertLeaguePlayer :: (MonadIO m, MonadLogger m) => LeaguePlayer -> DBAction m ()
+insertLeaguePlayer = lift . insert_
 
 repsertPlayerStats :: (MonadIO m, MonadLogger m) => PlayerStats -> DBAction m ()
 repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), yearStats@(PlayerStatsYear {..})) = lift $ do

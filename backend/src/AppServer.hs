@@ -6,7 +6,8 @@ import Api (API, Protected, Unprotected)
 import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
 import Auth (fetchGoogleJWKSet, validateToken)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
-import Data.IntMap.Strict qualified as Map
+import Data.IntMap.Strict qualified as IntMap
+import Data.Map.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
@@ -19,10 +20,13 @@ import Database
     getAllGameReports,
     getAllStats,
     getGameReports,
+    getLeagueGameStats,
+    getLeaguePlayerSummary,
     getNumGameReports,
     getPlayerByName,
     getPlayerStats,
     insertGameReport,
+    insertLeaguePlayer,
     insertPlayerIfNotExists,
     repsertPlayerStats,
     resetStats,
@@ -33,9 +37,10 @@ import Database
     updatePlayerName,
     updateReports,
   )
-import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..))
+import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..), Value (..), toSqlKey)
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
+import Relude.Extra (groupBy)
 import Servant
   ( AuthProtect,
     NoContent (..),
@@ -58,6 +63,9 @@ import Types.Api
     GoogleLoginResponse,
     IdToken,
     LeaderboardEntry (..),
+    LeaguePlayerStats (..),
+    LeaguePlayerStatsSummary (..),
+    LeagueStatsResponse,
     ModifyReportRequest (..),
     ProcessedGameReport,
     RawGameReport (..),
@@ -69,13 +77,15 @@ import Types.Api
     SubmitReportRequest (..),
     UserInfoResponse (..),
     fromGameReport,
+    fromLeagueGameStatsMap,
     fromPlayerStats,
     toGameReport,
   )
 import Types.Auth (Authenticated (..), SessionId (..), SessionIdCookie)
-import Types.DataField (Match (..), PlayerName, Rating, Side (..), Year)
+import Types.DataField (League, LeagueTier, Match (..), PlayerName, Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
+    LeaguePlayer (..),
     MaybePlayerStats,
     Player (..),
     PlayerId,
@@ -123,7 +133,7 @@ ratingAdjustment winner loser
   | otherwise = bigAdjust
   where
     diff = abs (winner - loser)
-    (smallAdjust, bigAdjust) = maybe maxThreshold snd (Map.lookupGE diff ratingThresholds)
+    (smallAdjust, bigAdjust) = maybe maxThreshold snd (IntMap.lookupGE diff ratingThresholds)
 
 yearOf :: UTCTime -> Year
 yearOf = (\(y, _, _) -> fromIntegral y) . toGregorian . utctDay
@@ -257,15 +267,15 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
 
 getReportsHandler :: Maybe Int64 -> Maybe Int64 -> AppM GetReportsResponse
 getReportsHandler limit offset =
-    runDb getNumGameReports >>= \total ->
-      runDb (getGameReports limit' offset') >>= \reports ->
-        pure GetReportsResponse {reports = fromGameReport <$> reports, total}
-    where
-      maxLimit = 500
-      (limit', offset') = case (limit, offset) of
-        (Nothing, _) -> (maxLimit, 0)
-        (Just lim, Nothing) -> (lim, 0)
-        (Just lim, Just off) -> (lim, off)
+  runDb getNumGameReports >>= \total ->
+    runDb (getGameReports limit' offset') >>= \reports ->
+      pure GetReportsResponse {reports = fromGameReport <$> reports, total}
+  where
+    maxLimit = 500
+    (limit', offset') = case (limit, offset) of
+      (Nothing, _) -> (maxLimit, 0)
+      (Just lim, Nothing) -> (lim, 0)
+      (Just lim, Just off) -> (lim, off)
 
 getLeaderboardHandler :: Maybe Year -> AppM GetLeaderboardResponse
 getLeaderboardHandler year = do
@@ -276,6 +286,31 @@ getLeaderboardHandler year = do
             . sortOn (Down . averageRating)
             . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year' stats)))
         )
+
+getLeagueStatsHandler :: League -> LeagueTier -> Year -> AppM LeagueStatsResponse
+getLeagueStatsHandler league tier year = do
+  (summariesByPlayer, statsByPair) <- runDb $ do
+    summaries <- getLeaguePlayerSummary league tier year
+    stats <- getLeagueGameStats league tier year
+    let summariesByPlayer =
+          fmap (\(Value n, Value w, Value g) -> (n, w, g)) . Map.mapKeys unValue . fromList $ summaries
+        statsByPair =
+          fmap (fmap (\(Value oid, Value o, Value w, Value l) -> (oid, o, w, l)) . toList . fmap snd)
+            . Map.mapKeys unValue
+            . groupBy fst
+            $ stats
+    pure (summariesByPlayer, statsByPair)
+
+  pure $
+    Map.mapWithKey
+      ( \playerId (name, totalWins, totalGames) ->
+          LeaguePlayerStats
+            { name,
+              summary = LeaguePlayerStatsSummary {totalWins, totalGames, points = 0},
+              gameStatsByOpponent = fromLeagueGameStatsMap playerId statsByPair
+            }
+      )
+      summariesByPlayer
 
 adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
 adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do
@@ -330,12 +365,27 @@ adminDeleteReportHandler DeleteReportRequest {rid} = runDb $ do
   reprocessReports
   pure NoContent
 
+adminAddLeaguePlayerHandler :: League -> LeagueTier -> Year -> Maybe Int64 -> Maybe PlayerName -> AppM NoContent
+adminAddLeaguePlayerHandler _ _ _ Nothing Nothing =
+  throwError err422 {errBody = "Either playerId or playerName must be provided."}
+adminAddLeaguePlayerHandler _ _ _ (Just _) (Just _) = do
+  throwError err422 {errBody = "Only one of playerId or playerName can be provided."}
+adminAddLeaguePlayerHandler league tier year (Just playerId) Nothing = do
+  runDb $ insertLeaguePlayer $ LeaguePlayer league tier year (toSqlKey playerId)
+  pure NoContent
+adminAddLeaguePlayerHandler league tier year Nothing (Just playerName) = do
+  runDb $ do
+    playerId <- entityKey <$> insertPlayerIfNotExists playerName
+    insertLeaguePlayer $ LeaguePlayer league tier year playerId
+  pure NoContent
+
 unprotected :: ServerT Unprotected AppM
 unprotected =
   authGoogleLoginHandler
     :<|> submitReportHandler
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
+    :<|> getLeagueStatsHandler
 
 protected :: AuthServerData (AuthProtect SessionIdCookie) -> ServerT Protected AppM
 protected auth =
@@ -345,6 +395,7 @@ protected auth =
     :<|> adminRemapPlayerHandler
     :<|> adminModifyReportHandler
     :<|> adminDeleteReportHandler
+    :<|> adminAddLeaguePlayerHandler
 
 server :: ServerT API AppM
 server = protected :<|> unprotected
