@@ -184,16 +184,16 @@ joinedLeagueResults ::
     )
 joinedLeagueResults league tier year =
   table @LeaguePlayer
-    `crossJoin` table @LeaguePlayer
+    `innerJoin` table @LeaguePlayer
+      `on` (\(leaguePlayer :& leagueOpponent) -> isInLeague leaguePlayer &&. isInLeague leagueOpponent)
     `innerJoin` table @Player
       `on` (\(leaguePlayer :& _ :& player) -> leaguePlayer ^. LeaguePlayerPlayerId ==. player ^. PlayerId)
     `innerJoin` table @Player
       `on` (\(_ :& leagueOpponent :& _ :& opponent) -> leagueOpponent ^. LeaguePlayerPlayerId ==. opponent ^. PlayerId)
     `leftJoin` table @GameReport
-      `on` ( \(leaguePlayer :& leagueOpponent :& player :& opponent :& report) ->
+      `on` ( \(_ :& player :& opponent :& report) ->
                isGamePlayedBy report player opponent
-                 &&. isInLeague leaguePlayer
-                 &&. isInLeague leagueOpponent
+                 &&. (report ?. GameReportLeague ==. just (val $ Just league))
                  &&. (report ?. GameReportTimestamp >=. just (val startTime))
                  &&. (report ?. GameReportTimestamp <. just (val endTime))
            )
