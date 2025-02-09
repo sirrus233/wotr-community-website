@@ -1,6 +1,6 @@
 import React from "react";
 import Box from "@mui/joy/Box";
-import { extendedLeagues, leagueTiers, START_YEAR } from "./constants";
+import { expansionLeagues, leagueTiers, START_YEAR } from "./constants";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
@@ -76,10 +76,10 @@ export default function Leagues({
                 </Box>
 
                 <Box display="flex" alignItems="center" fontSize="sm">
-                    Extended:
+                    Expansions:
                     <ButtonSelector
                         current={params.league}
-                        options={extendedLeagues.slice()}
+                        options={expansionLeagues.slice()}
                         setCurrent={(league) =>
                             setParams((params) => ({
                                 ...params,

@@ -6,14 +6,14 @@ export const matchTypes = ["Rated", "Unrated"] as const;
 
 export const competitionTypes = ["League", "Tournament"] as const;
 
-export const extendedLeagues = [
+export const expansionLeagues = [
     "LoMELeague",
     "WoMELeague",
     "SuperLeague",
     "TTSLeague",
 ] as const;
 
-export const leagues = ["GeneralLeague", ...extendedLeagues] as const;
+export const leagues = ["GeneralLeague", ...expansionLeagues] as const;
 
 export const leagueTiers = ["Tier1", "Tier2", "Tier3"] as const;
 
