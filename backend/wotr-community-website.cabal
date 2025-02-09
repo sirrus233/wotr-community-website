@@ -63,6 +63,7 @@ common dependencies
         vector              ^>=0.13.2.0,
         amazonka            ^>=2.0,
         amazonka-s3         ^>=2.0,
+        zip-archive         ^>=0.4.3.2,
 
 library
     import:           warnings,

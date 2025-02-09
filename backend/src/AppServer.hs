@@ -5,7 +5,10 @@ import Amazonka.S3 qualified as S3
 import Api (API, Protected, Unprotected)
 import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
 import Auth (fetchGoogleJWKSet, validateToken)
+import Codec.Archive.Zip (addEntryToArchive, emptyArchive, fromArchive, toEntry)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
+import Data.ByteString.Lazy qualified as L
+import Data.Csv (encode)
 import Data.IntMap.Strict qualified as IntMap
 import Data.Map.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
@@ -38,11 +41,14 @@ import Database
     updateReports,
   )
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..), Value (..), toSqlKey)
+import Database.Persist (selectList)
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
 import Relude.Extra (groupBy, lookupDefault)
 import Servant
   ( AuthProtect,
+    Header,
+    Headers,
     NoContent (..),
     ServerError (..),
     ServerT,
@@ -90,7 +96,9 @@ import Types.Database
     Player (..),
     PlayerId,
     PlayerStats,
+    PlayerStatsInitial,
     PlayerStatsTotal (..),
+    PlayerStatsYear,
     ReportInsertion,
     defaultPlayerStatsTotal,
     defaultPlayerStatsYear,
@@ -342,6 +350,38 @@ getLeagueStatsHandler league tier year = do
             }
       )
       summariesByPlayer
+
+exportHandler :: AppM (Headers '[Header "Content-Disposition" String] L.ByteString)
+exportHandler = do
+  (players, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers) <- runDb $ do
+    players <- fmap entityVal <$> lift (selectList @Player [] [])
+    gameReports <- fmap entityVal <$> lift (selectList @GameReport [] [])
+    playerStatsYears <- fmap entityVal <$> lift (selectList @PlayerStatsYear [] [])
+    playerStatsTotals <- fmap entityVal <$> lift (selectList @PlayerStatsTotal [] [])
+    playerStatsInits <- fmap entityVal <$> lift (selectList @PlayerStatsInitial [] [])
+    leaguePlayers <- fmap entityVal <$> lift (selectList @LeaguePlayer [] [])
+    pure (players, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers)
+
+  let playersCsv = encode players
+      gameReportsCsv = encode gameReports
+      playerStatsYearsCsv = encode playerStatsYears
+      playerStatsTotalsCsv = encode playerStatsTotals
+      playerStatsInitsCsv = encode playerStatsInits
+      leaguePlayersCsv = encode leaguePlayers
+
+      entries =
+        [ toEntry "players.csv" 0 playersCsv,
+          toEntry "gameReports.csv" 0 gameReportsCsv,
+          toEntry "playerStatsYears.csv" 0 playerStatsYearsCsv,
+          toEntry "playerStatsTotals.csv" 0 playerStatsTotalsCsv,
+          toEntry "playerStatsInits.csv" 0 playerStatsInitsCsv,
+          toEntry "leaguePlayers.csv" 0 leaguePlayersCsv
+        ]
+
+      archive = foldr addEntryToArchive emptyArchive entries
+      zipBytes = fromArchive archive
+
+  pure $ addHeader "attachment; filename=\"wotr-community-data.zip\"" zipBytes
 
 adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
 adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do
