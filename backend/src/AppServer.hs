@@ -40,7 +40,7 @@ import Database
 import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), PersistStoreWrite (..), Value (..), toSqlKey)
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
-import Relude.Extra (groupBy)
+import Relude.Extra (groupBy, lookupDefault)
 import Servant
   ( AuthProtect,
     NoContent (..),
@@ -82,7 +82,7 @@ import Types.Api
     toGameReport,
   )
 import Types.Auth (Authenticated (..), SessionId (..), SessionIdCookie)
-import Types.DataField (League, LeagueTier, Match (..), PlayerName, Rating, Side (..), Year)
+import Types.DataField (League (..), LeagueTier, Match (..), PlayerName, Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
     LeaguePlayer (..),
@@ -219,6 +219,25 @@ reprocessReports = do
   forM_ reports processReport
   updateActiveStatus
 
+leaguePoints2025 :: League -> Int -> Int -> [(Int, Int)] -> Double
+leaguePoints2025 league totalWins totalGames stats = baseScore + unplayedMultiplier * unplayedGames
+  where
+    baseScore = 0.1 * fromIntegral totalGames + fromIntegral totalWins
+    winRate = fromIntegral totalWins / fromIntegral totalGames :: Double
+    unplayedMultiplier
+      | (league == GeneralLeague || league == LoMELeague) && totalGames < 14 = 0
+      | (league == GeneralLeague || league == LoMELeague) && totalGames < 24 = 0.5 * winRate
+      | league == GeneralLeague || league == LoMELeague = winRate
+      | totalGames < 8 = 0
+      | totalGames < 18 = 0.5 * winRate
+      | otherwise = winRate
+    unplayedGames = fromIntegral . sum . map (\(wins, losses) -> 2 - wins - losses) $ stats
+
+leaguePoints :: League -> LeagueTier -> Year -> Int -> Int -> [(Int, Int)] -> Double
+leaguePoints league _ year totalWins totalGames stats
+  | year == 2025 = leaguePoints2025 league totalWins totalGames stats
+  | otherwise = 0
+
 authGoogleLoginHandler :: IdToken -> AppM GoogleLoginResponse
 authGoogleLoginHandler idToken = do
   httpConnMgr <- newManager
@@ -306,7 +325,19 @@ getLeagueStatsHandler league tier year = do
       ( \playerId (name, totalWins, totalGames) ->
           LeaguePlayerStats
             { name,
-              summary = LeaguePlayerStatsSummary {totalWins, totalGames, points = 0},
+              summary =
+                LeaguePlayerStatsSummary
+                  { totalWins,
+                    totalGames,
+                    points =
+                      leaguePoints
+                        league
+                        tier
+                        year
+                        totalWins
+                        totalGames
+                        (map (\(_, _, a, b) -> (a, b)) . lookupDefault [] playerId $ statsByPair)
+                  },
               gameStatsByOpponent = fromLeagueGameStatsMap playerId statsByPair
             }
       )
