@@ -143,17 +143,17 @@ function LeagueTable({ stats }: LeagueTableProps) {
                         {
                             key: `${playerId}-winRate`,
                             content: toPercent(
-                                playerStats.summary.wins /
-                                    playerStats.summary.gameCount
+                                playerStats.summary.totalWins /
+                                    playerStats.summary.totalGames
                             ),
                         },
                         {
-                            key: `${playerId}-gameCount`,
-                            content: playerStats.summary.gameCount,
+                            key: `${playerId}-totalGames`,
+                            content: playerStats.summary.totalGames,
                         },
                         {
                             key: `${playerId}-wins`,
-                            content: playerStats.summary.wins,
+                            content: playerStats.summary.totalWins,
                         },
                         {
                             key: `${playerId}-points`,

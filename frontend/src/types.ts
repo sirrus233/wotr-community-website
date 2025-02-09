@@ -206,8 +206,8 @@ export type LeagueStats = Record<number, LeaguePlayerStats>;
 export type LeaguePlayerStats = {
     name: string;
     summary: {
-        wins: number;
-        gameCount: number;
+        totalWins: number;
+        totalGames: number;
         points: number;
     };
     gameStatsByOpponent: Record<number, LeagueGameStats>;
