@@ -86,6 +86,7 @@ export default function TableLayout({
             >
                 {loading && <LoadingOverlay />}
 
+                {/* TODO: always pass in custom Table component, then remove this `or` handling */}
                 {table || (
                     <Table
                         aria-label={label}
