@@ -21,7 +21,7 @@ import PlayerEditForm from "./PlayerEditForm";
 import PlayerRemapForm from "./PlayerRemapForm";
 import TableLayout from "./TableLayout";
 import { range, toPercent } from "./utils";
-import { playerStates, START_YEAR } from "./constants";
+import { playerStates, LEADERBOARD_START_YEAR } from "./constants";
 
 type PlayerEditParams = {
     pid: number;
@@ -69,7 +69,10 @@ function Rankings({
         getLeaderboard();
     };
 
-    const availableYears = range(START_YEAR, new Date().getFullYear() + 1);
+    const availableYears = range(
+        LEADERBOARD_START_YEAR,
+        new Date().getFullYear() + 1
+    );
 
     return (
         <Box>

@@ -1,6 +1,6 @@
 import React from "react";
 import Box from "@mui/joy/Box";
-import { expansionLeagues, leagueTiers, START_YEAR } from "./constants";
+import { expansionLeagues, leagueTiers, LEAGUE_START_YEAR } from "./constants";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
@@ -38,7 +38,10 @@ export default function Leagues({
     error,
     refresh,
 }: Props) {
-    const availableYears = range(START_YEAR, new Date().getFullYear() + 1);
+    const availableYears = range(
+        LEAGUE_START_YEAR,
+        new Date().getFullYear() + 1
+    );
 
     return (
         <Box>

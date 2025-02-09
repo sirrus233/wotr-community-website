@@ -123,6 +123,7 @@ export enum ErrorMessage {
 }
 
 export const INFINITE = 100;
-export const START_YEAR = 2023;
+export const LEADERBOARD_START_YEAR = 2023;
+export const LEAGUE_START_YEAR = 2025;
 export const MAX_GAME_LOG_SIZE_MB = 1;
 export const MAX_GAME_LOG_SIZE_BYTES = MAX_GAME_LOG_SIZE_MB * 1024 * 1024;
