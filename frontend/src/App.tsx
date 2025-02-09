@@ -9,9 +9,9 @@ import Rankings from "./Rankings";
 import CheckIcon from "@mui/icons-material/Check";
 import CircularProgress from "@mui/joy/CircularProgress";
 import Box from "@mui/joy/Box";
+import Button from "@mui/joy/Button";
 import IconButton from "@mui/joy/IconButton";
 import Drawer from "@mui/joy/Drawer";
-import MuiLink from "@mui/joy/Link";
 import List from "@mui/joy/List";
 import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -213,7 +213,7 @@ function Home({
 }: HomeProps) {
     return (
         <Box
-            gap={4}
+            gap={3}
             sx={{
                 width: "100%",
                 display: "flex",
@@ -222,28 +222,40 @@ function Home({
             }}
         >
             <Section>
-                <Typography level="title-lg">Welcome!</Typography>
+                <Typography level="h4">Welcome!</Typography>
+
+                <Typography level="title-sm" mt={1} textAlign="center">
+                    This website is not affiliated with the official War of the
+                    Ring board game produced by Ares Games.
+                </Typography>
             </Section>
 
             <Section>
-                <Typography level="title-lg" mb={1}>
-                    Community Resources*
-                </Typography>
+                <Box display="flex" flexDirection="row" gap={1}>
+                    {[
+                        {
+                            to: "/game-report",
+                            label: "Submit a game report",
+                        },
+                        { to: "/rankings", label: "View rankings" },
+                        { to: "/game-reports", label: "View game reports" },
+                    ].map(({ to, label }) => (
+                        <Button
+                            component={Link}
+                            to={to}
+                            key={label}
+                            sx={{ textAlign: "center" }}
+                        >
+                            {label}
+                        </Button>
+                    ))}
+                </Box>
+            </Section>
 
-                <Typography level="title-sm" mb={1} textAlign="center">
-                    *Not affiliated with the official War of the Ring board game
-                    produced by Ares Games
-                </Typography>
+            <Section>
+                <Typography level="h4">Community Resources</Typography>
 
-                {[
-                    { to: "/game-report", label: "Game Report Form" },
-                    { to: "/rankings", label: "Rankings" },
-                    { to: "/game-reports", label: "Game Reports" },
-                ].map(({ to, label }) => (
-                    <MuiLink component={Link} to={to} key={label}>
-                        {label}
-                    </MuiLink>
-                ))}
+                <Subtitle>Find and Play Games</Subtitle>
 
                 {[
                     {
@@ -256,6 +268,19 @@ function Home({
                         href: "https://discord.gg/yZxQF4fK",
                         isDownload: false,
                     },
+                ].map(({ label, href, isDownload }) => (
+                    <ExternalLink
+                        href={href}
+                        isDownload={isDownload}
+                        key={label}
+                    >
+                        {label}
+                    </ExternalLink>
+                ))}
+
+                <Subtitle>Rules Clarifications and FAQ</Subtitle>
+
+                {[
                     {
                         label: "WotR Almanac",
                         href: "https://tinyurl.com/WOTRAlmanac",
@@ -271,6 +296,19 @@ function Home({
                         href: "https://tinyurl.com/KOMEAlmanac",
                         isDownload: false,
                     },
+                ].map(({ label, href, isDownload }) => (
+                    <ExternalLink
+                        href={href}
+                        isDownload={isDownload}
+                        key={label}
+                    >
+                        {label}
+                    </ExternalLink>
+                ))}
+
+                <Subtitle>Legacy</Subtitle>
+
+                {[
                     {
                         label: "Legacy Ladder (2024)",
                         href: "https://docs.google.com/spreadsheets/d/1okxuCGH1P9mDT-3Np4IvK-dUhmJHaoxP1-xG5U8CX4U/edit?gid=1355474132#gid=1355474132",
@@ -293,7 +331,7 @@ function Home({
             </Section>
 
             <Section>
-                <Typography level="title-lg" mb={1}>
+                <Typography level="h4" mb={1}>
                     Official Resources
                 </Typography>
 
@@ -422,5 +460,17 @@ function Section({ children }: SectionProps) {
         >
             {children}
         </Box>
+    );
+}
+
+interface SubtitleProps {
+    children: ReactNode;
+}
+
+function Subtitle({ children }: SubtitleProps) {
+    return (
+        <Typography fontWeight="bold" my={1} sx={{ color: "#666" }}>
+            {children}
+        </Typography>
     );
 }
