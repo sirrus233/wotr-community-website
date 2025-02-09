@@ -15,7 +15,7 @@ export const extendedLeagues = [
 
 export const leagues = ["GeneralLeague", ...extendedLeagues] as const;
 
-export const leagueTiers = ["tier1", "tier2", "tier3"] as const;
+export const leagueTiers = ["Tier1", "Tier2", "Tier3"] as const;
 
 export const expansions = [
     "LoME",

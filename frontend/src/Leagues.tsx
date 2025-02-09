@@ -191,11 +191,11 @@ function LeagueTable({ stats }: LeagueTableProps) {
 
 function getLeagueTierLabel(tier: LeagueTier): string {
     switch (tier) {
-        case "tier1":
+        case "Tier1":
             return "Elven";
-        case "tier2":
+        case "Tier2":
             return "Dwarf";
-        case "tier3":
+        case "Tier3":
             return "Hobbit";
     }
 }

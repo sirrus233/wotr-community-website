@@ -42,7 +42,7 @@ export default function App() {
 
     const [leagueParams, setLeagueParams] = useState<LeagueParams>({
         league: "GeneralLeague",
-        tier: "tier1",
+        tier: "Tier1",
         year: new Date().getFullYear(),
     });
     const [leagueStats, setLeagueStats] = useState<LeagueStats>({});
