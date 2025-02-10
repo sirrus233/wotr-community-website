@@ -201,7 +201,7 @@ export type LeagueParams = {
     year: number;
 };
 
-export type LeagueStats = Record<number, LeaguePlayerStats>;
+export type LeagueStats = Record<string, LeaguePlayerStats>;
 
 export type LeaguePlayerStats = {
     name: string;
@@ -210,7 +210,7 @@ export type LeaguePlayerStats = {
         totalGames: number;
         points: number;
     };
-    gameStatsByOpponent: Record<number, LeagueGameStats>;
+    gameStatsByOpponent: Record<string, LeagueGameStats>;
 };
 
 export type LeagueGameStats = {
