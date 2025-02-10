@@ -5,7 +5,7 @@ module Types.Database where
 
 import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
 import Data.Aeson (ToJSONKey (..), ToJSONKeyFunction)
-import Data.Aeson.Types (ToJSONKey, toJSONKeyText)
+import Data.Aeson.Types (toJSONKeyText)
 import Data.Csv (ToField (..), ToRecord (..))
 import Data.Csv qualified as CSV
 import Data.Text qualified as T
@@ -117,6 +117,25 @@ share
     deriving Show
 |]
 
+migrateSchema :: SQL.ConnectionPool -> Logger -> IO ()
+migrateSchema dbPool logger = do
+  migrations <- runSqlPool (runMigrationQuiet migrateDb) dbPool
+  unless (null migrations) (log logger LevelWarn "Database schema changed. Running migrations.")
+  mapM_ (log logger LevelDebug . toLogStr) migrations
+
+  let index_statements =
+        [ "CREATE INDEX IF NOT EXISTS idx_game_report_winner_id ON game_report (winner_id);",
+          "CREATE INDEX IF NOT EXISTS idx_game_report_loser_id ON game_report (loser_id);",
+          "CREATE INDEX IF NOT EXISTS idx_game_report_timestamp ON game_report (timestamp);",
+          "CREATE INDEX IF NOT EXISTS idx_game_report_winner_loser_timestamp ON game_report (winner_id, loser_id, timestamp);"
+        ]
+
+  foldMapM ((`runSqlPool` dbPool) . (`rawExecute` [])) index_statements
+
+instance ToJSONKey PlayerId where
+  toJSONKey :: ToJSONKeyFunction PlayerId
+  toJSONKey = toJSONKeyText (show . SQL.fromSqlKey)
+
 instance ToField PlayerId where
   toField :: PlayerId -> CSV.Field
   toField = toField
@@ -222,25 +241,6 @@ instance ToRecord LeaguePlayer where
         toField year,
         toField playerId
       ]
-
-migrateSchema :: SQL.ConnectionPool -> Logger -> IO ()
-migrateSchema dbPool logger = do
-  migrations <- runSqlPool (runMigrationQuiet migrateDb) dbPool
-  unless (null migrations) (log logger LevelWarn "Database schema changed. Running migrations.")
-  mapM_ (log logger LevelDebug . toLogStr) migrations
-
-  let index_statements =
-        [ "CREATE INDEX IF NOT EXISTS idx_game_report_winner_id ON game_report (winner_id);",
-          "CREATE INDEX IF NOT EXISTS idx_game_report_loser_id ON game_report (loser_id);",
-          "CREATE INDEX IF NOT EXISTS idx_game_report_timestamp ON game_report (timestamp);",
-          "CREATE INDEX IF NOT EXISTS idx_game_report_winner_loser_timestamp ON game_report (winner_id, loser_id, timestamp);"
-        ]
-
-  foldMapM ((`runSqlPool` dbPool) . (`rawExecute` [])) index_statements
-
-instance ToJSONKey PlayerId where
-  toJSONKey :: ToJSONKeyFunction PlayerId
-  toJSONKey = toJSONKeyText (show . SQL.fromSqlKey)
 
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 
