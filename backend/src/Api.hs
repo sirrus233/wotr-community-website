@@ -4,6 +4,7 @@ import Servant
   ( AuthProtect,
     Get,
     JSON,
+    OctetStream,
     PlainText,
     Post,
     PostNoContent,
@@ -19,6 +20,7 @@ import Servant
 import Servant.Multipart (MultipartForm, Tmp)
 import Types.Api
   ( DeleteReportRequest,
+    ExportResponse,
     GetLeaderboardResponse,
     GetReportsResponse,
     GoogleLoginResponse,
@@ -59,6 +61,9 @@ type GetLeagueStatsAPI =
     :> RequiredQueryParam "year" Int
     :> Get '[JSON] LeagueStatsResponse
 
+type ExportAPI =
+  "export" :> Get '[OctetStream] ExportResponse
+
 type AdminRenamePlayerAPI =
   "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
@@ -86,6 +91,7 @@ type Unprotected =
     :<|> GetReportsAPI
     :<|> GetLeaderboardAPI
     :<|> GetLeagueStatsAPI
+    :<|> ExportAPI
 
 type Protected =
   LogoutAPI

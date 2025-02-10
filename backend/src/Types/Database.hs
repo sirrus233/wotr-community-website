@@ -6,12 +6,28 @@ module Types.Database where
 import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
 import Data.Aeson (ToJSONKey (..), ToJSONKeyFunction)
 import Data.Aeson.Types (toJSONKeyText)
+import Data.Csv (ToField (..), ToRecord (..))
+import Data.Csv qualified as CSV
+import Data.Text qualified as T
 import Data.Time (UTCTime)
+import Data.Vector qualified as V
 import Database.Esqueleto.Experimental (Entity, Value, rawExecute, runMigrationQuiet, runSqlPool)
 import Database.Esqueleto.Experimental qualified as SQL
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Logging (Logger, log)
-import Types.DataField (Competition, Expansion, League, LeagueTier, Match, PlayerName, Rating, Side (..), Stronghold, Victory, Year)
+import Types.DataField
+  ( Competition,
+    Expansion,
+    League,
+    LeagueTier,
+    Match,
+    PlayerName,
+    Rating,
+    Side (..),
+    Stronghold,
+    Victory,
+    Year,
+  )
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAdmin"]
@@ -34,6 +50,7 @@ share
     isActive Bool
     UniquePlayerName name
     UniquePlayerDisplayName name
+    deriving Generic
     deriving Show
 
    GameReport
@@ -58,6 +75,7 @@ share
     interestRating Int
     comment Text Maybe
     logFile Text Maybe
+    deriving Generic
     deriving Show
 
    PlayerStatsYear
@@ -68,6 +86,7 @@ share
     lossesFree Int
     lossesShadow Int
     Primary playerId year
+    deriving Generic
     deriving Show
 
    PlayerStatsTotal
@@ -76,6 +95,7 @@ share
     ratingShadow Rating
     gameCount Int
     Primary playerId
+    deriving Generic
     deriving Show
 
    PlayerStatsInitial
@@ -84,6 +104,7 @@ share
     ratingShadow Rating
     gameCount Int
     Primary playerId
+    deriving Generic
     deriving Show
 
   LeaguePlayer
@@ -92,6 +113,7 @@ share
     year Int
     playerId PlayerId
     Primary league tier year playerId
+    deriving Generic
     deriving Show
 |]
 
@@ -113,6 +135,112 @@ migrateSchema dbPool logger = do
 instance ToJSONKey PlayerId where
   toJSONKey :: ToJSONKeyFunction PlayerId
   toJSONKey = toJSONKeyText (show . SQL.fromSqlKey)
+
+instance ToField PlayerId where
+  toField :: PlayerId -> CSV.Field
+  toField = toField
+
+instance ToRecord Player where
+  toRecord :: Player -> CSV.Record
+  toRecord (Player name displayName country isActive) =
+    V.fromList
+      [ toField name,
+        toField displayName,
+        toField (fromMaybe ("" :: Text) country),
+        toField (if isActive then "true" :: Text else "false")
+      ]
+
+instance ToRecord GameReport where
+  toRecord :: GameReport -> CSV.Record
+  toRecord
+    ( GameReport
+        timestamp
+        winnerId
+        loserId
+        side
+        victory
+        match
+        competition
+        league
+        expansions
+        treebeard
+        actionTokens
+        dwarvenRings
+        turns
+        corruption
+        mordor
+        initialEyes
+        aragornTurn
+        strongholds
+        interestRating
+        comment
+        logFile
+      ) =
+      V.fromList
+        [ toField (show timestamp :: Text),
+          toField winnerId,
+          toField loserId,
+          toField (show side :: Text),
+          toField (show victory :: Text),
+          toField (show match :: Text),
+          toField (T.intercalate "," . map show $ competition),
+          toField (maybe ("" :: Text) show league),
+          toField (T.intercalate "," . map show $ expansions),
+          toField (maybe ("" :: Text) (\b -> if b then "true" else "false") treebeard),
+          toField actionTokens,
+          toField dwarvenRings,
+          toField turns,
+          toField corruption,
+          toField (maybe ("" :: Text) show mordor),
+          toField initialEyes,
+          toField (maybe ("" :: Text) show aragornTurn),
+          toField (T.intercalate "," . map show $ strongholds),
+          toField interestRating,
+          toField (fromMaybe ("" :: Text) comment),
+          toField (fromMaybe ("" :: Text) logFile)
+        ]
+
+instance ToRecord PlayerStatsYear where
+  toRecord :: PlayerStatsYear -> CSV.Record
+  toRecord (PlayerStatsYear playerId year winsFree winsShadow lossesFree lossesShadow) =
+    V.fromList
+      [ toField playerId,
+        toField year,
+        toField winsFree,
+        toField winsShadow,
+        toField lossesFree,
+        toField lossesShadow
+      ]
+
+instance ToRecord PlayerStatsTotal where
+  toRecord :: PlayerStatsTotal -> CSV.Record
+  toRecord (PlayerStatsTotal playerId ratingFree ratingShadow gameCount) =
+    V.fromList
+      [ toField playerId,
+        toField ratingFree,
+        toField ratingShadow,
+        toField gameCount
+      ]
+
+instance ToRecord PlayerStatsInitial where
+  toRecord :: PlayerStatsInitial -> CSV.Record
+  toRecord (PlayerStatsInitial playerId ratingFree ratingShadow gameCount) =
+    V.fromList
+      [ toField playerId,
+        toField ratingFree,
+        toField ratingShadow,
+        toField gameCount
+      ]
+
+instance ToRecord LeaguePlayer where
+  toRecord :: LeaguePlayer -> CSV.Record
+  toRecord (LeaguePlayer league tier year playerId) =
+    V.fromList
+      [ toField (show league :: Text),
+        toField (show tier :: Text),
+        toField year,
+        toField playerId
+      ]
 
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 

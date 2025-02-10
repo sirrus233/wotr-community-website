@@ -17,6 +17,7 @@
         "Ered",
         "Esqueleto",
         "fmap",
+        "foldr",
         "fpmv",
         "fprv",
         "fullchain",
