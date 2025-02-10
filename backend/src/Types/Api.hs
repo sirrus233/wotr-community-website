@@ -1,6 +1,7 @@
 module Types.Api where
 
 import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict)
+import Data.ByteString.Lazy qualified as L
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
 import Relude.Extra (lookupDefault)
@@ -302,3 +303,5 @@ type LeagueStatsResponse = Map PlayerId LeaguePlayerStats
 fromLeagueGameStatsMap :: PlayerId -> LeagueGameStatsMap -> Map PlayerId LeagueGameStats
 fromLeagueGameStatsMap playerId =
   fromList . fmap (\(opponentId, opponent, wins, losses) -> (opponentId, LeagueGameStats {..})) . lookupDefault [] playerId
+
+type ExportResponse = (Headers '[Header "Content-Disposition" String] L.ByteString)

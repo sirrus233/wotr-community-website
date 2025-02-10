@@ -7,7 +7,6 @@ import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
 import Auth (fetchGoogleJWKSet, validateToken)
 import Codec.Archive.Zip (addEntryToArchive, emptyArchive, fromArchive, toEntry)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
-import Data.ByteString.Lazy qualified as L
 import Data.Csv (encode)
 import Data.IntMap.Strict qualified as IntMap
 import Data.Map.Strict qualified as Map
@@ -47,8 +46,6 @@ import Network.HTTP.Client.Conduit (newManager)
 import Relude.Extra (groupBy, lookupDefault)
 import Servant
   ( AuthProtect,
-    Header,
-    Headers,
     NoContent (..),
     ServerError (..),
     ServerT,
@@ -64,6 +61,7 @@ import Servant.Multipart (FileData (..))
 import Servant.Server.Experimental.Auth (AuthServerData)
 import Types.Api
   ( DeleteReportRequest (..),
+    ExportResponse,
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (..),
     GoogleLoginResponse,
@@ -351,7 +349,7 @@ getLeagueStatsHandler league tier year = do
       )
       summariesByPlayer
 
-exportHandler :: AppM (Headers '[Header "Content-Disposition" String] L.ByteString)
+exportHandler :: AppM ExportResponse
 exportHandler = do
   (players, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers) <- runDb $ do
     players <- fmap entityVal <$> lift (selectList @Player [] [])
@@ -457,6 +455,7 @@ unprotected =
     :<|> getReportsHandler
     :<|> getLeaderboardHandler
     :<|> getLeagueStatsHandler
+    :<|> exportHandler
 
 protected :: AuthServerData (AuthProtect SessionIdCookie) -> ServerT Protected AppM
 protected auth =
