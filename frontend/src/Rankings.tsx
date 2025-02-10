@@ -1,7 +1,5 @@
 import React, { CSSProperties, ReactNode, useState } from "react";
 import Box from "@mui/joy/Box";
-import Button from "@mui/joy/Button";
-import ButtonGroup from "@mui/joy/ButtonGroup";
 import EditIcon from "@mui/icons-material/EditOutlined";
 import IconButton from "@mui/joy/IconButton";
 import MergeIcon from "@mui/icons-material/Merge";
@@ -15,13 +13,15 @@ import {
     HEADER_MARGIN_PX,
     TABLE_BTN_HEIGHT_PX,
     TABLE_ELEMENTS_GAP,
+    BUTTON_SELECTOR_HEIGHT,
 } from "./styles/sizes";
+import ButtonSelector from "./ButtonSelector";
 import Filters from "./Filters";
 import PlayerEditForm from "./PlayerEditForm";
 import PlayerRemapForm from "./PlayerRemapForm";
 import TableLayout from "./TableLayout";
-import { range } from "./utils";
-import { playerStates, START_YEAR } from "./constants";
+import { range, toPercent } from "./utils";
+import { playerStates, LEADERBOARD_START_YEAR } from "./constants";
 
 type PlayerEditParams = {
     pid: number;
@@ -40,13 +40,12 @@ interface Props {
     setError: (error: string | null) => void;
 }
 
-const YEAR_SELECTOR_HEIGHT = 36;
 const HEADER_ROW_HEIGHT = 32;
 
 const TABLE_TOP_POSITION =
     HEADER_HEIGHT_PX +
     HEADER_MARGIN_PX +
-    YEAR_SELECTOR_HEIGHT +
+    BUTTON_SELECTOR_HEIGHT +
     TABLE_BTN_HEIGHT_PX * 2 +
     TABLE_ELEMENTS_GAP * 3;
 
@@ -70,7 +69,10 @@ function Rankings({
         getLeaderboard();
     };
 
-    const availableYears = range(START_YEAR, new Date().getFullYear() + 1);
+    const availableYears = range(
+        LEADERBOARD_START_YEAR,
+        new Date().getFullYear() + 1
+    );
 
     return (
         <Box>
@@ -97,29 +99,11 @@ function Rankings({
                 </Modal>
             )}
 
-            <Box
-                sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    width: "100%",
-                }}
-            >
-                <ButtonGroup style={{ height: `${YEAR_SELECTOR_HEIGHT}px` }}>
-                    {availableYears.reverse().map((yearOption) => (
-                        <Button
-                            key={yearOption}
-                            variant="plain"
-                            onClick={() => setYear(yearOption)}
-                            sx={{
-                                fontWeight:
-                                    year === yearOption ? "bold" : "normal",
-                            }}
-                        >
-                            {yearOption}
-                        </Button>
-                    ))}
-                </ButtonGroup>
-            </Box>
+            <ButtonSelector
+                current={year}
+                options={availableYears.reverse()}
+                setCurrent={setYear}
+            />
 
             <TableLayout
                 refresh={refresh}
@@ -376,8 +360,4 @@ function TableHeaderCell({
             {children}
         </th>
     );
-}
-
-function toPercent(num: number) {
-    return Math.round(num * 100) + "%";
 }

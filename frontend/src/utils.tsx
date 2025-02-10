@@ -191,3 +191,7 @@ export function range(start: number = 0, end: number): number[] {
         ? [...Array(end - start).keys()].map((i) => i + start)
         : [];
 }
+
+export function toPercent(num: number) {
+    return Math.round(num * 100) + "%";
+}

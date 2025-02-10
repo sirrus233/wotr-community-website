@@ -6,13 +6,16 @@ export const matchTypes = ["Rated", "Unrated"] as const;
 
 export const competitionTypes = ["League", "Tournament"] as const;
 
-export const leagues = [
-    "GeneralLeague",
+export const expansionLeagues = [
     "LoMELeague",
     "WoMELeague",
     "SuperLeague",
     "TTSLeague",
 ] as const;
+
+export const leagues = ["GeneralLeague", ...expansionLeagues] as const;
+
+export const leagueTiers = ["Tier1", "Tier2", "Tier3"] as const;
 
 export const expansions = [
     "LoME",
@@ -120,6 +123,7 @@ export enum ErrorMessage {
 }
 
 export const INFINITE = 100;
-export const START_YEAR = 2023;
+export const LEADERBOARD_START_YEAR = 2023;
+export const LEAGUE_START_YEAR = 2025;
 export const MAX_GAME_LOG_SIZE_MB = 1;
 export const MAX_GAME_LOG_SIZE_BYTES = MAX_GAME_LOG_SIZE_MB * 1024 * 1024;

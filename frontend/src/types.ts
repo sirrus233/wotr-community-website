@@ -2,6 +2,7 @@ import {
     competitionTypes,
     expansions,
     leagues,
+    leagueTiers,
     matchTypes,
     optionalFields,
     payloadFields,
@@ -23,6 +24,8 @@ export type Match = (typeof matchTypes)[number];
 export type Competition = (typeof competitionTypes)[number];
 
 export type League = (typeof leagues)[number];
+
+export type LeagueTier = (typeof leagueTiers)[number];
 
 export type Stronghold = (typeof strongholds)[number];
 
@@ -190,6 +193,30 @@ export type ValidReportDeleteFormData = {
             null
         >;
     };
+};
+
+export type LeagueParams = {
+    league: League;
+    tier: LeagueTier;
+    year: number;
+};
+
+export type LeagueStats = Record<number, LeaguePlayerStats>;
+
+export type LeaguePlayerStats = {
+    name: string;
+    summary: {
+        totalWins: number;
+        totalGames: number;
+        points: number;
+    };
+    gameStatsByOpponent: Record<number, LeagueGameStats>;
+};
+
+export type LeagueGameStats = {
+    opponent: string;
+    wins: number;
+    losses: number;
 };
 
 export type ValueOf<T> = T[keyof T];
