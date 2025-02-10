@@ -206,3 +206,7 @@ export function range(start: number = 0, end: number): number[] {
 export function toPercent(num: number) {
     return Math.round(num * 100) + "%";
 }
+
+export function noNansense(num: number) {
+    return isNaN(num) ? 0 : num;
+}

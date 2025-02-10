@@ -14,7 +14,13 @@ import {
     BUTTON_SELECTOR_HEIGHT,
 } from "./styles/sizes";
 import { LeagueParams, LeagueStats } from "./types";
-import { getLeagueLabel, getLeagueTierLabel, range, toPercent } from "./utils";
+import {
+    getLeagueLabel,
+    getLeagueTierLabel,
+    noNansense,
+    range,
+    toPercent,
+} from "./utils";
 import ButtonSelector from "./ButtonSelector";
 import LeaguePlayerForm from "./LeaguePlayerForm";
 import Table, { ColHeaderData, RowData } from "./Table";
@@ -218,8 +224,10 @@ function LeagueTable({
                             {
                                 key: `${playerId}-winRate`,
                                 content: toPercent(
-                                    playerStats.summary.totalWins /
-                                        playerStats.summary.totalGames
+                                    noNansense(
+                                        playerStats.summary.totalWins /
+                                            playerStats.summary.totalGames
+                                    )
                                 ),
                             },
                             {
