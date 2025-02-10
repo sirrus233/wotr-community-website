@@ -237,7 +237,7 @@ function LeagueTable({
                         },
                         {
                             key: `${playerId}-points`,
-                            content: playerStats.summary.points,
+                            content: playerStats.summary.points.toFixed(1),
                         },
                         ...entries.map(([opponentId]) => {
                             const gameStatsForOpponent =
