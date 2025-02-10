@@ -105,14 +105,15 @@ async function submit(validFormData: ValidLeaguePlayerFormData) {
     return await axios.post(
         "https://api.waroftheringcommunity.net:8080/addLeaguePlayer",
         // "http://localhost:8081/addLeaguePlayer",
-        toPayload(validFormData),
+        null,
         {
             headers: { "Content-Type": "application/json" },
+            params: toQueryParams(validFormData),
         }
     );
 }
 
-type LeaguePlayerPayload = {
+type LeaguePlayerQueryParams = {
     league: League;
     tier: LeagueTier;
     year: number;
@@ -120,7 +121,9 @@ type LeaguePlayerPayload = {
     playerName: string | null;
 };
 
-function toPayload(formData: ValidLeaguePlayerFormData): LeaguePlayerPayload {
+function toQueryParams(
+    formData: ValidLeaguePlayerFormData
+): LeaguePlayerQueryParams {
     return {
         league: formData.league.value,
         tier: formData.tier.value,
