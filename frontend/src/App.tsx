@@ -235,6 +235,7 @@ export default function App() {
                                     playerNames={playerNames}
                                     loading={loadingLeague}
                                     loadingPlayers={loadingLeaderboard}
+                                    isAdmin={userInfo?.isAdmin || false}
                                     error={leagueError}
                                     refresh={getLeagueStats}
                                 />

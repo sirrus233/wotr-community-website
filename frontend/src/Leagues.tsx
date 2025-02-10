@@ -34,6 +34,7 @@ interface Props {
     playerNames: string[];
     loading: boolean;
     loadingPlayers: boolean;
+    isAdmin: boolean;
     error: string | null;
     refresh: () => void;
 }
@@ -45,6 +46,7 @@ export default function Leagues({
     playerNames,
     loading,
     loadingPlayers,
+    isAdmin,
     error,
     refresh,
 }: Props) {
@@ -141,6 +143,7 @@ export default function Leagues({
                     <LeagueTable
                         stats={stats}
                         loading={loading}
+                        isAdmin={isAdmin}
                         openLeaguePlayerForm={() =>
                             setLeaguePlayerFormOpen(true)
                         }
@@ -154,12 +157,14 @@ export default function Leagues({
 interface LeagueTableProps {
     stats: LeagueStats;
     loading: boolean;
+    isAdmin: boolean;
     openLeaguePlayerForm: () => void;
 }
 
 function LeagueTable({
     stats,
     loading,
+    isAdmin,
     openLeaguePlayerForm,
 }: LeagueTableProps) {
     const entries = Object.entries(stats);
@@ -168,19 +173,23 @@ function LeagueTable({
 
     return (
         <Table
-            cornerHeader={{
-                content: (
-                    <IconButton
-                        size="sm"
-                        disabled={loading}
-                        onClick={openLeaguePlayerForm}
-                        variant="solid"
-                        color="primary"
-                    >
-                        <AddIcon />
-                    </IconButton>
-                ),
-            }}
+            cornerHeader={
+                isAdmin
+                    ? {
+                          content: (
+                              <IconButton
+                                  size="sm"
+                                  disabled={loading}
+                                  onClick={openLeaguePlayerForm}
+                                  variant="solid"
+                                  color="primary"
+                              >
+                                  <AddIcon />
+                              </IconButton>
+                          ),
+                      }
+                    : undefined
+            }
             colHeaders={[
                 ...FIXED_HEADERS.map(
                     (headerLabel): ColHeaderData => ({
