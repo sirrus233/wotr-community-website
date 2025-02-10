@@ -197,7 +197,7 @@ export type ValidReportDeleteFormData = {
 
 export type LeagueParams = {
     league: League;
-    tier: LeagueTier | null;
+    tier: LeagueTier;
     year: number;
 };
 

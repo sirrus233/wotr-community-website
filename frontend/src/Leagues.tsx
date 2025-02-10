@@ -63,7 +63,11 @@ export default function Leagues({
                 <Box display="flex" alignItems="center" mr={1} fontSize="sm">
                     Base:
                     <ButtonSelector
-                        current={params.tier}
+                        current={
+                            params.league === "GeneralLeague"
+                                ? params.tier
+                                : null
+                        }
                         options={leagueTiers.slice()}
                         setCurrent={(tier) =>
                             setParams((params) => ({
@@ -87,7 +91,7 @@ export default function Leagues({
                             setParams((params) => ({
                                 ...params,
                                 league,
-                                tier: null,
+                                tier: "Tier1",
                             }))
                         }
                         getLabel={getLeagueLabel}
