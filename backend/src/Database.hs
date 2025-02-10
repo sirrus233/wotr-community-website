@@ -214,13 +214,19 @@ joinedLeagueResults league tier year =
 getLeaguePlayerSummary :: (MonadIO m, MonadLogger m) => League -> LeagueTier -> Year -> DBAction m [LeagueGameSummaryRecord]
 getLeaguePlayerSummary league tier year = lift . select $ do
   (_ :& player :& opponent :& report) <- from $ joinedLeagueResults league tier year
-  where_ $ (player ^. PlayerId) !=. (opponent ^. PlayerId) &&. not_ (isNothing_ (report ?. GameReportId))
+  where_ $ (player ^. PlayerId) !=. (opponent ^. PlayerId)
   groupBy (player ^. PlayerId)
   let wins =
         coalesceDefault
-          [sum_ $ case_ [when_ (playerWon report player) then_ (val (1 :: Int))] (else_ (val 0))]
+          [sum_ $ case_ [when_ (playerWon report player) then_ (val (1 :: Int))] (else_ $ val 0)]
           (val 0)
-  pure (player ^. PlayerId, (player ^. PlayerDisplayName, wins, countRows))
+
+      gameCount =
+        coalesceDefault
+          [sum_ $ case_ [when_ (not_ . isNothing_ $ report ?. GameReportId) then_ (val (1 :: Int))] (else_ $ val 0)]
+          (val 0)
+
+  pure (player ^. PlayerId, (player ^. PlayerDisplayName, wins, gameCount))
   where
     playerWon report player = report ?. GameReportWinnerId ==. just (player ^. PlayerId)
 
