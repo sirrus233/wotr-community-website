@@ -8,6 +8,7 @@ import Data.Aeson (ToJSONKey (..), ToJSONKeyFunction)
 import Data.Aeson.Types (ToJSONKey, toJSONKeyText)
 import Data.Csv (ToField (..), ToRecord (..))
 import Data.Csv qualified as CSV
+import Data.Text qualified as T
 import Data.Time (UTCTime)
 import Data.Vector qualified as V
 import Database.Esqueleto.Experimental (Entity, Value, rawExecute, runMigrationQuiet, runSqlPool)
@@ -163,9 +164,9 @@ instance ToRecord GameReport where
           toField (show side :: Text),
           toField (show victory :: Text),
           toField (show match :: Text),
-          toField competition,
+          toField (T.intercalate "," . map show $ competition),
           toField (maybe ("" :: Text) show league),
-          toField expansions,
+          toField (T.intercalate "," . map show $ expansions),
           toField (maybe ("" :: Text) (\b -> if b then "true" else "false") treebeard),
           toField actionTokens,
           toField dwarvenRings,
@@ -174,9 +175,9 @@ instance ToRecord GameReport where
           toField (maybe ("" :: Text) show mordor),
           toField initialEyes,
           toField (maybe ("" :: Text) show aragornTurn),
-          toField strongholds,
+          toField (T.intercalate "," . map show $ strongholds),
           toField interestRating,
-          toField (fromMaybe ("" :: Text) comment), -- TODO Sanitize commas?
+          toField (fromMaybe ("" :: Text) comment),
           toField (fromMaybe ("" :: Text) logFile)
         ]
 
