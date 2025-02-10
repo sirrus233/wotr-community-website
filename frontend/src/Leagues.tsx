@@ -204,59 +204,65 @@ function LeagueTable({
                     })
                 ),
             ]}
-            rows={entries.map(
-                ([playerId, playerStats]): RowData => ({
-                    key: playerId,
-                    header: playerStats.name,
-                    bodyCells: [
-                        {
-                            key: `${playerId}-winRate`,
-                            content: toPercent(
-                                playerStats.summary.totalWins /
-                                    playerStats.summary.totalGames
-                            ),
-                        },
-                        {
-                            key: `${playerId}-totalGames`,
-                            content: playerStats.summary.totalGames,
-                        },
-                        {
-                            key: `${playerId}-wins`,
-                            content: playerStats.summary.totalWins,
-                        },
-                        {
-                            key: `${playerId}-points`,
-                            content: playerStats.summary.points,
-                        },
-                        ...entries.map(([opponentId]) => {
-                            const gameStatsForOpponent =
-                                playerStats.gameStatsByOpponent[
-                                    Number(opponentId)
-                                ];
-                            return {
-                                key: `${playerId}-${opponentId}`,
-                                content: (
-                                    <Box
-                                        sx={
-                                            playerId === opponentId
-                                                ? {
-                                                      background: "#ccc",
-                                                      color: "#ccc",
-                                                      borderRadius: "5px",
-                                                  }
-                                                : {}
-                                        }
-                                    >
-                                        {gameStatsForOpponent
-                                            ? `${gameStatsForOpponent.wins}-${gameStatsForOpponent.losses}`
-                                            : "-"}
-                                    </Box>
+            rows={entries
+                .sort(
+                    ([, playerStatsA], [, playerStatsB]) =>
+                        playerStatsB.summary.points -
+                        playerStatsA.summary.points
+                )
+                .map(
+                    ([playerId, playerStats]): RowData => ({
+                        key: playerId,
+                        header: playerStats.name,
+                        bodyCells: [
+                            {
+                                key: `${playerId}-winRate`,
+                                content: toPercent(
+                                    playerStats.summary.totalWins /
+                                        playerStats.summary.totalGames
                                 ),
-                            };
-                        }),
-                    ],
-                })
-            )}
+                            },
+                            {
+                                key: `${playerId}-totalGames`,
+                                content: playerStats.summary.totalGames,
+                            },
+                            {
+                                key: `${playerId}-wins`,
+                                content: playerStats.summary.totalWins,
+                            },
+                            {
+                                key: `${playerId}-points`,
+                                content: playerStats.summary.points,
+                            },
+                            ...entries.map(([opponentId]) => {
+                                const gameStatsForOpponent =
+                                    playerStats.gameStatsByOpponent[
+                                        Number(opponentId)
+                                    ];
+                                return {
+                                    key: `${playerId}-${opponentId}`,
+                                    content: (
+                                        <Box
+                                            sx={
+                                                playerId === opponentId
+                                                    ? {
+                                                          background: "#ccc",
+                                                          color: "#ccc",
+                                                          borderRadius: "5px",
+                                                      }
+                                                    : {}
+                                            }
+                                        >
+                                            {gameStatsForOpponent
+                                                ? `${gameStatsForOpponent.wins}-${gameStatsForOpponent.losses}`
+                                                : "-"}
+                                        </Box>
+                                    ),
+                                };
+                            }),
+                        ],
+                    })
+                )}
         />
     );
 }
