@@ -4,6 +4,7 @@
 module Types.Database where
 
 import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
+import Data.Aeson.Types (ToJSONKey)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity, Value, rawExecute, runMigrationQuiet, runSqlPool)
 import Database.Esqueleto.Experimental qualified as SQL
@@ -107,6 +108,8 @@ migrateSchema dbPool logger = do
         ]
 
   foldMapM ((`runSqlPool` dbPool) . (`rawExecute` [])) index_statements
+
+instance ToJSONKey PlayerId
 
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 

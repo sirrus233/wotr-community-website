@@ -275,18 +275,27 @@ data LeaguePlayerStats = LeaguePlayerStats
     summary :: LeaguePlayerStatsSummary,
     gameStatsByOpponent :: Map PlayerId LeagueGameStats
   }
+  deriving (Generic)
+
+instance ToJSON LeaguePlayerStats
 
 data LeaguePlayerStatsSummary = LeaguePlayerStatsSummary
   { totalWins :: Int,
     totalGames :: Int,
     points :: Double
   }
+  deriving (Generic)
+
+instance ToJSON LeaguePlayerStatsSummary
 
 data LeagueGameStats = LeagueGameStats
   { opponent :: Text,
     wins :: Int,
     losses :: Int
   }
+  deriving (Generic)
+
+instance ToJSON LeagueGameStats
 
 type LeagueStatsResponse = Map PlayerId LeaguePlayerStats
 

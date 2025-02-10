@@ -4,6 +4,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Text qualified as T
 import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlType (..))
 import Database.Persist.Sql (PersistFieldSql (..))
+import Servant (FromHttpApiData (..))
 
 defaultToPersistValue :: (Show a) => a -> PersistValue
 defaultToPersistValue a = PersistText (show a)
@@ -95,7 +96,15 @@ instance ToJSON League
 
 instance FromJSON League
 
+instance FromHttpApiData League where
+  parseQueryParam :: Text -> Either Text League
+  parseQueryParam = readEither . toString
+
 data LeagueTier = Tier1 | Tier2 | Tier3 deriving (Eq, Generic, Ord, Read, Show)
+
+instance FromHttpApiData LeagueTier where
+  parseQueryParam :: Text -> Either Text LeagueTier
+  parseQueryParam = readEither . toString
 
 instance PersistField LeagueTier where
   toPersistValue = defaultToPersistValue
