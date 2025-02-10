@@ -176,7 +176,7 @@ instance ToRecord GameReport where
           toField (maybe ("" :: Text) show aragornTurn),
           toField strongholds,
           toField interestRating,
-          toField (fromMaybe ("" :: Text) comment),
+          toField (fromMaybe ("" :: Text) comment), -- TODO Sanitize commas?
           toField (fromMaybe ("" :: Text) logFile)
         ]
 
