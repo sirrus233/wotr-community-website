@@ -11,6 +11,7 @@ interface Props<O extends string | PlayerOption> {
     placeholder: string;
     loading: boolean;
     alertText?: string;
+    alertPosition?: "above" | "below";
     onChange?: (value: O | null) => void;
     onInputValueChange?: (value: string) => void;
     validate: () => void;
@@ -22,6 +23,7 @@ export default function Autocomplete<O extends string | PlayerOption>({
     placeholder,
     loading,
     alertText,
+    alertPosition = "above",
     onChange = () => {},
     onInputValueChange = () => {},
     validate,
@@ -30,13 +32,18 @@ export default function Autocomplete<O extends string | PlayerOption>({
     const [displayedAlertText, setDisplayedAlertText] =
         useState<ReactNode>(null);
 
+    const alert = (
+        <Alert
+            color="warning"
+            sx={alertPosition === "above" ? { mb: "10px" } : { mt: "10px" }}
+        >
+            {displayedAlertText}
+        </Alert>
+    );
+
     return (
         <Box>
-            {displayedAlertText && (
-                <Alert color="warning" sx={{ mb: "10px" }}>
-                    {displayedAlertText}
-                </Alert>
-            )}
+            {displayedAlertText && alertPosition === "above" && alert}
 
             <MaterialAutocomplete
                 clearOnEscape
@@ -73,6 +80,8 @@ export default function Autocomplete<O extends string | PlayerOption>({
                     loading ? <CircularProgress size="sm" /> : undefined
                 }
             />
+
+            {displayedAlertText && alertPosition === "below" && alert}
         </Box>
     );
 }

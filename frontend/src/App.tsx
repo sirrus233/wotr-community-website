@@ -49,6 +49,8 @@ export default function App() {
     const [loadingLeague, setLoadingLeague] = useState(false);
     const [leagueError, setLeagueError] = useState<string | null>(null);
 
+    const playerNames = leaderboard.map((entry) => entry.name);
+
     const getUserInfo = (onError: (error: unknown) => void) => {
         setLoadingUserInfo(true);
         setLoginError(null);
@@ -193,8 +195,8 @@ export default function App() {
                             path="/game-report"
                             element={
                                 <GameReportForm
-                                    leaderboard={leaderboard}
-                                    loadingLeaderboard={loadingLeaderboard}
+                                    playerNames={playerNames}
+                                    loadingPlayers={loadingLeaderboard}
                                 />
                             }
                         />
@@ -202,8 +204,8 @@ export default function App() {
                             path="/game-reports"
                             element={
                                 <GameReports
-                                    leaderboard={leaderboard}
-                                    loadingLeaderboard={loadingLeaderboard}
+                                    playerNames={playerNames}
+                                    loadingPlayers={loadingLeaderboard}
                                     isAdmin={userInfo?.isAdmin || false}
                                 />
                             }
@@ -230,7 +232,10 @@ export default function App() {
                                     params={leagueParams}
                                     setParams={setLeagueParams}
                                     stats={leagueStats}
+                                    playerNames={playerNames}
                                     loading={loadingLeague}
+                                    loadingPlayers={loadingLeaderboard}
+                                    isAdmin={userInfo?.isAdmin || false}
                                     error={leagueError}
                                     refresh={getLeagueStats}
                                 />

@@ -219,4 +219,20 @@ export type LeagueGameStats = {
     losses: number;
 };
 
+export type LeaguePlayerFormData = {
+    league: FieldData<League>;
+    tier: FieldData<LeagueTier>;
+    year: FieldData<number>;
+    playerName: FieldData<string | null>;
+};
+
+export type ValidLeaguePlayerFormData = {
+    [K in keyof LeaguePlayerFormData]: {
+        [J in keyof LeaguePlayerFormData[K]]: Exclude<
+            LeaguePlayerFormData[K][J],
+            null
+        >;
+    };
+};
+
 export type ValueOf<T> = T[keyof T];
