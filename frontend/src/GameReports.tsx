@@ -12,7 +12,6 @@ import { ErrorMessage } from "./constants";
 import {
     Competition,
     Expansion,
-    LeaderboardEntry,
     League,
     Match,
     ProcessedGameReport,
@@ -56,14 +55,14 @@ const PAGE_FOOTER_HEIGHT = 50;
 const PAGE_LIMIT = 100;
 
 interface Props {
-    leaderboard: LeaderboardEntry[];
-    loadingLeaderboard: boolean;
+    playerNames: string[];
+    loadingPlayers: boolean;
     isAdmin: boolean;
 }
 
 export default function GameReports({
-    leaderboard,
-    loadingLeaderboard,
+    playerNames,
+    loadingPlayers,
     isAdmin,
 }: Props) {
     const [reports, setReports] = useState<ProcessedGameReport[]>([]);
@@ -118,8 +117,8 @@ export default function GameReports({
                             <Box overflow="auto" mt={3}>
                                 <GameReportForm
                                     report={reportEditParams}
-                                    leaderboard={leaderboard}
-                                    loadingLeaderboard={loadingLeaderboard}
+                                    playerNames={playerNames}
+                                    loadingPlayers={loadingPlayers}
                                     refreshGameReports={() =>
                                         refresh(currentPage)
                                     }

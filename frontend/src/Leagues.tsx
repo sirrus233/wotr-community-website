@@ -1,5 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
+import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/joy/Box";
+import IconButton from "@mui/joy/IconButton";
+import Modal from "@mui/joy/Modal";
+import ModalClose from "@mui/joy/ModalClose";
+import ModalDialog from "@mui/joy/ModalDialog";
 import { expansionLeagues, leagueTiers, LEAGUE_START_YEAR } from "./constants";
 import {
     HEADER_HEIGHT_PX,
@@ -8,9 +13,10 @@ import {
     TABLE_ELEMENTS_GAP,
     BUTTON_SELECTOR_HEIGHT,
 } from "./styles/sizes";
-import { LeagueParams, LeagueStats, LeagueTier } from "./types";
-import { getLeagueLabel, range, toPercent } from "./utils";
+import { LeagueParams, LeagueStats } from "./types";
+import { getLeagueLabel, getLeagueTierLabel, range, toPercent } from "./utils";
 import ButtonSelector from "./ButtonSelector";
+import LeaguePlayerForm from "./LeaguePlayerForm";
 import Table, { ColHeaderData, RowData } from "./Table";
 import TableLayout from "./TableLayout";
 
@@ -25,7 +31,9 @@ interface Props {
     params: LeagueParams;
     setParams: React.Dispatch<React.SetStateAction<LeagueParams>>;
     stats: LeagueStats;
+    playerNames: string[];
     loading: boolean;
+    loadingPlayers: boolean;
     error: string | null;
     refresh: () => void;
 }
@@ -34,10 +42,14 @@ export default function Leagues({
     params,
     setParams,
     stats,
+    playerNames,
     loading,
+    loadingPlayers,
     error,
     refresh,
 }: Props) {
+    const [leaguePlayerFormOpen, setLeaguePlayerFormOpen] = useState(false);
+
     const availableYears = range(
         LEAGUE_START_YEAR,
         new Date().getFullYear() + 1
@@ -45,6 +57,23 @@ export default function Leagues({
 
     return (
         <Box>
+            {leaguePlayerFormOpen && (
+                <Modal open onClose={() => setLeaguePlayerFormOpen(false)}>
+                    <ModalDialog maxWidth="200px">
+                        <ModalClose />
+
+                        <LeaguePlayerForm
+                            league={params.league}
+                            tier={params.tier}
+                            year={params.year}
+                            playerNames={playerNames}
+                            loadingPlayers={loadingPlayers}
+                            refresh={refresh}
+                        />
+                    </ModalDialog>
+                </Modal>
+            )}
+
             <ButtonSelector
                 current={params.year}
                 options={availableYears.reverse()}
@@ -108,7 +137,15 @@ export default function Leagues({
                 containerStyle={{
                     maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
                 }}
-                table={<LeagueTable stats={stats} />}
+                table={
+                    <LeagueTable
+                        stats={stats}
+                        loading={loading}
+                        openLeaguePlayerForm={() =>
+                            setLeaguePlayerFormOpen(true)
+                        }
+                    />
+                }
             />
         </Box>
     );
@@ -116,15 +153,34 @@ export default function Leagues({
 
 interface LeagueTableProps {
     stats: LeagueStats;
+    loading: boolean;
+    openLeaguePlayerForm: () => void;
 }
 
-function LeagueTable({ stats }: LeagueTableProps) {
+function LeagueTable({
+    stats,
+    loading,
+    openLeaguePlayerForm,
+}: LeagueTableProps) {
     const entries = Object.entries(stats);
 
     const FIXED_HEADERS = ["Win Rate", "Games", "Wins", "Points"];
 
     return (
         <Table
+            cornerHeader={{
+                content: (
+                    <IconButton
+                        size="sm"
+                        disabled={loading}
+                        onClick={openLeaguePlayerForm}
+                        variant="solid"
+                        color="primary"
+                    >
+                        <AddIcon />
+                    </IconButton>
+                ),
+            }}
             colHeaders={[
                 ...FIXED_HEADERS.map(
                     (headerLabel): ColHeaderData => ({
@@ -194,15 +250,4 @@ function LeagueTable({ stats }: LeagueTableProps) {
             )}
         />
     );
-}
-
-function getLeagueTierLabel(tier: LeagueTier): string {
-    switch (tier) {
-        case "Tier1":
-            return "Elven";
-        case "Tier2":
-            return "Dwarf";
-        case "Tier3":
-            return "Hobbit";
-    }
 }

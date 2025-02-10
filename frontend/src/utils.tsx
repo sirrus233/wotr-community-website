@@ -1,4 +1,4 @@
-import { Expansion, League, Side, Stronghold } from "./types";
+import { Expansion, League, LeagueTier, Side, Stronghold } from "./types";
 
 export function strongholdSide(
     expansions: Expansion[],
@@ -106,6 +106,17 @@ export function getLeagueLabel(league: League): string {
             return "Super";
         case "TTSLeague":
             return "TTS";
+    }
+}
+
+export function getLeagueTierLabel(tier: LeagueTier): string {
+    switch (tier) {
+        case "Tier1":
+            return "Elven";
+        case "Tier2":
+            return "Dwarf";
+        case "Tier3":
+            return "Hobbit";
     }
 }
 

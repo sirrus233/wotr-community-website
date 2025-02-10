@@ -59,20 +59,19 @@ export default function AdminFormLayout({
                         gap={2}
                         sx={{ my: 2, width: "100%" }}
                     >
-                        {children
-                            ? children
-                            : formElementsProps.map(
-                                  ({ element, label, ...props }) => (
-                                      <FormElement
-                                          key={label}
-                                          layoutTheme="minimal"
-                                          label={label}
-                                          {...props}
-                                      >
-                                          {element}
-                                      </FormElement>
-                                  )
-                              )}
+                        {children}
+                        {formElementsProps.map(
+                            ({ element, label, ...props }) => (
+                                <FormElement
+                                    key={label}
+                                    layoutTheme="minimal"
+                                    label={label}
+                                    {...props}
+                                >
+                                    {element}
+                                </FormElement>
+                            )
+                        )}
                     </Box>
 
                     <Button

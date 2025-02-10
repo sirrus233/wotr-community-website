@@ -29,7 +29,6 @@ import { toErrorMessage } from "../networkErrorHandlers";
 import {
     GameFormData,
     GameReportPayload,
-    LeaderboardEntry,
     ProcessedGameReport,
     ServerErrorBody,
     ServerValidationError,
@@ -59,20 +58,19 @@ import useGameReportClearEffects from "../hooks/useGameReportFormEffects";
 
 interface Props {
     report?: ProcessedGameReport;
-    leaderboard: LeaderboardEntry[];
-    loadingLeaderboard: boolean;
+    playerNames: string[];
+    loadingPlayers: boolean;
     refreshGameReports?: () => void;
     exit?: () => void;
 }
 
 function GameReportForm({
     report,
-    leaderboard,
-    loadingLeaderboard,
+    playerNames,
+    loadingPlayers,
     refreshGameReports = () => {},
     exit,
 }: Props) {
-    const playerNames = leaderboard.map((entry) => entry.name);
     const initialFormData = getInitialFormData(report, report && playerNames);
     const emptyFormData = getInitialFormData();
 
@@ -173,7 +171,7 @@ function GameReportForm({
                 <Autocomplete
                     options={playerNames}
                     current={formData.winner.value || ""}
-                    loading={loadingLeaderboard}
+                    loading={loadingPlayers}
                     alertText={
                         report
                             ? undefined
@@ -197,7 +195,7 @@ function GameReportForm({
                 <Autocomplete
                     options={playerNames}
                     current={formData.loser.value || ""}
-                    loading={loadingLeaderboard}
+                    loading={loadingPlayers}
                     alertText={
                         report
                             ? undefined
