@@ -4,6 +4,7 @@ import Servant
   ( AuthProtect,
     Get,
     JSON,
+    OctetStream,
     PlainText,
     Post,
     PostNoContent,
@@ -61,7 +62,7 @@ type GetLeagueStatsAPI =
     :> Get '[JSON] LeagueStatsResponse
 
 type ExportAPI =
-  "export" :> Get '[JSON] ExportResponse
+  "export" :> Get '[OctetStream] ExportResponse
 
 type AdminRenamePlayerAPI =
   "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
