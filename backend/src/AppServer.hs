@@ -7,6 +7,7 @@ import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
 import Auth (fetchGoogleJWKSet, validateToken)
 import Codec.Archive.Zip (addEntryToArchive, emptyArchive, fromArchive, toEntry)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
+import Data.ByteString.Lazy (toChunks)
 import Data.Csv (encode)
 import Data.IntMap.Strict qualified as IntMap
 import Data.Map.Strict qualified as Map
@@ -59,6 +60,7 @@ import Servant
   )
 import Servant.Multipart (FileData (..))
 import Servant.Server.Experimental.Auth (AuthServerData)
+import Servant.Types.SourceT (source)
 import Types.Api
   ( DeleteReportRequest (..),
     ExportResponse,
@@ -358,28 +360,29 @@ exportHandler = do
     playerStatsTotals <- fmap entityVal <$> lift (selectList @PlayerStatsTotal [] [])
     playerStatsInits <- fmap entityVal <$> lift (selectList @PlayerStatsInitial [] [])
     leaguePlayers <- fmap entityVal <$> lift (selectList @LeaguePlayer [] [])
+
+    logInfoN "Extracting data for export..."
+    logInfoN $ "Extracted Players: " <>: length players
+    logInfoN $ "Extracted Reports: " <>: length gameReports
+    logInfoN $ "Extracted PlayerStatsYears: " <>: length playerStatsYears
+    logInfoN $ "Extracted PlayerStatsTotals: " <>: length playerStatsTotals
+    logInfoN $ "Extracted PlayerStatsInits: " <>: length playerStatsInits
+    logInfoN $ "Extracted LeaguePlayers: " <>: length leaguePlayers
+
     pure (players, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers)
 
-  let playersCsv = encode players
-      gameReportsCsv = encode gameReports
-      playerStatsYearsCsv = encode playerStatsYears
-      playerStatsTotalsCsv = encode playerStatsTotals
-      playerStatsInitsCsv = encode playerStatsInits
-      leaguePlayersCsv = encode leaguePlayers
-
-      entries =
-        [ toEntry "players.csv" 0 playersCsv,
-          toEntry "gameReports.csv" 0 gameReportsCsv,
-          toEntry "playerStatsYears.csv" 0 playerStatsYearsCsv,
-          toEntry "playerStatsTotals.csv" 0 playerStatsTotalsCsv,
-          toEntry "playerStatsInits.csv" 0 playerStatsInitsCsv,
-          toEntry "leaguePlayers.csv" 0 leaguePlayersCsv
+  let entries =
+        [ toEntry "players.csv" 0 . encode $ players,
+          toEntry "gameReports.csv" 0 . encode $ gameReports,
+          toEntry "playerStatsYears.csv" 0 . encode $ playerStatsYears,
+          toEntry "playerStatsTotals.csv" 0 . encode $ playerStatsTotals,
+          toEntry "playerStatsInits.csv" 0 . encode $ playerStatsInits,
+          toEntry "leaguePlayers.csv" 0 . encode $ leaguePlayers
         ]
 
-      archive = foldr addEntryToArchive emptyArchive entries
-      zipBytes = fromArchive archive
+      exportArchive = toChunks . fromArchive . foldr addEntryToArchive emptyArchive $ entries
 
-  pure $ addHeader "attachment; filename=\"wotr-community-data.zip\"" zipBytes
+  pure $ addHeader "attachment; filename=\"wotr-community-data.zip\"" (source exportArchive)
 
 adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
 adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do

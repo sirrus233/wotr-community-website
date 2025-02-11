@@ -9,6 +9,7 @@ import Rankings from "./Rankings";
 import CheckIcon from "@mui/icons-material/Check";
 import CircularProgress from "@mui/joy/CircularProgress";
 import Box from "@mui/joy/Box";
+import Button from "@mui/joy/Button";
 import IconButton from "@mui/joy/IconButton";
 import Drawer from "@mui/joy/Drawer";
 import MuiLink from "@mui/joy/Link";
@@ -399,6 +400,42 @@ function Home({
                     setLoginError={setLoginError}
                     setLoadingUserInfo={setLoadingUserInfo}
                 />
+                <Button
+                    onClick={() =>
+                        axios
+                            .get(
+                                "https://api.waroftheringcommunity.net:8080/export",
+                                { responseType: "blob" }
+                            )
+                            .then((response) => {
+                                // https://gist.github.com/javilobo8/097c30a233786be52070986d8cdb1743
+                                const blob = new Blob([response.data], {
+                                    type: response.data.type,
+                                });
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement("a");
+                                link.href = url;
+                                const contentDisposition =
+                                    response.headers["content-disposition"];
+                                let fileName = "export.zip";
+                                if (contentDisposition) {
+                                    const fileNameMatch =
+                                        contentDisposition.match(
+                                            /filename="(.+)"/
+                                        );
+                                    if (fileNameMatch.length === 2)
+                                        fileName = fileNameMatch[1];
+                                }
+                                link.setAttribute("download", fileName);
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                                window.URL.revokeObjectURL(url);
+                            })
+                    }
+                >
+                    Export Data
+                </Button>
             </Section>
         </Box>
     );
