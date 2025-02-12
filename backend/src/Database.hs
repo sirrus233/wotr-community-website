@@ -77,10 +77,8 @@ import Types.Database
     PlayerStatsTotal (..),
     PlayerStatsYear (..),
     Unique (..),
-    defaultPlayerStatsYear,
     toPlayerStatsTotal,
   )
-import Types.Migration (ParsedLegacyLadderEntry (..))
 import Prelude hiding (get, on)
 
 type DBAction m = ExceptT ServerError (SqlPersistT m)
@@ -268,17 +266,6 @@ insertGameReport :: (MonadIO m, MonadLogger m) => GameReport -> DBAction m (Enti
 insertGameReport report = lift $ do
   rid <- insert report
   pure $ Entity rid report
-
-insertLegacyEntry :: (MonadIO m, MonadLogger m) => ParsedLegacyLadderEntry -> DBAction m ()
-insertLegacyEntry entry = do
-  (Entity playerId _) <- insertPlayerIfNotExists entry.player entry.country
-
-  let initialStats = PlayerStatsInitial playerId entry.freeRating entry.shadowRating entry.gamesPlayedTotal
-  let totalStats = PlayerStatsTotal playerId entry.freeRating entry.shadowRating entry.gamesPlayedTotal
-  let yearStats = defaultPlayerStatsYear playerId 2022
-
-  insertInitialStats initialStats
-  repsertPlayerStats (totalStats, yearStats)
 
 insertLeaguePlayer :: (MonadIO m, MonadLogger m) => LeaguePlayer -> DBAction m ()
 insertLeaguePlayer = lift . insert_
