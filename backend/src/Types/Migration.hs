@@ -341,7 +341,10 @@ toParsedGameReport awsEnv report =
       where
         interest = fromMaybe 1 (readMaybe . toString $ report.gameRating)
     comment = report.gameComment
-    log = toS3Url awsEnv.region (toS3Key timestamp winner loser) <$ report.gameLog
+    log = toS3Url awsEnv.region (toS3Key timestamp freePlayer shadowPlayer) <$ report.gameLog
+      where
+        freePlayer = if side == Free then winner else loser
+        shadowPlayer = if side == Shadow then winner else loser
 
 toRawGameReport :: ParsedGameReport -> RawGameReport
 toRawGameReport (ParsedGameReport {..}) = RawGameReport {..}
