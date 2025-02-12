@@ -87,6 +87,8 @@ export const payloadFields = [
     "interestRating",
 ] as const;
 
+export const optionalPlayerEditFields = ["country"] as const;
+
 export const serverValidationErrors = [
     "VictoryConditionConflictSPRV",
     "VictoryConditionConflictFPRV",

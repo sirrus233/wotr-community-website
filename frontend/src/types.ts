@@ -6,6 +6,7 @@ import {
     leagueTiers,
     matchTypes,
     optionalFields,
+    optionalPlayerEditFields,
     payloadFields,
     playerStates,
     serverValidationErrors,
@@ -34,7 +35,11 @@ export type OptionalField = (typeof optionalFields)[number];
 
 export type PayloadField = (typeof payloadFields)[number];
 
+export type OptionalPlayerEditField = (typeof optionalPlayerEditFields)[number];
+
 export type PlayerState = (typeof playerStates)[number];
+
+export type Country = keyof typeof COUNTRY_FLAGS;
 
 export type SuccessMessage = string | null;
 
@@ -124,7 +129,7 @@ export type ProcessedGameReport = GameReportPayload["report"] & {
 export interface LeaderboardEntry {
     pid: number;
     name: string;
-    country: keyof typeof COUNTRY_FLAGS | null;
+    country: Country | null;
     isActive: boolean;
     currentRatingFree: number;
     currentRatingShadow: number;
@@ -155,15 +160,16 @@ export type PlayerOption = {
 
 export interface PlayerEditFormData {
     pid: FieldData<number>;
-    newName: FieldData<string | null>;
+    currentName: FieldData<string>;
+    name: FieldData<string | null>;
+    country: FieldData<Country | null>;
 }
 
 export type ValidPlayerEditFormData = {
     [K in keyof PlayerEditFormData]: {
-        [J in keyof PlayerEditFormData[K]]: Exclude<
-            PlayerEditFormData[K][J],
-            null
-        >;
+        [J in keyof PlayerEditFormData[K]]: K extends OptionalPlayerEditField
+            ? PlayerEditFormData[K][J]
+            : Exclude<PlayerEditFormData[K][J], null>;
     };
 };
 
