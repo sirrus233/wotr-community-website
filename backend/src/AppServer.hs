@@ -37,6 +37,7 @@ import Database
     runDb,
     updateActiveStatus,
     updateAdminSessionId,
+    updatePlayerCountry,
     updatePlayerName,
     updateReports,
   )
@@ -384,12 +385,21 @@ exportHandler = do
 
   pure $ addHeader "attachment; filename=\"wotr-community-data.zip\"" (source exportArchive)
 
-adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
-adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do
-  player <- getPlayerByName newName
-  case player of
-    Nothing -> updatePlayerName pid newName >> pure NoContent
-    Just _ -> throwError err422 {errBody = "Name " <>: newName <> " already taken."}
+adminEditPlayerHandler :: RenamePlayerRequest -> AppM NoContent
+adminEditPlayerHandler RenamePlayerRequest {pid, name = mName, country = mCountry} = case (mName, mCountry) of
+  (Nothing, Nothing) -> pure NoContent
+  (Just n, Nothing) -> editName n >> pure NoContent
+  (Nothing, Just c) -> editCountry c >> pure NoContent
+  (Just n, Just c) -> editName n >> editCountry c >> pure NoContent
+  where
+    editName name = runDb $ do
+      player <- getPlayerByName name
+      case player of
+        Nothing -> updatePlayerName pid name
+        Just _ -> throwError err422 {errBody = "Name " <>: name <> " already taken."}
+
+    editCountry country = runDb $ do
+      updatePlayerCountry pid country
 
 adminRemapPlayerHandler :: RemapPlayerRequest -> AppM RemapPlayerResponse
 adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
@@ -464,7 +474,7 @@ protected :: AuthServerData (AuthProtect SessionIdCookie) -> ServerT Protected A
 protected auth =
   logoutHandler auth
     :<|> userInfoHandler
-    :<|> adminRenamePlayerHandler
+    :<|> adminEditPlayerHandler
     :<|> adminRemapPlayerHandler
     :<|> adminModifyReportHandler
     :<|> adminDeleteReportHandler

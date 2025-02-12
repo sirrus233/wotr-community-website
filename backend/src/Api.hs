@@ -65,8 +65,8 @@ type GetLeagueStatsAPI =
 
 type ExportAPI = "export" :> StreamGet NoFraming OctetStream ExportResponse
 
-type AdminRenamePlayerAPI =
-  "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
+type AdminEditPlayerAPI =
+  "editPlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
 
 type AdminRemapPlayerAPI =
   "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :> Post '[JSON] RemapPlayerResponse
@@ -97,7 +97,7 @@ type Unprotected =
 type Protected =
   LogoutAPI
     :<|> UserInfoAPI
-    :<|> AdminRenamePlayerAPI
+    :<|> AdminEditPlayerAPI
     :<|> AdminRemapPlayerAPI
     :<|> AdminModifyReportAPI
     :<|> AdminDeleteReportAPI

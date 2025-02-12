@@ -234,7 +234,8 @@ instance ToJSON GetLeaderboardResponse
 
 data RenamePlayerRequest = RenamePlayerRequest
   { pid :: PlayerId,
-    newName :: PlayerName
+    name :: Maybe PlayerName,
+    country :: Maybe Text
   }
   deriving (Generic)
 
