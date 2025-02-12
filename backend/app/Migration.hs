@@ -35,7 +35,7 @@ banList = ["mordak", "mellowsedge"]
 
 insertLegacyEntry :: (MonadIO m, MonadLogger m) => ParsedLegacyLadderEntry -> DBAction m ()
 insertLegacyEntry entry = do
-  (Entity playerId _) <- insertPlayerIfNotExists entry.player
+  (Entity playerId _) <- insertPlayerIfNotExists entry.player entry.country
 
   let initialStats = PlayerStatsInitial playerId entry.freeRating entry.shadowRating entry.gamesPlayedTotal
   let totalStats = PlayerStatsTotal playerId entry.freeRating entry.shadowRating entry.gamesPlayedTotal
