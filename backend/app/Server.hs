@@ -31,8 +31,8 @@ corsMiddleware = cors $ const $ Just policy
       CorsResourcePolicy
         { corsOrigins = Just (["https://waroftheringcommunity.net"], True),
           corsMethods = [],
-          corsRequestHeaders = ["content-type"],
-          corsExposedHeaders = Nothing,
+          corsRequestHeaders = ["Content-Type"],
+          corsExposedHeaders = Just ["Content-Disposition"],
           corsMaxAge = Nothing, -- TODO Set to 3600 or 7200 prior to launch
           corsVaryOrigin = False,
           corsRequireOrigin = True,

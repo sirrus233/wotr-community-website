@@ -4,6 +4,7 @@ import Servant
   ( AuthProtect,
     Get,
     JSON,
+    NoFraming,
     OctetStream,
     PlainText,
     Post,
@@ -13,6 +14,7 @@ import Servant
     ReqBody,
     Required,
     StdMethod (..),
+    StreamGet,
     Verb,
     (:<|>),
     (:>),
@@ -61,8 +63,7 @@ type GetLeagueStatsAPI =
     :> RequiredQueryParam "year" Int
     :> Get '[JSON] LeagueStatsResponse
 
-type ExportAPI =
-  "export" :> Get '[OctetStream] ExportResponse
+type ExportAPI = "export" :> StreamGet NoFraming OctetStream ExportResponse
 
 type AdminRenamePlayerAPI =
   "renamePlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent

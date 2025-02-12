@@ -138,7 +138,7 @@ instance ToJSONKey PlayerId where
 
 instance ToField PlayerId where
   toField :: PlayerId -> CSV.Field
-  toField = toField
+  toField = toField . SQL.fromSqlKey
 
 instance ToRecord Player where
   toRecord :: Player -> CSV.Record

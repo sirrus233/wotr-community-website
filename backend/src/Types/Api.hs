@@ -1,11 +1,11 @@
 module Types.Api where
 
 import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict)
-import Data.ByteString.Lazy qualified as L
+import Data.ByteString (StrictByteString)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
 import Relude.Extra (lookupDefault)
-import Servant (Header, Headers, MimeUnrender (..), NoContent, PlainText)
+import Servant (Header, Headers, MimeUnrender (..), NoContent, PlainText, SourceIO)
 import Servant.Multipart (FileData (..), FromMultipart (..), MultipartData (..), Tmp, lookupFile, lookupInput)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
 import Types.Database
@@ -304,4 +304,4 @@ fromLeagueGameStatsMap :: PlayerId -> LeagueGameStatsMap -> Map PlayerId LeagueG
 fromLeagueGameStatsMap playerId =
   fromList . fmap (\(opponentId, opponent, wins, losses) -> (opponentId, LeagueGameStats {..})) . lookupDefault [] playerId
 
-type ExportResponse = (Headers '[Header "Content-Disposition" String] L.ByteString)
+type ExportResponse = (Headers '[Header "Content-Disposition" String]) (SourceIO StrictByteString)
