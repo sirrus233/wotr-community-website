@@ -21,7 +21,11 @@ import PlayerEditForm from "./PlayerEditForm";
 import PlayerRemapForm from "./PlayerRemapForm";
 import TableLayout from "./TableLayout";
 import { range, toPercent } from "./utils";
-import { playerStates, LEADERBOARD_START_YEAR } from "./constants";
+import {
+    COUNTRY_FLAGS,
+    LEADERBOARD_START_YEAR,
+    playerStates,
+} from "./constants";
 
 type PlayerEditParams = {
     pid: number;
@@ -244,7 +248,13 @@ function Rankings({
                             )}
 
                             <TableCell>{i + 1}</TableCell>
-                            <TableCell>{entry.country}</TableCell>
+                            <TableCell
+                                style={{ fontSize: "3em", lineHeight: 0 }}
+                            >
+                                {(entry.country &&
+                                    COUNTRY_FLAGS[entry.country]) ||
+                                    null}
+                            </TableCell>
                             <TableCell>{entry.name}</TableCell>
                             <TableCell>{entry.averageRating}</TableCell>
                             <TableCell side="Shadow">

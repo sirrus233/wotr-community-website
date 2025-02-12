@@ -1,5 +1,6 @@
 import {
     competitionTypes,
+    COUNTRY_FLAGS,
     expansions,
     leagues,
     leagueTiers,
@@ -123,7 +124,7 @@ export type ProcessedGameReport = GameReportPayload["report"] & {
 export interface LeaderboardEntry {
     pid: number;
     name: string;
-    country: string | null;
+    country: keyof typeof COUNTRY_FLAGS | null;
     isActive: boolean;
     currentRatingFree: number;
     currentRatingShadow: number;
