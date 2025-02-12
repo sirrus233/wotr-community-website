@@ -10,7 +10,7 @@ type PlayerBanList = [PlayerName]
 
 data LegacyLadderEntryWithTrash = LegacyLadderEntryWithTrash
   { rank :: (),
-    flag :: (),
+    country :: Maybe Text,
     player :: Text,
     averageRating :: (),
     shadowRating :: Int,
@@ -23,6 +23,7 @@ instance FromRecord LegacyLadderEntryWithTrash
 
 data ParsedLegacyLadderEntry = ParsedLegacyLadderEntry
   { player :: Text,
+    country :: Maybe Text,
     shadowRating :: Int,
     freeRating :: Int,
     gamesPlayedTotal :: Int

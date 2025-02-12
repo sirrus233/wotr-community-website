@@ -250,14 +250,14 @@ getLeagueGameStats league tier year = lift . select $ do
   where
     playerWon report player = report ?. GameReportWinnerId ==. just (player ^. PlayerId)
 
-insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Entity Player)
-insertPlayerIfNotExists name = do
+insertPlayerIfNotExists :: (MonadIO m, MonadLogger m) => PlayerName -> Maybe Text -> DBAction m (Entity Player)
+insertPlayerIfNotExists name country = do
   player <- getPlayerByName name
   case player of
     Just p -> pure p
     Nothing -> lift $ do
       logInfoN $ "Adding new player " <> normalizeName name <> " to database."
-      let p = Player (normalizeName name) name Nothing False
+      let p = Player (normalizeName name) name country False
       pid <- insert p
       pure $ Entity pid p
 
@@ -271,7 +271,7 @@ insertGameReport report = lift $ do
 
 insertLegacyEntry :: (MonadIO m, MonadLogger m) => ParsedLegacyLadderEntry -> DBAction m ()
 insertLegacyEntry entry = do
-  (Entity playerId _) <- insertPlayerIfNotExists entry.player
+  (Entity playerId _) <- insertPlayerIfNotExists entry.player entry.country
 
   let initialStats = PlayerStatsInitial playerId entry.freeRating entry.shadowRating entry.gamesPlayedTotal
   let totalStats = PlayerStatsTotal playerId entry.freeRating entry.shadowRating entry.gamesPlayedTotal

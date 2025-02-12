@@ -183,8 +183,8 @@ putS3Object awsEnv key path =
 
 insertReport :: (MonadIO m, MonadLogger m) => UTCTime -> RawGameReport -> Maybe S3Url -> DBAction m ReportInsertion
 insertReport timestamp rawReport s3Url = do
-  winner <- insertPlayerIfNotExists rawReport.winner
-  loser <- insertPlayerIfNotExists rawReport.loser
+  winner <- insertPlayerIfNotExists rawReport.winner Nothing
+  loser <- insertPlayerIfNotExists rawReport.loser Nothing
   report <- insertGameReport $ toGameReport timestamp (entityKey winner) (entityKey loser) s3Url rawReport
   pure (report, winner, loser)
 
@@ -447,7 +447,7 @@ adminAddLeaguePlayerHandler league tier year (Just playerId) Nothing = do
   pure NoContent
 adminAddLeaguePlayerHandler league tier year Nothing (Just playerName) = do
   runDb $ do
-    playerId <- entityKey <$> insertPlayerIfNotExists playerName
+    playerId <- entityKey <$> insertPlayerIfNotExists playerName Nothing
     insertLeaguePlayer $ LeaguePlayer league tier year playerId
   pure NoContent
 
