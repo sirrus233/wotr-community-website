@@ -37,6 +37,7 @@ import Database
     runDb,
     updateActiveStatus,
     updateAdminSessionId,
+    updatePlayerCountry,
     updatePlayerName,
     updateReports,
   )
@@ -63,6 +64,7 @@ import Servant.Server.Experimental.Auth (AuthServerData)
 import Servant.Types.SourceT (source)
 import Types.Api
   ( DeleteReportRequest (..),
+    EditPlayerRequest (..),
     ExportResponse,
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (..),
@@ -77,7 +79,6 @@ import Types.Api
     RawGameReport (..),
     RemapPlayerRequest (..),
     RemapPlayerResponse (..),
-    RenamePlayerRequest (..),
     S3Url,
     SubmitGameReportResponse (..),
     SubmitReportRequest (..),
@@ -384,12 +385,16 @@ exportHandler = do
 
   pure $ addHeader "attachment; filename=\"wotr-community-data.zip\"" (source exportArchive)
 
-adminRenamePlayerHandler :: RenamePlayerRequest -> AppM NoContent
-adminRenamePlayerHandler RenamePlayerRequest {pid, newName} = runDb $ do
-  player <- getPlayerByName newName
+adminEditPlayerHandler :: EditPlayerRequest -> AppM NoContent
+adminEditPlayerHandler EditPlayerRequest {pid, name, country} = runDb $ do
+  player <- getPlayerByName name
   case player of
-    Nothing -> updatePlayerName pid newName >> pure NoContent
-    Just _ -> throwError err422 {errBody = "Name " <>: newName <> " already taken."}
+    Nothing -> updatePlayerName pid name
+    Just p | entityKey p == pid -> updatePlayerName pid name
+    Just _ -> throwError err422 {errBody = "Name " <>: name <> " already taken."}
+
+  updatePlayerCountry pid country
+  pure NoContent
 
 adminRemapPlayerHandler :: RemapPlayerRequest -> AppM RemapPlayerResponse
 adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
@@ -464,7 +469,7 @@ protected :: AuthServerData (AuthProtect SessionIdCookie) -> ServerT Protected A
 protected auth =
   logoutHandler auth
     :<|> userInfoHandler
-    :<|> adminRenamePlayerHandler
+    :<|> adminEditPlayerHandler
     :<|> adminRemapPlayerHandler
     :<|> adminModifyReportHandler
     :<|> adminDeleteReportHandler
