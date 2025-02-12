@@ -136,9 +136,8 @@ export default function App() {
                             padding: "0 10px",
                             boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.5)",
                             color: "white",
-                            // backgroundColor:
-                            //     "var(--joy-palette-primary-solidBg)",
-                            backgroundColor: "red",
+                            backgroundColor:
+                                "var(--joy-palette-primary-solidBg)",
                         }}
                     >
                         <DrawerNavigation />
@@ -150,7 +149,7 @@ export default function App() {
                                 textAlign: "center",
                             }}
                         >
-                            DRAFT!! NOT LIVE DATA!! DEMO ONLY!!
+                            WotR Community Ladder
                         </Typography>
 
                         <Box
