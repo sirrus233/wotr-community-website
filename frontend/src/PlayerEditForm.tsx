@@ -19,7 +19,6 @@ interface Props {
 export default function PlayerEditForm({ pid, name, country, refresh }: Props) {
     const initialFormData: PlayerEditFormData = {
         pid: initializeToDefaults(pid),
-        currentName: initializeToDefaults(name),
         country: initializeToDefaults(country),
         name: initializeToDefaults(name),
     };
@@ -90,17 +89,14 @@ async function submit(validFormData: ValidPlayerEditFormData) {
 
 type PlayerRenamePayload = {
     pid: number;
-    name: string | null;
+    name: string;
     country: Country | null;
 };
 
 function toPayload(formData: ValidPlayerEditFormData): PlayerRenamePayload {
     return {
         pid: formData.pid.value,
-        name:
-            formData.currentName.value === formData.name.value
-                ? null
-                : formData.name.value,
+        name: formData.name.value,
         country: formData.country.value,
     };
 }

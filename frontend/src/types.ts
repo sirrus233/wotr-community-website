@@ -160,7 +160,6 @@ export type PlayerOption = {
 
 export interface PlayerEditFormData {
     pid: FieldData<number>;
-    currentName: FieldData<string>;
     name: FieldData<string | null>;
     country: FieldData<Country | null>;
 }
