@@ -1,31 +1,26 @@
 import axios from "axios";
 import React from "react";
-import { PlayerEditFormData, ValidPlayerEditFormData } from "./types";
+import { Country, PlayerEditFormData, ValidPlayerEditFormData } from "./types";
 import AdminFormLayout from "./AdminFormLayout";
 import TextInput from "./TextInput";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import { toErrorMessage } from "./networkErrorHandlers";
+import Autocomplete from "./Autocomplete";
+import { COUNTRY_FLAGS, optionalPlayerEditFields } from "./constants";
 
 interface Props {
     pid: number;
     name: string;
+    country: Country | null;
     refresh: () => void;
 }
 
-export default function PlayerEditForm({ pid, name, refresh }: Props) {
+export default function PlayerEditForm({ pid, name, country, refresh }: Props) {
     const initialFormData: PlayerEditFormData = {
         pid: initializeToDefaults(pid),
-        newName: {
-            value: null,
-            error: null,
-            validate: function _() {
-                return this.value?.toLowerCase().trim() ===
-                    name.toLowerCase().trim()
-                    ? "Cannot rename a player to the same name"
-                    : null;
-            },
-        },
+        country: initializeToDefaults(country),
+        name: initializeToDefaults(name),
     };
 
     const [
@@ -34,7 +29,7 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
         { handleInputChange, validateField, handleSubmit },
     ] = useFormData<PlayerEditFormData, ValidPlayerEditFormData>({
         initialFormData,
-        optionalFields: [],
+        optionalFields: optionalPlayerEditFields.slice(),
         submit,
         toErrorMessage,
     });
@@ -51,14 +46,28 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
             shouldHideFormOnSuccess
             formElementsProps={[
                 {
-                    label: "New player name",
-                    error: formData.newName.error,
+                    label: "Name",
+                    error: formData.name.error,
                     element: (
                         <TextInput
-                            value={formData.newName.value || ""}
-                            placeholder="New player name"
-                            onChange={handleInputChange("newName")}
-                            validate={validateField("newName")}
+                            value={formData.name.value || ""}
+                            placeholder="Name"
+                            onChange={handleInputChange("name")}
+                            validate={validateField("name")}
+                        />
+                    ),
+                },
+                {
+                    label: "Country",
+                    error: formData.country.error,
+                    element: (
+                        <Autocomplete
+                            options={Object.keys(COUNTRY_FLAGS) as Country[]}
+                            current={formData.country.value}
+                            loading={false}
+                            placeholder="Country"
+                            onChange={handleInputChange("country")}
+                            validate={validateField("country")}
                         />
                     ),
                 },
@@ -69,8 +78,8 @@ export default function PlayerEditForm({ pid, name, refresh }: Props) {
 
 async function submit(validFormData: ValidPlayerEditFormData) {
     return await axios.post(
-        "https://api.waroftheringcommunity.net:8080/renamePlayer",
-        // "http://localhost:8081/renamePlayer",
+        "https://api.waroftheringcommunity.net:8080/editPlayer",
+        // "http://localhost:8081/editPlayer",
         toPayload(validFormData),
         {
             headers: { "Content-Type": "application/json" },
@@ -80,12 +89,14 @@ async function submit(validFormData: ValidPlayerEditFormData) {
 
 type PlayerRenamePayload = {
     pid: number;
-    newName: string;
+    name: string;
+    country: Country | null;
 };
 
 function toPayload(formData: ValidPlayerEditFormData): PlayerRenamePayload {
     return {
         pid: formData.pid.value,
-        newName: formData.newName.value,
+        name: formData.name.value,
+        country: formData.country.value,
     };
 }

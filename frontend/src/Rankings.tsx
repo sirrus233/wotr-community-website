@@ -6,7 +6,13 @@ import MergeIcon from "@mui/icons-material/Merge";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
-import { LeaderboardEntry, PlayerEditMode, PlayerState, Side } from "./types";
+import {
+    Country,
+    LeaderboardEntry,
+    PlayerEditMode,
+    PlayerState,
+    Side,
+} from "./types";
 import { FREE_PRIMARY_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
 import {
     HEADER_HEIGHT_PX,
@@ -30,6 +36,7 @@ import {
 type PlayerEditParams = {
     pid: number;
     name: string;
+    country: Country | null;
     mode: PlayerEditMode;
 };
 
@@ -224,6 +231,7 @@ function Rankings({
                                             setPlayerEditParams({
                                                 pid: entry.pid,
                                                 name: entry.name,
+                                                country: entry.country,
                                                 mode: "edit",
                                             })
                                         }
@@ -238,6 +246,7 @@ function Rankings({
                                             setPlayerEditParams({
                                                 pid: entry.pid,
                                                 name: entry.name,
+                                                country: entry.country,
                                                 mode: "remap",
                                             })
                                         }
