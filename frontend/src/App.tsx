@@ -455,8 +455,8 @@ function Home({
                             setExporting(true);
                             axios
                                 .get(
-                                    "http://localhost:8081/export",
-                                    // "https://api.waroftheringcommunity.net:8080/export",
+                                    // "http://localhost:8081/export",
+                                    "https://api.waroftheringcommunity.net:8080/export",
                                     { responseType: "blob" }
                                 )
                                 .then((response) => {
