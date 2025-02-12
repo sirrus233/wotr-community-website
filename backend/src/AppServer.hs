@@ -64,6 +64,7 @@ import Servant.Server.Experimental.Auth (AuthServerData)
 import Servant.Types.SourceT (source)
 import Types.Api
   ( DeleteReportRequest (..),
+    EditPlayerRequest (..),
     ExportResponse,
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (..),
@@ -78,7 +79,6 @@ import Types.Api
     RawGameReport (..),
     RemapPlayerRequest (..),
     RemapPlayerResponse (..),
-    RenamePlayerRequest (..),
     S3Url,
     SubmitGameReportResponse (..),
     SubmitReportRequest (..),
@@ -385,21 +385,16 @@ exportHandler = do
 
   pure $ addHeader "attachment; filename=\"wotr-community-data.zip\"" (source exportArchive)
 
-adminEditPlayerHandler :: RenamePlayerRequest -> AppM NoContent
-adminEditPlayerHandler RenamePlayerRequest {pid, name = mName, country = mCountry} = case (mName, mCountry) of
-  (Nothing, Nothing) -> pure NoContent
-  (Just n, Nothing) -> editName n >> pure NoContent
-  (Nothing, Just c) -> editCountry c >> pure NoContent
-  (Just n, Just c) -> editName n >> editCountry c >> pure NoContent
-  where
-    editName name = runDb $ do
-      player <- getPlayerByName name
-      case player of
-        Nothing -> updatePlayerName pid name
-        Just _ -> throwError err422 {errBody = "Name " <>: name <> " already taken."}
+adminEditPlayerHandler :: EditPlayerRequest -> AppM NoContent
+adminEditPlayerHandler EditPlayerRequest {pid, name, country} = runDb $ do
+  player <- getPlayerByName name
+  case player of
+    Nothing -> updatePlayerName pid name
+    Just p | entityKey p == pid -> updatePlayerName pid name
+    Just _ -> throwError err422 {errBody = "Name " <>: name <> " already taken."}
 
-    editCountry country = runDb $ do
-      updatePlayerCountry pid country
+  updatePlayerCountry pid country
+  pure NoContent
 
 adminRemapPlayerHandler :: RemapPlayerRequest -> AppM RemapPlayerResponse
 adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do

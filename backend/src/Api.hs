@@ -22,6 +22,7 @@ import Servant
 import Servant.Multipart (MultipartForm, Tmp)
 import Types.Api
   ( DeleteReportRequest,
+    EditPlayerRequest,
     ExportResponse,
     GetLeaderboardResponse,
     GetReportsResponse,
@@ -31,7 +32,6 @@ import Types.Api
     ModifyReportRequest,
     RemapPlayerRequest,
     RemapPlayerResponse,
-    RenamePlayerRequest,
     SubmitGameReportResponse,
     SubmitReportRequest,
     UserInfoResponse,
@@ -66,7 +66,7 @@ type GetLeagueStatsAPI =
 type ExportAPI = "export" :> StreamGet NoFraming OctetStream ExportResponse
 
 type AdminEditPlayerAPI =
-  "editPlayer" :> ReqBody '[JSON] RenamePlayerRequest :> PostNoContent
+  "editPlayer" :> ReqBody '[JSON] EditPlayerRequest :> PostNoContent
 
 type AdminRemapPlayerAPI =
   "remapPlayer" :> ReqBody '[JSON] RemapPlayerRequest :> Post '[JSON] RemapPlayerResponse

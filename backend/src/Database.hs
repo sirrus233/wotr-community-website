@@ -281,10 +281,10 @@ updatePlayerName pid name = lift $ do
     set player [PlayerName =. val (normalizeName name), PlayerDisplayName =. val name]
     where_ (player ^. PlayerId ==. val pid)
 
-updatePlayerCountry :: (MonadIO m, MonadLogger m) => PlayerId -> Text -> DBAction m ()
+updatePlayerCountry :: (MonadIO m, MonadLogger m) => PlayerId -> Maybe Text -> DBAction m ()
 updatePlayerCountry pid country = lift $ do
   update $ \player -> do
-    set player [PlayerCountry =. just (val country)]
+    set player [PlayerCountry =. val country]
     where_ (player ^. PlayerId ==. val pid)
 
 updateReports :: (MonadIO m, MonadLogger m) => PlayerId -> PlayerId -> DBAction m ()

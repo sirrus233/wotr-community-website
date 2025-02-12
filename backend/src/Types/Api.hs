@@ -232,14 +232,14 @@ newtype GetLeaderboardResponse = GetLeaderboardResponse {entries :: [Leaderboard
 
 instance ToJSON GetLeaderboardResponse
 
-data RenamePlayerRequest = RenamePlayerRequest
+data EditPlayerRequest = EditPlayerRequest
   { pid :: PlayerId,
-    name :: Maybe PlayerName,
+    name :: PlayerName,
     country :: Maybe Text
   }
   deriving (Generic)
 
-instance FromJSON RenamePlayerRequest
+instance FromJSON EditPlayerRequest
 
 data RemapPlayerRequest = RemapPlayerRequest
   { fromPid :: PlayerId,
