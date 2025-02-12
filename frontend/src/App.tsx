@@ -49,6 +49,8 @@ export default function App() {
     const [loadingLeague, setLoadingLeague] = useState(false);
     const [leagueError, setLeagueError] = useState<string | null>(null);
 
+    const [exporting, setExporting] = useState(false);
+
     const playerNames = leaderboard.map((entry) => entry.name);
 
     const getUserInfo = (onError: (error: unknown) => void) => {
@@ -188,6 +190,8 @@ export default function App() {
                                     clearUserInfo={clearUserInfo}
                                     setLoginError={setLoginError}
                                     setLoadingUserInfo={setLoadingUserInfo}
+                                    exporting={exporting}
+                                    setExporting={setExporting}
                                 />
                             }
                         />
@@ -253,6 +257,8 @@ interface HomeProps {
     clearUserInfo: () => void;
     setLoginError: (error: string) => void;
     setLoadingUserInfo: (loading: boolean) => void;
+    exporting: boolean;
+    setExporting: (exporting: boolean) => void;
 }
 
 function Home({
@@ -260,6 +266,8 @@ function Home({
     clearUserInfo,
     setLoginError,
     setLoadingUserInfo,
+    exporting,
+    setExporting,
 }: HomeProps) {
     return (
         <Box
@@ -273,28 +281,30 @@ function Home({
         >
             <Section>
                 <Typography level="h4">Welcome!</Typography>
+            </Section>
 
-                <Typography level="title-sm" mt={1} textAlign="center">
-                    This website is not affiliated with the official War of the
-                    Ring board game produced by Ares Games.
-                </Typography>
+            <Section>
+                <Button
+                    component={Link}
+                    to="/game-report"
+                    sx={{ textAlign: "center" }}
+                >
+                    Submit a game report
+                </Button>
             </Section>
 
             <Section>
                 <Box display="flex" flexDirection="row" gap={1}>
                     {[
-                        {
-                            to: "/game-report",
-                            label: "Submit a game report",
-                        },
                         { to: "/rankings", label: "View rankings" },
                         { to: "/game-reports", label: "View game reports" },
-                        { to: "/leagues", label: "Leagues" },
+                        { to: "/leagues", label: "View leagues" },
                     ].map(({ to, label }) => (
                         <Button
                             component={Link}
                             to={to}
                             key={label}
+                            variant="outlined"
                             sx={{ textAlign: "center" }}
                         >
                             {label}
@@ -429,50 +439,67 @@ function Home({
             </Section>
             <Section>
                 <Typography level="title-lg" mb={1}>
-                    Admin Sign-In
+                    Admin Tools
                 </Typography>
-                <GoogleLoginButton
-                    getUserInfo={getUserInfo}
-                    clearUserInfo={clearUserInfo}
-                    setLoginError={setLoginError}
-                    setLoadingUserInfo={setLoadingUserInfo}
-                />
-                <Button
-                    onClick={() =>
-                        axios
-                            .get(
-                                "https://api.waroftheringcommunity.net:8080/export",
-                                { responseType: "blob" }
-                            )
-                            .then((response) => {
-                                // https://gist.github.com/javilobo8/097c30a233786be52070986d8cdb1743
-                                const blob = new Blob([response.data], {
-                                    type: response.data.type,
-                                });
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement("a");
-                                link.href = url;
-                                const contentDisposition =
-                                    response.headers["content-disposition"];
-                                let fileName = "export.zip";
-                                if (contentDisposition) {
-                                    const fileNameMatch =
-                                        contentDisposition.match(
-                                            /filename="(.+)"/
-                                        );
-                                    if (fileNameMatch.length === 2)
-                                        fileName = fileNameMatch[1];
-                                }
-                                link.setAttribute("download", fileName);
-                                document.body.appendChild(link);
-                                link.click();
-                                link.remove();
-                                window.URL.revokeObjectURL(url);
-                            })
-                    }
-                >
-                    Export Data
-                </Button>
+
+                <Box display="flex" flexDirection="row" gap={1}>
+                    <GoogleLoginButton
+                        getUserInfo={getUserInfo}
+                        clearUserInfo={clearUserInfo}
+                        setLoginError={setLoginError}
+                        setLoadingUserInfo={setLoadingUserInfo}
+                    />
+                    <Button
+                        variant="outlined"
+                        loading={exporting}
+                        onClick={() => {
+                            setExporting(true);
+                            axios
+                                .get(
+                                    "http://localhost:8081/export",
+                                    // "https://api.waroftheringcommunity.net:8080/export",
+                                    { responseType: "blob" }
+                                )
+                                .then((response) => {
+                                    // https://gist.github.com/javilobo8/097c30a233786be52070986d8cdb1743
+                                    const blob = new Blob([response.data], {
+                                        type: response.data.type,
+                                    });
+                                    const url =
+                                        window.URL.createObjectURL(blob);
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    const contentDisposition =
+                                        response.headers["content-disposition"];
+                                    let fileName = "export.zip";
+                                    if (contentDisposition) {
+                                        const fileNameMatch =
+                                            contentDisposition.match(
+                                                /filename="(.+)"/
+                                            );
+                                        if (fileNameMatch.length === 2)
+                                            fileName = fileNameMatch[1];
+                                    }
+                                    link.setAttribute("download", fileName);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    link.remove();
+                                    window.URL.revokeObjectURL(url);
+                                })
+                                .catch(logNetworkError)
+                                .finally(() => setExporting(false));
+                        }}
+                    >
+                        Export Data
+                    </Button>
+                </Box>
+            </Section>
+
+            <Section>
+                <Typography level="title-sm" mt={1} textAlign="center">
+                    This website is not affiliated with the official War of the
+                    Ring board game produced by Ares Games.
+                </Typography>
             </Section>
         </Box>
     );
