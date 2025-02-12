@@ -1,8 +1,10 @@
 module Types.Migration where
 
+import Amazonka qualified as AWS
+import AppServer (toS3Key, toS3Url)
 import Data.Csv (FromRecord)
 import Data.Text qualified as T
-import Data.Time (UTCTime (..), fromGregorian, midnight, timeOfDayToTime)
+import Data.Time (TimeOfDay (..), UTCTime (..), fromGregorian, timeOfDayToTime)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Match (..), PlayerName, Side (..), Stronghold (..), Victory (..))
 
@@ -158,8 +160,8 @@ data ParsedGameReport = ParsedGameReport
     log :: Maybe Text
   }
 
-toParsedGameReport :: GameReportWithTrash -> ParsedGameReport
-toParsedGameReport report =
+toParsedGameReport :: AWS.Env -> GameReportWithTrash -> ParsedGameReport
+toParsedGameReport awsEnv report =
   ParsedGameReport
     { timestamp,
       winner,
@@ -184,11 +186,13 @@ toParsedGameReport report =
       log
     }
   where
-    timestamp = case T.splitOn "/" (report.timestamp) of
-      [d, m, y] ->
-        UTCTime
-          (fromGregorian (readOrError y) (readOrError m) (readOrError d))
-          (timeOfDayToTime midnight)
+    timestamp = case T.splitOn " " (report.timestamp) of
+      [date, time] -> case (T.splitOn "/" date, T.splitOn ":" time) of
+        ([d, m, y], [h, minute, s]) ->
+          UTCTime
+            (fromGregorian (readOrError y) (readOrError m) (readOrError d))
+            (timeOfDayToTime $ TimeOfDay (readOrError h) (readOrError minute) (readOrError s))
+        _ -> error $ "Invalid timestamp: " <> report.timestamp
       _ -> error $ "Invalid timestamp: " <> report.timestamp
       where
         readOrError :: (Read a, Num a) => Text -> a
@@ -337,7 +341,7 @@ toParsedGameReport report =
       where
         interest = fromMaybe 1 (readMaybe . toString $ report.gameRating)
     comment = report.gameComment
-    log = Nothing
+    log = toS3Url awsEnv.region (toS3Key timestamp winner loser) <$ report.gameLog
 
 toRawGameReport :: ParsedGameReport -> RawGameReport
 toRawGameReport (ParsedGameReport {..}) = RawGameReport {..}
