@@ -12,7 +12,6 @@ import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import IconButton from "@mui/joy/IconButton";
 import Drawer from "@mui/joy/Drawer";
-import MuiLink from "@mui/joy/Link";
 import List from "@mui/joy/List";
 import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -49,6 +48,8 @@ export default function App() {
     const [leagueStats, setLeagueStats] = useState<LeagueStats>({});
     const [loadingLeague, setLoadingLeague] = useState(false);
     const [leagueError, setLeagueError] = useState<string | null>(null);
+
+    const [exporting, setExporting] = useState(false);
 
     const playerNames = leaderboard.map((entry) => entry.name);
 
@@ -189,6 +190,8 @@ export default function App() {
                                     clearUserInfo={clearUserInfo}
                                     setLoginError={setLoginError}
                                     setLoadingUserInfo={setLoadingUserInfo}
+                                    exporting={exporting}
+                                    setExporting={setExporting}
                                 />
                             }
                         />
@@ -254,6 +257,8 @@ interface HomeProps {
     clearUserInfo: () => void;
     setLoginError: (error: string) => void;
     setLoadingUserInfo: (loading: boolean) => void;
+    exporting: boolean;
+    setExporting: (exporting: boolean) => void;
 }
 
 function Home({
@@ -261,10 +266,12 @@ function Home({
     clearUserInfo,
     setLoginError,
     setLoadingUserInfo,
+    exporting,
+    setExporting,
 }: HomeProps) {
     return (
         <Box
-            gap={4}
+            gap={3}
             sx={{
                 width: "100%",
                 display: "flex",
@@ -273,29 +280,43 @@ function Home({
             }}
         >
             <Section>
-                <Typography level="title-lg">Welcome!</Typography>
+                <Typography level="h4">Welcome!</Typography>
             </Section>
 
             <Section>
-                <Typography level="title-lg" mb={1}>
-                    Community Resources*
-                </Typography>
+                <Button
+                    component={Link}
+                    to="/game-report"
+                    sx={{ textAlign: "center" }}
+                >
+                    Submit a game report
+                </Button>
+            </Section>
 
-                <Typography level="title-sm" mb={1} textAlign="center">
-                    *Not affiliated with the official War of the Ring board game
-                    produced by Ares Games
-                </Typography>
+            <Section>
+                <Box display="flex" flexDirection="row" gap={1}>
+                    {[
+                        { to: "/rankings", label: "View rankings" },
+                        { to: "/game-reports", label: "View game reports" },
+                        { to: "/leagues", label: "View leagues" },
+                    ].map(({ to, label }) => (
+                        <Button
+                            component={Link}
+                            to={to}
+                            key={label}
+                            variant="outlined"
+                            sx={{ textAlign: "center" }}
+                        >
+                            {label}
+                        </Button>
+                    ))}
+                </Box>
+            </Section>
 
-                {[
-                    { to: "/game-report", label: "Game Report Form" },
-                    { to: "/rankings", label: "Rankings" },
-                    { to: "/game-reports", label: "Game Reports" },
-                    { to: "/leagues", label: "Leagues" },
-                ].map(({ to, label }) => (
-                    <MuiLink component={Link} to={to} key={label}>
-                        {label}
-                    </MuiLink>
-                ))}
+            <Section>
+                <Typography level="h4">Community Resources</Typography>
+
+                <Subtitle>Find and Play Games</Subtitle>
 
                 {[
                     {
@@ -308,6 +329,19 @@ function Home({
                         href: "https://discord.gg/yZxQF4fK",
                         isDownload: false,
                     },
+                ].map(({ label, href, isDownload }) => (
+                    <ExternalLink
+                        href={href}
+                        isDownload={isDownload}
+                        key={label}
+                    >
+                        {label}
+                    </ExternalLink>
+                ))}
+
+                <Subtitle>Rules Clarifications and FAQ</Subtitle>
+
+                {[
                     {
                         label: "WotR Almanac",
                         href: "https://tinyurl.com/WOTRAlmanac",
@@ -323,6 +357,19 @@ function Home({
                         href: "https://tinyurl.com/KOMEAlmanac",
                         isDownload: false,
                     },
+                ].map(({ label, href, isDownload }) => (
+                    <ExternalLink
+                        href={href}
+                        isDownload={isDownload}
+                        key={label}
+                    >
+                        {label}
+                    </ExternalLink>
+                ))}
+
+                <Subtitle>Legacy</Subtitle>
+
+                {[
                     {
                         label: "Legacy Ladder (2024)",
                         href: "https://docs.google.com/spreadsheets/d/1okxuCGH1P9mDT-3Np4IvK-dUhmJHaoxP1-xG5U8CX4U/edit?gid=1355474132#gid=1355474132",
@@ -345,7 +392,7 @@ function Home({
             </Section>
 
             <Section>
-                <Typography level="title-lg" mb={1}>
+                <Typography level="h4" mb={1}>
                     Official Resources
                 </Typography>
 
@@ -392,50 +439,67 @@ function Home({
             </Section>
             <Section>
                 <Typography level="title-lg" mb={1}>
-                    Admin Sign-In
+                    Admin Tools
                 </Typography>
-                <GoogleLoginButton
-                    getUserInfo={getUserInfo}
-                    clearUserInfo={clearUserInfo}
-                    setLoginError={setLoginError}
-                    setLoadingUserInfo={setLoadingUserInfo}
-                />
-                <Button
-                    onClick={() =>
-                        axios
-                            .get(
-                                "https://api.waroftheringcommunity.net:8080/export",
-                                { responseType: "blob" }
-                            )
-                            .then((response) => {
-                                // https://gist.github.com/javilobo8/097c30a233786be52070986d8cdb1743
-                                const blob = new Blob([response.data], {
-                                    type: response.data.type,
-                                });
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement("a");
-                                link.href = url;
-                                const contentDisposition =
-                                    response.headers["content-disposition"];
-                                let fileName = "export.zip";
-                                if (contentDisposition) {
-                                    const fileNameMatch =
-                                        contentDisposition.match(
-                                            /filename="(.+)"/
-                                        );
-                                    if (fileNameMatch.length === 2)
-                                        fileName = fileNameMatch[1];
-                                }
-                                link.setAttribute("download", fileName);
-                                document.body.appendChild(link);
-                                link.click();
-                                link.remove();
-                                window.URL.revokeObjectURL(url);
-                            })
-                    }
-                >
-                    Export Data
-                </Button>
+
+                <Box display="flex" flexDirection="row" gap={1}>
+                    <GoogleLoginButton
+                        getUserInfo={getUserInfo}
+                        clearUserInfo={clearUserInfo}
+                        setLoginError={setLoginError}
+                        setLoadingUserInfo={setLoadingUserInfo}
+                    />
+                    <Button
+                        variant="outlined"
+                        loading={exporting}
+                        onClick={() => {
+                            setExporting(true);
+                            axios
+                                .get(
+                                    "http://localhost:8081/export",
+                                    // "https://api.waroftheringcommunity.net:8080/export",
+                                    { responseType: "blob" }
+                                )
+                                .then((response) => {
+                                    // https://gist.github.com/javilobo8/097c30a233786be52070986d8cdb1743
+                                    const blob = new Blob([response.data], {
+                                        type: response.data.type,
+                                    });
+                                    const url =
+                                        window.URL.createObjectURL(blob);
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    const contentDisposition =
+                                        response.headers["content-disposition"];
+                                    let fileName = "export.zip";
+                                    if (contentDisposition) {
+                                        const fileNameMatch =
+                                            contentDisposition.match(
+                                                /filename="(.+)"/
+                                            );
+                                        if (fileNameMatch.length === 2)
+                                            fileName = fileNameMatch[1];
+                                    }
+                                    link.setAttribute("download", fileName);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    link.remove();
+                                    window.URL.revokeObjectURL(url);
+                                })
+                                .catch(logNetworkError)
+                                .finally(() => setExporting(false));
+                        }}
+                    >
+                        Export Data
+                    </Button>
+                </Box>
+            </Section>
+
+            <Section>
+                <Typography level="title-sm" mt={1} textAlign="center">
+                    This website is not affiliated with the official War of the
+                    Ring board game produced by Ares Games.
+                </Typography>
             </Section>
         </Box>
     );
@@ -519,5 +583,17 @@ function Section({ children }: SectionProps) {
         >
             {children}
         </Box>
+    );
+}
+
+interface SubtitleProps {
+    children: ReactNode;
+}
+
+function Subtitle({ children }: SubtitleProps) {
+    return (
+        <Typography fontWeight="bold" my={1} sx={{ color: "#666" }}>
+            {children}
+        </Typography>
     );
 }
