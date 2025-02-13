@@ -9,7 +9,6 @@ import Database.Esqueleto.Experimental
     Entity (..),
     From,
     PersistStoreWrite (..),
-    PersistUniqueWrite (..),
     SqlExpr,
     SqlPersistT,
     Value (..),

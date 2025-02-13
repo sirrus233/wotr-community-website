@@ -111,7 +111,7 @@ share
     league League
     tier LeagueTier
     year Int
-    playerId PlayerId
+    playerId PlayerId OnDeleteCascade
     Primary league tier year playerId
     deriving Generic
     deriving Show
