@@ -287,9 +287,9 @@ updatePlayerCountry pid country = lift $ do
     set player [PlayerCountry =. val country]
     where_ (player ^. PlayerId ==. val pid)
 
-updateReports :: (MonadIO m, MonadLogger m) => PlayerId -> PlayerId -> DBAction m ()
+updateReports :: (MonadIO m, MonadLogger m) => PlayerId -> PlayerId -> DBAction m Int64
 updateReports fromPid toPid = lift $ do
-  update $ \report -> do
+  updateCount $ \report -> do
     set
       report
       [ GameReportWinnerId
@@ -301,6 +301,22 @@ updateReports fromPid toPid = lift $ do
             [when_ (report ^. GameReportLoserId ==. val fromPid) then_ (val toPid)]
             (else_ (report ^. GameReportLoserId))
       ]
+
+updateLeaguePlayer :: (MonadIO m, MonadLogger m) => PlayerId -> PlayerId -> DBAction m ()
+updateLeaguePlayer fromPid toPid = lift $ do
+  leagues <- select $ do
+    league <- from $ table @LeaguePlayer
+    where_ (league ^. LeaguePlayerPlayerId ==. val fromPid)
+    pure league
+
+  repsertMany $
+    map
+      ( \(Entity _ lp) ->
+          ( LeaguePlayerKey lp.leaguePlayerLeague lp.leaguePlayerTier lp.leaguePlayerYear toPid,
+            lp {leaguePlayerPlayerId = toPid}
+          )
+      )
+      leagues
 
 updateActiveStatus :: (MonadIO m, MonadLogger m) => DBAction m ()
 updateActiveStatus = do
