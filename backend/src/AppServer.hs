@@ -37,6 +37,7 @@ import Database
     runDb,
     updateActiveStatus,
     updateAdminSessionId,
+    updateLeaguePlayer,
     updatePlayerCountry,
     updatePlayerName,
     updateReports,
@@ -403,10 +404,11 @@ adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
   _ <- readOrError ("Cannot find player " <>: fromPid) $ lift . get $ fromPid
   player <- readOrError ("Cannot find player " <>: toPid) $ lift . get $ toPid
 
-  updateReports fromPid toPid
+  updateCount <- updateReports fromPid toPid
+  updateLeaguePlayer fromPid toPid
   deletePlayer fromPid
   -- Warning: a deleted player that existed in pre-2022 data will be reintroduced via reprocessReports
-  reprocessReports
+  when (updateCount > 0) reprocessReports
 
   pure $ RemapPlayerResponse player.playerDisplayName
 
