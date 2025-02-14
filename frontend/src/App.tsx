@@ -119,6 +119,7 @@ export default function App() {
     }, []);
 
     return (
+        // cspell:disable-next-line
         <GoogleOAuthProvider clientId="331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com">
             <CssVarsProvider>
                 <CssBaseline />
