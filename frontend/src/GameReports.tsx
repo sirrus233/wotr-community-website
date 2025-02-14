@@ -225,7 +225,9 @@ export default function GameReports({
                         </td>
 
                         <td>
-                            {[report.winner, report.loser].sort().join("-")}
+                            {[report.winner, report.loser]
+                                .sort((a, b) => a.localeCompare(b))
+                                .join("-")}
                         </td>
                         <td>{displayTime(report.timestamp)}</td>
                         <td>{report.turns}</td>
