@@ -7,10 +7,12 @@ export default function getInitialFormData(
     allowedPlayerNames?: string[]
 ): GameFormData {
     return {
-        rid: initializeToDefaults(fromMaybe(null, report?.rid)),
-        timestamp: initializeToDefaults(fromMaybe(null, report?.timestamp)),
+        rid: initializeToDefaults(fromMaybeReport(null, report, "rid")),
+        timestamp: initializeToDefaults(
+            fromMaybeReport(null, report, "timestamp")
+        ),
         winner: {
-            value: fromMaybe(null, report?.winner),
+            value: fromMaybeReport(null, report, "winner"),
             error: null,
             validate: function _() {
                 return allowedPlayerNames &&
@@ -21,7 +23,7 @@ export default function getInitialFormData(
             },
         },
         loser: {
-            value: fromMaybe(null, report?.loser),
+            value: fromMaybeReport(null, report, "loser"),
             error: null,
             validate: function _() {
                 return allowedPlayerNames &&
@@ -31,44 +33,60 @@ export default function getInitialFormData(
                     : null;
             },
         },
-        side: initializeToDefaults(fromMaybe(null, report?.side)),
-        victory: initializeToDefaults(fromMaybe(null, report?.victory)),
-        match: initializeToDefaults(fromMaybe(null, report?.match)),
-        competition: initializeToDefaults(fromMaybe([], report?.competition)),
-        league: initializeToDefaults(fromMaybe(null, report?.league)),
+        side: initializeToDefaults(fromMaybeReport(null, report, "side")),
+        victory: initializeToDefaults(fromMaybeReport(null, report, "victory")),
+        match: initializeToDefaults(fromMaybeReport(null, report, "match")),
+        competition: initializeToDefaults(
+            fromMaybeReport([], report, "competition")
+        ),
+        league: initializeToDefaults(fromMaybeReport(null, report, "league")),
         usedExpansions: initializeToDefaults(
-            fromMaybe(null, report && !!report.expansions.length)
+            report ? !!report.expansions.length : null
         ),
-        expansions: initializeToDefaults(fromMaybe([], report?.expansions)),
-        treebeard: initializeToDefaults(fromMaybe(null, report?.treebeard)),
+        expansions: initializeToDefaults(
+            fromMaybeReport([], report, "expansions")
+        ),
+        treebeard: initializeToDefaults(
+            fromMaybeReport(null, report, "treebeard")
+        ),
         usedHandicap: initializeToDefaults(
-            fromMaybe(
-                null,
-                report &&
-                    ((typeof report.actionTokens === "number" &&
-                        report.actionTokens > 0) ||
-                        (typeof report.dwarvenRings === "number" &&
-                            report.dwarvenRings > 0))
-            )
+            report
+                ? (typeof report.actionTokens === "number" &&
+                      report.actionTokens > 0) ||
+                      (typeof report.dwarvenRings === "number" &&
+                          report.dwarvenRings > 0)
+                : null
         ),
-        actionTokens: initializeToDefaults(fromMaybe(0, report?.actionTokens)),
-        dwarvenRings: initializeToDefaults(fromMaybe(0, report?.dwarvenRings)),
-        turns: initializeToDefaults(fromMaybe(null, report?.turns)),
-        corruption: initializeToDefaults(fromMaybe(null, report?.corruption)),
+        actionTokens: initializeToDefaults(
+            fromMaybeReport(0, report, "actionTokens")
+        ),
+        dwarvenRings: initializeToDefaults(
+            fromMaybeReport(0, report, "dwarvenRings")
+        ),
+        turns: initializeToDefaults(fromMaybeReport(null, report, "turns")),
+        corruption: initializeToDefaults(
+            fromMaybeReport(null, report, "corruption")
+        ),
         didFellowshipReachMordor: initializeToDefaults(
-            fromMaybe(null, report && typeof report.mordor === "number")
+            report ? typeof report.mordor === "number" : null
         ),
-        mordor: initializeToDefaults(fromMaybe(null, report?.mordor)),
-        initialEyes: initializeToDefaults(fromMaybe(null, report?.initialEyes)),
+        mordor: initializeToDefaults(fromMaybeReport(null, report, "mordor")),
+        initialEyes: initializeToDefaults(
+            fromMaybeReport(null, report, "initialEyes")
+        ),
         wasAragornCrowned: initializeToDefaults(
-            fromMaybe(null, report && !!report.aragornTurn)
+            report ? report && !!report.aragornTurn : null
         ),
-        aragornTurn: initializeToDefaults(fromMaybe(null, report?.aragornTurn)),
-        strongholds: initializeToDefaults(fromMaybe([], report?.strongholds)),
+        aragornTurn: initializeToDefaults(
+            fromMaybeReport(null, report, "aragornTurn")
+        ),
+        strongholds: initializeToDefaults(
+            fromMaybeReport([], report, "strongholds")
+        ),
         interestRating: initializeToDefaults(
-            fromMaybe(null, report?.interestRating)
+            fromMaybeReport(null, report, "interestRating")
         ),
-        comment: initializeToDefaults(fromMaybe(null, report?.comment)),
+        comment: initializeToDefaults(fromMaybeReport(null, report, "comment")),
 
         /**
          * Warning: Modifying an existing report's log file is not implemented.
@@ -78,6 +96,10 @@ export default function getInitialFormData(
     };
 }
 
-function fromMaybe<D, V>(defaultVal: Exclude<D, undefined>, val: V) {
-    return val === undefined ? defaultVal : val;
+function fromMaybeReport<T, K extends keyof ProcessedGameReport>(
+    defaultVal: Exclude<T, undefined>,
+    report: ProcessedGameReport | undefined,
+    key: K
+): T | ProcessedGameReport[K] {
+    return report ? report[key] : defaultVal;
 }
