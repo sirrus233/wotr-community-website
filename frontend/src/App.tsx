@@ -276,6 +276,9 @@ function Home({
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                boxSizing: "border-box",
+                px: 3,
+                pb: 3,
             }}
         >
             <Section>
