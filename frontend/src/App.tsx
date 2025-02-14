@@ -149,7 +149,7 @@ export default function App() {
                                 textAlign: "center",
                             }}
                         >
-                            WotR Community Ladder
+                            War of the Ring Community
                         </Typography>
 
                         <Box

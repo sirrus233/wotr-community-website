@@ -145,12 +145,8 @@ function Rankings({
                             <TableHeaderCell level={0} rowSpan={2} colSpan={2}>
                                 Player
                             </TableHeaderCell>
-                            <TableHeaderCell
-                                level={0}
-                                rowSpan={2}
-                                style={{ borderBottom: "none" }}
-                            >
-                                Balanced
+                            <TableHeaderCell level={0} rowSpan={3}>
+                                Avg. Rating
                             </TableHeaderCell>
                             <TableHeaderCell
                                 level={0}
@@ -165,16 +161,16 @@ function Rankings({
                             <TableHeaderCell level={0} rowSpan={3}>
                                 Games
                             </TableHeaderCell>
-                            <TableHeaderCell level={0} rowSpan={3}>
-                                Games {year}
-                            </TableHeaderCell>
-                            <TableHeaderCell level={0} colSpan={6}>
-                                Base Game {year}
+                            <TableHeaderCell level={0} colSpan={7}>
+                                Yearly Stats {year}
                             </TableHeaderCell>
                         </TableHeaderRow>
 
                         <TableHeaderRow>
                             {/* Base */}
+                            <TableHeaderCell level={1} rowSpan={2}>
+                                Games {year}
+                            </TableHeaderCell>
                             <TableHeaderCell level={1} side="Free" colSpan={3}>
                                 FP
                             </TableHeaderCell>
@@ -190,9 +186,6 @@ function Rankings({
                         <TableHeaderRow>
                             <TableHeaderCell level={2}>Country</TableHeaderCell>
                             <TableHeaderCell level={2}>Name</TableHeaderCell>
-                            <TableHeaderCell level={2}>
-                                Avg. Rating
-                            </TableHeaderCell>
 
                             {/* FP Base */}
                             <TableHeaderCell level={2} side="Free">

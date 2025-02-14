@@ -164,7 +164,9 @@ function GameReportForm({
             </Modal>
 
             <FormElement
-                label={"Who won?"}
+                label={
+                    "Who won? (This should generally be you, if you are filling out this report!)"
+                }
                 error={formData.winner.error}
                 layoutTheme={layoutTheme}
             >
@@ -224,7 +226,7 @@ function GameReportForm({
                 />
             </FormElement>
             <FormElement
-                label={"How did you win?"}
+                label={"What type of win was it?"}
                 error={formData.victory.error}
                 layoutTheme={layoutTheme}
             >
