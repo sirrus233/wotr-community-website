@@ -168,7 +168,7 @@ function Rankings({
 
                         <TableHeaderRow>
                             {/* Base */}
-                            <TableHeaderCell level={2} rowSpan={2}>
+                            <TableHeaderCell level={1} rowSpan={2}>
                                 Games {year}
                             </TableHeaderCell>
                             <TableHeaderCell level={1} side="Free" colSpan={3}>
