@@ -1,0 +1,43 @@
+[project]
+dependencies = ["boto3>=1.36.18", "requests>=2.32.3"]
+description = "Add your description here"
+name = "migration"
+readme = "README.md"
+requires-python = ">=3.13"
+version = "0.1.0"
+
+[dependency-groups]
+dev = [
+    "boto3-stubs>=1.36.18",
+    "mypy-boto3-s3>=1.36.15",
+    "pyright>=1.1.394",
+    "ruff>=0.9.6",
+]
+
+[tool.pyright]
+# Some checks are not covered under "strict"
+reportCallInDefaultInitializer = true
+reportImplicitOverride = false
+reportImplicitStringConcatenation = true
+reportImportCycles = true
+reportMissingSuperCall = false
+reportPropertyTypeMismatch = true
+reportShadowedImports = true
+reportUninitializedInstanceVariable = true
+reportUnnecessaryTypeIgnoreComment = true
+reportUnusedCallResult = false
+typeCheckingMode = "strict"
+
+[tool.ruff]
+ignore = [
+    # "D",      # TODO Re-enable docstyle rules when docs are added
+    # "TD",     # TODO Re-enable TODO rules when docs are added
+    # "S311",   # TODO Allow use of random, but move to per-file ignore later
+    # "FIX002", # line-contains-todo: TODO comments should be allowed in code
+    # "COM812", # missing-trailing-comma: Conflicts with formatter
+    # "ISC001", # single-line-implicit-string-concatenation: Conflicts with formatter
+    # "ISC003", # single-line-explicit-string-concatenation: Prefer explicit concat
+    "T201", # Allow print in a script
+]
+select = ["ALL"]
+target-version = "py313"
