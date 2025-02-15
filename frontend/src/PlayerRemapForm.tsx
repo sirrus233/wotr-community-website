@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import Alert from "@mui/joy/Alert";
 import {
-    PlayerOption,
+    MenuOption,
     PlayerRemapFormData,
     ValidPlayerRemapFormData,
 } from "./types";
@@ -16,7 +16,7 @@ import { toErrorMessage } from "./networkErrorHandlers";
 interface Props {
     pid: number;
     name: string;
-    playerOptions: PlayerOption[];
+    playerOptions: MenuOption[];
     refresh: () => void;
 }
 
@@ -27,13 +27,13 @@ export default function PlayerRemapForm({
     refresh,
 }: Props) {
     const initialFormData: PlayerRemapFormData = {
-        fromPlayer: initializeToDefaults({ pid, label: name }),
+        fromPlayer: initializeToDefaults({ id: pid, label: name }),
         toPlayer: {
             value: null,
             error: null,
             validate: function _() {
                 return this.value
-                    ? pid === this.value.pid
+                    ? pid === this.value.id
                         ? "Cannot remap player to themselves"
                         : null
                     : null;
@@ -124,7 +124,7 @@ function toPayload(
     validFormData: ValidPlayerRemapFormData
 ): PlayerRemapPayload {
     return {
-        fromPid: validFormData.fromPlayer.value.pid,
-        toPid: validFormData.toPlayer.value.pid,
+        fromPid: validFormData.fromPlayer.value.id,
+        toPid: validFormData.toPlayer.value.id,
     };
 }

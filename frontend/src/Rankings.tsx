@@ -97,7 +97,7 @@ function Rankings({
                                 refresh={refresh}
                                 playerOptions={leaderboard.map((entry) => ({
                                     label: entry.name,
-                                    pid: entry.pid,
+                                    id: entry.pid,
                                 }))}
                             />
                         ) : (

@@ -153,9 +153,9 @@ export interface LeaderboardEntry {
 
 export type PlayerEditMode = "edit" | "remap";
 
-export type PlayerOption = {
+export type MenuOption = {
     label: string;
-    pid: number;
+    id: number;
 };
 
 export interface PlayerEditFormData {
@@ -173,8 +173,8 @@ export type ValidPlayerEditFormData = {
 };
 
 export interface PlayerRemapFormData {
-    fromPlayer: FieldData<PlayerOption>;
-    toPlayer: FieldData<PlayerOption | null>;
+    fromPlayer: FieldData<MenuOption>;
+    toPlayer: FieldData<MenuOption | null>;
 }
 
 export type ValidPlayerRemapFormData = {
