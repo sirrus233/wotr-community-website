@@ -245,13 +245,23 @@ function GameReportForm({
                 <SingleOptionInput
                     values={matchTypes.slice()}
                     current={formData.match.value}
+                    getLabel={(v) => {
+                        switch (v) {
+                            case "Rated":
+                                return "Rated";
+                            case "Unrated":
+                                return "Unrated (Friendly)";
+                        }
+                    }}
                     onChange={handleInputChange("match")}
                     validate={validateField("match")}
                 />
             </FormElement>
             {formData.match.value === "Rated" && (
                 <FormElement
-                    label={"Was this for a specific competition?"}
+                    label={
+                        "Optional: Was this for a specific competition? If not, leave this blank."
+                    }
                     error={formData.competition.error}
                     hasSingleControl={false}
                     layoutTheme={layoutTheme}
