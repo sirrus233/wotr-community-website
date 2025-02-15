@@ -3,7 +3,6 @@
 import csv
 import re
 import sys
-import time
 from datetime import UTC, datetime
 from http import HTTPStatus
 from pathlib import Path
@@ -87,8 +86,6 @@ def process_csv(csv_file_path: Path, bucket_name: str, region: str) -> None:
     """
     s3_client = boto3.client("s3", region_name=region)  # type: ignore[reportUnknown]
     session = Session()
-    processed_count = 0
-    limit = 10000
 
     with Path.open(csv_file_path, newline="", encoding="utf-8") as csv_file:
         reader = csv.reader(csv_file)
@@ -122,11 +119,6 @@ def process_csv(csv_file_path: Path, bucket_name: str, region: str) -> None:
                     continue
 
                 upload_to_s3(s3_client, bucket_name, s3_key, file_data)
-                processed_count += 1
-
-            if processed_count >= limit:
-                time.sleep(60)
-                processed_count = 0
 
 
 if __name__ == "__main__":
