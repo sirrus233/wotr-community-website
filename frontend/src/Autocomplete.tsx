@@ -3,9 +3,9 @@ import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
 import MaterialAutocomplete from "@mui/joy/Autocomplete";
 import CircularProgress from "@mui/joy/CircularProgress";
-import { PlayerOption } from "./types";
+import { MenuOption } from "./types";
 
-interface Props<O extends string | PlayerOption> {
+interface Props<O extends string | MenuOption> {
     options: O[];
     current: O | null;
     placeholder: string;
@@ -17,7 +17,7 @@ interface Props<O extends string | PlayerOption> {
     validate: () => void;
 }
 
-export default function Autocomplete<O extends string | PlayerOption>({
+export default function Autocomplete<O extends string | MenuOption>({
     options,
     current,
     placeholder,
