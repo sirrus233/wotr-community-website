@@ -24,6 +24,7 @@ import Types.Api
   ( DeleteReportRequest,
     EditPlayerRequest,
     ExportResponse,
+    GameReportFilterSpec,
     GetLeaderboardResponse,
     GetReportsResponse,
     GoogleLoginResponse,
@@ -51,7 +52,11 @@ type SubmitReportAPI =
   "submitReport" :> MultipartForm Tmp SubmitReportRequest :> Post '[JSON] SubmitGameReportResponse
 
 type GetReportsAPI =
-  "reports" :> QueryParam "limit" Int64 :> QueryParam "offset" Int64 :> Get '[JSON] GetReportsResponse
+  "reports"
+    :> QueryParam "limit" Int64
+    :> QueryParam "offset" Int64
+    :> QueryParam "filter" GameReportFilterSpec
+    :> Get '[JSON] GetReportsResponse
 
 type GetLeaderboardAPI =
   "leaderboard" :> QueryParam "year" Int :> Get '[JSON] GetLeaderboardResponse

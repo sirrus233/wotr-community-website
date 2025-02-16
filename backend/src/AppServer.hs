@@ -67,6 +67,7 @@ import Types.Api
   ( DeleteReportRequest (..),
     EditPlayerRequest (..),
     ExportResponse,
+    GameReportFilterSpec,
     GetLeaderboardResponse (GetLeaderboardResponse),
     GetReportsResponse (..),
     GoogleLoginResponse,
@@ -294,10 +295,10 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
       mapM_ (putS3Object awsEnv key . fdPayload) logFileData
       pure SubmitGameReportResponse {report = processedReport, winnerRating, loserRating}
 
-getReportsHandler :: Maybe Int64 -> Maybe Int64 -> AppM GetReportsResponse
-getReportsHandler limit offset =
+getReportsHandler :: Maybe Int64 -> Maybe Int64 -> Maybe GameReportFilterSpec -> AppM GetReportsResponse
+getReportsHandler limit offset filterSpec =
   runDb getNumGameReports >>= \total ->
-    runDb (getGameReports limit' offset') >>= \reports ->
+    runDb (getGameReports limit' offset' filterSpec) >>= \reports ->
       pure GetReportsResponse {reports = fromGameReport <$> reports, total}
   where
     maxLimit = 500
