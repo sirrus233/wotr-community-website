@@ -93,7 +93,7 @@ export default function GameReports({
                 params: {
                     limit: PAGE_LIMIT,
                     offset: getReportsOffset(page),
-                    filter: {
+                    filter: JSON.stringify({
                         winners: nullifyEmpty(
                             mergePlayerFilters(
                                 filters.winners,
@@ -106,7 +106,7 @@ export default function GameReports({
                                 filters.players
                             ).map(normalizeName)
                         ),
-                    },
+                    }),
                 },
             });
             setReports(response.data.reports);
