@@ -94,18 +94,9 @@ export default function GameReports({
                     limit: PAGE_LIMIT,
                     offset: getReportsOffset(page),
                     filter: JSON.stringify({
-                        winners: nullifyEmpty(
-                            mergePlayerFilters(
-                                filters.winners,
-                                filters.players
-                            ).map(normalizeName)
-                        ),
-                        losers: nullifyEmpty(
-                            mergePlayerFilters(
-                                filters.losers,
-                                filters.players
-                            ).map(normalizeName)
-                        ),
+                        winners: toPlayerFilterParam(filters.winners),
+                        losers: toPlayerFilterParam(filters.losers),
+                        players: toPlayerFilterParam(filters.players),
                     }),
                 },
             });
@@ -694,22 +685,14 @@ function countVictoryPoints(
         .reduce((sum, points) => sum + points, 0);
 }
 
-function mergePlayerFilters(filterA: string[], filterB: string[]) {
-    return filterA.length && filterB.length
-        ? intersection(filterA, filterB)
-        : filterA.length
-        ? filterA
-        : filterB;
+function toPlayerFilterParam(names: string[]) {
+    return nullifyEmpty(names.map(normalizeName));
 }
 
 function normalizeName(name: string) {
     return name.toLowerCase().trim();
 }
 
-function nullifyEmpty(arr: unknown[]) {
+function nullifyEmpty<T>(arr: T[]) {
     return arr.length ? arr : null;
-}
-
-function intersection<T>(arrayA: T[], arrayB: T[]) {
-    return arrayA.filter((v) => arrayB.includes(v));
 }
