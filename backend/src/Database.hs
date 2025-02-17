@@ -114,7 +114,8 @@ toFilterExpression ::
 toFilterExpression winner loser report spec = foldr ((&&.) . fromMaybe (val True)) (val True) filterList
   where
     toFilter entity field values = ((entity ^. field) `in_`) . valList <$> values
-    filterList = [winnerFilter, loserFilter, leagueFilter]
+    filterList = [playerFilter, winnerFilter, loserFilter, leagueFilter]
+    playerFilter = (toFilter winner PlayerName spec.players) ||. (toFilter loser PlayerName spec.players)
     winnerFilter = toFilter winner PlayerName spec.winners
     loserFilter = toFilter loser PlayerName spec.losers
     leagueFilter = toFilter report GameReportLeague (map Just <$> spec.leagues)
