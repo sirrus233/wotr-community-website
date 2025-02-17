@@ -52,7 +52,9 @@ export default function App() {
 
     const [exporting, setExporting] = useState(false);
 
-    const playerNames = leaderboard.map((entry) => entry.name);
+    const playerNames = leaderboard
+        .map((entry) => entry.name)
+        .sort((a, b) => a.localeCompare(b));
 
     const getUserInfo = (onError: (error: unknown) => void) => {
         setLoadingUserInfo(true);

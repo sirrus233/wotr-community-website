@@ -242,3 +242,9 @@ export type ValidLeaguePlayerFormData = {
 };
 
 export type ValueOf<T> = T[keyof T];
+
+export type GameReportFilters = {
+    players: string[];
+    winners: string[];
+    losers: string[];
+};

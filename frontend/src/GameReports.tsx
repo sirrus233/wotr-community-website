@@ -1,8 +1,11 @@
 import axios from "axios";
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { CSSProperties, ReactNode, useEffect, useState } from "react";
 import Box from "@mui/joy/Box";
+import CollapseIcon from "@mui/icons-material/KeyboardArrowDown";
 import EditIcon from "@mui/icons-material/EditTwoTone";
 import DeleteIcon from "@mui/icons-material/DeleteTwoTone";
+import ExpandIcon from "@mui/icons-material/KeyboardArrowUp";
+import FilterIcon from "@mui/icons-material/FilterList";
 import IconButton from "@mui/joy/IconButton";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
@@ -13,6 +16,7 @@ import { API_BASE_URL } from "./env";
 import {
     Competition,
     Expansion,
+    GameReportFilters,
     League,
     Match,
     ProcessedGameReport,
@@ -37,6 +41,7 @@ import {
     strongholdPoints,
     strongholdSide,
 } from "./utils";
+import TableFilter from "./TableFilter";
 import TableLayout from "./TableLayout";
 import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
@@ -52,6 +57,8 @@ const TABLE_TOP_POSITION =
     TABLE_ELEMENTS_GAP * 2;
 
 const PAGE_FOOTER_HEIGHT = 50;
+const PAIRING_COL_WIDTH = 190;
+const PLAYER_COL_WIDTH = 130;
 
 const PAGE_LIMIT = 100;
 
@@ -73,13 +80,33 @@ export default function GameReports({
     const [totalReportCount, setTotalReportCount] = useState(0);
     const [reportEditParams, setReportEditParams] =
         useState<ReportEditParams | null>(null);
+    const [areFiltersOpen, setAreFiltersOpen] = useState(false);
+    const [filters, setFilters] = useState<GameReportFilters>({
+        players: [],
+        winners: [],
+        losers: [],
+    });
 
-    const getReports = async (page: number) => {
+    const getReports = async (page: number, filters: GameReportFilters) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/reports`, {
                 params: {
                     limit: PAGE_LIMIT,
                     offset: getReportsOffset(page),
+                    filter: {
+                        winners: nullifyEmpty(
+                            mergePlayerFilters(
+                                filters.winners,
+                                filters.players
+                            ).map(normalizeName)
+                        ),
+                        losers: nullifyEmpty(
+                            mergePlayerFilters(
+                                filters.losers,
+                                filters.players
+                            ).map(normalizeName)
+                        ),
+                    },
                 },
             });
             setReports(response.data.reports);
@@ -91,13 +118,13 @@ export default function GameReports({
         setLoading(false);
     };
 
-    const refresh = (page: number) => {
+    const refresh = (page: number, filters: GameReportFilters) => {
         setError(null);
         setLoading(true);
-        getReports(page);
+        getReports(page, filters);
     };
 
-    useEffect(() => refresh(currentPage), [currentPage]);
+    useEffect(() => refresh(currentPage, filters), [currentPage, filters]);
 
     return (
         <Box>
@@ -108,7 +135,7 @@ export default function GameReports({
                         {reportEditParams.mode === "delete" ? (
                             <ReportDeleteForm
                                 report={reportEditParams}
-                                refresh={() => refresh(currentPage)}
+                                refresh={() => refresh(currentPage, filters)}
                             />
                         ) : (
                             <Box overflow="auto" mt={3}>
@@ -117,7 +144,7 @@ export default function GameReports({
                                     playerNames={playerNames}
                                     loadingPlayers={loadingPlayers}
                                     refreshGameReports={() =>
-                                        refresh(currentPage)
+                                        refresh(currentPage, filters)
                                     }
                                     exit={() => setReportEditParams(null)}
                                 />
@@ -128,7 +155,7 @@ export default function GameReports({
             )}
 
             <TableLayout
-                refresh={() => refresh(currentPage)}
+                refresh={() => refresh(currentPage, filters)}
                 error={error}
                 loading={loading}
                 label="Game Reports"
@@ -139,42 +166,164 @@ export default function GameReports({
                     "& thead > tr:first-child > *:first-child": {
                         pl: 2,
                     },
+                    "& thead > tr:last-child > *:first-child": {
+                        pl: 2,
+                        borderBottomWidth: "2px",
+                    },
+                    "& thead > tr > th": {
+                        verticalAlign: "middle",
+                    },
+                    "& thead > tr:first-child > th": {
+                        borderBottom: areFiltersOpen ? "none" : undefined,
+                    },
                     "& tbody > tr > *:first-child": { pl: 2 },
-                    "& thead > tr:first-child > *:last-child": {
+                    "& thead > tr:last-child > *:last-child": {
                         pr: 2,
                     },
                     "& tbody > tr > *:last-child": { pr: 2 },
                 }}
                 header={
-                    <tr>
-                        <th />
-                        <th />
-                        {isAdmin && <th>Edit</th>}
-                        <th>No.</th>
-                        <th>Pairing</th>
-                        <th>Timestamp</th>
-                        <th>Turn</th>
-                        <th>Winner</th>
-                        <th>Loser</th>
-                        <th>Game Type</th>
-                        <th>Victory Type</th>
-                        <th>Competition Type</th>
-                        <th>Expansions</th>
-                        <th>Tokens</th>
-                        <th>Dwarven Rings</th>
-                        <th>Corruption</th>
-                        <th>Mordor</th>
-                        <th>Aragorn</th>
-                        <th>Treebeard</th>
-                        <th>Initial Eyes</th>
-                        <th>SP-Captured Settlements</th>
-                        <th>SPVP</th>
-                        <th>FP-Captured Settlements</th>
-                        <th>FPVP</th>
-                        <th>Interest Rating</th>
-                        <th>Comments</th>
-                        <th>Game Log</th>
-                    </tr>
+                    <>
+                        {areFiltersOpen && (
+                            <FilterBar>
+                                <th colSpan={2}>
+                                    <ExpandButton
+                                        expanded={areFiltersOpen}
+                                        setExpanded={setAreFiltersOpen}
+                                    />
+                                </th>
+
+                                {isAdmin && <th />}
+                                <th />
+
+                                <TableFilter
+                                    placeholder="Select players"
+                                    loading={loadingPlayers}
+                                    options={playerNames}
+                                    width={PAIRING_COL_WIDTH}
+                                    current={filters.players}
+                                    onChange={(values) =>
+                                        setFilters({
+                                            ...filters,
+                                            players: values,
+                                        })
+                                    }
+                                />
+
+                                <th />
+                                <th />
+
+                                <TableFilter
+                                    placeholder="Select winner"
+                                    loading={loadingPlayers}
+                                    options={playerNames}
+                                    width={PLAYER_COL_WIDTH}
+                                    current={filters.winners}
+                                    onChange={(values) =>
+                                        setFilters({
+                                            ...filters,
+                                            winners: values,
+                                        })
+                                    }
+                                />
+
+                                <TableFilter
+                                    placeholder="Select loser"
+                                    loading={loadingPlayers}
+                                    options={playerNames}
+                                    width={PLAYER_COL_WIDTH}
+                                    current={filters.losers}
+                                    onChange={(values) =>
+                                        setFilters({
+                                            ...filters,
+                                            losers: values,
+                                        })
+                                    }
+                                />
+
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                                <th />
+                            </FilterBar>
+                        )}
+                        <tr>
+                            <th colSpan={2}>
+                                {!areFiltersOpen && (
+                                    <ExpandButton
+                                        expanded={areFiltersOpen}
+                                        setExpanded={setAreFiltersOpen}
+                                    />
+                                )}
+                            </th>
+
+                            {isAdmin && <th>Edit</th>}
+                            <th>No.</th>
+
+                            <FilterHeader
+                                areFiltersOpen={areFiltersOpen}
+                                setAreFiltersOpen={setAreFiltersOpen}
+                                appliedCount={filters.players.length}
+                                style={{ width: `${PAIRING_COL_WIDTH}px` }}
+                            >
+                                Pairing
+                            </FilterHeader>
+
+                            <th>Timestamp</th>
+                            <th>Turn</th>
+
+                            <FilterHeader
+                                areFiltersOpen={areFiltersOpen}
+                                setAreFiltersOpen={setAreFiltersOpen}
+                                appliedCount={filters.winners.length}
+                                style={{ width: `${PLAYER_COL_WIDTH}px` }}
+                            >
+                                Winner
+                            </FilterHeader>
+
+                            <FilterHeader
+                                areFiltersOpen={areFiltersOpen}
+                                setAreFiltersOpen={setAreFiltersOpen}
+                                appliedCount={filters.losers.length}
+                                style={{ width: `${PLAYER_COL_WIDTH}px` }}
+                            >
+                                Loser
+                            </FilterHeader>
+
+                            <th>Game Type</th>
+                            <th>Victory Type</th>
+                            <th>Competition Type</th>
+                            <th>Expansions</th>
+                            <th>Tokens</th>
+                            <th>Dwarven Rings</th>
+                            <th>Corruption</th>
+                            <th>Mordor</th>
+                            <th>Aragorn</th>
+                            <th>Treebeard</th>
+                            <th>Initial Eyes</th>
+                            <th>SP-Captured Settlements</th>
+                            <th>SPVP</th>
+                            <th>FP-Captured Settlements</th>
+                            <th>FPVP</th>
+                            <th>Interest Rating</th>
+                            <th>Comments</th>
+                            <th>Game Log</th>
+                        </tr>
+                    </>
                 }
                 body={reports.map((report, i) => (
                     <tr key={report.rid}>
@@ -221,15 +370,23 @@ export default function GameReports({
                                 getReportsOffset(currentPage)}
                         </td>
 
-                        <td>
+                        <FixedWidthCell width={PAIRING_COL_WIDTH}>
                             {[report.winner, report.loser]
                                 .sort((a, b) => a.localeCompare(b))
                                 .join("-")}
-                        </td>
+                        </FixedWidthCell>
+
                         <td>{displayTime(report.timestamp)}</td>
                         <td>{report.turns}</td>
-                        <td>{report.winner}</td>
-                        <td>{report.loser}</td>
+
+                        <FixedWidthCell width={PLAYER_COL_WIDTH}>
+                            {report.winner}
+                        </FixedWidthCell>
+
+                        <FixedWidthCell width={PLAYER_COL_WIDTH}>
+                            {report.loser}
+                        </FixedWidthCell>
+
                         <td>{summarizeGameType(report.expansions)}</td>
                         <td>
                             {summarizeVictoryType(report.side, report.victory)}
@@ -306,11 +463,30 @@ export default function GameReports({
     );
 }
 
-interface WrappedCellProps {
+interface ContainerProps {
     children: ReactNode;
 }
 
-function WrappedCell({ children }: WrappedCellProps) {
+type FixedWidthCellProps = ContainerProps & {
+    width: number;
+};
+
+function FixedWidthCell({ width, children }: FixedWidthCellProps) {
+    return (
+        <td>
+            <Typography
+                width={`${width}px`}
+                overflow="hidden"
+                whiteSpace="nowrap"
+                textOverflow="ellipsis"
+            >
+                {children}
+            </Typography>
+        </td>
+    );
+}
+
+function WrappedCell({ children }: ContainerProps) {
     return (
         <td style={{ whiteSpace: "wrap" }}>
             <Typography width="400px">{children}</Typography>
@@ -337,6 +513,110 @@ function RowAccent({ side }: RowAccentProps) {
                 }}
             />
         </td>
+    );
+}
+
+function FilterBar({ children }: ContainerProps) {
+    return (
+        <tr
+            style={{
+                position: "relative",
+                zIndex: "calc(var(--joy-zIndex-table) + 1)",
+            }}
+        >
+            {children}
+        </tr>
+    );
+}
+
+type FilterHeaderProps = ContainerProps & {
+    areFiltersOpen: boolean;
+    setAreFiltersOpen: (areOpen: boolean) => void;
+    appliedCount: number;
+    style?: CSSProperties;
+};
+
+function FilterHeader({
+    areFiltersOpen,
+    setAreFiltersOpen,
+    appliedCount,
+    children,
+    style = {},
+}: FilterHeaderProps) {
+    return (
+        <th>
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    ...style,
+                }}
+            >
+                {children}
+                <FilterButton
+                    areFiltersOpen={areFiltersOpen}
+                    setAreFiltersOpen={setAreFiltersOpen}
+                    appliedCount={appliedCount}
+                />
+            </Box>
+        </th>
+    );
+}
+
+interface FilterButtonProps {
+    areFiltersOpen: boolean;
+    setAreFiltersOpen: (areOpen: boolean) => void;
+    appliedCount: number;
+}
+
+function FilterButton({
+    areFiltersOpen,
+    setAreFiltersOpen,
+    appliedCount,
+}: FilterButtonProps) {
+    return (
+        <IconButton
+            onClick={() => setAreFiltersOpen(!areFiltersOpen)}
+            size="sm"
+            color="primary"
+            variant={appliedCount ? "solid" : undefined}
+            sx={{
+                minWidth: 0,
+                minHeight: 0,
+                px: "4px",
+                height: "1.5em",
+                position: "absolute",
+                justifyContent: "end",
+                right: 0,
+                mr: 1,
+            }}
+        >
+            <FilterIcon />
+            <Box fontSize="12px">{appliedCount ? appliedCount : null}</Box>
+        </IconButton>
+    );
+}
+
+interface ExpandButtonProps {
+    expanded: boolean;
+    setExpanded: (expanded: boolean) => void;
+}
+
+function ExpandButton({ expanded, setExpanded }: ExpandButtonProps) {
+    return (
+        <IconButton
+            onClick={() => setExpanded(!expanded)}
+            sx={{
+                display: "flex",
+                minWidth: 0,
+                minHeight: 0,
+                height: "100%",
+            }}
+        >
+            {expanded ? <CollapseIcon /> : <ExpandIcon />}
+        </IconButton>
     );
 }
 
@@ -412,4 +692,24 @@ function countVictoryPoints(
         .filter((stronghold) => strongholdSide(expansions, stronghold) === side)
         .map(strongholdPoints)
         .reduce((sum, points) => sum + points, 0);
+}
+
+function mergePlayerFilters(filterA: string[], filterB: string[]) {
+    return filterA.length && filterB.length
+        ? intersection(filterA, filterB)
+        : filterA.length
+        ? filterA
+        : filterB;
+}
+
+function normalizeName(name: string) {
+    return name.toLowerCase().trim();
+}
+
+function nullifyEmpty(arr: unknown[]) {
+    return arr.length ? arr : null;
+}
+
+function intersection<T>(arrayA: T[], arrayB: T[]) {
+    return arrayA.filter((v) => arrayB.includes(v));
 }
