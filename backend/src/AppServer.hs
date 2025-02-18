@@ -312,7 +312,7 @@ getLeaderboardHandler year = do
   let year' = fromMaybe currentYear year
   runDb (getAllStats year')
     <&> ( GetLeaderboardResponse
-            . sortOn (Down . averageRating)
+            . sortOn (Down . liftA2 (,) isActive averageRating)
             . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year' stats)))
         )
 
