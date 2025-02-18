@@ -7,7 +7,7 @@ import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import { toErrorMessage } from "./networkErrorHandlers";
 import Autocomplete from "./Autocomplete";
-import { COUNTRY_FLAGS, optionalPlayerEditFields } from "./constants";
+import { COUNTRIES_DATA, optionalPlayerEditFields } from "./constants";
 
 interface Props {
     pid: number;
@@ -62,7 +62,7 @@ export default function PlayerEditForm({ pid, name, country, refresh }: Props) {
                     error: formData.country.error,
                     element: (
                         <Autocomplete
-                            options={Object.keys(COUNTRY_FLAGS) as Country[]}
+                            options={Object.keys(COUNTRIES_DATA) as Country[]}
                             current={formData.country.value}
                             loading={false}
                             placeholder="Country"

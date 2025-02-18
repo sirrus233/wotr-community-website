@@ -1,4 +1,12 @@
-import React, { CSSProperties, ReactNode, useState } from "react";
+import React, {
+    CSSProperties,
+    DetailedHTMLProps,
+    ImgHTMLAttributes,
+    ReactElement,
+    ReactNode,
+    useState,
+} from "react";
+import Badge from "@mui/joy/Badge";
 import Box from "@mui/joy/Box";
 import EditIcon from "@mui/icons-material/EditOutlined";
 import IconButton from "@mui/joy/IconButton";
@@ -6,6 +14,8 @@ import MergeIcon from "@mui/icons-material/Merge";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
+import Tooltip from "@mui/joy/Tooltip";
+import Typography from "@mui/joy/Typography";
 import {
     Country,
     LeaderboardEntry,
@@ -28,7 +38,7 @@ import PlayerRemapForm from "./PlayerRemapForm";
 import TableLayout from "./TableLayout";
 import { range, toPercent } from "./utils";
 import {
-    COUNTRY_FLAGS,
+    COUNTRIES_DATA,
     LEADERBOARD_START_YEAR,
     playerStates,
 } from "./constants";
@@ -51,6 +61,8 @@ interface Props {
     setError: (error: string | null) => void;
 }
 
+const FLAG_WIDTH = 32;
+const FLAG_HEIGHT = 24;
 const HEADER_ROW_HEIGHT = 32;
 
 const TABLE_TOP_POSITION =
@@ -251,11 +263,12 @@ function Rankings({
 
                             <TableCell>{i + 1}</TableCell>
                             <TableCell
-                                style={{ fontSize: "3em", lineHeight: 0 }}
+                                style={{
+                                    lineHeight: 0,
+                                    overflow: "visible",
+                                }}
                             >
-                                {(entry.country &&
-                                    COUNTRY_FLAGS[entry.country]) ||
-                                    null}
+                                {toFlagImage(entry.country)}
                             </TableCell>
                             <TableCell>{entry.name}</TableCell>
                             <TableCell>{entry.averageRating}</TableCell>
@@ -372,4 +385,73 @@ function TableHeaderCell({
             {children}
         </th>
     );
+}
+
+interface FlagContainerProps {
+    children: ReactElement;
+    country: string;
+    code: string | null;
+}
+
+function FlagContainer({ children, country, code }: FlagContainerProps) {
+    return (
+        <Tooltip title={country} enterTouchDelay={0}>
+            <Badge
+                badgeContent={
+                    <Typography sx={{ fontSize: "10px" }}>{code}</Typography>
+                }
+                variant="soft"
+                size="sm"
+                badgeInset="12px -11px"
+            >
+                {children}
+            </Badge>
+        </Tooltip>
+    );
+}
+
+function toFlagImage(country: Country | null): ReactNode {
+    const countryData = country ? COUNTRIES_DATA[country] : null;
+
+    if (country && countryData) {
+        const imgProps: DetailedHTMLProps<
+            ImgHTMLAttributes<HTMLImageElement>,
+            HTMLImageElement
+        > = {
+            width: FLAG_WIDTH,
+            alt: country,
+            loading: "eager",
+        };
+
+        const { code, src } = countryData;
+
+        if (src) {
+            return (
+                <FlagContainer country={country} code={code || country}>
+                    <img src={src} {...imgProps} />
+                </FlagContainer>
+            );
+        }
+
+        if (code) {
+            // https://flagpedia.net/download/api
+            const lowerCode = code.toLowerCase();
+            const dimensions = `${FLAG_WIDTH}x${FLAG_HEIGHT}`;
+            const dimensions2x = `${FLAG_WIDTH * 2}x${FLAG_HEIGHT * 2}`;
+            const dimensions3x = `${FLAG_WIDTH * 3}x${FLAG_HEIGHT * 3}`;
+
+            return (
+                <FlagContainer country={country} code={code}>
+                    <img
+                        src={`https://flagcdn.com/${dimensions}/${lowerCode}.png`}
+                        srcSet={`https://flagcdn.com/${dimensions2x}/${lowerCode}.png 2x, https://flagcdn.com/${dimensions3x}/${lowerCode}.png 3x`}
+                        height={FLAG_HEIGHT}
+                        {...imgProps}
+                    />
+                </FlagContainer>
+            );
+        }
+    }
+
+    return null;
 }
