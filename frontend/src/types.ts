@@ -1,6 +1,6 @@
 import {
     competitionTypes,
-    COUNTRY_FLAGS,
+    COUNTRIES_DATA,
     expansions,
     leagues,
     leagueTiers,
@@ -39,7 +39,7 @@ export type OptionalPlayerEditField = (typeof optionalPlayerEditFields)[number];
 
 export type PlayerState = (typeof playerStates)[number];
 
-export type Country = keyof typeof COUNTRY_FLAGS;
+export type Country = keyof typeof COUNTRIES_DATA;
 
 export type SuccessMessage = string | null;
 
