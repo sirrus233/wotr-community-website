@@ -420,6 +420,7 @@ function toFlagImage(country: Country | null): ReactNode {
         > = {
             width: FLAG_WIDTH,
             alt: country,
+            style: { background: "#ddd", boxShadow: "inset 0 0 2px 2px white" },
             loading: "eager",
         };
 
