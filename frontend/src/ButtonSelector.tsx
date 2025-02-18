@@ -4,12 +4,15 @@ import Button from "@mui/joy/Button";
 import ButtonGroup from "@mui/joy/ButtonGroup";
 import { BUTTON_SELECTOR_HEIGHT } from "./styles/sizes";
 
+type Variant = "outlined" | "plain" | "soft" | "solid";
+
 interface Props<T extends string | number> {
     current: T | null;
     options: T[];
     setCurrent: (year: T) => void;
     getLabel?: (option: T) => string;
-    variant?: "outlined" | "plain" | "soft" | "solid";
+    variant?: Variant;
+    selectedVariant?: Variant;
     style?: CSSProperties;
 }
 
@@ -19,6 +22,7 @@ export default function ButtonSelector<T extends string | number>({
     setCurrent,
     getLabel = String,
     variant = "plain",
+    selectedVariant = variant,
     style = {},
 }: Props<T>) {
     return (
@@ -34,7 +38,7 @@ export default function ButtonSelector<T extends string | number>({
                 {options.map((option) => (
                     <Button
                         key={option}
-                        variant={variant}
+                        variant={current === option ? selectedVariant : variant}
                         onClick={() => setCurrent(option)}
                         sx={{
                             fontWeight: current === option ? "bold" : "normal",

@@ -115,6 +115,7 @@ export default function Leagues({
                         }
                         getLabel={getLeagueTierLabel}
                         variant="outlined"
+                        selectedVariant="solid"
                         style={{ marginLeft: "5px" }}
                     />
                 </Box>
@@ -133,6 +134,7 @@ export default function Leagues({
                         }
                         getLabel={getLeagueLabel}
                         variant="outlined"
+                        selectedVariant="solid"
                         style={{ marginLeft: "5px" }}
                     />
                 </Box>
