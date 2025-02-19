@@ -308,9 +308,9 @@ fromLeagueGameStatsMap playerId =
 type ExportResponse = (Headers '[Header "Content-Disposition" String]) (SourceIO StrictByteString)
 
 data GameReportFilterSpec = GameReportFilterSpec
-  { players :: Maybe [PlayerName],
-    winners :: Maybe [PlayerName],
-    losers :: Maybe [PlayerName],
+  { players :: Maybe [PlayerId],
+    winners :: Maybe [PlayerId],
+    losers :: Maybe [PlayerId],
     leagues :: Maybe [League]
   }
   deriving (Generic)

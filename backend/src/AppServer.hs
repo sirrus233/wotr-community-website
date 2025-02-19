@@ -297,7 +297,7 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
 
 getReportsHandler :: Maybe Int64 -> Maybe Int64 -> Maybe GameReportFilterSpec -> AppM GetReportsResponse
 getReportsHandler limit offset filterSpec =
-  runDb getNumGameReports >>= \total ->
+  runDb (getNumGameReports filterSpec) >>= \total ->
     runDb (getGameReports limit' offset' filterSpec) >>= \reports ->
       pure GetReportsResponse {reports = fromGameReport <$> reports, total}
   where

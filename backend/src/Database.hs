@@ -106,18 +106,16 @@ normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
 
 toFilterExpression ::
-  SqlExpr (Entity Player) ->
-  SqlExpr (Entity Player) ->
   SqlExpr (Entity GameReport) ->
   GameReportFilterSpec ->
   SqlExpr (Value Bool)
-toFilterExpression winner loser report spec = foldr ((&&.) . fromMaybe (val True)) (val True) filterList
+toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True) filterList
   where
     toFilter entity field values = ((entity ^. field) `in_`) . valList <$> values
     filterList = [playerFilter, winnerFilter, loserFilter, leagueFilter]
-    playerFilter = liftA2 (||.) (toFilter winner PlayerName spec.players) (toFilter loser PlayerName spec.players)
-    winnerFilter = toFilter winner PlayerName spec.winners
-    loserFilter = toFilter loser PlayerName spec.losers
+    playerFilter = liftA2 (||.) (toFilter report GameReportWinnerId spec.players) (toFilter report GameReportLoserId spec.players)
+    winnerFilter = toFilter report GameReportWinnerId spec.winners
+    loserFilter = toFilter report GameReportLoserId spec.losers
     leagueFilter = toFilter report GameReportLeague (map Just <$> spec.leagues)
 
 getAdminBySessionId :: (MonadIO m, MonadLogger m) => Text -> DBAction m (Maybe (Entity Admin))
@@ -175,7 +173,7 @@ getGameReports limit' offset' filterSpec = lift . select $ do
   offset offset'
   case filterSpec of
     Nothing -> pass
-    Just spec -> where_ $ toFilterExpression winner loser report spec
+    Just spec -> where_ $ toFilterExpression report spec
   pure (report, winner, loser)
 
 getAllGameReports :: (MonadIO m, MonadLogger m) => SortOrder -> DBAction m [(Entity GameReport, Entity Player, Entity Player)]
@@ -187,10 +185,13 @@ getAllGameReports sortOrder = lift . select $ do
   orderBy [sortOrder' (report ^. GameReportTimestamp)]
   pure (report, winner, loser)
 
-getNumGameReports :: (MonadIO m, MonadLogger m) => DBAction m Int
-getNumGameReports = do
+getNumGameReports :: (MonadIO m, MonadLogger m) => Maybe GameReportFilterSpec -> DBAction m Int
+getNumGameReports filterSpec = do
   count <- lift . selectOne $ do
-    _ <- from $ table @GameReport
+    report <- from $ table @GameReport
+    case filterSpec of
+      Nothing -> pass
+      Just spec -> where_ $ toFilterExpression report spec
     pure countRows
   pure $ unValue . fromMaybe (Value 0) $ count
 
