@@ -171,9 +171,7 @@ getGameReports limit' offset' filterSpec = lift . select $ do
   orderBy [desc (report ^. GameReportTimestamp)]
   limit limit'
   offset offset'
-  case filterSpec of
-    Nothing -> pass
-    Just spec -> where_ $ toFilterExpression report spec
+  for_ filterSpec (where_ . toFilterExpression report)
   pure (report, winner, loser)
 
 getAllGameReports :: (MonadIO m, MonadLogger m) => SortOrder -> DBAction m [(Entity GameReport, Entity Player, Entity Player)]
@@ -191,7 +189,6 @@ getNumGameReports filterSpec = do
     report <- from $ table @GameReport
     for_ filterSpec (where_ . toFilterExpression report)
     pure countRows
-
   pure $ unValue . fromMaybe (Value 0) $ count
 
 joinedLeagueResults ::
