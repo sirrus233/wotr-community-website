@@ -189,10 +189,9 @@ getNumGameReports :: (MonadIO m, MonadLogger m) => Maybe GameReportFilterSpec ->
 getNumGameReports filterSpec = do
   count <- lift . selectOne $ do
     report <- from $ table @GameReport
-    case filterSpec of
-      Nothing -> pass
-      Just spec -> where_ $ toFilterExpression report spec
+    for_ filterSpec (where_ . toFilterExpression report)
     pure countRows
+
   pure $ unValue . fromMaybe (Value 0) $ count
 
 joinedLeagueResults ::
