@@ -1,11 +1,4 @@
-import React, {
-    CSSProperties,
-    DetailedHTMLProps,
-    ImgHTMLAttributes,
-    ReactElement,
-    ReactNode,
-    useState,
-} from "react";
+import React, { CSSProperties, ReactElement, ReactNode, useState } from "react";
 import Badge from "@mui/joy/Badge";
 import Box from "@mui/joy/Box";
 import EditIcon from "@mui/icons-material/EditOutlined";
@@ -61,8 +54,6 @@ interface Props {
     setError: (error: string | null) => void;
 }
 
-const FLAG_WIDTH = 32;
-const FLAG_HEIGHT = 24;
 const HEADER_ROW_HEIGHT = 32;
 
 const TABLE_TOP_POSITION =
@@ -414,44 +405,33 @@ function toFlagImage(country: Country | null): ReactNode {
     const countryData = country ? COUNTRIES_DATA[country] : null;
 
     if (country && countryData) {
-        const imgProps: DetailedHTMLProps<
-            ImgHTMLAttributes<HTMLImageElement>,
-            HTMLImageElement
-        > = {
-            width: FLAG_WIDTH,
-            alt: country,
-            style: { background: "#ddd", boxShadow: "inset 0 0 2px 2px white" },
-            loading: "eager",
-        };
+        // https://flagpedia.net/download/api
+        const lowerCode = countryData.code.toLowerCase();
+        const WIDTH = 32;
+        const HEIGHT = 24;
+        const dimensions = `${WIDTH}x${HEIGHT}`;
+        const dimensions2x = `${WIDTH * 2}x${HEIGHT * 2}`;
+        const dimensions3x = `${WIDTH * 3}x${HEIGHT * 3}`;
 
-        const { code, src } = countryData;
-
-        if (src) {
-            return (
-                <FlagContainer country={country} code={code || country}>
-                    <img src={src} {...imgProps} />
-                </FlagContainer>
-            );
-        }
-
-        if (code) {
-            // https://flagpedia.net/download/api
-            const lowerCode = code.toLowerCase();
-            const dimensions = `${FLAG_WIDTH}x${FLAG_HEIGHT}`;
-            const dimensions2x = `${FLAG_WIDTH * 2}x${FLAG_HEIGHT * 2}`;
-            const dimensions3x = `${FLAG_WIDTH * 3}x${FLAG_HEIGHT * 3}`;
-
-            return (
-                <FlagContainer country={country} code={code}>
-                    <img
-                        src={`https://flagcdn.com/${dimensions}/${lowerCode}.png`}
-                        srcSet={`https://flagcdn.com/${dimensions2x}/${lowerCode}.png 2x, https://flagcdn.com/${dimensions3x}/${lowerCode}.png 3x`}
-                        height={FLAG_HEIGHT}
-                        {...imgProps}
-                    />
-                </FlagContainer>
-            );
-        }
+        return (
+            <FlagContainer
+                country={country}
+                code={countryData.code.split("-").at(-1) || ""}
+            >
+                <img
+                    src={`https://flagcdn.com/${dimensions}/${lowerCode}.png`}
+                    srcSet={`https://flagcdn.com/${dimensions2x}/${lowerCode}.png 2x, https://flagcdn.com/${dimensions3x}/${lowerCode}.png 3x`}
+                    width={WIDTH}
+                    height={HEIGHT}
+                    alt={country}
+                    style={{
+                        background: "#ddd",
+                        boxShadow: "inset 0 0 2px 2px white",
+                    }}
+                    loading="eager"
+                />
+            </FlagContainer>
+        );
     }
 
     return null;
