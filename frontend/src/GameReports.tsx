@@ -19,6 +19,7 @@ import {
     GameReportFilters,
     League,
     Match,
+    MenuOption,
     ProcessedGameReport,
     ReportEditMode,
     Side,
@@ -63,13 +64,13 @@ const PLAYER_COL_WIDTH = 130;
 const PAGE_LIMIT = 100;
 
 interface Props {
-    playerNames: string[];
+    playerOptions: MenuOption[];
     loadingPlayers: boolean;
     isAdmin: boolean;
 }
 
 export default function GameReports({
-    playerNames,
+    playerOptions,
     loadingPlayers,
     isAdmin,
 }: Props) {
@@ -132,7 +133,9 @@ export default function GameReports({
                             <Box overflow="auto" mt={3}>
                                 <GameReportForm
                                     report={reportEditParams}
-                                    playerNames={playerNames}
+                                    playerNames={playerOptions.map(
+                                        ({ label }) => label
+                                    )}
                                     loadingPlayers={loadingPlayers}
                                     refreshGameReports={() =>
                                         refresh(currentPage, filters)
@@ -190,7 +193,7 @@ export default function GameReports({
                                 <TableFilter
                                     placeholder="Select players"
                                     loading={loadingPlayers}
-                                    options={playerNames}
+                                    options={playerOptions}
                                     width={PAIRING_COL_WIDTH}
                                     current={filters.players}
                                     onChange={(values) =>
@@ -207,7 +210,7 @@ export default function GameReports({
                                 <TableFilter
                                     placeholder="Select winner"
                                     loading={loadingPlayers}
-                                    options={playerNames}
+                                    options={playerOptions}
                                     width={PLAYER_COL_WIDTH}
                                     current={filters.winners}
                                     onChange={(values) =>
@@ -221,7 +224,7 @@ export default function GameReports({
                                 <TableFilter
                                     placeholder="Select loser"
                                     loading={loadingPlayers}
-                                    options={playerNames}
+                                    options={playerOptions}
                                     width={PLAYER_COL_WIDTH}
                                     current={filters.losers}
                                     onChange={(values) =>
@@ -685,12 +688,8 @@ function countVictoryPoints(
         .reduce((sum, points) => sum + points, 0);
 }
 
-function toPlayerFilterParam(names: string[]) {
-    return nullifyEmpty(names.map(normalizeName));
-}
-
-function normalizeName(name: string) {
-    return name.toLowerCase().trim();
+function toPlayerFilterParam(playerOptions: MenuOption[]): number[] | null {
+    return nullifyEmpty(playerOptions.map(({ id }) => id));
 }
 
 function nullifyEmpty<T>(arr: T[]) {

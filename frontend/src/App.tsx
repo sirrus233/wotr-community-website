@@ -21,7 +21,13 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ErrorMessage } from "./constants";
 import { logNetworkError } from "./networkErrorHandlers";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
-import { LeaderboardEntry, LeagueParams, LeagueStats, UserInfo } from "./types";
+import {
+    LeaderboardEntry,
+    LeagueParams,
+    LeagueStats,
+    MenuOption,
+    UserInfo,
+} from "./types";
 import { API_BASE_URL } from "./env";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import GoogleLoginButton from "./GoogleLogin";
@@ -52,9 +58,11 @@ export default function App() {
 
     const [exporting, setExporting] = useState(false);
 
-    const playerNames = leaderboard
-        .map((entry) => entry.name)
-        .sort((a, b) => a.localeCompare(b));
+    const playerOptions = leaderboard
+        .map((entry): MenuOption => ({ label: entry.name, id: entry.pid }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+
+    const playerNames = playerOptions.map(({ label }) => label);
 
     const getUserInfo = (onError: (error: unknown) => void) => {
         setLoadingUserInfo(true);
@@ -206,7 +214,7 @@ export default function App() {
                             path="/game-reports"
                             element={
                                 <GameReports
-                                    playerNames={playerNames}
+                                    playerOptions={playerOptions}
                                     loadingPlayers={loadingLeaderboard}
                                     isAdmin={userInfo?.isAdmin || false}
                                 />
