@@ -74,6 +74,7 @@ export default function Autocomplete<O extends string | MenuOption>({
                 onBlur={() => {
                     validate();
                     setDisplayedAlertText(alertText);
+                    if (!current) setLocalInputValue("");
                 }}
                 disabled={loading}
                 startDecorator={
