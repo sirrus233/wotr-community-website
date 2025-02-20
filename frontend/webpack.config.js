@@ -14,6 +14,14 @@ module.exports = {
     },
     target: "web",
     resolve: {
+        alias: {
+            env: path.resolve(
+                __dirname,
+                "src",
+                "env",
+                prod ? "prod.ts" : "dev.ts"
+            ),
+        },
         extensions: [".ts", ".tsx", ".js", ".json"],
     },
     module: {

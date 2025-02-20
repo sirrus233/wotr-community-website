@@ -1,6 +1,7 @@
 import axios from "axios";
 import React from "react";
 import AdminFormLayout from "./AdminFormLayout";
+import { API_BASE_URL } from "./env";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import { toErrorMessage } from "./networkErrorHandlers";
@@ -49,8 +50,7 @@ export default function ReportDeleteForm({
 
 async function submit({ rid }: ValidReportDeleteFormData) {
     return await axios.post(
-        "https://api.waroftheringcommunity.net:8080/deleteReport",
-        // "http://localhost:8081/deleteReport",
+        `${API_BASE_URL}/deleteReport`,
         { rid: rid.value },
         { headers: { "Content-Type": "application/json" } }
     );

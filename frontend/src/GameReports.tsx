@@ -9,6 +9,7 @@ import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
 import { ErrorMessage } from "./constants";
+import { API_BASE_URL } from "./env";
 import {
     Competition,
     Expansion,
@@ -75,16 +76,12 @@ export default function GameReports({
 
     const getReports = async (page: number) => {
         try {
-            const response = await axios.get(
-                // "http://localhost:8081/reports"
-                "https://api.waroftheringcommunity.net:8080/reports",
-                {
-                    params: {
-                        limit: PAGE_LIMIT,
-                        offset: getReportsOffset(page),
-                    },
-                }
-            );
+            const response = await axios.get(`${API_BASE_URL}/reports`, {
+                params: {
+                    limit: PAGE_LIMIT,
+                    offset: getReportsOffset(page),
+                },
+            });
             setReports(response.data.reports);
             setTotalReportCount(response.data.total);
         } catch (error) {

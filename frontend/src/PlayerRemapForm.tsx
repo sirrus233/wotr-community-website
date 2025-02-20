@@ -11,6 +11,7 @@ import Autocomplete from "./Autocomplete";
 import useConditionalActionEffect from "./hooks/useConditionalActionEffect";
 import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import { ErrorMessage } from "./constants";
+import { API_BASE_URL } from "./env";
 import { toErrorMessage } from "./networkErrorHandlers";
 
 interface Props {
@@ -106,8 +107,7 @@ export default function PlayerRemapForm({
 
 async function submit(validFormData: ValidPlayerRemapFormData) {
     return await axios.post(
-        "https://api.waroftheringcommunity.net:8080/remapPlayer",
-        // "http://localhost:8081/remapPlayer",
+        `${API_BASE_URL}/remapPlayer`,
         toPayload(validFormData),
         {
             headers: { "Content-Type": "application/json" },

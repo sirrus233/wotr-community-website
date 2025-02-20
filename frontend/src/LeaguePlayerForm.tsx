@@ -2,6 +2,7 @@ import axios from "axios";
 import React from "react";
 import Box from "@mui/joy/Box";
 import { ErrorMessage } from "./constants";
+import { API_BASE_URL } from "./env";
 import { toErrorMessage } from "./networkErrorHandlers";
 import {
     League,
@@ -102,15 +103,10 @@ export default function LeaguePlayerForm({
 }
 
 async function submit(validFormData: ValidLeaguePlayerFormData) {
-    return await axios.post(
-        "https://api.waroftheringcommunity.net:8080/addLeaguePlayer",
-        // "http://localhost:8081/addLeaguePlayer",
-        null,
-        {
-            headers: { "Content-Type": "application/json" },
-            params: toQueryParams(validFormData),
-        }
-    );
+    return await axios.post(`${API_BASE_URL}/addLeaguePlayer`, null, {
+        headers: { "Content-Type": "application/json" },
+        params: toQueryParams(validFormData),
+    });
 }
 
 type LeaguePlayerQueryParams = {

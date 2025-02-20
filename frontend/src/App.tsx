@@ -22,6 +22,7 @@ import { ErrorMessage } from "./constants";
 import { logNetworkError } from "./networkErrorHandlers";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import { LeaderboardEntry, LeagueParams, LeagueStats, UserInfo } from "./types";
+import { API_BASE_URL } from "./env";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import GoogleLoginButton from "./GoogleLogin";
 import Leagues from "./Leagues";
@@ -57,8 +58,7 @@ export default function App() {
         setLoadingUserInfo(true);
         setLoginError(null);
         axios
-            // .get("http://localhost:8081/userInfo")
-            .get("https://api.waroftheringcommunity.net:8080/userInfo")
+            .get(`${API_BASE_URL}/userInfo`)
             .then((response) => setUserInfo(response.data))
             .catch(onError)
             .finally(() => setLoadingUserInfo(false));
@@ -68,8 +68,7 @@ export default function App() {
         setLoadingLeaderboard(true);
 
         axios
-            // .get("http://localhost:8081/leaderboard", {
-            .get("https://api.waroftheringcommunity.net:8080/leaderboard", {
+            .get(`${API_BASE_URL}/leaderboard`, {
                 params: { year: leaderboardYear },
             })
             .then((response) => {
@@ -88,10 +87,7 @@ export default function App() {
         setLoadingLeague(true);
 
         axios
-            // .get("http://localhost:8081/leagueStats", {
-            .get("https://api.waroftheringcommunity.net:8080/leagueStats", {
-                params: leagueParams,
-            })
+            .get(`${API_BASE_URL}/leagueStats`, { params: leagueParams })
             .then((response) => setLeagueStats(response.data as LeagueStats))
             .catch((error) => {
                 setLeagueError(ErrorMessage.Default);
@@ -458,11 +454,9 @@ function Home({
                         onClick={() => {
                             setExporting(true);
                             axios
-                                .get(
-                                    // "http://localhost:8081/export",
-                                    "https://api.waroftheringcommunity.net:8080/export",
-                                    { responseType: "blob" }
-                                )
+                                .get(`${API_BASE_URL}/export`, {
+                                    responseType: "blob",
+                                })
                                 .then((response) => {
                                     // https://gist.github.com/javilobo8/097c30a233786be52070986d8cdb1743
                                     const blob = new Blob([response.data], {
