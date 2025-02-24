@@ -29,29 +29,19 @@ data AppMode = Dev | Prod
 corsMiddleware :: AppMode -> Middleware
 corsMiddleware mode = cors $ const $ Just policy
   where
-    policy = case mode of
-      Dev -> devPolicy
-      Prod -> prodPolicy
-
-    devPolicy =
+    origins = case mode of
+      Dev -> ["http://localhost:3000"]
+      Prod -> ["https://waroftheringcommunity.net"]
+    maxAge = case mode of
+      Dev -> Nothing
+      Prod -> Nothing -- TODO Set to 3600 or 7200 prior to launch
+    policy =
       CorsResourcePolicy
-        { corsOrigins = Just (["http://localhost:3000"], True),
+        { corsOrigins = Just (origins, True),
           corsMethods = [],
           corsRequestHeaders = ["Content-Type"],
           corsExposedHeaders = Just ["Content-Disposition"],
-          corsMaxAge = Nothing,
-          corsVaryOrigin = False,
-          corsRequireOrigin = True,
-          corsIgnoreFailures = False
-        }
-
-    prodPolicy =
-      CorsResourcePolicy
-        { corsOrigins = Just (["https://waroftheringcommunity.net"], True),
-          corsMethods = [],
-          corsRequestHeaders = ["Content-Type"],
-          corsExposedHeaders = Just ["Content-Disposition"],
-          corsMaxAge = Nothing, -- TODO Set to 3600 or 7200 prior to launch
+          corsMaxAge = maxAge,
           corsVaryOrigin = False,
           corsRequireOrigin = True,
           corsIgnoreFailures = False
