@@ -9,8 +9,8 @@ import Control.Monad.Logger (LogLevel (..))
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
-import Logging (fileLogger, log, logException)
-import Network.Wai.Handler.Warp (defaultSettings, setOnException, setPort)
+import Logging (fileLogger, log, logException, stdoutLogger)
+import Network.Wai.Handler.Warp (Settings, defaultSettings, runSettings, setOnException, setPort)
 import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Network.Wai.Middleware.Gzip (defaultGzipSettings, gzip)
@@ -55,29 +55,38 @@ app env = gzipMiddleware . corsMiddleware $ serveWithContextT (Proxy :: Proxy AP
   where
     context = authHandler env :. multipartOpts :. EmptyContext
 
+runDev :: Env -> Settings -> IO ()
+runDev env settings = runSettings settings . app $ env
+
+runProd :: Env -> Settings -> IO ()
+runProd env settings = do
+  let certFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/fullchain.pem"
+  let keyFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/privkey.pem"
+  let tlsSettings_ = tlsSettings certFile keyFile
+  runTLS tlsSettings_ settings . app $ env
+
 main :: IO ()
 main = do
   args <- getArgs
+  let isDev = "dev" `elem` args
+  let doMigrate = "migrate" `elem` args
+
   setEnv "AWS_PROFILE" "wotrcommunity"
   createDirectoryIfMissing True . takeDirectory $ databaseFile
   createDirectoryIfMissing True . takeDirectory $ logFile
 
-  logger <- fileLogger logFile
+  logger <- if isDev then stdoutLogger else fileLogger logFile
   awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   authDbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText authDatabaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
   aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
 
-  let env = Env {dbPool, authDbPool, redisPool, logger, aws}
+  when doMigrate $ migrateSchema dbPool logger
 
-  when ("migrate" `elem` args) $ migrateSchema dbPool logger
+  let env = Env {dbPool, authDbPool, redisPool, logger, aws}
+  let settings = setPort 8080 . setOnException (logException env.logger) $ defaultSettings
+  let runServer = if isDev then runDev else runProd
 
   log logger LevelInfo "Starting server."
-
-  let certFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/fullchain.pem"
-  let keyFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/privkey.pem"
-  let tlsSettings_ = tlsSettings certFile keyFile
-  let settings = setPort 8080 . setOnException (logException logger) $ defaultSettings
-
-  runTLS tlsSettings_ settings . app $ env
+  runServer env settings
