@@ -9,7 +9,7 @@ import Control.Monad.Logger (LogLevel (..))
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
-import Logging (fileLogger, log, logException, stdoutLogger)
+import Logging (fileLogger, log, logException, stdoutLogger, toAwsLogger)
 import Network.Wai.Handler.Warp (Settings, defaultSettings, runSettings, setOnException, setPort)
 import Network.Wai.Handler.WarpTLS (runTLS, tlsSettings)
 import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
@@ -84,11 +84,10 @@ main = do
   createDirectoryIfMissing True . takeDirectory $ logFile
 
   logger <- (\case Dev -> stdoutLogger; Prod -> fileLogger logFile) appMode
-  awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   authDbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText authDatabaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
-  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
+  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = toAwsLogger logger, AWS.region = AWS.Oregon}
 
   when doMigrate $ migrateSchema dbPool logger
 

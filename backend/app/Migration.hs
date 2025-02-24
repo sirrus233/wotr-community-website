@@ -11,7 +11,7 @@ import Database (DBAction, insertInitialStats, insertPlayerIfNotExists, repsertP
 import Database.Esqueleto.Experimental (Entity (..), defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
 import Database.Redis (connect)
-import Logging (Logger, stdoutLogger, (<>:))
+import Logging (Logger, stdoutLogger, toAwsLogger, (<>:))
 import Logging qualified as L
 import Servant (ServerError (errBody), err500, runHandler, throwError)
 import System.Directory (createDirectoryIfMissing)
@@ -76,12 +76,11 @@ main = do
   setEnv "AWS_PROFILE" "wotrcommunity"
   createDirectoryIfMissing True . takeDirectory $ databaseFile
 
-  awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
   logger <- stdoutLogger
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   authDbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText authDatabaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
-  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = awsLogger, AWS.region = AWS.Oregon}
+  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = toAwsLogger logger, AWS.region = AWS.Oregon}
 
   let env = Env {dbPool, authDbPool, redisPool, logger, aws}
 
