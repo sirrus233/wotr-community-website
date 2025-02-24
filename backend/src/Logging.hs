@@ -59,8 +59,10 @@ fromAwsLogLevel AWS.Debug = LevelDebug
 fromAwsLogLevel AWS.Info = LevelInfo
 fromAwsLogLevel AWS.Error = LevelError
 
-toAwsLogger :: Logger -> AWS.Logger
-toAwsLogger logger awsLevel builder = log logger (fromAwsLogLevel awsLevel) (toLogStr builder)
+toAwsLogger :: LogLevelFilter -> Logger -> AWS.Logger
+toAwsLogger logFilter logger awsLevel builder = when (logFilter "" logLevel) (log logger logLevel (toLogStr builder))
+  where
+    logLevel = fromAwsLogLevel awsLevel
 
 log :: Logger -> LogLevel -> LogStr -> IO ()
 log logger = logger defaultLoc ""

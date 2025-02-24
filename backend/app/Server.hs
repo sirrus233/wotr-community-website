@@ -2,7 +2,7 @@ module Main where
 
 import Amazonka qualified as AWS
 import Api (API)
-import AppConfig (Env (..), authDatabaseFile, databaseFile, logFile, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
+import AppConfig (Env (..), authDatabaseFile, databaseFile, logFile, logFilter, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
 import Auth (authHandlerDev, authHandlerProd)
 import Control.Monad.Logger (LogLevel (..))
@@ -87,7 +87,7 @@ main = do
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   authDbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText authDatabaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
-  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = toAwsLogger logger, AWS.region = AWS.Oregon}
+  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = toAwsLogger logFilter logger, AWS.region = AWS.Oregon}
 
   when doMigrate $ migrateSchema dbPool logger
 
