@@ -24,10 +24,28 @@ import Types.Database (migrateSchema)
 
 type Middleware = Application -> Application
 
-corsMiddleware :: Middleware
-corsMiddleware = cors $ const $ Just policy
+data AppMode = Dev | Prod
+
+corsMiddleware :: AppMode -> Middleware
+corsMiddleware mode = cors $ const $ Just policy
   where
-    policy =
+    policy = case mode of
+      Dev -> devPolicy
+      Prod -> prodPolicy
+
+    devPolicy =
+      CorsResourcePolicy
+        { corsOrigins = Just (["http://localhost:3000"], True),
+          corsMethods = [],
+          corsRequestHeaders = ["Content-Type"],
+          corsExposedHeaders = Just ["Content-Disposition"],
+          corsMaxAge = Nothing,
+          corsVaryOrigin = False,
+          corsRequireOrigin = True,
+          corsIgnoreFailures = False
+        }
+
+    prodPolicy =
       CorsResourcePolicy
         { corsOrigins = Just (["https://waroftheringcommunity.net"], True),
           corsMethods = [],
@@ -50,32 +68,32 @@ multipartOpts =
   where
     maxSizeBytes = maxGameLogSizeMB * 1024 * 1024
 
-app :: Env -> Application
-app env = gzipMiddleware . corsMiddleware $ serveWithContextT (Proxy :: Proxy API) context (nt env) server
+app :: AppMode -> Env -> Application
+app mode env = gzipMiddleware . corsMiddleware mode $ serveWithContextT (Proxy :: Proxy API) context (nt env) server
   where
     context = authHandler env :. multipartOpts :. EmptyContext
 
 runDev :: Env -> Settings -> IO ()
-runDev env settings = runSettings settings . app $ env
+runDev env settings = runSettings settings . app Dev $ env
 
 runProd :: Env -> Settings -> IO ()
 runProd env settings = do
   let certFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/fullchain.pem"
   let keyFile = "/etc/letsencrypt/live/api.waroftheringcommunity.net/privkey.pem"
   let tlsSettings_ = tlsSettings certFile keyFile
-  runTLS tlsSettings_ settings . app $ env
+  runTLS tlsSettings_ settings . app Prod $ env
 
 main :: IO ()
 main = do
   args <- getArgs
-  let isDev = "dev" `elem` args
+  let appMode = if "dev" `elem` args then Dev else Prod
   let doMigrate = "migrate" `elem` args
 
   setEnv "AWS_PROFILE" "wotrcommunity"
   createDirectoryIfMissing True . takeDirectory $ databaseFile
   createDirectoryIfMissing True . takeDirectory $ logFile
 
-  logger <- if isDev then stdoutLogger else fileLogger logFile
+  logger <- (\case Dev -> stdoutLogger; Prod -> fileLogger logFile) appMode
   awsLogger <- AWS.newLogger AWS.Debug stdout -- TODO Replace Amazonka's logger with our real one
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   authDbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText authDatabaseFile) defaultConnectionPoolConfig
@@ -86,7 +104,7 @@ main = do
 
   let env = Env {dbPool, authDbPool, redisPool, logger, aws}
   let settings = setPort 8080 . setOnException (logException env.logger) $ defaultSettings
-  let runServer = if isDev then runDev else runProd
+  let runServer = (\case Dev -> runDev; Prod -> runProd) appMode
 
   log logger LevelInfo "Starting server."
   runServer env settings
