@@ -4,7 +4,7 @@ import Amazonka qualified as AWS
 import Api (API)
 import AppConfig (Env (..), authDatabaseFile, databaseFile, logFile, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
-import Auth (authHandler)
+import Auth (authHandlerDev, authHandlerProd)
 import Control.Monad.Logger (LogLevel (..))
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
@@ -61,7 +61,7 @@ multipartOpts =
 app :: AppMode -> Env -> Application
 app mode env = gzipMiddleware . corsMiddleware mode $ serveWithContextT (Proxy :: Proxy API) context (nt env) server
   where
-    context = authHandler env :. multipartOpts :. EmptyContext
+    context = (\case Dev -> authHandlerDev; Prod -> authHandlerProd) mode env :. multipartOpts :. EmptyContext
 
 runDev :: Env -> Settings -> IO ()
 runDev env settings = runSettings settings . app Dev $ env

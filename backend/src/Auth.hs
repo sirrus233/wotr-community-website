@@ -71,8 +71,8 @@ validateToken (JwkSet keys) (IdToken token) = do
       | claims.email_verified && isJust claims.hd = Right ()
       | otherwise = Left GoogleNotAuthoritativeError
 
-authHandler :: Env -> AuthHandler Request Authenticated
-authHandler env = mkAuthHandler (nt env . handler)
+authHandlerProd :: Env -> AuthHandler Request Authenticated
+authHandlerProd env = mkAuthHandler (nt env . handler)
   where
     handler :: Request -> AppM Authenticated
     handler req = do
@@ -86,3 +86,9 @@ authHandler env = mkAuthHandler (nt env . handler)
                 Nothing -> throwError err401 {errBody = "Invalid session."}
                 Just (Entity _ admin) ->
                   pure $ Authenticated {userId = UserId admin.adminUserId, sessionId = SessionId sessionId}
+
+authHandlerDev :: Env -> AuthHandler Request Authenticated
+authHandlerDev env = mkAuthHandler (nt env . handler)
+  where
+    handler :: Request -> AppM Authenticated
+    handler _ = pure Authenticated {userId = UserId "Frodo", sessionId = SessionId "Baggins"}
