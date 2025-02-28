@@ -1,4 +1,4 @@
-const prod = process.env.NODE_ENV === "production";
+const isDev = process.env.NODE_ENV === "development";
 
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -6,7 +6,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require("path");
 
 module.exports = {
-    mode: prod ? "production" : "development",
+    mode: isDev ? "development" : "production",
     entry: "./src/index.tsx",
     output: {
         path: path.resolve(__dirname + "/dist"),
@@ -14,6 +14,14 @@ module.exports = {
     },
     target: "web",
     resolve: {
+        alias: {
+            env: path.resolve(
+                __dirname,
+                "src",
+                "env",
+                isDev ? "dev.ts" : "prod.ts"
+            ),
+        },
         extensions: [".ts", ".tsx", ".js", ".json"],
     },
     module: {

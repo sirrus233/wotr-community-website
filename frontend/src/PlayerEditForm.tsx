@@ -8,6 +8,7 @@ import useFormData, { initializeToDefaults } from "./hooks/useFormData";
 import { toErrorMessage } from "./networkErrorHandlers";
 import Autocomplete from "./Autocomplete";
 import { COUNTRIES_DATA, optionalPlayerEditFields } from "./constants";
+import { API_BASE_URL } from "./env";
 
 interface Props {
     pid: number;
@@ -78,8 +79,7 @@ export default function PlayerEditForm({ pid, name, country, refresh }: Props) {
 
 async function submit(validFormData: ValidPlayerEditFormData) {
     return await axios.post(
-        "https://api.waroftheringcommunity.net:8080/editPlayer",
-        // "http://localhost:8081/editPlayer",
+        `${API_BASE_URL}/editPlayer`,
         toPayload(validFormData),
         {
             headers: { "Content-Type": "application/json" },

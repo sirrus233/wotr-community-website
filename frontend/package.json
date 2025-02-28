@@ -4,7 +4,7 @@
     "description": "War of the Ring community management website.",
     "main": "index.js",
     "scripts": {
-        "start": "webpack serve --port 3000",
+        "start": "NODE_ENV=development webpack serve --port 3000",
         "build": "NODE_ENV=production webpack",
         "test": "echo \"Error: no test specified\" && exit 1"
     },

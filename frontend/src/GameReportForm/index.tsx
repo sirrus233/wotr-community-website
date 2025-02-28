@@ -24,6 +24,7 @@ import {
     strongholds,
     victoryTypes,
 } from "../constants";
+import { API_BASE_URL } from "../env";
 import { GAME_FORM_BOLD } from "../styles/colors";
 import { toErrorMessage } from "../networkErrorHandlers";
 import {
@@ -609,8 +610,7 @@ export default GameReportForm;
 
 async function submit(validatedResult: ValidGameFormData) {
     return await axios.post(
-        // `http://localhost:8081/${
-        `https://api.waroftheringcommunity.net:8080/${
+        `${API_BASE_URL}/${
             typeof validatedResult.rid.value === "number"
                 ? "modifyReport"
                 : "submitReport"
