@@ -125,7 +125,7 @@ export class InfrastructureStack extends cdk.Stack {
         });
 
         instance.connections.allowFrom(
-            ec2.Peer.ipv4("97.113.1.92/32"),
+            ec2.Peer.ipv4("97.113.30.12/32"),
             ec2.Port.tcp(22)
         );
 
