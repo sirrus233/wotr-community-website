@@ -190,9 +190,10 @@ validateReport report =
 
 validateLogFile :: FilePath -> AppM ()
 validateLogFile fp = do
-  logFileText <- decodeLatin1 <$> readFileBS fp
-  unless (logFileHeader `T.isPrefixOf` logFileText) $ do
+  logFileLines <- take headerSearchSpan . lines . decodeLatin1 <$> readFileBS fp
+  unless (any (logFileHeader `T.isPrefixOf`) logFileLines) $ do
     logErrorN "Log file missing header."
     throwError $ err422 {errBody = "Invalid log file."}
   where
-    logFileHeader = "<auto> silent null\n"
+    headerSearchSpan = 5
+    logFileHeader = "<auto> silent null"
