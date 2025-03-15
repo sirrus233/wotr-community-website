@@ -289,7 +289,8 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
     Success (RawGameReport {..}) -> runDb $ do
       logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
       timestamp <- liftIO getCurrentTime
-      let key = toS3Key timestamp rawReport.winner rawReport.loser
+      let (freePlayer, shadowPlayer) = case side of Free -> (winner, loser); Shadow -> (loser, winner)
+      let key = toS3Key timestamp freePlayer shadowPlayer
       let s3Path = toS3Url awsEnv.region key <$ logFileData
       (processedReport, winnerRating, loserRating) <- processReport =<< insertReport timestamp rawReport s3Path
       mapM_ (putS3Object awsEnv key . fdPayload) logFileData
