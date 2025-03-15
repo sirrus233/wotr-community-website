@@ -1,5 +1,6 @@
 module Logging where
 
+import Amazonka qualified as AWS
 import Control.Monad.Logger (Loc, LogLevel (..), LogSource, LogStr, defaultLoc)
 import Network.Wai (Request)
 import System.Log.FastLogger
@@ -51,6 +52,17 @@ fileLogger path = do
   timeCache <- newTimeCache simpleTimeFormat
   (logger, _) <- newTimedFastLogger timeCache (LogFileNoRotate path defaultBufSize)
   pure $ \_ _ level msg -> logger (\time -> formatLogMsg time level msg)
+
+fromAwsLogLevel :: AWS.LogLevel -> LogLevel
+fromAwsLogLevel AWS.Trace = LevelDebug
+fromAwsLogLevel AWS.Debug = LevelDebug
+fromAwsLogLevel AWS.Info = LevelInfo
+fromAwsLogLevel AWS.Error = LevelError
+
+toAwsLogger :: LogLevelFilter -> Logger -> AWS.Logger
+toAwsLogger logFilter logger awsLevel builder = when (logFilter "" logLevel) (log logger logLevel (toLogStr builder))
+  where
+    logLevel = fromAwsLogLevel awsLevel
 
 log :: Logger -> LogLevel -> LogStr -> IO ()
 log logger = logger defaultLoc ""
