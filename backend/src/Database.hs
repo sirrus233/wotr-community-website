@@ -112,8 +112,14 @@ toFilterExpression ::
 toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True) filterList
   where
     toFilter entity field values = ((entity ^. field) `in_`) . valList <$> values
-    filterList = [playerFilter, winnerFilter, loserFilter, leagueFilter]
+    filterList = [playerFilter, pairingFilter, winnerFilter, loserFilter, leagueFilter]
     playerFilter = liftA2 (||.) (toFilter report GameReportWinnerId spec.players) (toFilter report GameReportLoserId spec.players)
+    pairingFilter =
+      spec.pairing <&> \case
+        (player1, Nothing) -> (report ^. GameReportWinnerId ==. val player1) ||. (report ^. GameReportLoserId ==. val player1)
+        (player1, Just player2) ->
+          ((report ^. GameReportWinnerId ==. val player1) ||. (report ^. GameReportLoserId ==. val player1))
+            &&. ((report ^. GameReportWinnerId ==. val player2) ||. (report ^. GameReportLoserId ==. val player2))
     winnerFilter = toFilter report GameReportWinnerId spec.winners
     loserFilter = toFilter report GameReportLoserId spec.losers
     leagueFilter = toFilter report GameReportLeague (map Just <$> spec.leagues)

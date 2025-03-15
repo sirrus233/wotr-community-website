@@ -83,6 +83,7 @@ export default function GameReports({
         useState<ReportEditParams | null>(null);
     const [areFiltersOpen, setAreFiltersOpen] = useState(false);
     const [filters, setFilters] = useState<GameReportFilters>({
+        pairing: [],
         players: [],
         winners: [],
         losers: [],
@@ -90,11 +91,19 @@ export default function GameReports({
 
     const getReports = async (page: number, filters: GameReportFilters) => {
         try {
+            const pairing = isPairingValid(filters.pairing)
+                ? toPlayerFilterParam(filters.pairing)
+                : null;
+
             const response = await axios.get(`${API_BASE_URL}/reports`, {
                 params: {
                     limit: PAGE_LIMIT,
                     offset: getReportsOffset(page),
                     filter: JSON.stringify({
+                        pairing:
+                            pairing?.length === 1
+                                ? [...pairing, null]
+                                : pairing,
                         winners: toPlayerFilterParam(filters.winners),
                         losers: toPlayerFilterParam(filters.losers),
                         players: toPlayerFilterParam(filters.players),
@@ -117,6 +126,8 @@ export default function GameReports({
     };
 
     useEffect(() => refresh(currentPage, filters), [currentPage, filters]);
+
+    const isPairingFilterValid = isPairingValid(filters.pairing);
 
     return (
         <Box>
@@ -169,6 +180,7 @@ export default function GameReports({
                     },
                     "& thead > tr:first-child > th": {
                         borderBottom: areFiltersOpen ? "none" : undefined,
+                        verticalAlign: areFiltersOpen ? "bottom" : undefined,
                     },
                     "& tbody > tr > *:first-child": { pl: 2 },
                     "& thead > tr:last-child > *:last-child": {
@@ -191,16 +203,21 @@ export default function GameReports({
                                 <th />
 
                                 <TableFilter
-                                    placeholder="Select players"
+                                    placeholder={"Select pairing"}
                                     loading={loadingPlayers}
                                     options={playerOptions}
                                     width={PAIRING_COL_WIDTH}
-                                    current={filters.players}
+                                    current={filters.pairing}
                                     onChange={(values) =>
                                         setFilters({
                                             ...filters,
-                                            players: values,
+                                            pairing: values,
                                         })
+                                    }
+                                    errorMessage={
+                                        isPairingFilterValid
+                                            ? undefined
+                                            : ErrorMessage.PairingFilterInvalid
                                     }
                                 />
 
@@ -271,7 +288,11 @@ export default function GameReports({
                             <FilterHeader
                                 areFiltersOpen={areFiltersOpen}
                                 setAreFiltersOpen={setAreFiltersOpen}
-                                appliedCount={filters.players.length}
+                                appliedCount={
+                                    isPairingFilterValid
+                                        ? filters.pairing.length
+                                        : 0
+                                }
                                 style={{ width: `${PAIRING_COL_WIDTH}px` }}
                             >
                                 Pairing
@@ -686,6 +707,10 @@ function countVictoryPoints(
         .filter((stronghold) => strongholdSide(expansions, stronghold) === side)
         .map(strongholdPoints)
         .reduce((sum, points) => sum + points, 0);
+}
+
+function isPairingValid(pairing: unknown[]) {
+    return pairing.length <= 2;
 }
 
 function toPlayerFilterParam(playerOptions: MenuOption[]): number[] | null {

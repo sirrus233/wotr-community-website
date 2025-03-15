@@ -309,6 +309,7 @@ type ExportResponse = (Headers '[Header "Content-Disposition" String]) (SourceIO
 
 data GameReportFilterSpec = GameReportFilterSpec
   { players :: Maybe [PlayerId],
+    pairing :: Maybe (PlayerId, Maybe PlayerId),
     winners :: Maybe [PlayerId],
     losers :: Maybe [PlayerId],
     leagues :: Maybe [League]
