@@ -122,6 +122,7 @@ export enum ErrorMessage {
     OnSubmit = "Could not submit, please resolve errors",
     MissingPlayerName = "This player does not exist in the database. Unless it's a new player, please check the spelling.",
     ExistingPlayerRequired = "Must choose an existing player",
+    PairingFilterInvalid = "Select up to two",
 }
 
 export const INFINITE = 100;

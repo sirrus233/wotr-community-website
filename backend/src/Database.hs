@@ -22,6 +22,7 @@ import Database.Esqueleto.Experimental
     from,
     getBy,
     groupBy,
+    in_,
     innerJoin,
     isNothing_,
     just,
@@ -43,6 +44,7 @@ import Database.Esqueleto.Experimental
     update,
     updateCount,
     val,
+    valList,
     when_,
     where_,
     (!=.),
@@ -59,6 +61,7 @@ import Database.Esqueleto.Experimental
     type (:&) (..),
   )
 import Servant (ServerError, throwError)
+import Types.Api (GameReportFilterSpec (..))
 import Types.Auth (SessionId (..), UserId (..))
 import Types.DataField (League, LeagueTier, PlayerName, Year)
 import Types.Database
@@ -102,6 +105,25 @@ runAuthDb dbAction = asks authDbPool >>= (`runDbWithPool` dbAction)
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
 
+toFilterExpression ::
+  SqlExpr (Entity GameReport) ->
+  GameReportFilterSpec ->
+  SqlExpr (Value Bool)
+toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True) filterList
+  where
+    toFilter entity field values = ((entity ^. field) `in_`) . valList <$> values
+    filterList = [playerFilter, pairingFilter, winnerFilter, loserFilter, leagueFilter]
+    playerFilter = liftA2 (||.) (toFilter report GameReportWinnerId spec.players) (toFilter report GameReportLoserId spec.players)
+    pairingFilter =
+      spec.pairing <&> \case
+        (player1, Nothing) -> (report ^. GameReportWinnerId ==. val player1) ||. (report ^. GameReportLoserId ==. val player1)
+        (player1, Just player2) ->
+          ((report ^. GameReportWinnerId ==. val player1) ||. (report ^. GameReportLoserId ==. val player1))
+            &&. ((report ^. GameReportWinnerId ==. val player2) ||. (report ^. GameReportLoserId ==. val player2))
+    winnerFilter = toFilter report GameReportWinnerId spec.winners
+    loserFilter = toFilter report GameReportLoserId spec.losers
+    leagueFilter = toFilter report GameReportLeague (map Just <$> spec.leagues)
+
 getAdminBySessionId :: (MonadIO m, MonadLogger m) => Text -> DBAction m (Maybe (Entity Admin))
 getAdminBySessionId sessionId = lift . getBy . UniqueAdminSessionId $ Just sessionId
 
@@ -144,12 +166,18 @@ joinedGameReports =
     `innerJoin` table @Player
       `on` (\(report :& _ :& loser) -> report ^. GameReportLoserId ==. loser ^. PlayerId)
 
-getGameReports :: (MonadIO m, MonadLogger m) => Int64 -> Int64 -> DBAction m [(Entity GameReport, Entity Player, Entity Player)]
-getGameReports limit' offset' = lift . select $ do
+getGameReports ::
+  (MonadIO m, MonadLogger m) =>
+  Int64 ->
+  Int64 ->
+  Maybe GameReportFilterSpec ->
+  DBAction m [(Entity GameReport, Entity Player, Entity Player)]
+getGameReports limit' offset' filterSpec = lift . select $ do
   (report :& winner :& loser) <- from joinedGameReports
   orderBy [desc (report ^. GameReportTimestamp)]
   limit limit'
   offset offset'
+  for_ filterSpec (where_ . toFilterExpression report)
   pure (report, winner, loser)
 
 getAllGameReports :: (MonadIO m, MonadLogger m) => SortOrder -> DBAction m [(Entity GameReport, Entity Player, Entity Player)]
@@ -161,10 +189,11 @@ getAllGameReports sortOrder = lift . select $ do
   orderBy [sortOrder' (report ^. GameReportTimestamp)]
   pure (report, winner, loser)
 
-getNumGameReports :: (MonadIO m, MonadLogger m) => DBAction m Int
-getNumGameReports = do
+getNumGameReports :: (MonadIO m, MonadLogger m) => Maybe GameReportFilterSpec -> DBAction m Int
+getNumGameReports filterSpec = do
   count <- lift . selectOne $ do
-    _ <- from $ table @GameReport
+    report <- from $ table @GameReport
+    for_ filterSpec (where_ . toFilterExpression report)
     pure countRows
   pure $ unValue . fromMaybe (Value 0) $ count
 

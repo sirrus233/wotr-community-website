@@ -1,11 +1,11 @@
 module Types.Api where
 
-import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict)
+import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict, eitherDecodeStrictText)
 import Data.ByteString (StrictByteString)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
 import Relude.Extra (lookupDefault)
-import Servant (Header, Headers, MimeUnrender (..), NoContent, PlainText, SourceIO)
+import Servant (FromHttpApiData (..), Header, Headers, MimeUnrender (..), NoContent, PlainText, SourceIO)
 import Servant.Multipart (FileData (..), FromMultipart (..), MultipartData (..), Tmp, lookupFile, lookupInput)
 import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
 import Types.Database
@@ -306,3 +306,18 @@ fromLeagueGameStatsMap playerId =
   fromList . fmap (\(opponentId, opponent, wins, losses) -> (opponentId, LeagueGameStats {..})) . lookupDefault [] playerId
 
 type ExportResponse = (Headers '[Header "Content-Disposition" String]) (SourceIO StrictByteString)
+
+data GameReportFilterSpec = GameReportFilterSpec
+  { players :: Maybe [PlayerId],
+    pairing :: Maybe (PlayerId, Maybe PlayerId),
+    winners :: Maybe [PlayerId],
+    losers :: Maybe [PlayerId],
+    leagues :: Maybe [League]
+  }
+  deriving (Generic)
+
+instance FromJSON GameReportFilterSpec
+
+instance FromHttpApiData GameReportFilterSpec where
+  parseQueryParam :: Text -> Either Text GameReportFilterSpec
+  parseQueryParam = first toText . eitherDecodeStrictText
