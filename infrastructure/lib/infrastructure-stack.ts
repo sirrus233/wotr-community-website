@@ -118,14 +118,14 @@ export class InfrastructureStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.RETAIN,
         });
 
-        new ec2.CfnVolumeAttachment(this, "AttachServerStorage", {
-            volumeId: ebsVolume.volumeId,
-            instanceId: instance.instanceId,
-            device: "/dev/sda2",
-        });
+        // new ec2.CfnVolumeAttachment(this, "AttachServerStorage", {
+        //     volumeId: ebsVolume.volumeId,
+        //     instanceId: instance.instanceId,
+        //     device: "/dev/sda2",
+        // });
 
         instance.connections.allowFrom(
-            ec2.Peer.ipv4("97.113.30.12/32"),
+            ec2.Peer.ipv4("97.113.5.72/32"),
             ec2.Port.tcp(22)
         );
 
