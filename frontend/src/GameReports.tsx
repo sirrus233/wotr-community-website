@@ -11,7 +11,7 @@ import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
-import { ErrorMessage } from "./constants";
+import { ErrorMessage, leagues } from "./constants";
 import { API_BASE_URL } from "./env";
 import {
     Competition,
@@ -60,11 +60,12 @@ const TABLE_TOP_POSITION =
 const PAGE_FOOTER_HEIGHT = 50;
 const PAIRING_COL_WIDTH = 190;
 const PLAYER_COL_WIDTH = 130;
+const LEAGUE_COL_WIDTH = 130;
 
 const PAGE_LIMIT = 100;
 
 interface Props {
-    playerOptions: MenuOption[];
+    playerOptions: MenuOption<number>[];
     loadingPlayers: boolean;
     isAdmin: boolean;
 }
@@ -87,12 +88,13 @@ export default function GameReports({
         players: [],
         winners: [],
         losers: [],
+        leagues: [],
     });
 
     const getReports = async (page: number, filters: GameReportFilters) => {
         try {
             const pairing = isPairingValid(filters.pairing)
-                ? toPlayerFilterParam(filters.pairing)
+                ? toFilterParam(filters.pairing)
                 : null;
 
             const response = await axios.get(`${API_BASE_URL}/reports`, {
@@ -104,9 +106,10 @@ export default function GameReports({
                             pairing?.length === 1
                                 ? [...pairing, null]
                                 : pairing,
-                        winners: toPlayerFilterParam(filters.winners),
-                        losers: toPlayerFilterParam(filters.losers),
-                        players: toPlayerFilterParam(filters.players),
+                        winners: toFilterParam(filters.winners),
+                        losers: toFilterParam(filters.losers),
+                        players: toFilterParam(filters.players),
+                        leagues: toFilterParam(filters.leagues),
                     }),
                 },
             });
@@ -255,6 +258,27 @@ export default function GameReports({
                                 <th />
                                 <th />
                                 <th />
+
+                                <TableFilter
+                                    placeholder="Select leagues"
+                                    loading={false}
+                                    allOption={{ id: "", label: "Select all" }}
+                                    options={leagues.map(
+                                        (league): MenuOption<string> => ({
+                                            id: league,
+                                            label: getLeagueLabel(league),
+                                        })
+                                    )}
+                                    width={LEAGUE_COL_WIDTH}
+                                    current={filters.leagues}
+                                    onChange={(values) => {
+                                        setFilters({
+                                            ...filters,
+                                            leagues: values,
+                                        });
+                                    }}
+                                />
+
                                 <th />
                                 <th />
                                 <th />
@@ -322,6 +346,16 @@ export default function GameReports({
                             <th>Game Type</th>
                             <th>Victory Type</th>
                             <th>Competition Type</th>
+
+                            <FilterHeader
+                                areFiltersOpen={areFiltersOpen}
+                                setAreFiltersOpen={setAreFiltersOpen}
+                                appliedCount={filters.leagues.length}
+                                style={{ width: `${LEAGUE_COL_WIDTH}px` }}
+                            >
+                                League
+                            </FilterHeader>
+
                             <th>Expansions</th>
                             <th>Tokens</th>
                             <th>Dwarven Rings</th>
@@ -409,10 +443,14 @@ export default function GameReports({
                         <td>
                             {summarizeCompetitionType(
                                 report.match,
-                                report.competition,
-                                report.league
+                                report.competition
                             )}
                         </td>
+
+                        <FixedWidthCell width={LEAGUE_COL_WIDTH}>
+                            {report.league ? getLeagueLabel(report.league) : ""}
+                        </FixedWidthCell>
+
                         <td>
                             {report.expansions
                                 .map(getExpansionLabel)
@@ -671,18 +709,8 @@ function summarizeVictoryType(side: Side, victory: Victory) {
     );
 }
 
-function summarizeCompetitionType(
-    match: Match,
-    competition: Competition[],
-    league: League | null
-) {
-    return [
-        match === "Rated" ? "Ladder" : "Friendly",
-        competition.includes("Tournament") ? "Tournament" : "",
-        competition.includes("League")
-            ? `League${league ? ` (${getLeagueLabel(league)})` : ""}`
-            : "",
-    ]
+function summarizeCompetitionType(match: Match, competition: Competition[]) {
+    return [match === "Rated" ? "Ladder" : "Friendly", ...competition]
         .filter(Boolean)
         .join(", ");
 }
@@ -713,8 +741,10 @@ function isPairingValid(pairing: unknown[]) {
     return pairing.length <= 2;
 }
 
-function toPlayerFilterParam(playerOptions: MenuOption[]): number[] | null {
-    return nullifyEmpty(playerOptions.map(({ id }) => id));
+function toFilterParam(
+    options: MenuOption<string | number>[]
+): (string | number)[] | null {
+    return nullifyEmpty(options.map(({ id }) => id));
 }
 
 function nullifyEmpty<T>(arr: T[]) {

@@ -6,23 +6,27 @@ import FormHelperText from "@mui/joy/FormHelperText";
 import { ErrorMessage } from "./constants";
 import { MenuOption } from "./types";
 
-interface Props<O extends string | MenuOption> {
+interface Props<O extends string | MenuOption<number | string>> {
     options: O[];
     current: O[];
     placeholder: string;
     loading: boolean;
     width: number;
     errorMessage?: ErrorMessage;
+    allOption?: O;
     onChange: (value: O[]) => void;
 }
 
-export default function TableFilter<O extends string | MenuOption>({
+export default function TableFilter<
+    O extends string | MenuOption<number | string>
+>({
     options,
     current,
     placeholder,
     loading,
     width,
     errorMessage,
+    allOption,
     onChange,
 }: Props<O>) {
     const [isFocused, setIsFocused] = useState(false);
@@ -53,12 +57,30 @@ export default function TableFilter<O extends string | MenuOption>({
                         size="sm"
                         limitTags={0}
                         placeholder={placeholder}
-                        options={options}
+                        options={
+                            allOption ? [allOption].concat(options) : options
+                        }
                         value={current}
                         loading={loading}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
-                        onChange={(_, values) => onChange(values)}
+                        onChange={(_, values) => {
+                            if (allOption && values.includes(allOption)) {
+                                onChange(options);
+                            } else {
+                                onChange(
+                                    values.filter(
+                                        (value) => value !== allOption
+                                    )
+                                );
+                            }
+                        }}
+                        isOptionEqualToValue={(option, value) => {
+                            return typeof option === "string" ||
+                                typeof value === "string"
+                                ? option === value
+                                : option.id === value.id;
+                        }}
                         sx={{
                             background: "white",
                             fontSize: "inherit",

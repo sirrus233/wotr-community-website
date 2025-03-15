@@ -153,9 +153,9 @@ export interface LeaderboardEntry {
 
 export type PlayerEditMode = "edit" | "remap";
 
-export type MenuOption = {
+export type MenuOption<T extends number | string> = {
     label: string;
-    id: number;
+    id: T;
 };
 
 export interface PlayerEditFormData {
@@ -173,8 +173,8 @@ export type ValidPlayerEditFormData = {
 };
 
 export interface PlayerRemapFormData {
-    fromPlayer: FieldData<MenuOption>;
-    toPlayer: FieldData<MenuOption | null>;
+    fromPlayer: FieldData<MenuOption<number>>;
+    toPlayer: FieldData<MenuOption<number> | null>;
 }
 
 export type ValidPlayerRemapFormData = {
@@ -244,8 +244,9 @@ export type ValidLeaguePlayerFormData = {
 export type ValueOf<T> = T[keyof T];
 
 export type GameReportFilters = {
-    pairing: MenuOption[];
-    players: MenuOption[];
-    winners: MenuOption[];
-    losers: MenuOption[];
+    pairing: MenuOption<number>[];
+    players: MenuOption<number>[];
+    winners: MenuOption<number>[];
+    losers: MenuOption<number>[];
+    leagues: MenuOption<string>[];
 };

@@ -5,7 +5,7 @@ import MaterialAutocomplete from "@mui/joy/Autocomplete";
 import CircularProgress from "@mui/joy/CircularProgress";
 import { MenuOption } from "./types";
 
-interface Props<O extends string | MenuOption> {
+interface Props<O extends string | MenuOption<number | string>> {
     options: O[];
     current: O | null;
     placeholder: string;
@@ -17,7 +17,9 @@ interface Props<O extends string | MenuOption> {
     validate: () => void;
 }
 
-export default function Autocomplete<O extends string | MenuOption>({
+export default function Autocomplete<
+    O extends string | MenuOption<number | string>
+>({
     options,
     current,
     placeholder,

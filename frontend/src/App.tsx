@@ -59,7 +59,12 @@ export default function App() {
     const [exporting, setExporting] = useState(false);
 
     const playerOptions = leaderboard
-        .map((entry): MenuOption => ({ label: entry.name, id: entry.pid }))
+        .map(
+            (entry): MenuOption<number> => ({
+                label: entry.name,
+                id: entry.pid,
+            })
+        )
         .sort((a, b) => a.label.localeCompare(b.label));
 
     const playerNames = playerOptions.map(({ label }) => label);
