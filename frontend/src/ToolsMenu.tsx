@@ -51,8 +51,8 @@ export default function ToolsMenu({
     useEffect(() => {
         if (loginError) {
             setErrorData({
-                title: ErrorMessage.NotAuthorizedStatus,
-                message: ErrorMessage.NotAuthorized,
+                title: loginError,
+                message: ErrorMessage.LoginError,
             });
         }
     }, [loginError]);
