@@ -6,7 +6,9 @@ import FormHelperText from "@mui/joy/FormHelperText";
 import { ErrorMessage } from "./constants";
 import { MenuOption } from "./types";
 
-interface Props<O extends string | MenuOption<number | string>> {
+type Option = string | MenuOption<unknown>;
+
+interface Props<O extends Option> {
     options: O[];
     current: O[];
     placeholder: string;
@@ -14,12 +16,11 @@ interface Props<O extends string | MenuOption<number | string>> {
     width: number;
     errorMessage?: ErrorMessage;
     allOption?: O;
+    emptyOption?: O;
     onChange: (value: O[]) => void;
 }
 
-export default function TableFilter<
-    O extends string | MenuOption<number | string>
->({
+export default function TableFilter<O extends Option>({
     options,
     current,
     placeholder,
@@ -27,9 +28,14 @@ export default function TableFilter<
     width,
     errorMessage,
     allOption,
+    emptyOption,
     onChange,
 }: Props<O>) {
     const [isFocused, setIsFocused] = useState(false);
+
+    const specialOptions = [allOption, emptyOption].filter(
+        (o) => o !== undefined
+    );
 
     return (
         <th style={{ overflow: "visible" }}>
@@ -57,30 +63,37 @@ export default function TableFilter<
                         size="sm"
                         limitTags={0}
                         placeholder={placeholder}
-                        options={
-                            allOption ? [allOption].concat(options) : options
-                        }
+                        options={specialOptions.concat(options)}
                         value={current}
                         loading={loading}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         onChange={(_, values) => {
-                            if (allOption && values.includes(allOption)) {
-                                onChange(options);
-                            } else {
-                                onChange(
-                                    values.filter(
-                                        (value) => value !== allOption
-                                    )
+                            const cleanedValues = values.filter((value) => {
+                                return !(
+                                    isOptionEqual(value, allOption) ||
+                                    isOptionEqual(value, emptyOption)
                                 );
-                            }
+                            });
+
+                            onChange(
+                                values.find((o) => isOptionEqual(o, allOption))
+                                    ? options
+                                    : emptyOption &&
+                                      values.find((o) =>
+                                          isOptionEqual(o, emptyOption)
+                                      )
+                                    ? current.find((o) =>
+                                          isOptionEqual(o, emptyOption)
+                                      )
+                                        ? cleanedValues
+                                        : [emptyOption]
+                                    : cleanedValues
+                            );
                         }}
-                        isOptionEqualToValue={(option, value) => {
-                            return typeof option === "string" ||
-                                typeof value === "string"
-                                ? option === value
-                                : option.id === value.id;
-                        }}
+                        isOptionEqualToValue={(...args) =>
+                            isOptionEqual(...args)
+                        }
                         sx={{
                             background: "white",
                             fontSize: "inherit",
@@ -104,4 +117,12 @@ export default function TableFilter<
             </FormControl>
         </th>
     );
+}
+
+function isOptionEqual(a?: Option, b?: Option) {
+    if (!a || !b) return false;
+
+    return typeof a === "string" || typeof b === "string"
+        ? a === b
+        : a.id === b.id;
 }

@@ -153,7 +153,7 @@ export interface LeaderboardEntry {
 
 export type PlayerEditMode = "edit" | "remap";
 
-export type MenuOption<T extends number | string> = {
+export type MenuOption<T> = {
     label: string;
     id: T;
 };

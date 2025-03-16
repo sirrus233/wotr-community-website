@@ -64,6 +64,9 @@ const LEAGUE_COL_WIDTH = 130;
 
 const PAGE_LIMIT = 100;
 
+const ALL_OPTION_ID = "ALL";
+const EMPTY_OPTION_ID = "EMPTY";
+
 interface Props {
     playerOptions: MenuOption<number>[];
     loadingPlayers: boolean;
@@ -262,13 +265,18 @@ export default function GameReports({
                                 <TableFilter
                                     placeholder="Select leagues"
                                     loading={false}
-                                    allOption={{ id: "", label: "Select all" }}
-                                    options={leagues.map(
-                                        (league): MenuOption<string> => ({
-                                            id: league,
-                                            label: getLeagueLabel(league),
-                                        })
-                                    )}
+                                    allOption={{
+                                        id: ALL_OPTION_ID,
+                                        label: "Any league",
+                                    }}
+                                    emptyOption={{
+                                        id: EMPTY_OPTION_ID,
+                                        label: "No league",
+                                    }}
+                                    options={leagues.map((league) => ({
+                                        id: league,
+                                        label: getLeagueLabel(league),
+                                    }))}
                                     width={LEAGUE_COL_WIDTH}
                                     current={filters.leagues}
                                     onChange={(values) => {
@@ -741,10 +749,10 @@ function isPairingValid(pairing: unknown[]) {
     return pairing.length <= 2;
 }
 
-function toFilterParam(
-    options: MenuOption<string | number>[]
-): (string | number)[] | null {
-    return nullifyEmpty(options.map(({ id }) => id));
+function toFilterParam(options: MenuOption<unknown>[]): unknown[] | null {
+    return options.find(({ id }) => id === EMPTY_OPTION_ID)
+        ? []
+        : nullifyEmpty(options.map(({ id }) => id));
 }
 
 function nullifyEmpty<T>(arr: T[]) {
