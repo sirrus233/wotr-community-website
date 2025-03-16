@@ -22,7 +22,7 @@ export default function ExternalLink({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            style={style}
+            sx={style}
         >
             <Icon sx={{ paddingRight: "5px" }} />
             {children}
