@@ -119,8 +119,8 @@ export default function TableFilter<O extends Option>({
     );
 }
 
-function isOptionEqual(a?: Option, b?: Option) {
-    if (!a || !b) return false;
+function isOptionEqual(a: Option, b?: Option) {
+    if (!b) return false;
 
     return typeof a === "string" || typeof b === "string"
         ? a === b
