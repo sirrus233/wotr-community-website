@@ -95,7 +95,7 @@ export default function ToolsMenu({
             .finally(() => setExporting(false));
     };
 
-    const handleLogout = async () => {
+    const handleLogout = () => {
         const onError = (error: unknown) => {
             logNetworkError(error);
             setErrorData({
@@ -105,15 +105,11 @@ export default function ToolsMenu({
         };
 
         setLoadingUserInfo(true);
-        try {
-            googleLogout();
-            await axios
-                .post(`${API_BASE_URL}/logout`)
-                .then(() => getUserInfo(onError));
-        } catch (error) {
-            onError(error);
-        }
-        setLoadingUserInfo(false);
+        axios
+            .post(`${API_BASE_URL}/logout`)
+            .then(() => getUserInfo(onError))
+            .catch(onError)
+            .finally(() => setLoadingUserInfo(false));
     };
 
     return (
