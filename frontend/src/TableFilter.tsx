@@ -37,6 +37,30 @@ export default function TableFilter<O extends Option>({
         (o) => o !== undefined
     );
 
+    const isAllOption = (option: Option) =>
+        !!allOption && isOptionEqual(option, allOption);
+
+    const isEmptyOption = (option: Option) =>
+        !!emptyOption && isOptionEqual(option, emptyOption);
+
+    const isSpecialOption = (option: Option) =>
+        isAllOption(option) || isEmptyOption(option);
+
+    function translateSelections(selections: O[]): O[] {
+        const normalSelections = selections.filter((o) => !isSpecialOption(o));
+
+        if (selections.find(isAllOption)) {
+            return options;
+        }
+        if (emptyOption && selections.find(isEmptyOption)) {
+            return current.find(isEmptyOption)
+                ? normalSelections
+                : [emptyOption];
+        }
+
+        return normalSelections;
+    }
+
     return (
         <th style={{ overflow: "visible" }}>
             <FormControl error={!!errorMessage}>
@@ -69,27 +93,7 @@ export default function TableFilter<O extends Option>({
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         onChange={(_, values) => {
-                            const cleanedValues = values.filter((value) => {
-                                return !(
-                                    isOptionEqual(value, allOption) ||
-                                    isOptionEqual(value, emptyOption)
-                                );
-                            });
-
-                            onChange(
-                                values.find((o) => isOptionEqual(o, allOption))
-                                    ? options
-                                    : emptyOption &&
-                                      values.find((o) =>
-                                          isOptionEqual(o, emptyOption)
-                                      )
-                                    ? current.find((o) =>
-                                          isOptionEqual(o, emptyOption)
-                                      )
-                                        ? cleanedValues
-                                        : [emptyOption]
-                                    : cleanedValues
-                            );
+                            onChange(translateSelections(values));
                         }}
                         isOptionEqualToValue={(...args) =>
                             isOptionEqual(...args)
@@ -119,9 +123,7 @@ export default function TableFilter<O extends Option>({
     );
 }
 
-function isOptionEqual(a: Option, b?: Option) {
-    if (!b) return false;
-
+function isOptionEqual(a: Option, b: Option) {
     return typeof a === "string" || typeof b === "string"
         ? a === b
         : a.id === b.id;
