@@ -88,7 +88,7 @@ export default function ToolsMenu({
             .catch((error) => {
                 logNetworkError(error);
                 setErrorData({
-                    title: "There is some new devilry here",
+                    title: "There is some new devilry here...",
                     message: ErrorMessage.ExportError,
                 });
             })
