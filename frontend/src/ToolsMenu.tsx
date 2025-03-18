@@ -96,7 +96,7 @@ export default function ToolsMenu({
     };
 
     const handleLogout = () => {
-        const onError = (error: unknown) => {
+        const onLogoutEndpointError = (error: unknown) => {
             logNetworkError(error);
             setErrorData({
                 title: "The way is shut.",
@@ -104,11 +104,17 @@ export default function ToolsMenu({
             });
         };
 
+        const onUserInfoErrorAfterLogout = (error: unknown) => {
+            // an error is expected after logout
+            logNetworkError(error);
+            clearUserInfo();
+        };
+
         setLoadingUserInfo(true);
         axios
             .post(`${API_BASE_URL}/logout`)
-            .catch(onError)
-            .then(() => getUserInfo(logNetworkError)) // log expected error but don't display to user
+            .catch(onLogoutEndpointError)
+            .then(() => getUserInfo(onUserInfoErrorAfterLogout))
             .finally(() => setLoadingUserInfo(false));
     };
 
