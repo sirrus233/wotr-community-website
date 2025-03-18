@@ -4,7 +4,7 @@ import { ServerErrorBody } from "./types";
 export function toErrorMessage(error: ServerErrorBody): string {
     switch (error.status) {
         case 401:
-            return ErrorMessage.NotAuthorized;
+            return `${ErrorMessage.NotAuthorizedStatus} ${ErrorMessage.NotAuthorized}`;
         case 422:
             return error.response.data;
         default:

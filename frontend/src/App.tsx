@@ -16,7 +16,6 @@ import List from "@mui/joy/List";
 import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/joy/Typography";
-import WarningIcon from "@mui/icons-material/Warning";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { ErrorMessage } from "./constants";
 import { logNetworkError } from "./networkErrorHandlers";
@@ -30,8 +29,8 @@ import {
 } from "./types";
 import { API_BASE_URL } from "./env";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import GoogleLoginButton from "./GoogleLogin";
 import Leagues from "./Leagues";
+import ToolsMenu from "./ToolsMenu";
 
 export default function App() {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -173,13 +172,6 @@ export default function App() {
                         >
                             {loadingUserInfo ? (
                                 <CircularProgress size="sm" />
-                            ) : loginError ? (
-                                <>
-                                    <WarningIcon
-                                        sx={{ color: "inherit", mx: "5px" }}
-                                    />
-                                    {loginError}
-                                </>
                             ) : (
                                 userInfo?.isAdmin && (
                                     <>
@@ -190,22 +182,22 @@ export default function App() {
                                     </>
                                 )
                             )}
+
+                            <ToolsMenu
+                                loadingUserInfo={loadingUserInfo}
+                                loginError={loginError}
+                                userInfo={userInfo}
+                                exporting={exporting}
+                                getUserInfo={getUserInfo}
+                                clearUserInfo={clearUserInfo}
+                                setLoginError={setLoginError}
+                                setLoadingUserInfo={setLoadingUserInfo}
+                                setExporting={setExporting}
+                            />
                         </Box>
                     </header>
                     <Routes>
-                        <Route
-                            path="/"
-                            element={
-                                <Home
-                                    getUserInfo={getUserInfo}
-                                    clearUserInfo={clearUserInfo}
-                                    setLoginError={setLoginError}
-                                    setLoadingUserInfo={setLoadingUserInfo}
-                                    exporting={exporting}
-                                    setExporting={setExporting}
-                                />
-                            }
-                        />
+                        <Route path="/" element={<Home />} />
                         <Route
                             path="/game-report"
                             element={
@@ -263,23 +255,7 @@ export default function App() {
     );
 }
 
-interface HomeProps {
-    getUserInfo: (onError: (error: unknown) => void) => void;
-    clearUserInfo: () => void;
-    setLoginError: (error: string) => void;
-    setLoadingUserInfo: (loading: boolean) => void;
-    exporting: boolean;
-    setExporting: (exporting: boolean) => void;
-}
-
-function Home({
-    getUserInfo,
-    clearUserInfo,
-    setLoginError,
-    setLoadingUserInfo,
-    exporting,
-    setExporting,
-}: HomeProps) {
+function Home() {
     return (
         <Box
             gap={3}
@@ -450,61 +426,6 @@ function Home({
                         {label}
                     </ExternalLink>
                 ))}
-            </Section>
-            <Section>
-                <Typography level="title-lg" mb={1}>
-                    Admin Tools
-                </Typography>
-
-                <Box display="flex" flexDirection="row" gap={1}>
-                    <GoogleLoginButton
-                        getUserInfo={getUserInfo}
-                        clearUserInfo={clearUserInfo}
-                        setLoginError={setLoginError}
-                        setLoadingUserInfo={setLoadingUserInfo}
-                    />
-                    <Button
-                        variant="outlined"
-                        loading={exporting}
-                        onClick={() => {
-                            setExporting(true);
-                            axios
-                                .get(`${API_BASE_URL}/export`, {
-                                    responseType: "blob",
-                                })
-                                .then((response) => {
-                                    // https://gist.github.com/javilobo8/097c30a233786be52070986d8cdb1743
-                                    const blob = new Blob([response.data], {
-                                        type: response.data.type,
-                                    });
-                                    const url =
-                                        window.URL.createObjectURL(blob);
-                                    const link = document.createElement("a");
-                                    link.href = url;
-                                    const contentDisposition =
-                                        response.headers["content-disposition"];
-                                    let fileName = "export.zip";
-                                    if (contentDisposition) {
-                                        const fileNameMatch =
-                                            contentDisposition.match(
-                                                /filename="(.+)"/
-                                            );
-                                        if (fileNameMatch.length === 2)
-                                            fileName = fileNameMatch[1];
-                                    }
-                                    link.setAttribute("download", fileName);
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    link.remove();
-                                    window.URL.revokeObjectURL(url);
-                                })
-                                .catch(logNetworkError)
-                                .finally(() => setExporting(false));
-                        }}
-                    >
-                        Export Data
-                    </Button>
-                </Box>
             </Section>
 
             <Section>

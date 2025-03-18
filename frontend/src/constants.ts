@@ -115,7 +115,7 @@ export const playerStates = ["Active", "Inactive"] as const;
 
 export enum ErrorMessage {
     Default = "Something went wrong. Please contact an admin for assistance.",
-    NotAuthorized = "You cannot pass! If you're an administrator, your session may have expired. Please log in and try again.",
+    NotAuthorized = "If you're an administrator, your session may have expired. Please log in and try again.",
     NotAuthorizedStatus = "You cannot pass!",
     UnknownAuthStatus = "Sign-in unavailable",
     Required = "Required",
@@ -123,6 +123,9 @@ export enum ErrorMessage {
     MissingPlayerName = "This player does not exist in the database. Unless it's a new player, please check the spelling.",
     ExistingPlayerRequired = "Must choose an existing player",
     PairingFilterInvalid = "Select up to two",
+    LoginError = "Failed to sign in. Non-administrators can't sign in. If you're an administrator, please request support on Discord.",
+    LogoutError = "Failed to sign out. Please contact an admin for assistance.",
+    ExportError = "Failed to export data. Please contact an admin for assistance.",
 }
 
 export const INFINITE = 100;
