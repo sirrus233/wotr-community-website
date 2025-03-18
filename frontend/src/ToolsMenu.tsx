@@ -1,6 +1,5 @@
 import axios from "axios";
 import React, { CSSProperties, ReactNode, useEffect, useState } from "react";
-import { googleLogout } from "@react-oauth/google";
 import Box from "@mui/joy/Box";
 import CircularProgress from "@mui/joy/CircularProgress";
 import Dropdown from "@mui/joy/Dropdown";
@@ -43,6 +42,7 @@ export default function ToolsMenu({
     setExporting,
 }: Props) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [errorData, setErrorData] = useState<{
         title: ReactNode;
         message: ReactNode;
@@ -107,8 +107,8 @@ export default function ToolsMenu({
         setLoadingUserInfo(true);
         axios
             .post(`${API_BASE_URL}/logout`)
-            .then(() => getUserInfo(onError))
             .catch(onError)
+            .then(() => getUserInfo(logNetworkError)) // log expected error but don't display to user
             .finally(() => setLoadingUserInfo(false));
     };
 
@@ -126,6 +126,23 @@ export default function ToolsMenu({
                 <SupportLink />
             </Modal>
 
+            <Modal
+                isOpen={isLoginModalOpen}
+                close={() => setIsLoginModalOpen(false)}
+                title={"Admin Sign-In"}
+            >
+                {userInfo?.isAdmin ? (
+                    <Box width={200}>Signed in</Box>
+                ) : (
+                    <GoogleLoginButton
+                        getUserInfo={getUserInfo}
+                        clearUserInfo={clearUserInfo}
+                        setLoginError={setLoginError}
+                        setLoadingUserInfo={setLoadingUserInfo}
+                    />
+                )}
+            </Modal>
+
             <ToolsButton loading={exporting || loadingUserInfo} />
 
             <Menu>
@@ -135,31 +152,18 @@ export default function ToolsMenu({
                 </Item>
 
                 {userInfo?.isAdmin ? (
-                    <Item
-                        disabled={loadingUserInfo}
-                        onClick={handleLogout}
-                        containerStyle={{ padding: 1 }}
-                    >
+                    <Item disabled={loadingUserInfo} onClick={handleLogout}>
                         <LogoutIcon sx={{ mr: 1, pl: "3px" }} />
                         Sign Out
                     </Item>
                 ) : (
-                    <MaskedItem
+                    <Item
                         disabled={loadingUserInfo}
-                        maskChildren={
-                            <>
-                                <LoginIcon sx={{ mr: 1 }} />
-                                Admin Sign-In
-                            </>
-                        }
+                        onClick={() => setIsLoginModalOpen(true)}
                     >
-                        <GoogleLoginButton
-                            getUserInfo={getUserInfo}
-                            clearUserInfo={clearUserInfo}
-                            setLoginError={setLoginError}
-                            setLoadingUserInfo={setLoadingUserInfo}
-                        />
-                    </MaskedItem>
+                        <LoginIcon sx={{ mr: 1 }} />
+                        Admin Sign-In
+                    </Item>
                 )}
             </Menu>
         </Dropdown>
@@ -217,55 +221,5 @@ function Item({ children, disabled, containerStyle = {}, onClick }: ItemProps) {
                 {children}
             </Box>
         </MenuItem>
-    );
-}
-
-type MaskedItemProps = ContainerProps & {
-    disabled: boolean;
-    maskChildren: ReactNode;
-};
-
-function MaskedItem({ disabled, maskChildren, children }: MaskedItemProps) {
-    return (
-        <Item
-            disabled={disabled}
-            containerStyle={{ position: "relative", padding: 0 }}
-        >
-            <ItemMask>{maskChildren}</ItemMask>
-            <InvisibleOverlay>{!disabled && children}</InvisibleOverlay>
-        </Item>
-    );
-}
-
-function ItemMask({ children }: ContainerProps) {
-    return (
-        <Box
-            sx={{
-                position: "relative",
-                zIndex: 1,
-                display: "flex",
-                alignItems: "center",
-                p: 1,
-            }}
-        >
-            {children}
-        </Box>
-    );
-}
-
-function InvisibleOverlay({ children }: ContainerProps) {
-    return (
-        <Box
-            sx={{
-                position: "absolute",
-                width: "100%",
-                zIndex: 2,
-                opacity: 0,
-                p: 0,
-                m: 0,
-            }}
-        >
-            {children}
-        </Box>
     );
 }
