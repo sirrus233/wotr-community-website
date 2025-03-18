@@ -17,7 +17,7 @@ import { toErrorMessage } from "./networkErrorHandlers";
 interface Props {
     pid: number;
     name: string;
-    playerOptions: MenuOption[];
+    playerOptions: MenuOption<number>[];
     refresh: () => void;
 }
 

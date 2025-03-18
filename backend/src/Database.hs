@@ -122,7 +122,9 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
             &&. ((report ^. GameReportWinnerId ==. val player2) ||. (report ^. GameReportLoserId ==. val player2))
     winnerFilter = toFilter report GameReportWinnerId spec.winners
     loserFilter = toFilter report GameReportLoserId spec.losers
-    leagueFilter = toFilter report GameReportLeague (map Just <$> spec.leagues)
+    leagueFilter = case spec.leagues of
+      Just [] -> Just (isNothing_ (report ^. GameReportLeague))
+      _ -> toFilter report GameReportLeague (map Just <$> spec.leagues)
 
 getAdminBySessionId :: (MonadIO m, MonadLogger m) => Text -> DBAction m (Maybe (Entity Admin))
 getAdminBySessionId sessionId = lift . getBy . UniqueAdminSessionId $ Just sessionId
