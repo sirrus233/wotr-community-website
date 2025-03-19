@@ -22,27 +22,24 @@ interface Props {
     loadingUserInfo: boolean;
     loginError: string | null;
     userInfo: UserInfo | null;
-    exporting: boolean;
     getUserInfo: (onError: (error: unknown) => void) => void;
     clearUserInfo: () => void;
-    setLoginError: (error: string | null) => void;
+    setLoginError: (error: ErrorMessage | null) => void;
     setLoadingUserInfo: (loading: boolean) => void;
-    setExporting: (exporting: boolean) => void;
 }
 
 export default function ToolsMenu({
     loadingUserInfo,
     loginError,
     userInfo,
-    exporting,
     getUserInfo,
     clearUserInfo,
     setLoginError,
     setLoadingUserInfo,
-    setExporting,
 }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [exporting, setExporting] = useState(false);
     const [errorData, setErrorData] = useState<{
         title: ReactNode;
         message: ReactNode;

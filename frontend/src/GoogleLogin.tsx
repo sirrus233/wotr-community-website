@@ -8,7 +8,7 @@ import { logNetworkError, toAuthStatus } from "./networkErrorHandlers";
 interface Props {
     getUserInfo: (onError: (error: unknown) => void) => void;
     clearUserInfo: () => void;
-    setLoginError: (error: string) => void;
+    setLoginError: (error: ErrorMessage) => void;
     setLoadingUserInfo: (loading: boolean) => void;
 }
 

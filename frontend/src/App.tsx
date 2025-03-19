@@ -17,7 +17,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/joy/Typography";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import { ErrorMessage } from "./constants";
+import useRequestState from "./hooks/useRequestState";
 import { logNetworkError } from "./networkErrorHandlers";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import {
@@ -33,17 +33,32 @@ import Leagues from "./Leagues";
 import ToolsMenu from "./ToolsMenu";
 
 export default function App() {
-    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-    const [loadingUserInfo, setLoadingUserInfo] = useState(false);
-    const [loginError, setLoginError] = useState<string | null>(null);
+    const [
+        getUserInfo,
+        [userInfo, loadingUserInfo, loginError],
+        [setUserInfo, setLoadingUserInfo, setLoginError],
+    ] = useRequestState<UserInfo, null>(null, () =>
+        axios.get(`${API_BASE_URL}/userInfo`)
+    );
 
-    const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+    const [
+        getLeaderboard,
+        [leaderboard, loadingLeaderboard, leaderboardError],
+    ] = useRequestState<{ entries: LeaderboardEntry[] }, { entries: [] }>(
+        { entries: [] },
+        () =>
+            axios.get(`${API_BASE_URL}/leaderboard`, {
+                params: { year: leaderboardYear },
+            })
+    );
+
+    const [getLeagueStats, [leagueStats, loadingLeague, leagueError]] =
+        useRequestState<LeagueStats, Record<never, never>>({}, () =>
+            axios.get(`${API_BASE_URL}/leagueStats`, { params: leagueParams })
+        );
+
     const [leaderboardYear, setLeaderboardYear] = useState(
         new Date().getFullYear()
-    );
-    const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
-    const [leaderboardError, setLeaderboardError] = useState<string | null>(
-        null
     );
 
     const [leagueParams, setLeagueParams] = useState<LeagueParams>({
@@ -51,13 +66,8 @@ export default function App() {
         tier: "Tier1",
         year: new Date().getFullYear(),
     });
-    const [leagueStats, setLeagueStats] = useState<LeagueStats>({});
-    const [loadingLeague, setLoadingLeague] = useState(false);
-    const [leagueError, setLeagueError] = useState<string | null>(null);
 
-    const [exporting, setExporting] = useState(false);
-
-    const playerOptions = leaderboard
+    const playerOptions = leaderboard.entries
         .map(
             (entry): MenuOption<number> => ({
                 label: entry.name,
@@ -67,48 +77,6 @@ export default function App() {
         .sort((a, b) => a.label.localeCompare(b.label));
 
     const playerNames = playerOptions.map(({ label }) => label);
-
-    const getUserInfo = (onError: (error: unknown) => void) => {
-        setLoadingUserInfo(true);
-        setLoginError(null);
-        axios
-            .get(`${API_BASE_URL}/userInfo`)
-            .then((response) => setUserInfo(response.data))
-            .catch(onError)
-            .finally(() => setLoadingUserInfo(false));
-    };
-
-    const getLeaderboard = () => {
-        setLoadingLeaderboard(true);
-
-        axios
-            .get(`${API_BASE_URL}/leaderboard`, {
-                params: { year: leaderboardYear },
-            })
-            .then((response) => {
-                setLeaderboard(response.data.entries as LeaderboardEntry[]);
-            })
-            .catch((error) => {
-                setLeaderboardError(ErrorMessage.Default);
-                logNetworkError(error);
-            })
-            .finally(() => {
-                setLoadingLeaderboard(false);
-            });
-    };
-
-    const getLeagueStats = () => {
-        setLoadingLeague(true);
-
-        axios
-            .get(`${API_BASE_URL}/leagueStats`, { params: leagueParams })
-            .then((response) => setLeagueStats(response.data as LeagueStats))
-            .catch((error) => {
-                setLeagueError(ErrorMessage.Default);
-                logNetworkError(error);
-            })
-            .finally(() => setLoadingLeague(false));
-    };
 
     const clearUserInfo = () => setUserInfo(null);
 
@@ -187,12 +155,10 @@ export default function App() {
                                 loadingUserInfo={loadingUserInfo}
                                 loginError={loginError}
                                 userInfo={userInfo}
-                                exporting={exporting}
                                 getUserInfo={getUserInfo}
                                 clearUserInfo={clearUserInfo}
                                 setLoginError={setLoginError}
                                 setLoadingUserInfo={setLoadingUserInfo}
-                                setExporting={setExporting}
                             />
                         </Box>
                     </header>
@@ -221,14 +187,13 @@ export default function App() {
                             path="/rankings"
                             element={
                                 <Rankings
-                                    leaderboard={leaderboard}
+                                    entries={leaderboard.entries}
                                     year={leaderboardYear}
                                     loading={loadingLeaderboard}
                                     error={leaderboardError}
                                     isAdmin={userInfo?.isAdmin || false}
                                     getLeaderboard={getLeaderboard}
                                     setYear={setLeaderboardYear}
-                                    setError={setLeaderboardError}
                                 />
                             }
                         />
