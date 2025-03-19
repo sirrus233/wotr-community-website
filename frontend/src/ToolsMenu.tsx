@@ -137,8 +137,14 @@ export default function ToolsMenu({
                 close={() => setIsLoginModalOpen(false)}
                 title={"Admin Sign-In"}
             >
-                {userInfo?.isAdmin ? (
-                    <Box width={200}>Signed in</Box>
+                {loadingUserInfo || userInfo?.isAdmin ? (
+                    <Box width={200}>
+                        {loadingUserInfo ? (
+                            <CircularProgress size="sm" />
+                        ) : (
+                            "Signed in"
+                        )}
+                    </Box>
                 ) : (
                     <GoogleLoginButton
                         getUserInfo={getUserInfo}
