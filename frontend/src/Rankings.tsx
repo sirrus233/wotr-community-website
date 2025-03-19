@@ -32,6 +32,7 @@ import TableLayout from "./TableLayout";
 import { range, toPercent } from "./utils";
 import {
     COUNTRIES_DATA,
+    ErrorMessage,
     LEADERBOARD_START_YEAR,
     playerStates,
 } from "./constants";
@@ -44,14 +45,13 @@ type PlayerEditParams = {
 };
 
 interface Props {
-    leaderboard: LeaderboardEntry[];
+    entries: LeaderboardEntry[];
     year: number;
     loading: boolean;
     error: string | null;
     isAdmin: boolean;
     getLeaderboard: () => void;
     setYear: (year: number) => void;
-    setError: (error: string | null) => void;
 }
 
 const HEADER_ROW_HEIGHT = 32;
@@ -64,24 +64,18 @@ const TABLE_TOP_POSITION =
     TABLE_ELEMENTS_GAP * 3;
 
 function Rankings({
-    leaderboard,
+    entries,
     year,
     loading,
     error,
     isAdmin,
     getLeaderboard,
     setYear,
-    setError,
 }: Props) {
     const [filters, setFilters] = useState<PlayerState[]>(["Active"]);
 
     const [playerEditParams, setPlayerEditParams] =
         useState<PlayerEditParams | null>(null);
-
-    const refresh = () => {
-        setError(null);
-        getLeaderboard();
-    };
 
     const availableYears = range(
         LEADERBOARD_START_YEAR,
@@ -97,8 +91,8 @@ function Rankings({
                         {playerEditParams.mode === "remap" ? (
                             <PlayerRemapForm
                                 {...playerEditParams}
-                                refresh={refresh}
-                                playerOptions={leaderboard.map((entry) => ({
+                                refresh={getLeaderboard}
+                                playerOptions={entries.map((entry) => ({
                                     label: entry.name,
                                     id: entry.pid,
                                 }))}
@@ -106,7 +100,7 @@ function Rankings({
                         ) : (
                             <PlayerEditForm
                                 {...playerEditParams}
-                                refresh={refresh}
+                                refresh={getLeaderboard}
                             />
                         )}
                     </ModalDialog>
@@ -120,7 +114,7 @@ function Rankings({
             />
 
             <TableLayout
-                refresh={refresh}
+                refresh={getLeaderboard}
                 error={error}
                 loading={loading}
                 label="Rankings"
@@ -210,7 +204,7 @@ function Rankings({
                         </TableHeaderRow>
                     </>
                 }
-                body={leaderboard
+                body={entries
                     .filter(
                         (entry) =>
                             (entry.isActive && filters.includes("Active")) ||

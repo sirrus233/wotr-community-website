@@ -12,7 +12,7 @@ export function toErrorMessage(error: ServerErrorBody): string {
     }
 }
 
-export function toAuthStatus(error: unknown): string {
+export function toAuthStatus(error: unknown): ErrorMessage {
     if (isServerError(error) && error.status === 401) {
         return ErrorMessage.NotAuthorizedStatus;
     }
