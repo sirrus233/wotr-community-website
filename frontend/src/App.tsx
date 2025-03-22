@@ -90,7 +90,7 @@ export default function App() {
             logNetworkError(error);
             clearUserInfo();
         };
-        refreshUserInfo(onError);
+        refreshUserInfo({ onError });
     }, []);
 
     return (

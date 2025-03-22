@@ -112,7 +112,9 @@ export default function ToolsMenu({
         axios
             .post(`${API_BASE_URL}/logout`)
             .catch(onLogoutEndpointError)
-            .then(() => refreshUserInfo(onUserInfoErrorAfterLogout))
+            .then(() =>
+                refreshUserInfo({ onError: onUserInfoErrorAfterLogout })
+            )
             .finally(() => setLoadingUserInfo(false));
     };
 

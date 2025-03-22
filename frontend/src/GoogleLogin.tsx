@@ -31,7 +31,7 @@ export default function GoogleLoginButton({
             .post(`${API_BASE_URL}/auth/google/login`, response.credential, {
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
             })
-            .then(() => refreshUserInfo(onError))
+            .then(() => refreshUserInfo({ onError }))
             .catch((error) => {
                 onError(error);
                 setLoadingUserInfo(false);

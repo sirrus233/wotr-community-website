@@ -4,12 +4,16 @@ import { logNetworkError } from "../networkErrorHandlers";
 
 type OnError = (err: unknown) => void;
 
+interface RefreshRequestOptions {
+    onError?: OnError;
+}
+
 export type RequestWithState<P = undefined> = (
     params: P,
     onError?: OnError
 ) => void;
 
-export type RefreshRequest = (onError?: OnError) => void;
+export type RefreshRequest = (options?: RefreshRequestOptions) => void;
 
 type State<T, P> = [P, T, boolean, ErrorMessage | null];
 
@@ -55,7 +59,8 @@ export default function useRequestState<T, P = undefined>({
             .finally(() => setLoading(false));
     };
 
-    const refresh: RefreshRequest = (onError?) => request(params, onError);
+    const refresh: RefreshRequest = ({ onError } = {}) =>
+        request(params, onError);
 
     return [
         refresh,
