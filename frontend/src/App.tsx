@@ -1,10 +1,10 @@
 import axios from "axios";
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect } from "react";
 import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
-import GameReports from "./GameReports";
+import GameReports, { serializeReportsParams } from "./GameReports";
 import Rankings from "./Rankings";
 import CheckIcon from "@mui/icons-material/Check";
 import CircularProgress from "@mui/joy/CircularProgress";
@@ -21,10 +21,13 @@ import useRequestState from "./hooks/useRequestState";
 import { logNetworkError } from "./networkErrorHandlers";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import {
+    GameReportParams,
     LeaderboardEntry,
+    LeaderboardParams,
     LeagueParams,
     LeagueStats,
     MenuOption,
+    ProcessedGameReport,
     UserInfo,
 } from "./types";
 import { API_BASE_URL } from "./env";
@@ -32,39 +35,70 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import Leagues from "./Leagues";
 import ToolsMenu from "./ToolsMenu";
 
+const PAGE_LIMIT = 100;
+
 export default function App() {
     const [
-        getUserInfo,
-        [userInfo, loadingUserInfo, loginError],
-        [setUserInfo, setLoadingUserInfo, setLoginError],
-    ] = useRequestState<UserInfo, null>(null, () =>
-        axios.get(`${API_BASE_URL}/userInfo`)
-    );
+        refreshUserInfo,
+        [, userInfo, loadingUserInfo, loginError],
+        [, setUserInfo, setLoadingUserInfo, setLoginError],
+    ] = useRequestState<UserInfo | null>({
+        initialState: null,
+        initialParams: undefined,
+        sendRequest: () => axios.get(`${API_BASE_URL}/userInfo`),
+    });
 
     const [
-        getLeaderboard,
-        [leaderboard, loadingLeaderboard, leaderboardError],
-    ] = useRequestState<{ entries: LeaderboardEntry[] }, { entries: [] }>(
-        { entries: [] },
-        () =>
-            axios.get(`${API_BASE_URL}/leaderboard`, {
-                params: { year: leaderboardYear },
-            })
-    );
+        refreshLeaderboard,
+        [leaderboardParams, leaderboard, loadingLeaderboard, leaderboardError],
+        [setLeaderboardParams],
+    ] = useRequestState<{ entries: LeaderboardEntry[] }, LeaderboardParams>({
+        initialState: { entries: [] },
+        initialParams: { year: new Date().getFullYear() },
+        sendRequest: (params) =>
+            axios.get(`${API_BASE_URL}/leaderboard`, { params }),
+    });
 
-    const [getLeagueStats, [leagueStats, loadingLeague, leagueError]] =
-        useRequestState<LeagueStats, Record<never, never>>({}, () =>
-            axios.get(`${API_BASE_URL}/leagueStats`, { params: leagueParams })
-        );
+    const [
+        refreshLeagueStats,
+        [leagueParams, leagueStats, loadingLeague, leagueError],
+        [setLeagueParams],
+    ] = useRequestState<LeagueStats, LeagueParams>({
+        initialState: {},
+        initialParams: {
+            league: "GeneralLeague",
+            tier: "Tier1",
+            year: new Date().getFullYear(),
+        },
+        sendRequest: (params) =>
+            axios.get(`${API_BASE_URL}/leagueStats`, { params }),
+    });
 
-    const [leaderboardYear, setLeaderboardYear] = useState(
-        new Date().getFullYear()
-    );
-
-    const [leagueParams, setLeagueParams] = useState<LeagueParams>({
-        league: "GeneralLeague",
-        tier: "Tier1",
-        year: new Date().getFullYear(),
+    const [
+        refreshReports,
+        [reportsParams, reportsData, loadingReports, reportsError],
+        [setReportsParams],
+    ] = useRequestState<
+        { total: number; reports: ProcessedGameReport[] },
+        GameReportParams
+    >({
+        initialState: { total: 0, reports: [] },
+        initialParams: {
+            limit: PAGE_LIMIT,
+            currentPage: 1,
+            filters: {
+                pairing: [],
+                players: [],
+                winners: [],
+                losers: [],
+                leagues: [],
+            },
+        },
+        sendRequest: (params) => {
+            return axios.get(`${API_BASE_URL}/reports`, {
+                params: serializeReportsParams(params),
+            });
+        },
     });
 
     const playerOptions = leaderboard.entries
@@ -80,20 +114,15 @@ export default function App() {
 
     const clearUserInfo = () => setUserInfo(null);
 
-    useEffect(getLeaderboard, [leaderboardYear]);
-
-    useEffect(getLeagueStats, [
-        leagueParams.year,
-        leagueParams.league,
-        leagueParams.tier,
-    ]);
-
-    useEffect(function getUserInfoOnMount() {
+    useEffect(refreshLeaderboard, [leaderboardParams]);
+    useEffect(refreshLeagueStats, [leagueParams]);
+    useEffect(refreshReports, [reportsParams]);
+    useEffect(() => {
         const onError = (error: unknown) => {
             logNetworkError(error);
             clearUserInfo();
         };
-        getUserInfo(onError);
+        refreshUserInfo(onError);
     }, []);
 
     return (
@@ -155,7 +184,7 @@ export default function App() {
                                 loadingUserInfo={loadingUserInfo}
                                 loginError={loginError}
                                 userInfo={userInfo}
-                                getUserInfo={getUserInfo}
+                                refreshUserInfo={refreshUserInfo}
                                 clearUserInfo={clearUserInfo}
                                 setLoginError={setLoginError}
                                 setLoadingUserInfo={setLoadingUserInfo}
@@ -177,9 +206,16 @@ export default function App() {
                             path="/game-reports"
                             element={
                                 <GameReports
+                                    reports={reportsData.reports}
+                                    totalReportCount={reportsData.total}
                                     playerOptions={playerOptions}
+                                    loadingReports={loadingReports}
                                     loadingPlayers={loadingLeaderboard}
                                     isAdmin={userInfo?.isAdmin || false}
+                                    error={reportsError}
+                                    params={reportsParams}
+                                    setParams={setReportsParams}
+                                    refresh={refreshReports}
                                 />
                             }
                         />
@@ -188,12 +224,12 @@ export default function App() {
                             element={
                                 <Rankings
                                     entries={leaderboard.entries}
-                                    year={leaderboardYear}
                                     loading={loadingLeaderboard}
                                     error={leaderboardError}
                                     isAdmin={userInfo?.isAdmin || false}
-                                    getLeaderboard={getLeaderboard}
-                                    setYear={setLeaderboardYear}
+                                    params={leaderboardParams}
+                                    setParams={setLeaderboardParams}
+                                    refresh={refreshLeaderboard}
                                 />
                             }
                         />
@@ -201,15 +237,15 @@ export default function App() {
                             path="/leagues"
                             element={
                                 <Leagues
-                                    params={leagueParams}
-                                    setParams={setLeagueParams}
                                     stats={leagueStats}
                                     playerNames={playerNames}
                                     loading={loadingLeague}
                                     loadingPlayers={loadingLeaderboard}
                                     isAdmin={userInfo?.isAdmin || false}
                                     error={leagueError}
-                                    refresh={getLeagueStats}
+                                    params={leagueParams}
+                                    setParams={setLeagueParams}
+                                    refresh={refreshLeagueStats}
                                 />
                             }
                         />

@@ -2,12 +2,20 @@ import { useState } from "react";
 import { ErrorMessage } from "../constants";
 import { logNetworkError } from "../networkErrorHandlers";
 
-type RequestWithState = (onError?: (err: unknown) => void) => void;
+type OnError = (err: unknown) => void;
 
-type State<T, I> = [T | I, boolean, ErrorMessage | null];
+export type RequestWithState<P = undefined> = (
+    params: P,
+    onError?: OnError
+) => void;
 
-type Setters<T, I> = [
-    React.Dispatch<React.SetStateAction<T | I>>,
+export type RefreshRequest = (onError?: OnError) => void;
+
+type State<T, P> = [P, T, boolean, ErrorMessage | null];
+
+type Setters<T, P> = [
+    React.Dispatch<React.SetStateAction<P>>,
+    React.Dispatch<React.SetStateAction<T>>,
     React.Dispatch<React.SetStateAction<boolean>>,
     React.Dispatch<React.SetStateAction<ErrorMessage | null>>
 ];
@@ -16,15 +24,24 @@ interface Response {
     data: any;
 }
 
-export default function useRequestState<T, I>(
-    initialData: I,
-    sendRequest: () => Promise<Response>
-): [RequestWithState, State<T, I>, Setters<T, I>] {
-    const [data, setData] = useState<T | I>(initialData);
+interface Args<T, P> {
+    initialState: T;
+    initialParams: P;
+    sendRequest: (params: P) => Promise<Response>;
+}
+
+export default function useRequestState<T, P = undefined>({
+    initialState,
+    initialParams,
+    sendRequest,
+}: Args<T, P>): [RefreshRequest, State<T, P>, Setters<T, P>] {
+    const [params, setParams] = useState<P>(initialParams);
+    const [data, setData] = useState<T>(initialState);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<ErrorMessage | null>(null);
 
-    const request: RequestWithState = (
+    const request: RequestWithState<P> = (
+        params,
         onError = (err) => {
             logNetworkError(err);
             setError(ErrorMessage.Default);
@@ -32,11 +49,17 @@ export default function useRequestState<T, I>(
     ) => {
         setLoading(true);
         setError(null);
-        sendRequest()
+        sendRequest(params)
             .then((res) => setData(res.data as T))
             .catch(onError)
             .finally(() => setLoading(false));
     };
 
-    return [request, [data, loading, error], [setData, setLoading, setError]];
+    const refresh: RefreshRequest = (onError?) => request(params, onError);
+
+    return [
+        refresh,
+        [params, data, loading, error],
+        [setParams, setData, setLoading, setError],
+    ];
 }

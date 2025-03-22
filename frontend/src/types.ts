@@ -151,6 +151,10 @@ export interface LeaderboardEntry {
     yearlyWinRateShadow: number;
 }
 
+export interface LeaderboardParams {
+    year: number;
+}
+
 export type PlayerEditMode = "edit" | "remap";
 
 export type MenuOption<T> = {
@@ -249,4 +253,10 @@ export type GameReportFilters = {
     winners: MenuOption<number>[];
     losers: MenuOption<number>[];
     leagues: MenuOption<string>[];
+};
+
+export type GameReportParams = {
+    limit: number;
+    currentPage: number;
+    filters: GameReportFilters;
 };
