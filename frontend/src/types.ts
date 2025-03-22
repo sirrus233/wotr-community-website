@@ -151,6 +151,10 @@ export interface LeaderboardEntry {
     yearlyWinRateShadow: number;
 }
 
+export interface LeaderboardParams {
+    year: number;
+}
+
 export type PlayerEditMode = "edit" | "remap";
 
 export type MenuOption<T> = {

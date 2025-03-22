@@ -6,6 +6,7 @@ import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import { expansionLeagues, leagueTiers, LEAGUE_START_YEAR } from "./constants";
+import { RefreshRequest } from "./hooks/useRequestState";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
@@ -34,26 +35,26 @@ const TABLE_TOP_POSITION =
     TABLE_ELEMENTS_GAP * 4;
 
 interface Props {
-    params: LeagueParams;
-    setParams: React.Dispatch<React.SetStateAction<LeagueParams>>;
     stats: LeagueStats;
     playerNames: string[];
     loading: boolean;
     loadingPlayers: boolean;
     isAdmin: boolean;
     error: string | null;
-    refresh: () => void;
+    params: LeagueParams;
+    setParams: React.Dispatch<React.SetStateAction<LeagueParams>>;
+    refresh: RefreshRequest;
 }
 
 export default function Leagues({
-    params,
-    setParams,
     stats,
     playerNames,
     loading,
     loadingPlayers,
     isAdmin,
     error,
+    params,
+    setParams,
     refresh,
 }: Props) {
     const [leaguePlayerFormOpen, setLeaguePlayerFormOpen] = useState(false);

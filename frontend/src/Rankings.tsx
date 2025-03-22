@@ -12,6 +12,7 @@ import Typography from "@mui/joy/Typography";
 import {
     Country,
     LeaderboardEntry,
+    LeaderboardParams,
     PlayerEditMode,
     PlayerState,
     Side,
@@ -32,10 +33,10 @@ import TableLayout from "./TableLayout";
 import { range, toPercent } from "./utils";
 import {
     COUNTRIES_DATA,
-    ErrorMessage,
     LEADERBOARD_START_YEAR,
     playerStates,
 } from "./constants";
+import { RefreshRequest } from "./hooks/useRequestState";
 
 type PlayerEditParams = {
     pid: number;
@@ -46,12 +47,12 @@ type PlayerEditParams = {
 
 interface Props {
     entries: LeaderboardEntry[];
-    year: number;
     loading: boolean;
     error: string | null;
     isAdmin: boolean;
-    getLeaderboard: () => void;
-    setYear: (year: number) => void;
+    params: LeaderboardParams;
+    setParams: React.Dispatch<React.SetStateAction<LeaderboardParams>>;
+    refresh: RefreshRequest;
 }
 
 const HEADER_ROW_HEIGHT = 32;
@@ -65,17 +66,18 @@ const TABLE_TOP_POSITION =
 
 function Rankings({
     entries,
-    year,
     loading,
     error,
     isAdmin,
-    getLeaderboard,
-    setYear,
+    params,
+    setParams,
+    refresh,
 }: Props) {
     const [filters, setFilters] = useState<PlayerState[]>(["Active"]);
-
     const [playerEditParams, setPlayerEditParams] =
         useState<PlayerEditParams | null>(null);
+
+    const { year } = params;
 
     const availableYears = range(
         LEADERBOARD_START_YEAR,
@@ -91,7 +93,7 @@ function Rankings({
                         {playerEditParams.mode === "remap" ? (
                             <PlayerRemapForm
                                 {...playerEditParams}
-                                refresh={getLeaderboard}
+                                refresh={refresh}
                                 playerOptions={entries.map((entry) => ({
                                     label: entry.name,
                                     id: entry.pid,
@@ -100,7 +102,7 @@ function Rankings({
                         ) : (
                             <PlayerEditForm
                                 {...playerEditParams}
-                                refresh={getLeaderboard}
+                                refresh={refresh}
                             />
                         )}
                     </ModalDialog>
@@ -110,11 +112,11 @@ function Rankings({
             <ButtonSelector
                 current={year}
                 options={availableYears.reverse()}
-                setCurrent={setYear}
+                setCurrent={(year) => setParams({ year })}
             />
 
             <TableLayout
-                refresh={getLeaderboard}
+                refresh={refresh}
                 error={error}
                 loading={loading}
                 label="Rankings"
