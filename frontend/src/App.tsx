@@ -276,11 +276,12 @@ function Header({ toolsMenuProps }: HeaderProps) {
                                             "var(--joy-palette-primary-softBg)",
                                         color: "var(--joy-palette-primary-solidBg)",
                                     },
-                                    fontWeight:
-                                        to === pathname ? "bold" : "normal",
                                 }}
                             >
                                 {label}
+                                {to === pathname && (
+                                    <Box borderBottom="1px solid white" />
+                                )}
                             </Typography>
                         ))}
                     </Box>
