@@ -199,7 +199,7 @@ function ToolsButton({ loading }: ToolsButtonProps) {
             sx={{
                 p: "5px",
                 m: "5px",
-                mr: 0,
+                mx: 0,
                 minHeight: 0,
             }}
         >

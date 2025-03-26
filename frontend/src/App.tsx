@@ -276,6 +276,7 @@ function Header({ toolsMenuProps }: HeaderProps) {
                                             "var(--joy-palette-primary-softBg)",
                                         color: "var(--joy-palette-primary-solidBg)",
                                     },
+                                    ":last-child": { mr: 0 },
                                 }}
                             >
                                 {label}
@@ -294,11 +295,17 @@ function Header({ toolsMenuProps }: HeaderProps) {
                         userInfo?.isAdmin && (
                             <>
                                 <AboveSmall>
-                                    <CheckIcon sx={{ color: "inherit" }} />
+                                    <CheckIcon
+                                        sx={{
+                                            mx: "5px",
+                                            color: "inherit",
+                                            display: "flex",
+                                        }}
+                                    />
                                 </AboveSmall>
 
                                 <AboveMedium>
-                                    <Box ml="5px">Signed in</Box>
+                                    <Box mr="5px">Signed in</Box>
                                 </AboveMedium>
                             </>
                         )
