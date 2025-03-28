@@ -239,7 +239,12 @@ function Header({ toolsMenuProps }: HeaderProps) {
                     textDecoration: "none",
                 }}
             >
-                <img src={ringImgPath} style={{ paddingRight: "10px" }} />
+                <img
+                    src={ringImgPath}
+                    alt="The one ring"
+                    style={{ paddingRight: "10px" }}
+                    width="50px"
+                />
 
                 <Box whiteSpace="nowrap">
                     <AboveSmall>War of the Ring Community</AboveSmall>
