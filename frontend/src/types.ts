@@ -254,3 +254,9 @@ export type GameReportFilters = {
     losers: MenuOption<number>[];
     leagues: MenuOption<string>[];
 };
+
+export type GameReportParams = {
+    limit: number;
+    currentPage: number;
+    filters: GameReportFilters;
+};

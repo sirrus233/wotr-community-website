@@ -4,7 +4,7 @@ import CssBaseline from "@mui/joy/CssBaseline";
 import React, { ReactNode, useEffect } from "react";
 import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
-import GameReports from "./GameReports";
+import GameReports, { serializeReportsParams } from "./GameReports";
 import Rankings from "./Rankings";
 import CheckIcon from "@mui/icons-material/Check";
 import CircularProgress from "@mui/joy/CircularProgress";
@@ -21,17 +21,21 @@ import useRequestState from "./hooks/useRequestState";
 import { logNetworkError } from "./networkErrorHandlers";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import {
+    GameReportParams,
     LeaderboardEntry,
     LeaderboardParams,
     LeagueParams,
     LeagueStats,
     MenuOption,
+    ProcessedGameReport,
     UserInfo,
 } from "./types";
 import { API_BASE_URL } from "./env";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Leagues from "./Leagues";
 import ToolsMenu from "./ToolsMenu";
+
+const PAGE_LIMIT = 100;
 
 export default function App() {
     const [
@@ -70,6 +74,33 @@ export default function App() {
             axios.get(`${API_BASE_URL}/leagueStats`, { params }),
     });
 
+    const [
+        refreshReports,
+        [reportsParams, reportsData, loadingReports, reportsError],
+        [setReportsParams],
+    ] = useRequestState<
+        { total: number; reports: ProcessedGameReport[] },
+        GameReportParams
+    >({
+        initialState: { total: 0, reports: [] },
+        initialParams: {
+            limit: PAGE_LIMIT,
+            currentPage: 1,
+            filters: {
+                pairing: [],
+                players: [],
+                winners: [],
+                losers: [],
+                leagues: [],
+            },
+        },
+        sendRequest: (params) => {
+            return axios.get(`${API_BASE_URL}/reports`, {
+                params: serializeReportsParams(params),
+            });
+        },
+    });
+
     const playerOptions = leaderboard.entries
         .map(
             (entry): MenuOption<number> => ({
@@ -85,6 +116,7 @@ export default function App() {
 
     useEffect(refreshLeaderboard, [leaderboardParams]);
     useEffect(refreshLeagueStats, [leagueParams]);
+    useEffect(refreshReports, [reportsParams]);
     useEffect(() => {
         const onError = (error: unknown) => {
             logNetworkError(error);
@@ -174,9 +206,16 @@ export default function App() {
                             path="/game-reports"
                             element={
                                 <GameReports
+                                    reports={reportsData.reports}
+                                    totalReportCount={reportsData.total}
                                     playerOptions={playerOptions}
+                                    loadingReports={loadingReports}
                                     loadingPlayers={loadingLeaderboard}
                                     isAdmin={userInfo?.isAdmin || false}
+                                    error={reportsError}
+                                    params={reportsParams}
+                                    setParams={setReportsParams}
+                                    refresh={refreshReports}
                                 />
                             }
                         />

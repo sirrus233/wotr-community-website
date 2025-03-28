@@ -1,5 +1,4 @@
-import axios from "axios";
-import React, { CSSProperties, ReactNode, useEffect, useState } from "react";
+import React, { CSSProperties, ReactNode, useState } from "react";
 import Box from "@mui/joy/Box";
 import CollapseIcon from "@mui/icons-material/KeyboardArrowDown";
 import EditIcon from "@mui/icons-material/EditTwoTone";
@@ -12,12 +11,12 @@ import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
 import { ErrorMessage, leagues } from "./constants";
-import { API_BASE_URL } from "./env";
+import { RefreshRequest } from "./hooks/useRequestState";
 import {
     Competition,
     Expansion,
     GameReportFilters,
-    League,
+    GameReportParams,
     Match,
     MenuOption,
     ProcessedGameReport,
@@ -27,7 +26,6 @@ import {
     Victory,
 } from "./types";
 import { FREE_ACCENT_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
-import { logNetworkError } from "./networkErrorHandlers";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
@@ -62,76 +60,45 @@ const PAIRING_COL_WIDTH = 190;
 const PLAYER_COL_WIDTH = 130;
 const LEAGUE_COL_WIDTH = 130;
 
-const PAGE_LIMIT = 100;
-
 const ALL_OPTION_ID = "ALL";
 const EMPTY_OPTION_ID = "EMPTY";
 
 interface Props {
+    reports: ProcessedGameReport[];
+    totalReportCount: number;
     playerOptions: MenuOption<number>[];
+    loadingReports: boolean;
     loadingPlayers: boolean;
     isAdmin: boolean;
+    error: ErrorMessage | null;
+    params: GameReportParams;
+    setParams: React.Dispatch<React.SetStateAction<GameReportParams>>;
+    refresh: RefreshRequest;
 }
 
 export default function GameReports({
+    reports,
+    totalReportCount,
     playerOptions,
+    loadingReports,
     loadingPlayers,
     isAdmin,
+    error,
+    params,
+    setParams,
+    refresh,
 }: Props) {
-    const [reports, setReports] = useState<ProcessedGameReport[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalReportCount, setTotalReportCount] = useState(0);
     const [reportEditParams, setReportEditParams] =
         useState<ReportEditParams | null>(null);
     const [areFiltersOpen, setAreFiltersOpen] = useState(false);
-    const [filters, setFilters] = useState<GameReportFilters>({
-        pairing: [],
-        players: [],
-        winners: [],
-        losers: [],
-        leagues: [],
-    });
 
-    const getReports = async (page: number, filters: GameReportFilters) => {
-        try {
-            const pairing = isPairingValid(filters.pairing)
-                ? toFilterParam(filters.pairing)
-                : null;
+    const { currentPage, filters, limit } = params;
 
-            const response = await axios.get(`${API_BASE_URL}/reports`, {
-                params: {
-                    limit: PAGE_LIMIT,
-                    offset: getReportsOffset(page),
-                    filter: JSON.stringify({
-                        pairing:
-                            pairing?.length === 1
-                                ? [...pairing, null]
-                                : pairing,
-                        winners: toFilterParam(filters.winners),
-                        losers: toFilterParam(filters.losers),
-                        players: toFilterParam(filters.players),
-                        leagues: toFilterParam(filters.leagues),
-                    }),
-                },
-            });
-            setReports(response.data.reports);
-            setTotalReportCount(response.data.total);
-        } catch (error) {
-            setError(ErrorMessage.Default);
-            logNetworkError(error);
-        }
-        setLoading(false);
-    };
+    const setCurrentPage = (currentPage: number) =>
+        setParams((params) => ({ ...params, currentPage }));
 
-    const refresh = (page: number, filters: GameReportFilters) => {
-        setError(null);
-        setLoading(true);
-        getReports(page, filters);
-    };
-
-    useEffect(() => refresh(currentPage, filters), [currentPage, filters]);
+    const setFilters = (filters: GameReportFilters) =>
+        setParams((params) => ({ ...params, filters }));
 
     const isPairingFilterValid = isPairingValid(filters.pairing);
 
@@ -144,7 +111,7 @@ export default function GameReports({
                         {reportEditParams.mode === "delete" ? (
                             <ReportDeleteForm
                                 report={reportEditParams}
-                                refresh={() => refresh(currentPage, filters)}
+                                refresh={refresh}
                             />
                         ) : (
                             <Box overflow="auto" mt={3}>
@@ -154,9 +121,7 @@ export default function GameReports({
                                         ({ label }) => label
                                     )}
                                     loadingPlayers={loadingPlayers}
-                                    refreshGameReports={() =>
-                                        refresh(currentPage, filters)
-                                    }
+                                    refreshGameReports={refresh}
                                     exit={() => setReportEditParams(null)}
                                 />
                             </Box>
@@ -166,9 +131,9 @@ export default function GameReports({
             )}
 
             <TableLayout
-                refresh={() => refresh(currentPage, filters)}
+                refresh={refresh}
                 error={error}
-                loading={loading}
+                loading={loadingReports}
                 label="Game Reports"
                 containerStyle={{
                     maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px - ${PAGE_FOOTER_HEIGHT}px)`,
@@ -394,7 +359,7 @@ export default function GameReports({
                                 <IconButton
                                     size="sm"
                                     sx={{ minWidth: 0 }}
-                                    disabled={loading}
+                                    disabled={loadingReports}
                                     onClick={() =>
                                         setReportEditParams({
                                             ...report,
@@ -408,7 +373,7 @@ export default function GameReports({
                                 <IconButton
                                     size="sm"
                                     sx={{ minWidth: 0 }}
-                                    disabled={loading}
+                                    disabled={loadingReports}
                                     onClick={() =>
                                         setReportEditParams({
                                             ...report,
@@ -424,7 +389,7 @@ export default function GameReports({
                         <td style={{ fontWeight: "bold" }}>
                             {totalReportCount -
                                 i -
-                                getReportsOffset(currentPage)}
+                                getReportsOffset(currentPage, limit)}
                         </td>
 
                         <FixedWidthCell width={PAIRING_COL_WIDTH}>
@@ -517,11 +482,29 @@ export default function GameReports({
                     currentPage={currentPage}
                     setCurrentPage={setCurrentPage}
                     totalCount={totalReportCount}
-                    perPageCount={PAGE_LIMIT}
+                    perPageCount={limit}
                 />
             </Box>
         </Box>
     );
+}
+
+export function serializeReportsParams(params: GameReportParams) {
+    const pairing = isPairingValid(params.filters.pairing)
+        ? toFilterParam(params.filters.pairing)
+        : null;
+
+    return {
+        limit: params.limit,
+        offset: getReportsOffset(params.currentPage, params.limit),
+        filter: JSON.stringify({
+            pairing: pairing?.length === 1 ? [...pairing, null] : pairing,
+            winners: toFilterParam(params.filters.winners),
+            losers: toFilterParam(params.filters.losers),
+            players: toFilterParam(params.filters.players),
+            leagues: toFilterParam(params.filters.leagues),
+        }),
+    };
 }
 
 interface ContainerProps {
@@ -681,8 +664,8 @@ function ExpandButton({ expanded, setExpanded }: ExpandButtonProps) {
     );
 }
 
-function getReportsOffset(currentPage: number) {
-    return (currentPage - 1) * PAGE_LIMIT;
+function getReportsOffset(currentPage: number, perPageCount: number) {
+    return (currentPage - 1) * perPageCount;
 }
 
 function summarizeGameType(expansions: Expansion[]) {
