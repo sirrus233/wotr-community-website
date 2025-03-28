@@ -278,7 +278,7 @@ function Home() {
                     },
                     {
                         label: "Discord",
-                        href: "https://discord.gg/yZxQF4fK",
+                        href: "https://discord.gg/DUdcpdyNMm",
                         isDownload: false,
                     },
                 ].map(({ label, href, isDownload }) => (
@@ -307,6 +307,34 @@ function Home() {
                     {
                         label: "WotR Almanac: KoME",
                         href: "https://tinyurl.com/KOMEAlmanac",
+                        isDownload: false,
+                    },
+                    {
+                        label: "League Rules",
+                        href: "https://docs.google.com/document/d/1T2OIOfU9vlSJQd0xPoivFmHOUTvPOa1jjtaiN2vrHAQ",
+                        isDownload: false,
+                    },
+                ].map(({ label, href, isDownload }) => (
+                    <ExternalLink
+                        href={href}
+                        isDownload={isDownload}
+                        key={label}
+                    >
+                        {label}
+                    </ExternalLink>
+                ))}
+
+                <Subtitle>Technical Support</Subtitle>
+
+                {[
+                    {
+                        label: "Java Client & Hamachi Setup",
+                        href: "https://www.youtube.com/watch?v=g6xt-xC9dXY",
+                        isDownload: false,
+                    },
+                    {
+                        label: "ZeroTier Setup",
+                        href: "https://www.youtube.com/watch?v=mKkia_KGzzo",
                         isDownload: false,
                     },
                 ].map(({ label, href, isDownload }) => (
