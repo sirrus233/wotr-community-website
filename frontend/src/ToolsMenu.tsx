@@ -14,6 +14,7 @@ import GoogleLoginButton from "./GoogleLogin";
 import Modal from "./Modal";
 import SupportLink from "./SupportLink";
 import { ErrorMessage } from "./constants";
+import { RefreshRequest } from "./hooks/useRequestState";
 import { UserInfo } from "./types";
 import { API_BASE_URL } from "./env";
 import { logNetworkError } from "./networkErrorHandlers";
@@ -22,7 +23,7 @@ interface Props {
     loadingUserInfo: boolean;
     loginError: string | null;
     userInfo: UserInfo | null;
-    getUserInfo: (onError: (error: unknown) => void) => void;
+    refreshUserInfo: RefreshRequest;
     clearUserInfo: () => void;
     setLoginError: (error: ErrorMessage | null) => void;
     setLoadingUserInfo: (loading: boolean) => void;
@@ -32,7 +33,7 @@ export default function ToolsMenu({
     loadingUserInfo,
     loginError,
     userInfo,
-    getUserInfo,
+    refreshUserInfo,
     clearUserInfo,
     setLoginError,
     setLoadingUserInfo,
@@ -111,7 +112,9 @@ export default function ToolsMenu({
         axios
             .post(`${API_BASE_URL}/logout`)
             .catch(onLogoutEndpointError)
-            .then(() => getUserInfo(onUserInfoErrorAfterLogout))
+            .then(() =>
+                refreshUserInfo({ onError: onUserInfoErrorAfterLogout })
+            )
             .finally(() => setLoadingUserInfo(false));
     };
 
@@ -144,7 +147,7 @@ export default function ToolsMenu({
                     </Box>
                 ) : (
                     <GoogleLoginButton
-                        getUserInfo={getUserInfo}
+                        refreshUserInfo={refreshUserInfo}
                         clearUserInfo={clearUserInfo}
                         setLoginError={setLoginError}
                         setLoadingUserInfo={setLoadingUserInfo}

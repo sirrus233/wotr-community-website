@@ -3,17 +3,18 @@ import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { ErrorMessage } from "./constants";
 import { API_BASE_URL } from "./env";
+import { RefreshRequest } from "./hooks/useRequestState";
 import { logNetworkError, toAuthStatus } from "./networkErrorHandlers";
 
 interface Props {
-    getUserInfo: (onError: (error: unknown) => void) => void;
+    refreshUserInfo: RefreshRequest;
     clearUserInfo: () => void;
     setLoginError: (error: ErrorMessage) => void;
     setLoadingUserInfo: (loading: boolean) => void;
 }
 
 export default function GoogleLoginButton({
-    getUserInfo,
+    refreshUserInfo,
     clearUserInfo,
     setLoginError,
     setLoadingUserInfo,
@@ -30,7 +31,7 @@ export default function GoogleLoginButton({
             .post(`${API_BASE_URL}/auth/google/login`, response.credential, {
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
             })
-            .then(() => getUserInfo(onError))
+            .then(() => refreshUserInfo({ onError }))
             .catch((error) => {
                 onError(error);
                 setLoadingUserInfo(false);
