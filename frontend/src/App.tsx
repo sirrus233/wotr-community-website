@@ -243,7 +243,7 @@ function Header({ toolsMenuProps }: HeaderProps) {
                     src={ringImgPath}
                     alt="The one ring"
                     style={{ paddingRight: "10px" }}
-                    width="50px"
+                    width="40px"
                 />
 
                 <Box whiteSpace="nowrap">
