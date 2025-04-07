@@ -19,7 +19,7 @@ import { UserInfo } from "./types";
 import { API_BASE_URL } from "./env";
 import { logNetworkError } from "./networkErrorHandlers";
 
-interface Props {
+export interface ToolsMenuProps {
     loadingUserInfo: boolean;
     loginError: string | null;
     userInfo: UserInfo | null;
@@ -37,7 +37,7 @@ export default function ToolsMenu({
     clearUserInfo,
     setLoginError,
     setLoadingUserInfo,
-}: Props) {
+}: ToolsMenuProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [exporting, setExporting] = useState(false);
@@ -193,14 +193,14 @@ interface ToolsButtonProps {
 function ToolsButton({ loading }: ToolsButtonProps) {
     return (
         <MenuButton
-            variant="plain"
+            variant="solid"
+            color="primary"
             size="lg"
             sx={{
                 p: "5px",
                 m: "5px",
-                mr: 0,
+                mx: 0,
                 minHeight: 0,
-                color: "inherit",
             }}
         >
             {loading ? (

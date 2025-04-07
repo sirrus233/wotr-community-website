@@ -1,5 +1,5 @@
 import axios from "axios";
-import { CssVarsProvider } from "@mui/joy/styles";
+import { CssVarsProvider, extendTheme } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
 import React, { ReactNode, useEffect } from "react";
 import ExternalLink from "./ExternalLink";
@@ -16,9 +16,23 @@ import List from "@mui/joy/List";
 import ListItemButton from "@mui/joy/ListItemButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Typography from "@mui/joy/Typography";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import {
+    BrowserRouter,
+    Routes,
+    Route,
+    Link,
+    useLocation,
+} from "react-router-dom";
+import ringImgPath from "./assets/ring.png";
 import useRequestState from "./hooks/useRequestState";
 import { logNetworkError } from "./networkErrorHandlers";
+import {
+    AboveLarge,
+    AboveSmall,
+    AboveMedium,
+    BelowLarge,
+    BelowSmall,
+} from "./styles/breakpoints";
 import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "./styles/sizes";
 import {
     GameReportParams,
@@ -33,7 +47,15 @@ import {
 import { API_BASE_URL } from "./env";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Leagues from "./Leagues";
-import ToolsMenu from "./ToolsMenu";
+import ToolsMenu, { ToolsMenuProps } from "./ToolsMenu";
+
+const routesData = [
+    { to: "/", label: "Home" },
+    { to: "/game-report", label: "Game Report Form" },
+    { to: "/rankings", label: "Rankings" },
+    { to: "/game-reports", label: "Game Reports" },
+    { to: "/leagues", label: "Leagues" },
+];
 
 const PAGE_LIMIT = 100;
 
@@ -125,72 +147,36 @@ export default function App() {
         refreshUserInfo({ onError });
     }, []);
 
+    const theme = extendTheme({
+        breakpoints: {
+            values: {
+                xs: 0,
+                sm: 450,
+                md: 700,
+                lg: 1100,
+                xl: 1536,
+            },
+        },
+    });
+
     return (
         // cspell:disable-next-line
         <GoogleOAuthProvider clientId="331114708951-rhdksfhejc8l5tif6qd3ofuj6uc2e4pg.apps.googleusercontent.com">
-            <CssVarsProvider>
+            <CssVarsProvider theme={theme}>
                 <CssBaseline />
                 <BrowserRouter>
-                    <header
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            width: "100%",
-                            height: `${HEADER_HEIGHT_PX}px`,
-                            position: "sticky",
-                            top: 0,
-                            zIndex: 1000,
-                            margin: `0 0 ${HEADER_MARGIN_PX}px 0`,
-                            padding: "0 10px",
-                            boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.5)",
-                            color: "white",
-                            backgroundColor:
-                                "var(--joy-palette-primary-solidBg)",
+                    <Header
+                        toolsMenuProps={{
+                            loadingUserInfo,
+                            loginError,
+                            userInfo,
+                            refreshUserInfo,
+                            clearUserInfo,
+                            setLoginError,
+                            setLoadingUserInfo,
                         }}
-                    >
-                        <DrawerNavigation />
-                        <Typography
-                            level="title-lg"
-                            sx={{
-                                color: "white",
-                                width: "100%",
-                                textAlign: "center",
-                            }}
-                        >
-                            War of the Ring Community
-                        </Typography>
+                    />
 
-                        <Box
-                            position="absolute"
-                            right={0}
-                            pr="10px"
-                            display="flex"
-                            alignItems="center"
-                        >
-                            {loadingUserInfo ? (
-                                <CircularProgress size="sm" />
-                            ) : (
-                                userInfo?.isAdmin && (
-                                    <>
-                                        <CheckIcon
-                                            sx={{ color: "inherit", mx: "5px" }}
-                                        />
-                                        Signed in
-                                    </>
-                                )
-                            )}
-
-                            <ToolsMenu
-                                loadingUserInfo={loadingUserInfo}
-                                loginError={loginError}
-                                userInfo={userInfo}
-                                refreshUserInfo={refreshUserInfo}
-                                clearUserInfo={clearUserInfo}
-                                setLoginError={setLoginError}
-                                setLoadingUserInfo={setLoadingUserInfo}
-                            />
-                        </Box>
-                    </header>
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route
@@ -253,6 +239,130 @@ export default function App() {
                 </BrowserRouter>
             </CssVarsProvider>
         </GoogleOAuthProvider>
+    );
+}
+
+interface HeaderProps {
+    toolsMenuProps: ToolsMenuProps;
+}
+
+function Header({ toolsMenuProps }: HeaderProps) {
+    const { loadingUserInfo, userInfo } = toolsMenuProps;
+    const { pathname } = useLocation();
+
+    return (
+        <header
+            style={{
+                display: "flex",
+                alignItems: "center",
+                width: "100%",
+                height: `${HEADER_HEIGHT_PX}px`,
+                position: "sticky",
+                top: 0,
+                zIndex: 1000,
+                margin: `0 0 ${HEADER_MARGIN_PX}px 0`,
+                padding: "0 10px",
+                boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.5)",
+                color: "white",
+                backgroundColor: "var(--joy-palette-primary-solidBg)",
+            }}
+        >
+            <Typography
+                component={Link}
+                to="/"
+                level="title-lg"
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    color: "white",
+                    textDecoration: "none",
+                }}
+            >
+                <img
+                    src={ringImgPath}
+                    alt="The one ring"
+                    style={{ paddingRight: "10px" }}
+                    width="40px"
+                />
+
+                <Box whiteSpace="nowrap">
+                    <AboveSmall>War of the Ring Community</AboveSmall>
+                    <BelowSmall>WotR Community</BelowSmall>
+                </Box>
+            </Typography>
+
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    position: "absolute",
+                    px: 1,
+                    right: 0,
+                }}
+            >
+                <AboveLarge>
+                    <Box sx={{ display: "flex" }}>
+                        {routesData.map(({ to, label }) => (
+                            <Typography
+                                key={label}
+                                component={Link}
+                                to={to}
+                                variant="solid"
+                                color="primary"
+                                sx={{
+                                    textDecoration: "none",
+                                    mr: 1,
+                                    px: 1,
+                                    py: "5px",
+                                    borderRadius: "5px",
+                                    ":hover": {
+                                        background:
+                                            "var(--joy-palette-primary-softBg)",
+                                        color: "var(--joy-palette-primary-solidBg)",
+                                    },
+                                    ":last-child": { mr: 0 },
+                                }}
+                            >
+                                {label}
+                                {to === pathname && (
+                                    <Box borderBottom="1px solid white" />
+                                )}
+                            </Typography>
+                        ))}
+                    </Box>
+                </AboveLarge>
+
+                <Box display="flex" alignItems="center">
+                    {loadingUserInfo ? (
+                        <CircularProgress size="sm" />
+                    ) : (
+                        userInfo?.isAdmin && (
+                            <>
+                                <AboveSmall>
+                                    <CheckIcon
+                                        sx={{
+                                            mx: "5px",
+                                            color: "inherit",
+                                            display: "flex",
+                                        }}
+                                    />
+                                </AboveSmall>
+
+                                <AboveMedium>
+                                    <Box mr="5px">Signed in</Box>
+                                </AboveMedium>
+                            </>
+                        )
+                    )}
+
+                    <ToolsMenu {...toolsMenuProps} />
+                </Box>
+
+                <BelowLarge>
+                    <DrawerNavigation pathname={pathname} />
+                </BelowLarge>
+            </Box>
+        </header>
     );
 }
 
@@ -467,7 +577,11 @@ function Home() {
     );
 }
 
-function DrawerNavigation() {
+interface DrawerNavigationProps {
+    pathname: string;
+}
+
+function DrawerNavigation({ pathname }: DrawerNavigationProps) {
     const [open, setOpen] = React.useState(false);
 
     return (
@@ -475,12 +589,11 @@ function DrawerNavigation() {
             <IconButton
                 variant="solid"
                 color="primary"
-                sx={{ position: "absolute" }}
                 onClick={() => setOpen(true)}
             >
                 <MenuIcon />
             </IconButton>
-            <Drawer open={open} onClose={() => setOpen(false)}>
+            <Drawer open={open} onClose={() => setOpen(false)} anchor="right">
                 <List
                     size="lg"
                     component="nav"
@@ -489,41 +602,20 @@ function DrawerNavigation() {
                         fontSize: "xl",
                     }}
                 >
-                    <ListItemButton
-                        component={Link}
-                        to="/"
-                        onClick={() => setOpen(false)}
-                    >
-                        Home
-                    </ListItemButton>
-                    <ListItemButton
-                        component={Link}
-                        to="/game-report"
-                        onClick={() => setOpen(false)}
-                    >
-                        Game Report Form
-                    </ListItemButton>
-                    <ListItemButton
-                        component={Link}
-                        to="/rankings"
-                        onClick={() => setOpen(false)}
-                    >
-                        Rankings
-                    </ListItemButton>
-                    <ListItemButton
-                        component={Link}
-                        to="/game-reports"
-                        onClick={() => setOpen(false)}
-                    >
-                        Game Reports
-                    </ListItemButton>
-                    <ListItemButton
-                        component={Link}
-                        to="/leagues"
-                        onClick={() => setOpen(false)}
-                    >
-                        Leagues
-                    </ListItemButton>
+                    {routesData.map(({ to, label }) => (
+                        <ListItemButton
+                            key={label}
+                            component={Link}
+                            to={to}
+                            onClick={() => setOpen(false)}
+                            variant={to === pathname ? "soft" : "plain"}
+                            sx={{
+                                fontWeight: to === pathname ? "bold" : "normal",
+                            }}
+                        >
+                            {label}
+                        </ListItemButton>
+                    ))}
                 </List>
             </Drawer>
         </>
