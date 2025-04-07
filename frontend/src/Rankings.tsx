@@ -1,8 +1,13 @@
 import React, { CSSProperties, ReactElement, ReactNode, useState } from "react";
 import Badge from "@mui/joy/Badge";
 import Box from "@mui/joy/Box";
+import Dropdown from "@mui/joy/Dropdown";
 import EditIcon from "@mui/icons-material/EditOutlined";
+import ExpandIcon from "@mui/icons-material/ExpandCircleDown";
 import IconButton from "@mui/joy/IconButton";
+import Menu from "@mui/joy/Menu";
+import MenuButton from "@mui/joy/MenuButton";
+import MenuItem from "@mui/joy/MenuItem";
 import MergeIcon from "@mui/icons-material/Merge";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
@@ -23,9 +28,7 @@ import {
     HEADER_MARGIN_PX,
     TABLE_BTN_HEIGHT_PX,
     TABLE_ELEMENTS_GAP,
-    BUTTON_SELECTOR_HEIGHT,
 } from "./styles/sizes";
-import ButtonSelector from "./ButtonSelector";
 import Filters from "./Filters";
 import PlayerEditForm from "./PlayerEditForm";
 import PlayerRemapForm from "./PlayerRemapForm";
@@ -60,7 +63,6 @@ const HEADER_ROW_HEIGHT = 32;
 const TABLE_TOP_POSITION =
     HEADER_HEIGHT_PX +
     HEADER_MARGIN_PX +
-    BUTTON_SELECTOR_HEIGHT +
     TABLE_BTN_HEIGHT_PX * 2 +
     TABLE_ELEMENTS_GAP * 3;
 
@@ -82,7 +84,7 @@ function Rankings({
     const availableYears = range(
         LEADERBOARD_START_YEAR,
         new Date().getFullYear() + 1
-    );
+    ).reverse();
 
     return (
         <Box>
@@ -108,12 +110,6 @@ function Rankings({
                     </ModalDialog>
                 </Modal>
             )}
-
-            <ButtonSelector
-                current={year}
-                options={availableYears.reverse()}
-                setCurrent={(year) => setParams({ year })}
-            />
 
             <TableLayout
                 refresh={refresh}
@@ -161,7 +157,19 @@ function Rankings({
                                 Games
                             </TableHeaderCell>
                             <TableHeaderCell level={0} colSpan={7}>
-                                Yearly Stats {year}
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    Yearly Stats {year}
+                                    <YearSelector
+                                        years={availableYears}
+                                        setYear={(year) => setParams({ year })}
+                                    />
+                                </Box>
                             </TableHeaderCell>
                         </TableHeaderRow>
 
@@ -371,6 +379,36 @@ function TableHeaderCell({
         >
             {children}
         </th>
+    );
+}
+
+interface YearSelectorProps {
+    years: number[];
+    setYear: (year: number) => void;
+}
+
+function YearSelector({ years, setYear }: YearSelectorProps) {
+    return (
+        <Dropdown>
+            <MenuButton
+                variant="plain"
+                color="primary"
+                sx={{
+                    py: "1px",
+                    px: "3px",
+                    mx: "3px",
+                    my: 0,
+                    minHeight: 0,
+                }}
+            >
+                <ExpandIcon />
+            </MenuButton>
+            <Menu>
+                {years.map((year) => (
+                    <MenuItem onClick={() => setYear(year)}>{year}</MenuItem>
+                ))}
+            </Menu>
+        </Dropdown>
     );
 }
 
