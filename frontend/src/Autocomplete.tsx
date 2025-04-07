@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
 import MaterialAutocomplete from "@mui/joy/Autocomplete";
@@ -31,6 +31,15 @@ export default function Autocomplete<O extends string | MenuOption<unknown>>({
     const [localInputValue, setLocalInputValue] = useState("");
     const [displayedAlertText, setDisplayedAlertText] =
         useState<ReactNode>(null);
+
+    useEffect(
+        function clearAlertText() {
+            if (!alertText && displayedAlertText) {
+                setDisplayedAlertText(null);
+            }
+        },
+        [alertText, displayedAlertText]
+    );
 
     const alert = (
         <Alert
@@ -67,9 +76,6 @@ export default function Autocomplete<O extends string | MenuOption<unknown>>({
                     );
 
                     onChange(selected || null);
-                }}
-                onChange={(_, value) => {
-                    if (value) setDisplayedAlertText(null);
                 }}
                 onBlur={() => {
                     validate();
