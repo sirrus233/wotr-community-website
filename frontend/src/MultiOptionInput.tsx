@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import Checkbox from "@mui/joy/Checkbox";
 import List from "@mui/joy/List";
 import ListItem from "@mui/joy/ListItem";
@@ -6,6 +6,7 @@ import ListItem from "@mui/joy/ListItem";
 interface MultiOptionInputProps<T> {
     values: T[];
     current: T[];
+    fakeOptions?: ReactNode;
     getLabel?: (value: T) => string;
     onChange: (value: T[]) => void;
     validate: () => void;
@@ -14,6 +15,7 @@ interface MultiOptionInputProps<T> {
 export default function MultiOptionInput<T>({
     values,
     current,
+    fakeOptions,
     getLabel = String,
     onChange,
     validate,
@@ -42,19 +44,44 @@ export default function MultiOptionInput<T>({
                 "--ListItem-minHeight": "32px",
             }}
         >
+            {fakeOptions}
             {values.map((value, i) => (
-                <ListItem key={i}>
-                    <Checkbox
-                        checked={current.includes(value)}
-                        size="sm"
-                        disableIcon
-                        overlay
-                        value={String(value)}
-                        label={getLabel(value)}
-                        onChange={handleChange}
-                    />
-                </ListItem>
+                <MultiOptionInputItem
+                    key={i}
+                    checked={current.includes(value)}
+                    value={String(value)}
+                    label={getLabel(value)}
+                    onChange={handleChange}
+                />
             ))}
         </List>
+    );
+}
+
+interface MultiOptionInputItemProps {
+    checked: boolean;
+    value: string;
+    label: string;
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+export function MultiOptionInputItem({
+    checked,
+    value,
+    label,
+    onChange,
+}: MultiOptionInputItemProps) {
+    return (
+        <ListItem>
+            <Checkbox
+                checked={checked}
+                size="sm"
+                disableIcon
+                overlay
+                value={value}
+                label={label}
+                onChange={onChange}
+            />
+        </ListItem>
     );
 }

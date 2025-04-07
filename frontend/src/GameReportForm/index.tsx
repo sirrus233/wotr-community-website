@@ -48,7 +48,7 @@ import Autocomplete from "../Autocomplete";
 import ErrorDisplay from "../ErrorDisplay";
 import FileUpload from "../FileUpload";
 import FormElement from "../FormElement";
-import MultiOptionInput from "../MultiOptionInput";
+import MultiOptionInput, { MultiOptionInputItem } from "../MultiOptionInput";
 import SelectNumericOptionInput from "../SelectNumericOptionInput";
 import SingleOptionInput from "../SingleOptionInput";
 import TextInput from "../TextInput";
@@ -261,7 +261,7 @@ function GameReportForm({
             {formData.match.value === "Rated" && (
                 <FormElement
                     label={
-                        "Optional: Was this for a specific competition? If not, leave this blank."
+                        "What kind of rated game was it? Select all that apply."
                     }
                     error={formData.competition.error}
                     hasSingleControl={false}
@@ -272,6 +272,14 @@ function GameReportForm({
                         current={formData.competition.value}
                         onChange={handleInputChange("competition")}
                         validate={validateField("competition")}
+                        fakeOptions={
+                            <MultiOptionInputItem
+                                checked
+                                value="Ladder (required)"
+                                label="Ladder (required)"
+                                onChange={() => {}}
+                            />
+                        }
                     />
                 </FormElement>
             )}
