@@ -61,7 +61,8 @@ interface Props {
     report?: ProcessedGameReport;
     playerNames: string[];
     loadingPlayers: boolean;
-    refreshGameReports?: () => void;
+    refreshGameReports: () => void;
+    refreshLeaderboard: () => void;
     exit?: () => void;
 }
 
@@ -69,7 +70,8 @@ function GameReportForm({
     report,
     playerNames,
     loadingPlayers,
-    refreshGameReports = () => {},
+    refreshGameReports,
+    refreshLeaderboard,
     exit,
 }: Props) {
     const initialFormData = getInitialFormData(report, report && playerNames);
@@ -102,7 +104,10 @@ function GameReportForm({
         successMessage,
     });
 
-    useConditionalActionEffect(!!successMessage, refreshGameReports);
+    useConditionalActionEffect(!!successMessage, () => {
+        refreshGameReports();
+        refreshLeaderboard();
+    });
 
     const { value: selectedExpansions } = formData.expansions;
 

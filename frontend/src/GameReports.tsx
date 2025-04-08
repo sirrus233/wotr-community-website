@@ -74,6 +74,7 @@ interface Props {
     params: GameReportParams;
     setParams: React.Dispatch<React.SetStateAction<GameReportParams>>;
     refresh: RefreshRequest;
+    refreshLeaderboard: RefreshRequest;
 }
 
 export default function GameReports({
@@ -87,6 +88,7 @@ export default function GameReports({
     params,
     setParams,
     refresh,
+    refreshLeaderboard,
 }: Props) {
     const [reportEditParams, setReportEditParams] =
         useState<ReportEditParams | null>(null);
@@ -122,6 +124,7 @@ export default function GameReports({
                                     )}
                                     loadingPlayers={loadingPlayers}
                                     refreshGameReports={refresh}
+                                    refreshLeaderboard={refreshLeaderboard}
                                     exit={() => setReportEditParams(null)}
                                 />
                             </Box>
