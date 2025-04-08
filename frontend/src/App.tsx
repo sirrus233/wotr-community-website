@@ -185,6 +185,8 @@ export default function App() {
                                 <GameReportForm
                                     playerNames={playerNames}
                                     loadingPlayers={loadingLeaderboard}
+                                    refreshGameReports={refreshReports}
+                                    refreshLeaderboard={refreshLeaderboard}
                                 />
                             }
                         />
@@ -202,6 +204,7 @@ export default function App() {
                                     params={reportsParams}
                                     setParams={setReportsParams}
                                     refresh={refreshReports}
+                                    refreshLeaderboard={refreshLeaderboard}
                                 />
                             }
                         />
