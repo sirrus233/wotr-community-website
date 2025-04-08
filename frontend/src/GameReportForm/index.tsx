@@ -398,7 +398,7 @@ function GameReportForm({
             >
                 <SelectNumericOptionInput
                     start={1}
-                    end={25}
+                    end={50}
                     current={formData.turns.value}
                     onChange={handleInputChange("turns")}
                     validate={validateField("turns")}
