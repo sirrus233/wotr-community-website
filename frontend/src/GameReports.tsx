@@ -100,7 +100,7 @@ export default function GameReports({
         setParams((params) => ({ ...params, currentPage }));
 
     const setFilters = (filters: GameReportFilters) =>
-        setParams((params) => ({ ...params, filters }));
+        setParams((params) => ({ ...params, currentPage: 1, filters }));
 
     const isPairingFilterValid = isPairingValid(filters.pairing);
 
