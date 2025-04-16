@@ -5,6 +5,7 @@ import EditIcon from "@mui/icons-material/EditTwoTone";
 import DeleteIcon from "@mui/icons-material/DeleteTwoTone";
 import ExpandIcon from "@mui/icons-material/KeyboardArrowUp";
 import FilterIcon from "@mui/icons-material/FilterList";
+import FilterIconAlt from "@mui/icons-material/FilterAlt";
 import IconButton from "@mui/joy/IconButton";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
@@ -142,11 +143,7 @@ export default function GameReports({
                     maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px - ${PAGE_FOOTER_HEIGHT}px)`,
                 }}
                 tableStyle={{
-                    "& thead > tr:first-child > *:first-child": {
-                        pl: 2,
-                    },
                     "& thead > tr:last-child > *:first-child": {
-                        pl: 2,
                         borderBottomWidth: "2px",
                     },
                     "& thead > tr > th": {
@@ -156,7 +153,10 @@ export default function GameReports({
                         borderBottom: areFiltersOpen ? "none" : undefined,
                         verticalAlign: areFiltersOpen ? "bottom" : undefined,
                     },
-                    "& tbody > tr > *:first-child": { pl: 2 },
+                    "& tbody > tr > *:first-child": {
+                        padding: 0,
+                        width: "6px",
+                    },
                     "& thead > tr:last-child > *:last-child": {
                         pr: 2,
                     },
@@ -353,7 +353,7 @@ export default function GameReports({
                 body={reports.map((report, i) => (
                     <tr key={report.rid}>
                         <RowAccent side={report.side} />
-                        <td style={{ padding: "0 8px 0 0" }}>
+                        <td style={{ padding: 0 }}>
                             {report.side === "Free" ? "💍" : "🌋"}
                         </td>
 
@@ -547,11 +547,10 @@ interface RowAccentProps {
 
 function RowAccent({ side }: RowAccentProps) {
     return (
-        <td style={{ padding: 0 }}>
+        <td>
             <div
                 style={{
                     height: "100%",
-                    width: "5px",
                     borderBottom: "1px solid white",
                     background:
                         side === "Free"
@@ -655,6 +654,7 @@ function ExpandButton({ expanded, setExpanded }: ExpandButtonProps) {
     return (
         <IconButton
             onClick={() => setExpanded(!expanded)}
+            color="primary"
             sx={{
                 display: "flex",
                 minWidth: 0,
@@ -662,6 +662,7 @@ function ExpandButton({ expanded, setExpanded }: ExpandButtonProps) {
                 height: "100%",
             }}
         >
+            <FilterIconAlt />
             {expanded ? <CollapseIcon /> : <ExpandIcon />}
         </IconButton>
     );
