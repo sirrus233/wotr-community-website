@@ -150,15 +150,15 @@ interface Props<
 }
 
 export default function Table<
-    T extends CornerHeaderData<MenuOption<any>>,
-    U extends ColHeaderData<MenuOption<any>>
+    CorH extends CornerHeaderData<MenuOption<any>>,
+    ColH extends ColHeaderData<MenuOption<any>>
 >({
     cornerHeaders,
     colHeaders,
     rows,
     style = {},
     hasFilters = false,
-}: Props<T, U>) {
+}: Props<CorH, ColH>) {
     const [areFiltersOpen, setAreFiltersOpen] = useState(false);
 
     const filterBarHeight = [...cornerHeaders, ...colHeaders].find(
