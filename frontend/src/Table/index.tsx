@@ -38,7 +38,7 @@ const Container = styled("table")<{ ownerState: ContainerProps }>(
             position: "sticky",
             background: TABLE_HEADER_COLOR,
             textOverflow: "ellipsis",
-            "&:first-child": { paddingLeft: CELL_PADDING },
+            "&:first-of-type": { paddingLeft: CELL_PADDING },
         },
         [`tr th:nth-of-type(${pinnedColCount})`]: {
             borderRight: LIGHT_BORDER,
