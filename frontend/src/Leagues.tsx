@@ -18,6 +18,7 @@ import { LeagueParams, LeagueStats } from "./types";
 import {
     getLeagueLabel,
     getLeagueTierLabel,
+    isDefined,
     noNansense,
     range,
     toPercent,
@@ -185,9 +186,11 @@ function LeagueTable({
 
     return (
         <Table
-            cornerHeader={
+            cornerHeaders={[
                 isAdmin
                     ? {
+                          key: "add",
+                          width: 145,
                           content: (
                               <IconButton
                                   size="sm"
@@ -200,13 +203,12 @@ function LeagueTable({
                               </IconButton>
                           ),
                       }
-                    : undefined
-            }
+                    : undefined,
+            ].filter(isDefined)}
             colHeaders={[
                 ...FIXED_HEADERS.map(
                     (headerLabel): ColHeaderData => ({
                         key: headerLabel,
-                        content: headerLabel,
                     })
                 ),
                 ...entries.map(
@@ -219,8 +221,8 @@ function LeagueTable({
             rows={entries.map(
                 ([playerId, playerStats]): RowData => ({
                     key: playerId,
-                    header: playerStats.name,
-                    bodyCells: [
+                    cells: [
+                        { key: playerStats.name },
                         {
                             key: `${playerId}-winRate`,
                             content: toPercent(

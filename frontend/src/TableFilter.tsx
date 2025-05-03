@@ -6,9 +6,12 @@ import FormHelperText from "@mui/joy/FormHelperText";
 import { ErrorMessage } from "./constants";
 import { MenuOption } from "./types";
 
+export const TABLE_FILTER_HEIGHT = "2em";
+export const FILTER_ERROR_HEIGHT = "1.5em";
+
 type Option = string | MenuOption<unknown>;
 
-interface Props<O extends Option> {
+export interface TableFilterProps<O extends Option> {
     options: O[];
     current: O[];
     placeholder: string;
@@ -30,8 +33,10 @@ export default function TableFilter<O extends Option>({
     allOption,
     emptyOption,
     onChange,
-}: Props<O>) {
+}: TableFilterProps<O>) {
     const [isFocused, setIsFocused] = useState(false);
+
+    const paddedWidth = `calc(${width}px - 10px)`;
 
     const specialOptions = [allOption, emptyOption].filter(
         (o) => o !== undefined
@@ -62,21 +67,38 @@ export default function TableFilter<O extends Option>({
     }
 
     return (
-        <th style={{ overflow: "visible" }}>
+        <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="end"
+            height="100%"
+        >
             <FormControl error={!!errorMessage}>
                 {errorMessage && (
-                    <FormHelperText sx={{ mb: "3px", fontSize: "inherit" }}>
+                    <FormHelperText
+                        sx={{
+                            boxSizing: "border-box",
+                            height: FILTER_ERROR_HEIGHT,
+                            mt: 0,
+                            pb: "3px",
+                            fontSize: "inherit",
+                            fontWeight: "normal",
+                            width,
+                        }}
+                    >
                         {errorMessage}
                     </FormHelperText>
                 )}
 
                 <Box
                     sx={{
+                        boxSizing: "border-box",
+                        height: TABLE_FILTER_HEIGHT,
                         position: "relative",
                         display: "flex",
                         justifyContent: "center",
-                        width: `${width}px`,
-                        height: "2em",
+                        maxWidth: paddedWidth,
                     }}
                 >
                     <MaterialAutocomplete
@@ -107,7 +129,7 @@ export default function TableFilter<O extends Option>({
                             ...(isFocused
                                 ? {
                                       position: "absolute",
-                                      width: `${width}px`,
+                                      width: paddedWidth,
                                       minHeight: "100%",
                                   }
                                 : {
@@ -119,7 +141,7 @@ export default function TableFilter<O extends Option>({
                     />
                 </Box>
             </FormControl>
-        </th>
+        </Box>
     );
 }
 
