@@ -210,3 +210,15 @@ export function toPercent(num: number) {
 export function noNansense(num: number) {
     return isNaN(num) ? 0 : num;
 }
+
+export function isDefined<T>(value: T): value is Exclude<T, null | undefined> {
+    return value !== null && value !== undefined;
+}
+
+export function sum(numbers: number[]) {
+    return numbers.reduce((sum, num) => sum + num, 0);
+}
+
+export function fallback<T>(value: T, fallback: T) {
+    return isDefined(value) ? value : fallback;
+}
