@@ -357,7 +357,7 @@ export default function GameReports({
                 { key: "interest", content: report.interestRating },
                 {
                     key: "comments",
-                    content: <WrappedCell>{report.comment}</WrappedCell>,
+                    content: <WrappedText>{report.comment}</WrappedText>,
                 },
                 {
                     key: "log",
@@ -475,7 +475,7 @@ function FixedWidthText({ width, children }: FixedWidthTextProps) {
     );
 }
 
-function WrappedCell({ children }: ContainerProps) {
+function WrappedText({ children }: ContainerProps) {
     return (
         <Box width="400px" whiteSpace="wrap">
             {children}
