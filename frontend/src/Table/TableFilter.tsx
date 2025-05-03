@@ -3,8 +3,8 @@ import MaterialAutocomplete from "@mui/joy/Autocomplete";
 import Box from "@mui/joy/Box";
 import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
-import { ErrorMessage } from "./constants";
-import { MenuOption } from "./types";
+import { ErrorMessage } from "../constants";
+import { MenuOption } from "../types";
 
 export const TABLE_FILTER_HEIGHT = "2em";
 export const FILTER_ERROR_HEIGHT = "1.5em";

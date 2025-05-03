@@ -15,9 +15,9 @@ import {
     TABLE_BORDER_COLOR,
     TABLE_FONT_COLOR,
     TABLE_HEADER_COLOR,
-} from "./styles/colors";
-import { MenuOption } from "./types";
-import { fallback, sum } from "./utils";
+} from "../styles/colors";
+import { MenuOption } from "../types";
+import { fallback, sum } from "../utils";
 
 /**
  * STYLED COMPONENTS
