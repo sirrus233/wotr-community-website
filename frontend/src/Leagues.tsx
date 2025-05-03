@@ -25,7 +25,8 @@ import {
 } from "./utils";
 import ButtonSelector from "./ButtonSelector";
 import LeaguePlayerForm from "./LeaguePlayerForm";
-import Table, { ColHeaderData, RowData } from "./Table";
+import Table from "./Table";
+import { ColHeaderData, RowData } from "./Table/types";
 import TableLayout from "./TableLayout";
 
 const TABLE_TOP_POSITION =

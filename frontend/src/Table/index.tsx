@@ -1,33 +1,23 @@
 import React, { CSSProperties, ReactNode, useState } from "react";
 import Box from "@mui/joy/Box";
-import CollapseIcon from "@mui/icons-material/KeyboardArrowDown";
-import ExpandIcon from "@mui/icons-material/KeyboardArrowUp";
 import FilterIcon from "@mui/icons-material/FilterList";
-import FilterIconAlt from "@mui/icons-material/FilterAlt";
 import IconButton from "@mui/joy/IconButton";
 import { styled } from "@mui/joy/styles";
-import TableFilter, {
-    FILTER_ERROR_HEIGHT,
-    TABLE_FILTER_HEIGHT,
-    TableFilterProps,
-} from "./TableFilter";
+import FilterBar, { ExpandButton, PINNED_COLS_Z_IDX } from "./FilterBar";
+import { FILTER_ERROR_HEIGHT, TABLE_FILTER_HEIGHT } from "./TableFilter";
 import {
     TABLE_BORDER_COLOR,
     TABLE_FONT_COLOR,
     TABLE_HEADER_COLOR,
 } from "../styles/colors";
+import sumPriorWidths from "./sumPriorWidths";
 import { MenuOption } from "../types";
-import { fallback, sum } from "../utils";
-
-/**
- * STYLED COMPONENTS
- */
+import { ColHeaderData, CornerHeaderData, RowData } from "./types";
+import { fallback } from "../utils";
 
 const LIGHT_BORDER = `1px solid ${TABLE_BORDER_COLOR}`;
 const STRONG_BORDER = `2px solid ${TABLE_BORDER_COLOR}`;
 const CELL_PADDING = "5px";
-const FILTER_BAR_Z_IDX = 3;
-const PINNED_COLS_Z_IDX = FILTER_BAR_Z_IDX - 1;
 
 interface ContainerProps {
     pinnedColCount: number;
@@ -48,28 +38,13 @@ const Container = styled("table")<{ ownerState: ContainerProps }>(
             position: "sticky",
             background: TABLE_HEADER_COLOR,
             textOverflow: "ellipsis",
+            "&:first-child": { paddingLeft: CELL_PADDING },
         },
         [`tr th:nth-of-type(${pinnedColCount})`]: {
             borderRight: LIGHT_BORDER,
         },
     })
 );
-
-const FilterBar = styled("tr")({
-    position: "relative",
-    overflow: "hidden",
-    zIndex: FILTER_BAR_Z_IDX,
-    th: { top: 0 },
-});
-
-const ColumnFilterSlot = styled("th")({
-    overflow: "visible",
-});
-
-const CornerFilterSlot = styled(ColumnFilterSlot)({
-    zIndex: PINNED_COLS_Z_IDX,
-    "&:first-child": { paddingLeft: CELL_PADDING },
-});
 
 const TableHeader = styled("th")({
     overflow: "hidden",
@@ -96,47 +71,6 @@ const BodyCell = styled("td")({
     textOverflow: "ellipsis",
     borderBottom: LIGHT_BORDER,
 });
-
-/**
- * MAIN
- */
-
-export interface ColHeaderData<T extends MenuOption<any> = MenuOption<any>> {
-    key: string | number;
-    content?: ReactNode;
-    filter?: TableFilterProps<T> & { width: number; appliedCount: number };
-    span?: number;
-    style?: CSSProperties;
-}
-
-export interface RowHeaderData {
-    key: string | number;
-    content?: ReactNode;
-    span?: number;
-    style?: CSSProperties;
-}
-
-export interface CellData {
-    key: string | number;
-    content?: ReactNode;
-    span?: number;
-    style?: CSSProperties;
-}
-
-export interface RowData {
-    key: string | number;
-    cells: CellData[];
-    style?: CSSProperties;
-}
-
-export interface CornerHeaderData<T extends MenuOption<any> = MenuOption<any>> {
-    key: string | number;
-    content?: ReactNode;
-    width: number;
-    filter?: Omit<TableFilterProps<T>, "width"> & { appliedCount: number };
-    span?: number;
-    style?: CSSProperties;
-}
 
 interface Props<
     CorH extends CornerHeaderData<MenuOption<any>>,
@@ -174,43 +108,13 @@ export default function Table<
         >
             <thead>
                 {areFiltersOpen && (
-                    <FilterBar>
-                        {cornerHeaders.map(
-                            ({ key, filter, width, style = {} }, i, cHs) => {
-                                return (
-                                    <CornerFilterSlot
-                                        key={key}
-                                        sx={{
-                                            width,
-                                            height: filterBarHeight,
-                                            left: sumPriorWidths(cHs, i),
-                                            ...style,
-                                        }}
-                                    >
-                                        {i === 0 ? (
-                                            <ExpandButton
-                                                expanded={areFiltersOpen}
-                                                setExpanded={setAreFiltersOpen}
-                                            />
-                                        ) : filter ? (
-                                            <TableFilter
-                                                width={width}
-                                                {...filter}
-                                            />
-                                        ) : (
-                                            <></>
-                                        )}
-                                    </CornerFilterSlot>
-                                );
-                            }
-                        )}
-
-                        {colHeaders.map(({ key, filter, style = {} }) => (
-                            <ColumnFilterSlot key={key} sx={style}>
-                                {filter ? <TableFilter {...filter} /> : <></>}
-                            </ColumnFilterSlot>
-                        ))}
-                    </FilterBar>
+                    <FilterBar
+                        cornerHeaders={cornerHeaders}
+                        colHeaders={colHeaders}
+                        areFiltersOpen={areFiltersOpen}
+                        setAreFiltersOpen={setAreFiltersOpen}
+                        height={filterBarHeight}
+                    />
                 )}
 
                 <tr>
@@ -315,37 +219,6 @@ export default function Table<
                 ))}
             </tbody>
         </Container>
-    );
-}
-
-/**
- * HELPERS
- */
-
-function sumPriorWidths(headers: { width: number }[], position: number) {
-    return sum(headers.slice(0, position).map((h) => h.width));
-}
-
-interface ExpandButtonProps {
-    expanded: boolean;
-    setExpanded: (expanded: boolean) => void;
-}
-
-function ExpandButton({ expanded, setExpanded }: ExpandButtonProps) {
-    return (
-        <IconButton
-            onClick={() => setExpanded(!expanded)}
-            color="primary"
-            sx={{
-                display: "flex",
-                minWidth: 0,
-                minHeight: 0,
-                height: "100%",
-            }}
-        >
-            <FilterIconAlt />
-            {expanded ? <CollapseIcon /> : <ExpandIcon />}
-        </IconButton>
     );
 }
 

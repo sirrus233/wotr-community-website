@@ -43,7 +43,8 @@ import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
 import ReportDeleteForm from "./ReportDeleteForm";
 import Pagination from "./Pagination";
-import Table, { ColHeaderData, CornerHeaderData, RowData } from "./Table";
+import Table from "./Table";
+import { ColHeaderData, CornerHeaderData, RowData } from "./Table/types";
 
 type ReportEditParams = ProcessedGameReport & { mode: ReportEditMode };
 
