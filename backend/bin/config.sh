@@ -19,3 +19,6 @@ export SERVER_SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 export BACKUP_SCRIPT_FILE="${APP_DIR}/bin/backup_sqlite.sh"
 export BACKUP_SERVICE_FILE="/etc/systemd/system/backup-${SERVICE_NAME}.service"
 export BACKUP_TIMER_FILE="/etc/systemd/system/backup-${SERVICE_NAME}.timer"
+export ACTIVE_UPDATE_SERVICE_FILE="/etc/systemd/system/active-update-${SERVICE_NAME}.service"
+export ACTIVE_UPDATE_TIMER_FILE="/etc/systemd/system/active-update-${SERVICE_NAME}.timer"
+export ENV_FILE=/wotr-server/env
