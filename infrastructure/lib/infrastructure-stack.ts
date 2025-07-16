@@ -94,6 +94,13 @@ export class InfrastructureStack extends cdk.Stack {
         const role = new iam.Role(this, "ServerRole", {
             assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
         });
+
+        role.addManagedPolicy(
+            iam.ManagedPolicy.fromAwsManagedPolicyName(
+                "AmazonSSMManagedInstanceCore"
+            )
+        );
+
         writeableBuckets.forEach((bucket) => bucket.grantPut(role));
 
         const instance = new ec2.Instance(this, "ServerInstance", {
@@ -123,16 +130,6 @@ export class InfrastructureStack extends cdk.Stack {
             instanceId: instance.instanceId,
             device: "/dev/sda2",
         });
-
-        instance.connections.allowFrom(
-            ec2.Peer.ipv4("97.113.5.72/32"),
-            ec2.Port.tcp(22)
-        );
-
-        instance.connections.allowFrom(
-            ec2.Peer.ipv4("67.183.91.95/32"),
-            ec2.Port.tcp(22)
-        );
 
         instance.connections.allowFromAnyIpv4(ec2.Port.tcp(80));
         instance.connections.allowFromAnyIpv4(ec2.Port.tcp(443));
