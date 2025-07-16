@@ -4,7 +4,7 @@ import Amazonka qualified as AWS
 import Api (API)
 import AppConfig (Env (..), authDatabaseFile, databaseFile, logFile, logFilter, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
-import Auth (authHandlerDev, authHandlerProd)
+import Auth (authServiceHandler, authUserHandlerDev, authUserHandlerProd)
 import Control.Monad.Logger (LogLevel (..))
 import Database.Esqueleto.Experimental (defaultConnectionPoolConfig)
 import Database.Persist.Sqlite (createSqlitePoolWithConfig)
@@ -61,7 +61,11 @@ multipartOpts =
 app :: AppMode -> Env -> Application
 app mode env = gzipMiddleware . corsMiddleware mode $ serveWithContextT (Proxy :: Proxy API) context (nt env) server
   where
-    context = (\case Dev -> authHandlerDev; Prod -> authHandlerProd) mode env :. multipartOpts :. EmptyContext
+    context =
+      (\case Dev -> authUserHandlerDev; Prod -> authUserHandlerProd) mode env
+        :. authServiceHandler env
+        :. multipartOpts
+        :. EmptyContext
 
 runDev :: Env -> Settings -> IO ()
 runDev env settings = runSettings settings . app Dev $ env
@@ -88,10 +92,11 @@ main = do
   authDbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText authDatabaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
   aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = toAwsLogger logFilter logger, AWS.region = AWS.Oregon}
+  apiSecret <- fmap encodeUtf8 <$> lookupEnv "SERVICE_API_SECRET"
 
   when doMigrate $ migrateSchema dbPool logger
 
-  let env = Env {dbPool, authDbPool, redisPool, logger, aws}
+  let env = Env {dbPool, authDbPool, redisPool, logger, aws, apiSecret}
   let settings = setPort 8080 . setOnException (logException env.logger) $ defaultSettings
   let runServer = (\case Dev -> runDev; Prod -> runProd) appMode
 
