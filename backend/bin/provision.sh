@@ -81,7 +81,7 @@ Group=ec2-user
 Environment="PORT=8080"
 Environment="SSL_CERT_PATH=/etc/letsencrypt/live/${SERVER_HOST}/fullchain.pem"
 Environment="SSL_KEY_PATH=/etc/letsencrypt/live/${SERVER_HOST}/privkey.pem"
-EnvironmentFile=\${ENV_FILE}
+EnvironmentFile=${ENV_FILE}
 
 [Install]
 WantedBy=multi-user.target
@@ -128,7 +128,7 @@ Description=Update all player active statuses in the database
 
 [Service]
 Type=oneshot
-EnvironmentFile=\${ENV_FILE}
+EnvironmentFile=${ENV_FILE}
 ExecStart=/usr/bin/curl \
     -X POST \
     -H 'Origin: https://waroftheringcommunity.net' \
