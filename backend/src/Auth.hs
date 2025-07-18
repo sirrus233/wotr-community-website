@@ -1,6 +1,6 @@
 module Auth where
 
-import AppConfig (AppM, Env, authCookieName, googleClientId, nt)
+import AppConfig (AppM, Env (..), authCookieName, googleClientId, nt)
 import Crypto.JWT (JWTError (JWTExpired, JWTNotInAudience, JWTNotInIssuer))
 import Crypto.Random (getSystemDRG, withDRG)
 import Data.Aeson (eitherDecode)
@@ -17,7 +17,7 @@ import Network.Wai (Request (..))
 import Servant (ServerError (errBody), err401, throwError)
 import Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler)
 import Types.Api (IdToken (..))
-import Types.Auth (Authenticated (..), GoogleIdTokenClaims (..), SessionId (..), UserId (..))
+import Types.Auth (AuthenticatedService (..), AuthenticatedUser (..), GoogleIdTokenClaims (..), SessionId (..), UserId (..))
 import Types.Database (Admin (..))
 import Web.Cookie (parseCookiesText)
 
@@ -25,7 +25,7 @@ fetchGoogleJWKSet :: Manager -> IO (Either String JwkSet)
 fetchGoogleJWKSet mgr = do
   request <- parseRequest "https://www.googleapis.com/oauth2/v3/certs"
   response <- httpLbs request mgr
-  pure $ eitherDecode (response.responseBody)
+  pure $ eitherDecode response.responseBody
 
 data TokenValidationError
   = JwtDecodeError JwtError
@@ -71,10 +71,10 @@ validateToken (JwkSet keys) (IdToken token) = do
       | claims.email_verified && isJust claims.hd = Right ()
       | otherwise = Left GoogleNotAuthoritativeError
 
-authHandlerProd :: Env -> AuthHandler Request Authenticated
-authHandlerProd env = mkAuthHandler (nt env . handler)
+authUserHandlerProd :: Env -> AuthHandler Request AuthenticatedUser
+authUserHandlerProd env = mkAuthHandler (nt env . handler)
   where
-    handler :: Request -> AppM Authenticated
+    handler :: Request -> AppM AuthenticatedUser
     handler req = do
       case parseCookiesText <$> lookup "Cookie" (requestHeaders req) of
         Nothing -> throwError err401 {errBody = "Missing Cookie header."}
@@ -85,10 +85,23 @@ authHandlerProd env = mkAuthHandler (nt env . handler)
               runAuthDb (getAdminBySessionId sessionId) >>= \case
                 Nothing -> throwError err401 {errBody = "Invalid session."}
                 Just (Entity _ admin) ->
-                  pure $ Authenticated {userId = UserId admin.adminUserId, sessionId = SessionId sessionId}
+                  pure $ AuthenticatedUser {userId = UserId admin.adminUserId, sessionId = SessionId sessionId}
 
-authHandlerDev :: Env -> AuthHandler Request Authenticated
-authHandlerDev env = mkAuthHandler (nt env . handler)
+authUserHandlerDev :: Env -> AuthHandler Request AuthenticatedUser
+authUserHandlerDev env = mkAuthHandler (nt env . handler)
   where
-    handler :: Request -> AppM Authenticated
-    handler _ = pure Authenticated {userId = UserId "Frodo", sessionId = SessionId "Baggins"}
+    handler :: Request -> AppM AuthenticatedUser
+    handler _ = pure AuthenticatedUser {userId = UserId "Frodo", sessionId = SessionId "Baggins"}
+
+authServiceHandler :: Env -> AuthHandler Request AuthenticatedService
+authServiceHandler env = mkAuthHandler (nt env . handler)
+  where
+    handler :: Request -> AppM AuthenticatedService
+    handler req = do
+      case lookup "X-Api-Key" (requestHeaders req) of
+        Nothing -> throwError err401 {errBody = "Missing API key header."}
+        Just key -> do
+          case env.apiSecret of
+            Nothing -> throwError err401 {errBody = "No API secret found in environment."}
+            Just secret | key == secret -> pure AuthenticatedService
+            _ -> throwError err401 {errBody = "Incorrect API key."}

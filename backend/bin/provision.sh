@@ -81,6 +81,7 @@ Group=ec2-user
 Environment="PORT=8080"
 Environment="SSL_CERT_PATH=/etc/letsencrypt/live/${SERVER_HOST}/fullchain.pem"
 Environment="SSL_KEY_PATH=/etc/letsencrypt/live/${SERVER_HOST}/privkey.pem"
+EnvironmentFile=${ENV_FILE}
 
 [Install]
 WantedBy=multi-user.target
@@ -109,7 +110,7 @@ END_UNIT
 Description=Database backup timer
 
 [Timer]
-OnCalendar=*-*-* *:00:00
+OnCalendar=hourly
 Persistent=true
 
 [Install]
@@ -119,6 +120,38 @@ END_UNIT
   echo "Staring backup service timer..."
   sudo systemctl daemon-reload
   sudo systemctl enable --now backup-${SERVICE_NAME}.timer
+
+  echo "Generating player active status update service file..."
+  cat <<END_UNIT | sudo tee $ACTIVE_UPDATE_SERVICE_FILE
+[Unit]
+Description=Update all player active statuses in the database
+
+[Service]
+Type=oneshot
+EnvironmentFile=${ENV_FILE}
+ExecStart=/usr/bin/curl \
+    -X POST \
+    -H 'Origin: https://waroftheringcommunity.net' \
+    -H 'X-Api-Key:\${SERVICE_API_SECRET}' \
+    https://api.waroftheringcommunity.net/updateActiveStatus
+END_UNIT
+
+  echo "Generating player active status update timer file..."
+  cat <<END_UNIT | sudo tee $ACTIVE_UPDATE_TIMER_FILE
+[Unit]
+Description=Player active status update timer
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+END_UNIT
+
+  echo "Staring player active status update service timer..."
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now active-update-${SERVICE_NAME}.timer
 EOF
 
 echo "Uploading database backup script..."

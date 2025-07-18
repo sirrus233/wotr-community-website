@@ -37,7 +37,7 @@ import Types.Api
     SubmitReportRequest,
     UserInfoResponse,
   )
-import Types.Auth (SessionIdCookie)
+import Types.Auth (ServiceCaller, SessionIdCookie)
 import Types.DataField (League, LeagueTier, PlayerName)
 
 type RequiredQueryParam = QueryParam' '[Required]
@@ -91,6 +91,8 @@ type AdminAddLeaguePlayerAPI =
     :> QueryParam "playerName" PlayerName
     :> PostNoContent
 
+type UpdateActiveStatusAPI = "updateActiveStatus" :> PostNoContent
+
 type Unprotected =
   AuthGoogleLoginAPI
     :<|> SubmitReportAPI
@@ -98,6 +100,9 @@ type Unprotected =
     :<|> GetLeaderboardAPI
     :<|> GetLeagueStatsAPI
     :<|> ExportAPI
+
+type Service =
+  UpdateActiveStatusAPI
 
 type Protected =
   LogoutAPI
@@ -108,4 +113,4 @@ type Protected =
     :<|> AdminDeleteReportAPI
     :<|> AdminAddLeaguePlayerAPI
 
-type API = (AuthProtect SessionIdCookie :> Protected) :<|> Unprotected
+type API = (AuthProtect SessionIdCookie :> Protected) :<|> (AuthProtect ServiceCaller :> Service) :<|> Unprotected

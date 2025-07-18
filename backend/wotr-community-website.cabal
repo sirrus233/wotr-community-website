@@ -31,7 +31,7 @@ common extensions
 
 common dependencies
     build-depends:
-        base                ^>=4.20.0.0,
+        base                ^>=4.21.0.0,
         relude              ^>=1.2.2.0,
         text                ^>=2.1.2,
         filepath            ^>=1.5.4.0,

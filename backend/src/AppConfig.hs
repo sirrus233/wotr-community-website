@@ -14,7 +14,8 @@ data Env = Env
     authDbPool :: SQL.ConnectionPool,
     redisPool :: Redis.Connection,
     logger :: Logger,
-    aws :: AWS.Env
+    aws :: AWS.Env,
+    apiSecret :: Maybe ByteString
   }
 
 type AppM = ReaderT Env (LoggingT Handler)

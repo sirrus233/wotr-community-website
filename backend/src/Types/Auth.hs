@@ -4,15 +4,21 @@ import Data.Aeson (FromJSON)
 import Servant (AuthProtect)
 import Servant.Server.Experimental.Auth (AuthServerData)
 
-data SessionIdCookie = Proxy -- Type-level tag for the auth scheme
+data SessionIdCookie -- Type-level tag for auth requiring a user session cookie
 
-type instance AuthServerData (AuthProtect SessionIdCookie) = Authenticated
+type instance AuthServerData (AuthProtect SessionIdCookie) = AuthenticatedUser
+
+data ServiceCaller -- Type-level tag for auth requiring a header with our service's API secret
+
+type instance AuthServerData (AuthProtect ServiceCaller) = AuthenticatedService
 
 newtype UserId = UserId {unUserId :: Text}
 
 newtype SessionId = SessionId {unSessionId :: Text}
 
-data Authenticated = Authenticated {userId :: UserId, sessionId :: SessionId}
+data AuthenticatedUser = AuthenticatedUser {userId :: UserId, sessionId :: SessionId}
+
+data AuthenticatedService = AuthenticatedService
 
 data GoogleIdTokenClaims = GoogleIdTokenClaims
   { iss :: Text,

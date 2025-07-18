@@ -2,7 +2,7 @@ module AppServer where
 
 import Amazonka qualified as AWS
 import Amazonka.S3 qualified as S3
-import Api (API, Protected, Unprotected)
+import Api (API, Protected, Service, Unprotected)
 import AppConfig (AppM, Env (..), authCookieName, gameLogBucket)
 import Auth (fetchGoogleJWKSet, validateToken)
 import Codec.Archive.Zip (addEntryToArchive, emptyArchive, fromArchive, toEntry)
@@ -90,7 +90,7 @@ import Types.Api
     fromPlayerStats,
     toGameReport,
   )
-import Types.Auth (Authenticated (..), SessionId (..), SessionIdCookie)
+import Types.Auth (AuthenticatedUser (..), ServiceCaller, SessionId (..), SessionIdCookie)
 import Types.DataField (League (..), LeagueTier, Match (..), PlayerName, Rating, Side (..), Year)
 import Types.Database
   ( GameReport (..),
@@ -270,8 +270,8 @@ authGoogleLoginHandler idToken = do
           }
   pure (addHeader cookie NoContent)
 
-logoutHandler :: Authenticated -> AppM NoContent
-logoutHandler (Authenticated {userId}) = do
+logoutHandler :: AuthenticatedUser -> AppM NoContent
+logoutHandler (AuthenticatedUser {userId}) = do
   _ <- runAuthDb $ updateAdminSessionId userId Nothing
   pure NoContent
 
@@ -460,6 +460,9 @@ adminAddLeaguePlayerHandler league tier year Nothing (Just playerName) = do
     insertLeaguePlayer $ LeaguePlayer league tier year playerId
   pure NoContent
 
+updateActiveStatusHandler :: AppM NoContent
+updateActiveStatusHandler = logInfoN "Updating player active statuses." >> runDb updateActiveStatus >> pure NoContent
+
 unprotected :: ServerT Unprotected AppM
 unprotected =
   authGoogleLoginHandler
@@ -468,6 +471,10 @@ unprotected =
     :<|> getLeaderboardHandler
     :<|> getLeagueStatsHandler
     :<|> exportHandler
+
+service :: AuthServerData (AuthProtect ServiceCaller) -> ServerT Service AppM
+service _ =
+  updateActiveStatusHandler
 
 protected :: AuthServerData (AuthProtect SessionIdCookie) -> ServerT Protected AppM
 protected auth =
@@ -480,4 +487,4 @@ protected auth =
     :<|> adminAddLeaguePlayerHandler
 
 server :: ServerT API AppM
-server = protected :<|> unprotected
+server = protected :<|> service :<|> unprotected
