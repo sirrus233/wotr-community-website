@@ -204,7 +204,7 @@ function LeagueTable({
                               </IconButton>
                           ),
                       }
-                    : undefined,
+                    : { key: "player", width: 145, content: "" },
             ].filter(isDefined)}
             colHeaders={[
                 ...FIXED_HEADERS.map(
