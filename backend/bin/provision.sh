@@ -129,11 +129,11 @@ Description=Update all player active statuses in the database
 [Service]
 Type=oneshot
 EnvironmentFile=${ENV_FILE}
-ExecStart=/usr/bin/curl \
-    -X POST \
-    -H 'Origin: https://waroftheringcommunity.net' \
-    -H 'X-Api-Key:\${SERVICE_API_SECRET}' \
-    https://api.waroftheringcommunity.net/updateActiveStatus
+ExecStart=/usr/bin/curl \\\\
+    -X POST \\\\
+    -H 'Origin: https://waroftheringcommunity.net' \\\\
+    -H 'X-Api-Key:\\\${SERVICE_API_SECRET}' \\\\
+    https://api.waroftheringcommunity.net:8080/updateActiveStatus
 END_UNIT
 
   echo "Generating player active status update timer file..."
