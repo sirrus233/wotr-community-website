@@ -18,13 +18,15 @@ import { LeagueParams, LeagueStats } from "./types";
 import {
     getLeagueLabel,
     getLeagueTierLabel,
+    isDefined,
     noNansense,
     range,
     toPercent,
 } from "./utils";
 import ButtonSelector from "./ButtonSelector";
 import LeaguePlayerForm from "./LeaguePlayerForm";
-import Table, { ColHeaderData, RowData } from "./Table";
+import Table from "./Table";
+import { ColHeaderData, RowData } from "./Table/types";
 import TableLayout from "./TableLayout";
 
 const TABLE_TOP_POSITION =
@@ -185,9 +187,11 @@ function LeagueTable({
 
     return (
         <Table
-            cornerHeader={
+            cornerHeaders={[
                 isAdmin
                     ? {
+                          key: "add",
+                          width: 145,
                           content: (
                               <IconButton
                                   size="sm"
@@ -200,13 +204,12 @@ function LeagueTable({
                               </IconButton>
                           ),
                       }
-                    : undefined
-            }
+                    : undefined,
+            ].filter(isDefined)}
             colHeaders={[
                 ...FIXED_HEADERS.map(
                     (headerLabel): ColHeaderData => ({
                         key: headerLabel,
-                        content: headerLabel,
                     })
                 ),
                 ...entries.map(
@@ -219,8 +222,8 @@ function LeagueTable({
             rows={entries.map(
                 ([playerId, playerStats]): RowData => ({
                     key: playerId,
-                    header: playerStats.name,
-                    bodyCells: [
+                    cells: [
+                        { key: playerStats.name },
                         {
                             key: `${playerId}-winRate`,
                             content: toPercent(

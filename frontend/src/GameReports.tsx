@@ -1,17 +1,13 @@
-import React, { CSSProperties, ReactNode, useState } from "react";
+import React, { ReactNode, useState } from "react";
 import Box from "@mui/joy/Box";
-import CollapseIcon from "@mui/icons-material/KeyboardArrowDown";
 import EditIcon from "@mui/icons-material/EditTwoTone";
 import DeleteIcon from "@mui/icons-material/DeleteTwoTone";
-import ExpandIcon from "@mui/icons-material/KeyboardArrowUp";
-import FilterIcon from "@mui/icons-material/FilterList";
-import FilterIconAlt from "@mui/icons-material/FilterAlt";
 import IconButton from "@mui/joy/IconButton";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
-import Typography from "@mui/joy/Typography";
 import { ErrorMessage, leagues } from "./constants";
+import useMediaQuery from "./hooks/useMediaQuery";
 import { RefreshRequest } from "./hooks/useRequestState";
 import {
     Competition,
@@ -38,15 +34,17 @@ import {
     getExpansionLabel,
     getLeagueLabel,
     getStrongholdLabel,
+    isDefined,
     strongholdPoints,
     strongholdSide,
 } from "./utils";
-import TableFilter from "./TableFilter";
 import TableLayout from "./TableLayout";
 import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
 import ReportDeleteForm from "./ReportDeleteForm";
 import Pagination from "./Pagination";
+import Table from "./Table";
+import { ColHeaderData, CornerHeaderData, RowData } from "./Table/types";
 
 type ReportEditParams = ProcessedGameReport & { mode: ReportEditMode };
 
@@ -57,9 +55,9 @@ const TABLE_TOP_POSITION =
     TABLE_ELEMENTS_GAP * 2;
 
 const PAGE_FOOTER_HEIGHT = 50;
-const PAIRING_COL_WIDTH = 190;
-const PLAYER_COL_WIDTH = 130;
-const LEAGUE_COL_WIDTH = 130;
+const PAIRING_COL_WIDTH = 200;
+const PLAYER_COL_WIDTH = 140;
+const LEAGUE_COL_WIDTH = 140;
 
 const ALL_OPTION_ID = "ALL";
 const EMPTY_OPTION_ID = "EMPTY";
@@ -93,7 +91,8 @@ export default function GameReports({
 }: Props) {
     const [reportEditParams, setReportEditParams] =
         useState<ReportEditParams | null>(null);
-    const [areFiltersOpen, setAreFiltersOpen] = useState(false);
+
+    const belowSmallBreakpoint = useMediaQuery("sm");
 
     const { currentPage, filters, limit } = params;
 
@@ -104,6 +103,273 @@ export default function GameReports({
         setParams((params) => ({ ...params, currentPage: 1, filters }));
 
     const isPairingFilterValid = isPairingValid(filters.pairing);
+
+    const cornerHeaders: CornerHeaderData[] = [
+        { key: "expand", width: 64, content: <></> },
+        isAdmin ? { key: "Edit", width: 58 } : null,
+    ].filter(isDefined);
+
+    const switchHeaders: (CornerHeaderData & ColHeaderData)[] = [
+        { key: "No.", width: 50 },
+        {
+            key: "Pairing",
+            width: PAIRING_COL_WIDTH,
+            filter: {
+                placeholder: "Select pairing",
+                loading: loadingPlayers,
+                options: playerOptions,
+                width: PAIRING_COL_WIDTH,
+                current: filters.pairing,
+                appliedCount: isPairingFilterValid ? filters.pairing.length : 0,
+                onChange: (values: MenuOption<number>[]) =>
+                    setFilters({ ...filters, pairing: values }),
+                errorMessage: isPairingFilterValid
+                    ? undefined
+                    : ErrorMessage.PairingFilterInvalid,
+            },
+        },
+    ];
+
+    const colHeaders: ColHeaderData[] = [
+        { key: "Timestamp" },
+        { key: "Turn" },
+        {
+            key: "Winner",
+            filter: {
+                placeholder: "Select winner",
+                loading: loadingPlayers,
+                options: playerOptions,
+                width: PLAYER_COL_WIDTH,
+                current: filters.winners,
+                appliedCount: filters.winners.length,
+                onChange: (values: MenuOption<number>[]) =>
+                    setFilters({ ...filters, winners: values }),
+            },
+        },
+        {
+            key: "Loser",
+            filter: {
+                placeholder: "Select loser",
+                loading: loadingPlayers,
+                options: playerOptions,
+                width: PLAYER_COL_WIDTH,
+                current: filters.losers,
+                appliedCount: filters.losers.length,
+                onChange: (values: MenuOption<number>[]) =>
+                    setFilters({ ...filters, losers: values }),
+            },
+        },
+        { key: "Game Type" },
+        { key: "Victory Type" },
+        { key: "Competition Type" },
+        {
+            key: "League",
+            filter: {
+                placeholder: "Select leagues",
+                loading: false,
+                allOption: { id: ALL_OPTION_ID, label: "Any league" },
+                emptyOption: { id: EMPTY_OPTION_ID, label: "No league" },
+                options: leagues.map((league) => ({
+                    id: league,
+                    label: getLeagueLabel(league),
+                })),
+                width: LEAGUE_COL_WIDTH,
+                current: filters.leagues,
+                appliedCount: filters.leagues.length,
+                onChange: (values: MenuOption<string>[]) => {
+                    setFilters({ ...filters, leagues: values });
+                },
+            },
+        },
+        { key: "Expansions" },
+        { key: "Tokens" },
+        { key: "Dwarven Rings" },
+        { key: "Corruption" },
+        { key: "Mordor" },
+        { key: "Aragorn" },
+        { key: "Treebeard" },
+        { key: "Initial Eyes" },
+        { key: "SP-Captured Settlements" },
+        { key: "SPVP" },
+        { key: "FP-Captured Settlements" },
+        { key: "FPVP" },
+        { key: "Interest Rating" },
+        { key: "Comments" },
+        { key: "Game Log" },
+    ];
+
+    const rows = reports.map(
+        (report, i): RowData => ({
+            key: report.rid,
+            cells: [
+                {
+                    key: `side`,
+                    style: { padding: "2px 0 2px 2px" },
+                    content: (
+                        <Box
+                            display="flex"
+                            flexDirection="column"
+                            justifyContent="center"
+                            p={0}
+                            height="100%"
+                            borderLeft={
+                                report.side === "Free"
+                                    ? `5px solid ${FREE_ACCENT_COLOR}`
+                                    : `5px solid ${SHADOW_PRIMARY_COLOR}`
+                            }
+                        >
+                            {report.side === "Free" ? "💍" : "🌋"}
+                        </Box>
+                    ),
+                },
+                isAdmin
+                    ? {
+                          key: `edit`,
+                          style: { padding: "1px" },
+                          content: (
+                              <>
+                                  <IconButton
+                                      size="sm"
+                                      sx={{ minWidth: 0 }}
+                                      disabled={loadingReports}
+                                      onClick={() =>
+                                          setReportEditParams({
+                                              ...report,
+                                              mode: "edit",
+                                          })
+                                      }
+                                  >
+                                      <EditIcon />
+                                  </IconButton>
+
+                                  <IconButton
+                                      size="sm"
+                                      sx={{ minWidth: 0 }}
+                                      disabled={loadingReports}
+                                      onClick={() =>
+                                          setReportEditParams({
+                                              ...report,
+                                              mode: "delete",
+                                          })
+                                      }
+                                  >
+                                      <DeleteIcon />
+                                  </IconButton>
+                              </>
+                          ),
+                      }
+                    : null,
+                {
+                    key: `number`,
+                    content:
+                        totalReportCount -
+                        i -
+                        getReportsOffset(currentPage, limit),
+                },
+                {
+                    key: `pairing`,
+                    content: [report.winner, report.loser]
+                        .sort((a, b) => a.localeCompare(b))
+                        .join("-"),
+                },
+                { key: `timestamp`, content: displayTime(report.timestamp) },
+                { key: "turns", content: report.turns },
+                {
+                    key: "winner",
+                    content: (
+                        <FixedWidthText width={PLAYER_COL_WIDTH}>
+                            {report.winner}
+                        </FixedWidthText>
+                    ),
+                },
+                {
+                    key: "loser",
+                    content: (
+                        <FixedWidthText width={PLAYER_COL_WIDTH}>
+                            {report.loser}
+                        </FixedWidthText>
+                    ),
+                },
+                {
+                    key: "game-type",
+                    content: summarizeGameType(report.expansions),
+                },
+                {
+                    key: "victory-type",
+                    content: summarizeVictoryType(report.side, report.victory),
+                },
+                {
+                    key: "competition-type",
+                    content: summarizeCompetitionType(
+                        report.match,
+                        report.competition
+                    ),
+                },
+                {
+                    key: "league",
+                    content: report.league ? getLeagueLabel(report.league) : "",
+                },
+                {
+                    key: "expansions",
+                    content: report.expansions
+                        .map(getExpansionLabel)
+                        .join(", "),
+                },
+                { key: "tokens", content: report.actionTokens },
+                { key: "dwarven-rings", content: report.dwarvenRings },
+                { key: "corruption", content: report.corruption },
+                { key: "mordor", content: report.mordor },
+                { key: "aragorn", content: report.aragornTurn },
+                { key: "treebeard", content: report.treebeard && "✓" },
+                { key: "eyes", content: report.initialEyes },
+                {
+                    key: "sp-settlements",
+                    content: summarizeCapturedSettlements(
+                        report.strongholds,
+                        report.expansions,
+                        "Free"
+                    ),
+                },
+                {
+                    key: "spvp",
+                    content: countVictoryPoints(
+                        report.strongholds,
+                        report.expansions,
+                        "Free"
+                    ),
+                },
+                {
+                    key: "fp-settlements",
+                    content: summarizeCapturedSettlements(
+                        report.strongholds,
+                        report.expansions,
+                        "Shadow"
+                    ),
+                },
+                {
+                    key: "fpvp",
+                    content: countVictoryPoints(
+                        report.strongholds,
+                        report.expansions,
+                        "Shadow"
+                    ),
+                },
+                { key: "interest", content: report.interestRating },
+                {
+                    key: "comments",
+                    content: <WrappedText>{report.comment}</WrappedText>,
+                },
+                {
+                    key: "log",
+                    content: report.logFile && (
+                        <ExternalLink isDownload href={report.logFile}>
+                            Download Report
+                        </ExternalLink>
+                    ),
+                },
+            ].filter(isDefined),
+        })
+    );
 
     return (
         <Box>
@@ -142,342 +408,20 @@ export default function GameReports({
                 containerStyle={{
                     maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px - ${PAGE_FOOTER_HEIGHT}px)`,
                 }}
-                tableStyle={{
-                    "& thead > tr:last-child > *:first-child": {
-                        borderBottomWidth: "2px",
-                    },
-                    "& thead > tr > th": {
-                        verticalAlign: "middle",
-                    },
-                    "& thead > tr:first-child > th": {
-                        borderBottom: areFiltersOpen ? "none" : undefined,
-                        verticalAlign: areFiltersOpen ? "bottom" : undefined,
-                    },
-                    "& tbody > tr > *:first-child": {
-                        padding: 0,
-                        width: "6px",
-                    },
-                    "& thead > tr:last-child > *:last-child": {
-                        pr: 2,
-                    },
-                    "& tbody > tr > *:last-child": { pr: 2 },
-                }}
-                header={
-                    <>
-                        {areFiltersOpen && (
-                            <FilterBar>
-                                <th colSpan={2}>
-                                    <ExpandButton
-                                        expanded={areFiltersOpen}
-                                        setExpanded={setAreFiltersOpen}
-                                    />
-                                </th>
-
-                                {isAdmin && <th />}
-                                <th />
-
-                                <TableFilter
-                                    placeholder={"Select pairing"}
-                                    loading={loadingPlayers}
-                                    options={playerOptions}
-                                    width={PAIRING_COL_WIDTH}
-                                    current={filters.pairing}
-                                    onChange={(values) =>
-                                        setFilters({
-                                            ...filters,
-                                            pairing: values,
-                                        })
-                                    }
-                                    errorMessage={
-                                        isPairingFilterValid
-                                            ? undefined
-                                            : ErrorMessage.PairingFilterInvalid
-                                    }
-                                />
-
-                                <th />
-                                <th />
-
-                                <TableFilter
-                                    placeholder="Select winner"
-                                    loading={loadingPlayers}
-                                    options={playerOptions}
-                                    width={PLAYER_COL_WIDTH}
-                                    current={filters.winners}
-                                    onChange={(values) =>
-                                        setFilters({
-                                            ...filters,
-                                            winners: values,
-                                        })
-                                    }
-                                />
-
-                                <TableFilter
-                                    placeholder="Select loser"
-                                    loading={loadingPlayers}
-                                    options={playerOptions}
-                                    width={PLAYER_COL_WIDTH}
-                                    current={filters.losers}
-                                    onChange={(values) =>
-                                        setFilters({
-                                            ...filters,
-                                            losers: values,
-                                        })
-                                    }
-                                />
-
-                                <th />
-                                <th />
-                                <th />
-
-                                <TableFilter
-                                    placeholder="Select leagues"
-                                    loading={false}
-                                    allOption={{
-                                        id: ALL_OPTION_ID,
-                                        label: "Any league",
-                                    }}
-                                    emptyOption={{
-                                        id: EMPTY_OPTION_ID,
-                                        label: "No league",
-                                    }}
-                                    options={leagues.map((league) => ({
-                                        id: league,
-                                        label: getLeagueLabel(league),
-                                    }))}
-                                    width={LEAGUE_COL_WIDTH}
-                                    current={filters.leagues}
-                                    onChange={(values) => {
-                                        setFilters({
-                                            ...filters,
-                                            leagues: values,
-                                        });
-                                    }}
-                                />
-
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                                <th />
-                            </FilterBar>
-                        )}
-                        <tr>
-                            <th colSpan={2}>
-                                {!areFiltersOpen && (
-                                    <ExpandButton
-                                        expanded={areFiltersOpen}
-                                        setExpanded={setAreFiltersOpen}
-                                    />
-                                )}
-                            </th>
-
-                            {isAdmin && <th>Edit</th>}
-                            <th>No.</th>
-
-                            <FilterHeader
-                                areFiltersOpen={areFiltersOpen}
-                                setAreFiltersOpen={setAreFiltersOpen}
-                                appliedCount={
-                                    isPairingFilterValid
-                                        ? filters.pairing.length
-                                        : 0
-                                }
-                                style={{ width: `${PAIRING_COL_WIDTH}px` }}
-                            >
-                                Pairing
-                            </FilterHeader>
-
-                            <th>Timestamp</th>
-                            <th>Turn</th>
-
-                            <FilterHeader
-                                areFiltersOpen={areFiltersOpen}
-                                setAreFiltersOpen={setAreFiltersOpen}
-                                appliedCount={filters.winners.length}
-                                style={{ width: `${PLAYER_COL_WIDTH}px` }}
-                            >
-                                Winner
-                            </FilterHeader>
-
-                            <FilterHeader
-                                areFiltersOpen={areFiltersOpen}
-                                setAreFiltersOpen={setAreFiltersOpen}
-                                appliedCount={filters.losers.length}
-                                style={{ width: `${PLAYER_COL_WIDTH}px` }}
-                            >
-                                Loser
-                            </FilterHeader>
-
-                            <th>Game Type</th>
-                            <th>Victory Type</th>
-                            <th>Competition Type</th>
-
-                            <FilterHeader
-                                areFiltersOpen={areFiltersOpen}
-                                setAreFiltersOpen={setAreFiltersOpen}
-                                appliedCount={filters.leagues.length}
-                                style={{ width: `${LEAGUE_COL_WIDTH}px` }}
-                            >
-                                League
-                            </FilterHeader>
-
-                            <th>Expansions</th>
-                            <th>Tokens</th>
-                            <th>Dwarven Rings</th>
-                            <th>Corruption</th>
-                            <th>Mordor</th>
-                            <th>Aragorn</th>
-                            <th>Treebeard</th>
-                            <th>Initial Eyes</th>
-                            <th>SP-Captured Settlements</th>
-                            <th>SPVP</th>
-                            <th>FP-Captured Settlements</th>
-                            <th>FPVP</th>
-                            <th>Interest Rating</th>
-                            <th>Comments</th>
-                            <th>Game Log</th>
-                        </tr>
-                    </>
+                table={
+                    <Table
+                        hasFilters
+                        cornerHeaders={[
+                            ...cornerHeaders,
+                            ...(belowSmallBreakpoint ? [] : switchHeaders),
+                        ]}
+                        colHeaders={[
+                            ...(belowSmallBreakpoint ? switchHeaders : []),
+                            ...colHeaders,
+                        ]}
+                        rows={rows}
+                    />
                 }
-                body={reports.map((report, i) => (
-                    <tr key={report.rid}>
-                        <RowAccent side={report.side} />
-                        <td style={{ padding: 0 }}>
-                            {report.side === "Free" ? "💍" : "🌋"}
-                        </td>
-
-                        {isAdmin && (
-                            <td>
-                                <IconButton
-                                    size="sm"
-                                    sx={{ minWidth: 0 }}
-                                    disabled={loadingReports}
-                                    onClick={() =>
-                                        setReportEditParams({
-                                            ...report,
-                                            mode: "edit",
-                                        })
-                                    }
-                                >
-                                    <EditIcon />
-                                </IconButton>
-
-                                <IconButton
-                                    size="sm"
-                                    sx={{ minWidth: 0 }}
-                                    disabled={loadingReports}
-                                    onClick={() =>
-                                        setReportEditParams({
-                                            ...report,
-                                            mode: "delete",
-                                        })
-                                    }
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </td>
-                        )}
-
-                        <td style={{ fontWeight: "bold" }}>
-                            {totalReportCount -
-                                i -
-                                getReportsOffset(currentPage, limit)}
-                        </td>
-
-                        <FixedWidthCell width={PAIRING_COL_WIDTH}>
-                            {[report.winner, report.loser]
-                                .sort((a, b) => a.localeCompare(b))
-                                .join("-")}
-                        </FixedWidthCell>
-
-                        <td>{displayTime(report.timestamp)}</td>
-                        <td>{report.turns}</td>
-
-                        <FixedWidthCell width={PLAYER_COL_WIDTH}>
-                            {report.winner}
-                        </FixedWidthCell>
-
-                        <FixedWidthCell width={PLAYER_COL_WIDTH}>
-                            {report.loser}
-                        </FixedWidthCell>
-
-                        <td>{summarizeGameType(report.expansions)}</td>
-                        <td>
-                            {summarizeVictoryType(report.side, report.victory)}
-                        </td>
-                        <td>
-                            {summarizeCompetitionType(
-                                report.match,
-                                report.competition
-                            )}
-                        </td>
-
-                        <FixedWidthCell width={LEAGUE_COL_WIDTH}>
-                            {report.league ? getLeagueLabel(report.league) : ""}
-                        </FixedWidthCell>
-
-                        <td>
-                            {report.expansions
-                                .map(getExpansionLabel)
-                                .join(", ")}
-                        </td>
-                        <td>{report.actionTokens}</td>
-                        <td>{report.dwarvenRings}</td>
-                        <td>{report.corruption}</td>
-                        <td>{report.mordor}</td>
-                        <td>{report.aragornTurn}</td>
-                        <td>{report.treebeard && "✓"}</td>
-                        <td>{report.initialEyes}</td>
-                        <td>
-                            {summarizeCapturedSettlements(
-                                report.strongholds,
-                                report.expansions,
-                                "Free"
-                            )}
-                        </td>
-                        <td>
-                            {countVictoryPoints(
-                                report.strongholds,
-                                report.expansions,
-                                "Free"
-                            )}
-                        </td>
-                        <td>
-                            {summarizeCapturedSettlements(
-                                report.strongholds,
-                                report.expansions,
-                                "Shadow"
-                            )}
-                        </td>
-                        <td>
-                            {countVictoryPoints(
-                                report.strongholds,
-                                report.expansions,
-                                "Shadow"
-                            )}
-                        </td>
-                        <td>{report.interestRating}</td>
-                        <WrappedCell>{report.comment}</WrappedCell>
-                        <td>
-                            {report.logFile && (
-                                <ExternalLink isDownload href={report.logFile}>
-                                    Download Report
-                                </ExternalLink>
-                            )}
-                        </td>
-                    </tr>
-                ))}
             />
 
             <Box height={`${PAGE_FOOTER_HEIGHT}px`}>
@@ -514,157 +458,28 @@ interface ContainerProps {
     children: ReactNode;
 }
 
-type FixedWidthCellProps = ContainerProps & {
+type FixedWidthTextProps = ContainerProps & {
     width: number;
 };
 
-function FixedWidthCell({ width, children }: FixedWidthCellProps) {
+function FixedWidthText({ width, children }: FixedWidthTextProps) {
     return (
-        <td>
-            <Typography
-                width={`${width}px`}
-                overflow="hidden"
-                whiteSpace="nowrap"
-                textOverflow="ellipsis"
-            >
-                {children}
-            </Typography>
-        </td>
-    );
-}
-
-function WrappedCell({ children }: ContainerProps) {
-    return (
-        <td style={{ whiteSpace: "wrap" }}>
-            <Typography width="400px">{children}</Typography>
-        </td>
-    );
-}
-
-interface RowAccentProps {
-    side: Side;
-}
-
-function RowAccent({ side }: RowAccentProps) {
-    return (
-        <td>
-            <div
-                style={{
-                    height: "100%",
-                    borderBottom: "1px solid white",
-                    background:
-                        side === "Free"
-                            ? FREE_ACCENT_COLOR
-                            : SHADOW_PRIMARY_COLOR,
-                }}
-            />
-        </td>
-    );
-}
-
-function FilterBar({ children }: ContainerProps) {
-    return (
-        <tr
-            style={{
-                position: "relative",
-                zIndex: "calc(var(--joy-zIndex-table) + 1)",
-            }}
+        <Box
+            width={`${width}px`}
+            overflow="hidden"
+            whiteSpace="nowrap"
+            textOverflow="ellipsis"
         >
             {children}
-        </tr>
+        </Box>
     );
 }
 
-type FilterHeaderProps = ContainerProps & {
-    areFiltersOpen: boolean;
-    setAreFiltersOpen: (areOpen: boolean) => void;
-    appliedCount: number;
-    style?: CSSProperties;
-};
-
-function FilterHeader({
-    areFiltersOpen,
-    setAreFiltersOpen,
-    appliedCount,
-    children,
-    style = {},
-}: FilterHeaderProps) {
+function WrappedText({ children }: ContainerProps) {
     return (
-        <th>
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100%",
-                    ...style,
-                }}
-            >
-                {children}
-                <FilterButton
-                    areFiltersOpen={areFiltersOpen}
-                    setAreFiltersOpen={setAreFiltersOpen}
-                    appliedCount={appliedCount}
-                />
-            </Box>
-        </th>
-    );
-}
-
-interface FilterButtonProps {
-    areFiltersOpen: boolean;
-    setAreFiltersOpen: (areOpen: boolean) => void;
-    appliedCount: number;
-}
-
-function FilterButton({
-    areFiltersOpen,
-    setAreFiltersOpen,
-    appliedCount,
-}: FilterButtonProps) {
-    return (
-        <IconButton
-            onClick={() => setAreFiltersOpen(!areFiltersOpen)}
-            size="sm"
-            color="primary"
-            variant={appliedCount ? "solid" : undefined}
-            sx={{
-                minWidth: 0,
-                minHeight: 0,
-                px: "4px",
-                height: "1.5em",
-                position: "absolute",
-                justifyContent: "end",
-                right: 0,
-                mr: 1,
-            }}
-        >
-            <FilterIcon />
-            <Box fontSize="12px">{appliedCount ? appliedCount : null}</Box>
-        </IconButton>
-    );
-}
-
-interface ExpandButtonProps {
-    expanded: boolean;
-    setExpanded: (expanded: boolean) => void;
-}
-
-function ExpandButton({ expanded, setExpanded }: ExpandButtonProps) {
-    return (
-        <IconButton
-            onClick={() => setExpanded(!expanded)}
-            color="primary"
-            sx={{
-                display: "flex",
-                minWidth: 0,
-                minHeight: 0,
-                height: "100%",
-            }}
-        >
-            <FilterIconAlt />
-            {expanded ? <CollapseIcon /> : <ExpandIcon />}
-        </IconButton>
+        <Box width="400px" whiteSpace="wrap">
+            {children}
+        </Box>
     );
 }
 
