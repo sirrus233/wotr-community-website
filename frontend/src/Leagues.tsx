@@ -188,23 +188,23 @@ function LeagueTable({
     return (
         <Table
             cornerHeaders={[
-                isAdmin
-                    ? {
-                          key: "add",
-                          width: 145,
-                          content: (
-                              <IconButton
-                                  size="sm"
-                                  disabled={loading}
-                                  onClick={openLeaguePlayerForm}
-                                  variant="solid"
-                                  color="primary"
-                              >
-                                  <AddIcon />
-                              </IconButton>
-                          ),
-                      }
-                    : { key: "player", width: 145, content: "" },
+                {
+                    key: "player",
+                    width: 145,
+                    content: isAdmin ? (
+                        <IconButton
+                            size="sm"
+                            disabled={loading}
+                            onClick={openLeaguePlayerForm}
+                            variant="solid"
+                            color="primary"
+                        >
+                            <AddIcon />
+                        </IconButton>
+                    ) : (
+                        ""
+                    ),
+                },
             ].filter(isDefined)}
             colHeaders={[
                 ...FIXED_HEADERS.map(
