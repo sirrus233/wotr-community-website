@@ -1,8 +1,10 @@
-# Setup
+# Run
 
 - `cd` into this directory
 - `cabal update`
-- `cabal build` or `cabal run`
+- `cabal run server -- dev`
+
+# Other setup
 
 - In IDE
   - Open a workspace where `wotr-community-website.cabal` file is in the project root
@@ -12,10 +14,8 @@
   - All download methods: https://sqlitebrowser.org/dl/
   - With Homebrew: `brew install db-browser-for-sqlite`
 
-# Run
-
-- `cabal run`
-
 # Troubleshooting
 
 - `cabal clean`
+- `ghcup list` and look for warnings about new versions available
+- `ghcup set ghc <version number>` to switch GHC versions
