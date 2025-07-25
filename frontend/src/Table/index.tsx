@@ -49,6 +49,7 @@ const Container = styled("table")<{ ownerState: ContainerProps }>(
 const TableHeader = styled("th")({
     overflow: "hidden",
     padding: CELL_PADDING,
+    zIndex: 1,
 });
 
 const ColHeader = styled(TableHeader)({
