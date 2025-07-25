@@ -2,10 +2,12 @@ import React, { ReactNode, useState } from "react";
 import Box from "@mui/joy/Box";
 import EditIcon from "@mui/icons-material/EditTwoTone";
 import DeleteIcon from "@mui/icons-material/DeleteTwoTone";
+import ViewIcon from "@mui/icons-material/Visibility";
 import IconButton from "@mui/joy/IconButton";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
+import Tooltip from "@mui/joy/Tooltip";
 import { ErrorMessage, leagues } from "./constants";
 import useMediaQuery from "./hooks/useMediaQuery";
 import { RefreshRequest } from "./hooks/useRequestState";
@@ -357,7 +359,9 @@ export default function GameReports({
                 { key: "interest", content: report.interestRating },
                 {
                     key: "comments",
-                    content: <WrappedText>{report.comment}</WrappedText>,
+                    content: report.comment ? (
+                        <CommentText>{report.comment}</CommentText>
+                    ) : null,
                 },
                 {
                     key: "log",
@@ -475,11 +479,30 @@ function FixedWidthText({ width, children }: FixedWidthTextProps) {
     );
 }
 
-function WrappedText({ children }: ContainerProps) {
+function CommentText({ children }: ContainerProps) {
     return (
-        <Box width="400px" whiteSpace="wrap">
-            {children}
-        </Box>
+        <Tooltip
+            title={<Box maxWidth="300px">{children}</Box>}
+            enterTouchDelay={0}
+            size="sm"
+        >
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    color: "primary.500",
+                    px: "5px",
+                }}
+            >
+                <ViewIcon
+                    color="primary"
+                    sx={{ width: "1.5em", height: "1.5em", pr: "5px" }}
+                />
+                View comments
+            </Box>
+        </Tooltip>
     );
 }
 
