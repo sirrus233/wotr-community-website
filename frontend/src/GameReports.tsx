@@ -48,6 +48,9 @@ import Pagination from "./Pagination";
 import Table from "./Table";
 import { ColHeaderData, CornerHeaderData, RowData } from "./Table/types";
 
+import FreeIcon from "@mui/icons-material/People";
+import ShadowIcon from "@mui/icons-material/LocalFireDepartment";
+
 type ReportEditParams = ProcessedGameReport & { mode: ReportEditMode };
 
 const TABLE_TOP_POSITION =
@@ -207,22 +210,7 @@ export default function GameReports({
                 {
                     key: `side`,
                     style: { padding: "2px 0 2px 2px" },
-                    content: (
-                        <Box
-                            display="flex"
-                            flexDirection="column"
-                            justifyContent="center"
-                            p={0}
-                            height="100%"
-                            borderLeft={
-                                report.side === "Free"
-                                    ? `5px solid ${FREE_ACCENT_COLOR}`
-                                    : `5px solid ${SHADOW_PRIMARY_COLOR}`
-                            }
-                        >
-                            {report.side === "Free" ? "💍" : "🌋"}
-                        </Box>
-                    ),
+                    content: <GameAccent side={report.side} />,
                 },
                 isAdmin
                     ? {
@@ -503,6 +491,25 @@ function CommentText({ children }: ContainerProps) {
                 View comments
             </Box>
         </Tooltip>
+    );
+}
+
+function GameAccent({ side }: { side: Side }) {
+    const Icon = side === "Free" ? FreeIcon : ShadowIcon;
+    const color = side === "Free" ? FREE_ACCENT_COLOR : SHADOW_PRIMARY_COLOR;
+
+    return (
+        <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            p={0}
+            height="100%"
+            borderLeft={`5px solid ${color}`}
+        >
+            <Icon sx={{ width: "20px", height: "20px", color }} />
+        </Box>
     );
 }
 
