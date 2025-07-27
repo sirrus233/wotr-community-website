@@ -116,19 +116,25 @@ toFilterExpression ::
   SqlExpr (Value Bool)
 toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True) filterList
   where
-    toInequalityFilter :: (PersistEntity e) => SqlExpr (Entity e) -> EntityField e Int -> InequalityFilter -> SqlExpr (Value Bool)
+    toInequalityFilter ::
+      (PersistEntity e) =>
+      SqlExpr (Entity e) -> EntityField e Int -> InequalityFilter -> SqlExpr (Value Bool)
     toInequalityFilter entity field = \case
       InequalityFilter LT a -> (entity ^. field) <. val a
       InequalityFilter GT a -> (entity ^. field) >. val a
       InequalityFilter EQ a -> (entity ^. field) ==. val a
-    toMaybeInequalityFilter :: (PersistEntity e) => SqlExpr (Entity e) -> EntityField e (Maybe Int) -> Maybe InequalityFilter -> SqlExpr (Value Bool)
+    toMaybeInequalityFilter ::
+      (PersistEntity e) =>
+      SqlExpr (Entity e) -> EntityField e (Maybe Int) -> Maybe InequalityFilter -> SqlExpr (Value Bool)
     toMaybeInequalityFilter entity field = \case
       Nothing -> isNothing_ (entity ^. field)
       Just (InequalityFilter LT a) -> (entity ^. field) <. (just . val $ a)
       Just (InequalityFilter GT a) -> (entity ^. field) >. (just . val $ a)
       Just (InequalityFilter EQ a) -> (entity ^. field) ==. (just . val $ a)
-    toListFilter :: (Functor fc, PersistEntity e, PersistField f) => SqlExpr (Entity e) -> EntityField e f -> fc [f] -> fc (SqlExpr (Value Bool))
-    toListFilter entity field values = ((entity ^. field) `in_`) . valList <$> values -- TODO Move functor out of function
+    toListFilter ::
+      (PersistEntity e, PersistField f) =>
+      SqlExpr (Entity e) -> EntityField e f -> [f] -> SqlExpr (Value Bool)
+    toListFilter entity field = ((entity ^. field) `in_`) . valList
     filterList :: [Maybe (SqlExpr (Value Bool))]
     filterList =
       [ playerFilter,
@@ -149,7 +155,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
         interestRating,
         hasLog
       ]
-    playerFilter = liftA2 (||.) (toListFilter report GameReportWinnerId spec.players) (toListFilter report GameReportLoserId spec.players)
+    playerFilter = liftA2 (||.) (toListFilter report GameReportWinnerId <$> spec.players) (toListFilter report GameReportLoserId <$> spec.players)
     pairingFilter =
       spec.pairing <&> \case
         (player1, Nothing) -> (report ^. GameReportWinnerId ==. val player1) ||. (report ^. GameReportLoserId ==. val player1)
@@ -161,16 +167,17 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
         Before t -> report ^. GameReportTimestamp <=. val t
         After t -> report ^. GameReportTimestamp >=. val t
         Between start end -> (report ^. GameReportTimestamp >=. val start) &&. (report ^. GameReportTimestamp <=. val end)
-    winnerFilter = toListFilter report GameReportWinnerId spec.winners
-    loserFilter = toListFilter report GameReportLoserId spec.losers
+    winnerFilter = toListFilter report GameReportWinnerId <$> spec.winners
+    loserFilter = toListFilter report GameReportLoserId <$> spec.losers
     turnsFilter = toInequalityFilter report GameReportTurns <$> spec.turns
     victoryFilter =
       spec.victory
         <&> foldr1 (||.)
         . fmap (\(s, v) -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val v)
-    leagueFilter = case spec.leagues of
-      Just [] -> Just (isNothing_ (report ^. GameReportLeague))
-      _ -> toListFilter report GameReportLeague (map Just <$> spec.leagues)
+    leagueFilter =
+      spec.leagues <&> \case
+        [] -> isNothing_ (report ^. GameReportLeague)
+        leagues -> toListFilter report GameReportLeague . map Just $ leagues
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
     corruption = toInequalityFilter report GameReportCorruption <$> spec.corruption
