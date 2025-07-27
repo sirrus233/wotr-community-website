@@ -307,7 +307,7 @@ fromLeagueGameStatsMap playerId =
 
 type ExportResponse = (Headers '[Header "Content-Disposition" String]) (SourceIO StrictByteString)
 
-data TimestampFilter = TimestampFilter {startAt :: UTCTime, endAt :: UTCTime} deriving (Generic)
+data TimestampFilter = Before UTCTime | After UTCTime | Between UTCTime UTCTime deriving (Generic)
 
 instance FromJSON TimestampFilter
 
@@ -315,9 +315,9 @@ data InequalityFilter = InequalityFilter Ordering Int deriving (Generic)
 
 instance FromJSON InequalityFilter
 
-data CompetitionFilter = RatedFilter Match | CompetitionFilter Competition deriving (Generic)
-
-instance FromJSON CompetitionFilter
+-- TODO Unused until competition can be filtered in the DB
+-- data CompetitionFilter = RatedFilter Match | CompetitionFilter Competition deriving (Generic)
+-- instance FromJSON CompetitionFilter
 
 data GameReportFilterSpec = GameReportFilterSpec
   { players :: Maybe [PlayerId],
@@ -326,21 +326,21 @@ data GameReportFilterSpec = GameReportFilterSpec
     winners :: Maybe [PlayerId],
     losers :: Maybe [PlayerId],
     turns :: Maybe InequalityFilter,
-    victory :: Maybe [(Side, Victory)],
-    competition :: Maybe [CompetitionFilter],
+    victory :: Maybe (NonEmpty (Side, Victory)),
+    -- TODO competition
     leagues :: Maybe [League],
-    expansions :: Maybe [Expansion],
+    -- TODO expansions
     tokens :: Maybe InequalityFilter,
     dwarvenRings :: Maybe InequalityFilter,
     corruption :: Maybe InequalityFilter,
-    mordor :: Maybe InequalityFilter,
-    aragorn :: Maybe InequalityFilter,
+    mordor :: Maybe (Maybe InequalityFilter),
+    aragorn :: Maybe (Maybe InequalityFilter),
     treebeard :: Maybe Bool,
     initialEyes :: Maybe InequalityFilter,
-    spCaptured :: Maybe [Stronghold],
-    spvp :: Maybe InequalityFilter,
-    fpCaptured :: Maybe [Stronghold],
-    fpvp :: Maybe InequalityFilter,
+    -- TODO spCaptured
+    -- TODO spvp
+    -- TODO fpCaptured
+    -- TODO fpvp
     interestRating :: Maybe InequalityFilter,
     hasLog :: Maybe Bool
   }
