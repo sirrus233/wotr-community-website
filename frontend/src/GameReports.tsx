@@ -8,6 +8,8 @@ import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import Tooltip from "@mui/joy/Tooltip";
+import freeIconPath from "./assets/ring-emoji.png";
+import shadowIconPath from "./assets/volcano-emoji.png";
 import { ErrorMessage, leagues } from "./constants";
 import useMediaQuery from "./hooks/useMediaQuery";
 import { RefreshRequest } from "./hooks/useRequestState";
@@ -47,9 +49,6 @@ import ReportDeleteForm from "./ReportDeleteForm";
 import Pagination from "./Pagination";
 import Table from "./Table";
 import { ColHeaderData, CornerHeaderData, RowData } from "./Table/types";
-
-import FreeIcon from "@mui/icons-material/People";
-import ShadowIcon from "@mui/icons-material/LocalFireDepartment";
 
 type ReportEditParams = ProcessedGameReport & { mode: ReportEditMode };
 
@@ -495,8 +494,10 @@ function CommentText({ children }: ContainerProps) {
 }
 
 function GameAccent({ side }: { side: Side }) {
-    const Icon = side === "Free" ? FreeIcon : ShadowIcon;
-    const color = side === "Free" ? FREE_ACCENT_COLOR : SHADOW_PRIMARY_COLOR;
+    const [color, src, alt] =
+        side === "Free"
+            ? [FREE_ACCENT_COLOR, freeIconPath, "FP Icon"]
+            : [SHADOW_PRIMARY_COLOR, shadowIconPath, "SP Icon"];
 
     return (
         <Box
@@ -508,7 +509,7 @@ function GameAccent({ side }: { side: Side }) {
             height="100%"
             borderLeft={`5px solid ${color}`}
         >
-            <Icon sx={{ width: "20px", height: "20px", color }} />
+            <img src={src} alt={alt} style={{ width: "1em", height: "1em" }} />
         </Box>
     );
 }
