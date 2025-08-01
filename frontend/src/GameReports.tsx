@@ -509,7 +509,11 @@ function GameAccent({ side }: { side: Side }) {
             height="100%"
             borderLeft={`5px solid ${color}`}
         >
-            <img src={src} alt={alt} style={{ width: "1em", height: "1em" }} />
+            <img
+                src={src}
+                alt={alt}
+                style={{ width: "14px", height: "14px" }}
+            />
         </Box>
     );
 }
