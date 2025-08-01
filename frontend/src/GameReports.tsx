@@ -8,6 +8,8 @@ import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import Tooltip from "@mui/joy/Tooltip";
+import freeIconPath from "./assets/ring-emoji.png";
+import shadowIconPath from "./assets/volcano-emoji.png";
 import { ErrorMessage, leagues } from "./constants";
 import useMediaQuery from "./hooks/useMediaQuery";
 import { RefreshRequest } from "./hooks/useRequestState";
@@ -207,22 +209,7 @@ export default function GameReports({
                 {
                     key: `side`,
                     style: { padding: "2px 0 2px 2px" },
-                    content: (
-                        <Box
-                            display="flex"
-                            flexDirection="column"
-                            justifyContent="center"
-                            p={0}
-                            height="100%"
-                            borderLeft={
-                                report.side === "Free"
-                                    ? `5px solid ${FREE_ACCENT_COLOR}`
-                                    : `5px solid ${SHADOW_PRIMARY_COLOR}`
-                            }
-                        >
-                            {report.side === "Free" ? "💍" : "🌋"}
-                        </Box>
-                    ),
+                    content: <GameAccent side={report.side} />,
                 },
                 isAdmin
                     ? {
@@ -503,6 +490,27 @@ function CommentText({ children }: ContainerProps) {
                 View comments
             </Box>
         </Tooltip>
+    );
+}
+
+function GameAccent({ side }: { side: Side }) {
+    const [color, src, alt] =
+        side === "Free"
+            ? [FREE_ACCENT_COLOR, freeIconPath, "FP Icon"]
+            : [SHADOW_PRIMARY_COLOR, shadowIconPath, "SP Icon"];
+
+    return (
+        <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            p={0}
+            height="100%"
+            borderLeft={`5px solid ${color}`}
+        >
+            <img src={src} alt={alt} style={{ width: "1em", height: "1em" }} />
+        </Box>
     );
 }
 
