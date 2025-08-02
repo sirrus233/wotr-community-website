@@ -2,12 +2,15 @@ module Database where
 
 import AppConfig (AppM, Env (..), runAppLogger)
 import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
+import Data.Foldable1 (foldr1)
 import Data.Text qualified as T
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, getCurrentTime, nominalDay)
 import Database.Esqueleto.Experimental
   ( ConnectionPool,
     Entity (..),
     From,
+    PersistEntity,
+    PersistField,
     PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
@@ -52,8 +55,10 @@ import Database.Esqueleto.Experimental
     (+.),
     (/.),
     (<.),
+    (<=.),
     (=.),
     (==.),
+    (>.),
     (>=.),
     (?.),
     (^.),
@@ -61,7 +66,7 @@ import Database.Esqueleto.Experimental
     type (:&) (..),
   )
 import Servant (ServerError, throwError)
-import Types.Api (GameReportFilterSpec (..))
+import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), TimestampFilter (..))
 import Types.Auth (SessionId (..), UserId (..))
 import Types.DataField (League, LeagueTier, PlayerName, Year)
 import Types.Database
@@ -111,20 +116,83 @@ toFilterExpression ::
   SqlExpr (Value Bool)
 toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True) filterList
   where
-    toFilter entity field values = ((entity ^. field) `in_`) . valList <$> values
-    filterList = [playerFilter, pairingFilter, winnerFilter, loserFilter, leagueFilter]
-    playerFilter = liftA2 (||.) (toFilter report GameReportWinnerId spec.players) (toFilter report GameReportLoserId spec.players)
+    toInequalityFilter ::
+      (PersistEntity e) =>
+      SqlExpr (Entity e) -> EntityField e Int -> InequalityFilter -> SqlExpr (Value Bool)
+    toInequalityFilter entity field = \case
+      InequalityFilter LT a -> (entity ^. field) <. val a
+      InequalityFilter GT a -> (entity ^. field) >. val a
+      InequalityFilter EQ a -> (entity ^. field) ==. val a
+    toMaybeInequalityFilter ::
+      (PersistEntity e) =>
+      SqlExpr (Entity e) -> EntityField e (Maybe Int) -> Maybe InequalityFilter -> SqlExpr (Value Bool)
+    toMaybeInequalityFilter entity field = \case
+      Nothing -> isNothing_ (entity ^. field)
+      Just (InequalityFilter LT a) -> (entity ^. field) <. (just . val $ a)
+      Just (InequalityFilter GT a) -> (entity ^. field) >. (just . val $ a)
+      Just (InequalityFilter EQ a) -> (entity ^. field) ==. (just . val $ a)
+    toListFilter ::
+      (PersistEntity e, PersistField f) =>
+      SqlExpr (Entity e) -> EntityField e f -> [f] -> SqlExpr (Value Bool)
+    toListFilter entity field = ((entity ^. field) `in_`) . valList
+    filterList :: [Maybe (SqlExpr (Value Bool))]
+    filterList =
+      [ playerFilter,
+        pairingFilter,
+        timestampFilter,
+        winnerFilter,
+        loserFilter,
+        turnsFilter,
+        victoryFilter,
+        leagueFilter,
+        tokensFilter,
+        dwarvenRings,
+        corruption,
+        mordor,
+        aragorn,
+        treebeard,
+        initialEyes,
+        interestRating,
+        hasLog
+      ]
+    playerFilter = liftA2 (||.) (toListFilter report GameReportWinnerId <$> spec.players) (toListFilter report GameReportLoserId <$> spec.players)
     pairingFilter =
       spec.pairing <&> \case
         (player1, Nothing) -> (report ^. GameReportWinnerId ==. val player1) ||. (report ^. GameReportLoserId ==. val player1)
         (player1, Just player2) ->
           ((report ^. GameReportWinnerId ==. val player1) ||. (report ^. GameReportLoserId ==. val player1))
             &&. ((report ^. GameReportWinnerId ==. val player2) ||. (report ^. GameReportLoserId ==. val player2))
-    winnerFilter = toFilter report GameReportWinnerId spec.winners
-    loserFilter = toFilter report GameReportLoserId spec.losers
-    leagueFilter = case spec.leagues of
-      Just [] -> Just (isNothing_ (report ^. GameReportLeague))
-      _ -> toFilter report GameReportLeague (map Just <$> spec.leagues)
+    timestampFilter =
+      spec.timestamp <&> \case
+        Before t -> report ^. GameReportTimestamp <=. val t
+        After t -> report ^. GameReportTimestamp >=. val t
+        Between start end -> (report ^. GameReportTimestamp >=. val start) &&. (report ^. GameReportTimestamp <=. val end)
+    winnerFilter = toListFilter report GameReportWinnerId <$> spec.winners
+    loserFilter = toListFilter report GameReportLoserId <$> spec.losers
+    turnsFilter = toInequalityFilter report GameReportTurns <$> spec.turns
+    victoryFilter =
+      spec.victory
+        <&> foldr1 (||.)
+        . fmap (\(s, v) -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val v)
+    leagueFilter =
+      spec.leagues <&> \case
+        [] -> isNothing_ (report ^. GameReportLeague)
+        leagues -> toListFilter report GameReportLeague . map Just $ leagues
+    tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
+    dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
+    corruption = toInequalityFilter report GameReportCorruption <$> spec.corruption
+    mordor = toMaybeInequalityFilter report GameReportMordor <$> spec.mordor
+    aragorn = toMaybeInequalityFilter report GameReportAragornTurn <$> spec.aragorn
+    treebeard =
+      spec.treebeard <&> \case
+        True -> (report ^. GameReportTreebeard) ==. (just . val $ True)
+        False -> (report ^. GameReportTreebeard) ==. (just . val $ False) ||. isNothing_ (report ^. GameReportTreebeard)
+    initialEyes = toInequalityFilter report GameReportInitialEyes <$> spec.initialEyes
+    interestRating = toInequalityFilter report GameReportInterestRating <$> spec.interestRating
+    hasLog =
+      spec.hasLog <&> \case
+        True -> not_ . isNothing_ $ (report ^. GameReportLogFile)
+        False -> isNothing_ (report ^. GameReportLogFile)
 
 getAdminBySessionId :: (MonadIO m, MonadLogger m) => Text -> DBAction m (Maybe (Entity Admin))
 getAdminBySessionId sessionId = lift . getBy . UniqueAdminSessionId $ Just sessionId

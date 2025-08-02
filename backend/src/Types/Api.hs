@@ -307,12 +307,42 @@ fromLeagueGameStatsMap playerId =
 
 type ExportResponse = (Headers '[Header "Content-Disposition" String]) (SourceIO StrictByteString)
 
+data TimestampFilter = Before UTCTime | After UTCTime | Between UTCTime UTCTime deriving (Generic)
+
+instance FromJSON TimestampFilter
+
+data InequalityFilter = InequalityFilter Ordering Int deriving (Generic)
+
+instance FromJSON InequalityFilter
+
+-- TODO Unused until competition can be filtered in the DB
+-- data CompetitionFilter = RatedFilter Match | CompetitionFilter Competition deriving (Generic)
+-- instance FromJSON CompetitionFilter
+
 data GameReportFilterSpec = GameReportFilterSpec
   { players :: Maybe [PlayerId],
     pairing :: Maybe (PlayerId, Maybe PlayerId),
+    timestamp :: Maybe TimestampFilter,
     winners :: Maybe [PlayerId],
     losers :: Maybe [PlayerId],
-    leagues :: Maybe [League]
+    turns :: Maybe InequalityFilter,
+    victory :: Maybe (NonEmpty (Side, Victory)),
+    -- TODO competition
+    leagues :: Maybe [League],
+    -- TODO expansions
+    tokens :: Maybe InequalityFilter,
+    dwarvenRings :: Maybe InequalityFilter,
+    corruption :: Maybe InequalityFilter,
+    mordor :: Maybe (Maybe InequalityFilter),
+    aragorn :: Maybe (Maybe InequalityFilter),
+    treebeard :: Maybe Bool,
+    initialEyes :: Maybe InequalityFilter,
+    -- TODO spCaptured
+    -- TODO spvp
+    -- TODO fpCaptured
+    -- TODO fpvp
+    interestRating :: Maybe InequalityFilter,
+    hasLog :: Maybe Bool
   }
   deriving (Generic)
 
