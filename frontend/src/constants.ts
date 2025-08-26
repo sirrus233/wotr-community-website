@@ -113,6 +113,12 @@ export const serverValidationErrors = [
 
 export const playerStates = ["Active", "Inactive"] as const;
 
+export const settlementLayouts = [
+    "Standard",
+    "Vertical Analysis",
+    "Horizontal Analysis",
+] as const;
+
 export enum ErrorMessage {
     Default = "Something went wrong. Please contact an admin for assistance.",
     NotAuthorized = "If you're an administrator, your session may have expired. Please log in and try again.",

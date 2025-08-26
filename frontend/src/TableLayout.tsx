@@ -1,13 +1,16 @@
 import React, { CSSProperties, ReactNode } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
+import Drawer from "@mui/joy/Drawer";
+import IconButton from "@mui/joy/IconButton";
+import SettingsIcon from "@mui/icons-material/Settings";
 import Table from "@mui/joy/Table";
 import { SxProps } from "@mui/joy/styles/types";
 import { TABLE_BTN_HEIGHT_PX, TABLE_ELEMENTS_GAP } from "./styles/sizes";
 import ErrorDisplay from "./ErrorDisplay";
 import LoadingOverlay from "./LoadingOverlay";
 
-interface Props {
+interface CommonProps {
     refresh: () => void;
     error: string | null;
     loading: boolean;
@@ -20,6 +23,18 @@ interface Props {
     tableStyle?: SxProps;
 }
 
+interface PropsA extends CommonProps {
+    settingsPanel?: never;
+    settingsOpen?: never;
+    toggleSettings?: never;
+}
+
+interface PropsB extends CommonProps {
+    settingsPanel: ReactNode;
+    settingsOpen: boolean;
+    toggleSettings: () => void;
+}
+
 export default function TableLayout({
     refresh,
     error,
@@ -29,9 +44,12 @@ export default function TableLayout({
     table,
     header,
     body,
+    settingsPanel,
+    settingsOpen,
+    toggleSettings,
     containerStyle = {},
     tableStyle = {},
-}: Props) {
+}: PropsA | PropsB) {
     return (
         <Box
             sx={{
@@ -48,6 +66,7 @@ export default function TableLayout({
                     alignItems: "center",
                     justifyContent: "center",
                     m: `${TABLE_ELEMENTS_GAP}px 0`,
+                    "button + button": { mx: "5px" },
                 }}
             >
                 <Button
@@ -56,7 +75,27 @@ export default function TableLayout({
                 >
                     Refresh
                 </Button>
+
+                {settingsPanel && (
+                    <IconButton
+                        variant="solid"
+                        color="primary"
+                        onClick={toggleSettings}
+                    >
+                        <SettingsIcon />
+                    </IconButton>
+                )}
             </Box>
+
+            {settingsOpen && (
+                <Drawer
+                    open={settingsOpen}
+                    onClose={toggleSettings}
+                    anchor="right"
+                >
+                    {settingsPanel}
+                </Drawer>
+            )}
 
             {filters && (
                 <Box

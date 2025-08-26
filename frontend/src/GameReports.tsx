@@ -26,7 +26,10 @@ import {
     Stronghold,
     Victory,
 } from "./types";
-import { FREE_ACCENT_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
+import colors, {
+    FREE_ACCENT_COLOR,
+    SHADOW_PRIMARY_COLOR,
+} from "./styles/colors";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
@@ -45,7 +48,10 @@ import {
 import TableLayout from "./TableLayout";
 import ExternalLink from "./ExternalLink";
 import GameReportForm from "./GameReportForm";
+import GameReportSettings, { Settings } from "./GameReportSettings";
 import ReportDeleteForm from "./ReportDeleteForm";
+import SettlementBadge from "./SettlementBadge";
+import ShadowCaptures from "./ShadowCaptures";
 import Pagination from "./Pagination";
 import Table from "./Table";
 import { ColHeaderData, CornerHeaderData, RowData } from "./Table/types";
@@ -95,6 +101,11 @@ export default function GameReports({
 }: Props) {
     const [reportEditParams, setReportEditParams] =
         useState<ReportEditParams | null>(null);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [settings, setSettings] = useState<Settings>({
+        settlementLayout: "Standard",
+        areSettlementsAbbreviated: false,
+    });
 
     const belowSmallBreakpoint = useMediaQuery("sm");
 
@@ -193,7 +204,26 @@ export default function GameReports({
         { key: "Aragorn" },
         { key: "Treebeard" },
         { key: "Initial Eyes" },
-        { key: "SP-Captured Settlements" },
+        {
+            key: "SP-Captured Settlements",
+            content: (
+                <Box display="flex" alignItems="center" justifyContent="center">
+                    <Box mr="5px">SP-Captured Settlements</Box>
+                    <IconButton
+                        size="sm"
+                        color="primary"
+                        onClick={() => setSettingsOpen(true)}
+                        sx={{
+                            height: "1em",
+                            minHeight: "fit-content",
+                            py: "2px",
+                        }}
+                    >
+                        <ViewIcon />
+                    </IconButton>
+                </Box>
+            ),
+        },
         { key: "SPVP" },
         { key: "FP-Captured Settlements" },
         { key: "FPVP" },
@@ -313,10 +343,12 @@ export default function GameReports({
                 { key: "eyes", content: report.initialEyes },
                 {
                     key: "sp-settlements",
-                    content: summarizeCapturedSettlements(
-                        report.strongholds,
-                        report.expansions,
-                        "Free"
+                    content: (
+                        <ShadowCaptures
+                            report={report}
+                            layout={settings.settlementLayout}
+                            isAbbreviated={settings.areSettlementsAbbreviated}
+                        />
                     ),
                 },
                 {
@@ -329,11 +361,7 @@ export default function GameReports({
                 },
                 {
                     key: "fp-settlements",
-                    content: summarizeCapturedSettlements(
-                        report.strongholds,
-                        report.expansions,
-                        "Shadow"
-                    ),
+                    content: <FreeCaptures report={report} />,
                 },
                 {
                     key: "fpvp",
@@ -396,6 +424,14 @@ export default function GameReports({
                 error={error}
                 loading={loadingReports}
                 label="Game Reports"
+                toggleSettings={() => setSettingsOpen((prev) => !prev)}
+                settingsOpen={settingsOpen}
+                settingsPanel={
+                    <GameReportSettings
+                        settings={settings}
+                        setSettings={setSettings}
+                    />
+                }
                 containerStyle={{
                     maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px - ${PAGE_FOOTER_HEIGHT}px)`,
                 }}
@@ -518,6 +554,26 @@ function GameAccent({ side }: { side: Side }) {
     );
 }
 
+function FreeCaptures(props: { report: ProcessedGameReport }) {
+    const { strongholds, expansions } = props.report;
+
+    return (
+        <Box display="flex">
+            {strongholds
+                .filter((sh) => strongholdSide(expansions, sh) === "Shadow")
+                .map(getStrongholdLabel)
+                .map((label) => (
+                    <SettlementBadge
+                        key={label}
+                        style={{ background: colors.shadowPrimary }}
+                    >
+                        {label}
+                    </SettlementBadge>
+                ))}
+        </Box>
+    );
+}
+
 function getReportsOffset(currentPage: number, perPageCount: number) {
     return (currentPage - 1) * perPageCount;
 }
@@ -558,17 +614,6 @@ function summarizeCompetitionType(match: Match, competition: Competition[]) {
     return [match === "Rated" ? "Ladder" : "Friendly", ...competition]
         .filter(Boolean)
         .join(", ");
-}
-
-function summarizeCapturedSettlements(
-    strongholds: Stronghold[],
-    expansions: Expansion[],
-    side: Side
-) {
-    return strongholds
-        .filter((stronghold) => strongholdSide(expansions, stronghold) === side)
-        .map(getStrongholdLabel)
-        .join(" • ");
 }
 
 function countVictoryPoints(
