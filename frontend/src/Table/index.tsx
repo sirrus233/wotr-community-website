@@ -4,7 +4,7 @@ import FilterIcon from "@mui/icons-material/FilterList";
 import IconButton from "@mui/joy/IconButton";
 import { styled } from "@mui/joy/styles";
 import FilterBar, { ExpandButton, PINNED_COLS_Z_IDX } from "./FilterBar";
-import { FILTER_ERROR_HEIGHT, TABLE_FILTER_HEIGHT } from "./TableFilter";
+import { FILTER_ERROR_HEIGHT, TABLE_FILTER_HEIGHT } from "./constants";
 import {
     TABLE_BORDER_COLOR,
     TABLE_FONT_COLOR,
@@ -160,14 +160,14 @@ export default function Table<
                     )}
 
                     {colHeaders.map(
-                        ({ key, content, span, filter, style = {} }) => (
+                        ({ key, content, span, filter, width, style = {} }) => (
                             <ColHeader
                                 scope="col"
                                 key={key}
                                 colSpan={span}
                                 sx={{
-                                    width: filter?.width,
-                                    minWidth: filter?.width,
+                                    width,
+                                    minWidth: width,
                                     top: areFiltersOpen ? filterBarHeight : 0,
                                     ...style,
                                 }}
