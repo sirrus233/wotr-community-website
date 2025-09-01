@@ -105,6 +105,7 @@ export default function Table<
     return (
         <Container
             sx={style}
+            cellPadding={0}
             ownerState={{ pinnedColCount: cornerHeaders.length }}
         >
             <thead>
@@ -167,6 +168,7 @@ export default function Table<
                                 colSpan={span}
                                 sx={{
                                     width,
+                                    maxWidth: width,
                                     minWidth: width,
                                     top: areFiltersOpen ? filterBarHeight : 0,
                                     ...style,
