@@ -9,6 +9,8 @@ import { isDefined, range } from "../utils";
 import { TABLE_FILTER_HEIGHT } from "./constants";
 import { InequalityFilterProps } from "./types";
 
+type PseudoInequalityOperator = "GTE" | "LTE";
+
 export default function InequalityFilter({
     current,
     min,
@@ -20,9 +22,9 @@ export default function InequalityFilter({
     const [currentOperator, currentValue = null] = current || [];
 
     const [inputValue, setInputValue] = useState<number | null>(currentValue);
-    const [inputOperator, setInputOperator] = useState<InequalityOperator>(
-        currentOperator || "EQ"
-    );
+    const [inputOperator, setInputOperator] = useState<
+        InequalityOperator | PseudoInequalityOperator
+    >(currentOperator || "EQ");
 
     useEffect(() => {
         const didValueChange = currentValue !== inputValue;
@@ -30,10 +32,12 @@ export default function InequalityFilter({
 
         if (didValueChange) {
             onChange(
-                isDefined(inputValue) ? [inputOperator, inputValue] : null
+                isDefined(inputValue)
+                    ? translateFilter(inputOperator, inputValue)
+                    : null
             );
         } else if (didOperatorChange && isDefined(inputValue)) {
-            onChange([inputOperator, inputValue]);
+            onChange(translateFilter(inputOperator, inputValue));
         }
     }, [currentOperator, currentValue, inputOperator, inputValue]);
 
@@ -66,7 +70,7 @@ export default function InequalityFilter({
                     mr: "1px",
                 }}
             >
-                {(["EQ", "GT", "LT"] as const).map((o) => (
+                {(["EQ", "GT", "LT", "GTE", "LTE"] as const).map((o) => (
                     <Option key={o} value={o}>
                         {operatorLabel(o)}
                     </Option>
@@ -111,7 +115,9 @@ function ResetButton(props: { reset: () => void }) {
     );
 }
 
-function operatorLabel(operator: InequalityOperator) {
+function operatorLabel(
+    operator: InequalityOperator | PseudoInequalityOperator
+): string {
     switch (operator) {
         case "EQ":
             return "=";
@@ -119,5 +125,23 @@ function operatorLabel(operator: InequalityOperator) {
             return ">";
         case "LT":
             return "<";
+        case "GTE":
+            return ">=";
+        case "LTE":
+            return "<=";
+    }
+}
+
+function translateFilter(
+    operator: InequalityOperator | PseudoInequalityOperator,
+    value: number
+): [InequalityOperator, number] {
+    switch (operator) {
+        case "GTE":
+            return ["GT", value - 1];
+        case "LTE":
+            return ["LT", value + 1];
+        default:
+            return [operator, value];
     }
 }

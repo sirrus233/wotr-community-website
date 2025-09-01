@@ -40,6 +40,7 @@ interface CommonColHeaderData {
     span?: number;
     style?: CSSProperties;
 }
+
 interface ColHeaderDataA extends CommonColHeaderData {
     filter?: never;
     width?: number;
