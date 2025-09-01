@@ -70,7 +70,7 @@ export default function InequalityFilter({
                     mr: "1px",
                 }}
             >
-                {(["EQ", "GT", "LT", "GTE", "LTE"] as const).map((o) => (
+                {(["EQ", "GT", "GTE", "LT", "LTE"] as const).map((o) => (
                     <Option key={o} value={o}>
                         {operatorLabel(o)}
                     </Option>
