@@ -11,14 +11,15 @@ interface CommonFilterProps {
     appliedCount: number;
 }
 
-export interface AutocompleteProps<O extends Option> extends CommonFilterProps {
+export interface AutocompleteProps<Opt extends Option>
+    extends CommonFilterProps {
     filterType: "autocomplete";
-    options: O[];
-    current: O[];
+    options: Opt[];
+    current: Opt[];
     loading: boolean;
-    allOption?: O;
-    emptyOption?: O;
-    onChange: (value: O[]) => void;
+    allOption?: Opt;
+    emptyOption?: Opt;
+    onChange: (value: Opt[]) => void;
 }
 
 export interface InequalityFilterProps extends CommonFilterProps {
