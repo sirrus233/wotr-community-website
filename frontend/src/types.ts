@@ -247,12 +247,23 @@ export type ValidLeaguePlayerFormData = {
 
 export type ValueOf<T> = T[keyof T];
 
+export type ApiInequalityOperator = "GT" | "LT" | "EQ";
+
+export type NonApiInequalityOperator = "GTE" | "LTE";
+
+export type InequalityOperator =
+    | ApiInequalityOperator
+    | NonApiInequalityOperator;
+
+export type InequalityFilter = [ApiInequalityOperator, number];
+
 export type GameReportFilters = {
     pairing: MenuOption<number>[];
     players: MenuOption<number>[];
     winners: MenuOption<number>[];
     losers: MenuOption<number>[];
     leagues: MenuOption<string>[];
+    turns: InequalityFilter | null;
 };
 
 export type GameReportParams = {

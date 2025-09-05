@@ -114,6 +114,7 @@ export default function App() {
                 winners: [],
                 losers: [],
                 leagues: [],
+                turns: null,
             },
         },
         sendRequest: (params) => {

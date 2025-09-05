@@ -119,10 +119,10 @@ export default function GameReports({
             key: "Pairing",
             width: PAIRING_COL_WIDTH,
             filter: {
+                filterType: "autocomplete",
                 placeholder: "Select pairing",
                 loading: loadingPlayers,
                 options: playerOptions,
-                width: PAIRING_COL_WIDTH,
                 current: filters.pairing,
                 appliedCount: isPairingFilterValid ? filters.pairing.length : 0,
                 onChange: (values: MenuOption<number>[]) =>
@@ -136,14 +136,27 @@ export default function GameReports({
 
     const colHeaders: ColHeaderData[] = [
         { key: "Timestamp" },
-        { key: "Turn" },
+        {
+            key: "Turn",
+            width: 120,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Turn",
+                min: 1,
+                max: 999,
+                current: filters.turns,
+                appliedCount: isDefined(filters.turns?.[1]) ? 1 : 0,
+                onChange: (value) => setFilters({ ...filters, turns: value }),
+            },
+        },
         {
             key: "Winner",
+            width: PLAYER_COL_WIDTH,
             filter: {
+                filterType: "autocomplete",
                 placeholder: "Select winner",
                 loading: loadingPlayers,
                 options: playerOptions,
-                width: PLAYER_COL_WIDTH,
                 current: filters.winners,
                 appliedCount: filters.winners.length,
                 onChange: (values: MenuOption<number>[]) =>
@@ -152,11 +165,12 @@ export default function GameReports({
         },
         {
             key: "Loser",
+            width: PLAYER_COL_WIDTH,
             filter: {
+                filterType: "autocomplete",
                 placeholder: "Select loser",
                 loading: loadingPlayers,
                 options: playerOptions,
-                width: PLAYER_COL_WIDTH,
                 current: filters.losers,
                 appliedCount: filters.losers.length,
                 onChange: (values: MenuOption<number>[]) =>
@@ -168,7 +182,9 @@ export default function GameReports({
         { key: "Competition Type" },
         {
             key: "League",
+            width: LEAGUE_COL_WIDTH,
             filter: {
+                filterType: "autocomplete",
                 placeholder: "Select leagues",
                 loading: false,
                 allOption: { id: ALL_OPTION_ID, label: "Any league" },
@@ -177,7 +193,6 @@ export default function GameReports({
                     id: league,
                     label: getLeagueLabel(league),
                 })),
-                width: LEAGUE_COL_WIDTH,
                 current: filters.leagues,
                 appliedCount: filters.leagues.length,
                 onChange: (values: MenuOption<string>[]) => {
@@ -436,6 +451,7 @@ export function serializeReportsParams(params: GameReportParams) {
         limit: params.limit,
         offset: getReportsOffset(params.currentPage, params.limit),
         filter: JSON.stringify({
+            ...params.filters,
             pairing: pairing?.length === 1 ? [...pairing, null] : pairing,
             winners: toFilterParam(params.filters.winners),
             losers: toFilterParam(params.filters.losers),
