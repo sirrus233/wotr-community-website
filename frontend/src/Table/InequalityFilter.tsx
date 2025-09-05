@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import Box from "@mui/joy/Box";
 import ClearIcon from "@mui/icons-material/CloseRounded";
 import IconButton from "@mui/joy/IconButton";
+import Input from "@mui/joy/Input";
 import Option from "@mui/joy/Option";
 import Select from "@mui/joy/Select";
 import { InequalityFilter, InequalityOperator } from "../types";
-import { isDefined, range } from "../utils";
+import { isDefined, noNansense } from "../utils";
 import { TABLE_FILTER_HEIGHT } from "./constants";
 import { InequalityFilterProps } from "./types";
 
@@ -78,25 +79,24 @@ export default function InequalityFilter({
                 ))}
             </Select>
 
-            <Select
+            <Input
                 size="sm"
+                type="number"
                 placeholder={placeholder}
-                value={inputValue}
-                onChange={(_, value) => setInputValue(value)}
-                indicator={isDefined(inputValue) ? null : undefined}
+                value={inputValue === null ? "" : String(inputValue)}
+                onChange={(e) =>
+                    setInputValue(
+                        constrainNumberInput(e.target.value, min, max)
+                    )
+                }
                 sx={{ ...commonStyle, flex: 1 }}
+                slotProps={{ input: { min, max } }}
                 endDecorator={
                     isDefined(inputValue) ? (
                         <ResetButton reset={() => setInputValue(null)} />
                     ) : undefined
                 }
-            >
-                {range(min, max + 1).map((value) => (
-                    <Option key={value} value={value}>
-                        {value}
-                    </Option>
-                ))}
-            </Select>
+            />
         </Box>
     );
 }
@@ -145,4 +145,16 @@ function translateFilter(
         default:
             return [operator, value];
     }
+}
+
+function constrainNumberInput(
+    value: string,
+    min?: number,
+    max?: number
+): number | null {
+    if (value === "") return null;
+    const num = noNansense(Number(value));
+    if (isDefined(min) && num < min) return min;
+    if (isDefined(max) && num > max) return max;
+    return num;
 }

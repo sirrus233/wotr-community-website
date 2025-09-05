@@ -25,8 +25,8 @@ export interface AutocompleteProps<Opt extends Option>
 export interface InequalityFilterProps extends CommonFilterProps {
     filterType: "inequality";
     current: InequalityFilter | null;
-    min: number;
-    max: number;
+    min?: number;
+    max?: number;
     onChange: (value: [InequalityOperator, number] | null) => void;
 }
 

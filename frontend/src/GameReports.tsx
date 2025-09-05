@@ -143,7 +143,7 @@ export default function GameReports({
                 filterType: "inequality",
                 placeholder: "Turn",
                 min: 1,
-                max: 50,
+                max: 999,
                 current: filters.turns,
                 appliedCount: isDefined(filters.turns?.[1]) ? 1 : 0,
                 onChange: (value) => setFilters({ ...filters, turns: value }),
