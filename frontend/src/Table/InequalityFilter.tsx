@@ -58,6 +58,7 @@ export default function InequalityFilter({
             justifyContent="center"
             height="100%"
             maxWidth={width}
+            sx={{ "&&": { "*": { margin: 0, marginInline: 0 } } }}
         >
             <Select
                 size="sm"
@@ -66,7 +67,7 @@ export default function InequalityFilter({
                 sx={{
                     ...commonStyle,
                     width: "fit-content",
-                    pl: "4px",
+                    px: "4px",
                     mr: "1px",
                 }}
             >
