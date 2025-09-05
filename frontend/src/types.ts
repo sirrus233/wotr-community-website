@@ -247,9 +247,15 @@ export type ValidLeaguePlayerFormData = {
 
 export type ValueOf<T> = T[keyof T];
 
-export type InequalityOperator = "GT" | "LT" | "EQ";
+export type ApiInequalityOperator = "GT" | "LT" | "EQ";
 
-export type InequalityFilter = [InequalityOperator, number];
+export type NonApiInequalityOperator = "GTE" | "LTE";
+
+export type InequalityOperator =
+    | ApiInequalityOperator
+    | NonApiInequalityOperator;
+
+export type InequalityFilter = [ApiInequalityOperator, number];
 
 export type GameReportFilters = {
     pairing: MenuOption<number>[];

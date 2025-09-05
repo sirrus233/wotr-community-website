@@ -1,6 +1,6 @@
 import { CSSProperties, ReactNode } from "react";
 import { ErrorMessage } from "../constants";
-import { InequalityFilter, InequalityOperator, MenuOption } from "../types";
+import { InequalityFilter, MenuOption } from "../types";
 
 export type Option = string | MenuOption<unknown>;
 
@@ -27,7 +27,7 @@ export interface InequalityFilterProps extends CommonFilterProps {
     current: InequalityFilter | null;
     min?: number;
     max?: number;
-    onChange: (value: [InequalityOperator, number] | null) => void;
+    onChange: (value: InequalityFilter | null) => void;
 }
 
 type Filter<T extends MenuOption<any> = MenuOption<any>> =

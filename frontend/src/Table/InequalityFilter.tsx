@@ -10,8 +10,6 @@ import { isDefined, noNansense } from "../utils";
 import { TABLE_FILTER_HEIGHT } from "./constants";
 import { InequalityFilterProps } from "./types";
 
-type PseudoInequalityOperator = "GTE" | "LTE";
-
 export default function InequalityFilter({
     current,
     min,
@@ -23,9 +21,9 @@ export default function InequalityFilter({
     const [currentOperator, currentValue = null] = current || [];
 
     const [inputValue, setInputValue] = useState<number | null>(currentValue);
-    const [inputOperator, setInputOperator] = useState<
-        InequalityOperator | PseudoInequalityOperator
-    >(currentOperator || "EQ");
+    const [inputOperator, setInputOperator] = useState<InequalityOperator>(
+        currentOperator || "EQ"
+    );
 
     useEffect(() => {
         const didValueChange = currentValue !== inputValue;
@@ -116,9 +114,7 @@ function ResetButton(props: { reset: () => void }) {
     );
 }
 
-function operatorLabel(
-    operator: InequalityOperator | PseudoInequalityOperator
-): string {
+function operatorLabel(operator: InequalityOperator): string {
     switch (operator) {
         case "EQ":
             return "=";
@@ -134,9 +130,9 @@ function operatorLabel(
 }
 
 function translateFilter(
-    operator: InequalityOperator | PseudoInequalityOperator,
+    operator: InequalityOperator,
     value: number
-): [InequalityOperator, number] {
+): InequalityFilter {
     switch (operator) {
         case "GTE":
             return ["GT", value - 1];
