@@ -10,6 +10,7 @@ import {
     payloadFields,
     playerStates,
     serverValidationErrors,
+    settlementLayouts,
     sides,
     strongholds,
     victoryTypes,
@@ -38,6 +39,8 @@ export type PayloadField = (typeof payloadFields)[number];
 export type OptionalPlayerEditField = (typeof optionalPlayerEditFields)[number];
 
 export type PlayerState = (typeof playerStates)[number];
+
+export type SettlementLayout = (typeof settlementLayouts)[number];
 
 export type Country = keyof typeof COUNTRIES_DATA;
 
