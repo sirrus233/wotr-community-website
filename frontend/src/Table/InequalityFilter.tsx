@@ -57,7 +57,7 @@ export default function InequalityFilter({
             justifyContent="center"
             height="100%"
             maxWidth={width}
-            sx={{ "&&": { "*": { margin: 0, marginInline: 0 } } }}
+            sx={{ "&&": { "*": { margin: 0, marginInline: 0 } }, mx: "5px" }}
         >
             <Select
                 size="sm"
