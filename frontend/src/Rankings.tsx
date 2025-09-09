@@ -128,16 +128,25 @@ function Rankings({
                             enterTouchDelay={0}
                             size="sm"
                             title={
-                                <Box>
-                                    <Box mb="5px">
+                                <Box
+                                    display="flex"
+                                    flexDirection="column"
+                                    gap="5px"
+                                    maxWidth="450px"
+                                >
+                                    <Box>
                                         A player rated {"<"} 700 is active if
-                                        they've played 4+ games in the last 12
-                                        months.
+                                        they've played <strong>4+</strong> games
+                                        in the last 12 months.
                                     </Box>
                                     <Box>
-                                        A player rated {">="} 700 is active if
-                                        they've played 12+ games in the last 12
-                                        months.
+                                        A player rated ≥ 700 is active if
+                                        they've played <strong>12+</strong>{" "}
+                                        games in the last 12 months.
+                                    </Box>
+                                    <Box>
+                                        Active statuses are updated every{" "}
+                                        <strong>24 hours</strong>.
                                     </Box>
                                 </Box>
                             }
