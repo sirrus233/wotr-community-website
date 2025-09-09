@@ -20,16 +20,17 @@
 
   - Install and configure AWS CLI
   - Add a `wotrcommunity` AWS profile with IAM credentials
+  - Get a private key allowing SSH into the EC2 instance
   - [Install the Session Manager plugin for AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
   - Add the following to `~/.ssh/config`:
     ```
     Host api.waroftheringcommunity.net
       User ec2-user
-      IdentityFile ~/.ssh/serverkey.pem
+      IdentityFile <private_key_file_path>
       HostName <instance_id>
       ProxyCommand sh -c "aws ssm start-session --profile wotrcommunity --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'"
     ```
-    Where `<instance_id>` can be found in the EC2 console, but don't know about `IdentityFile` origin, forgot :'D
+    Where `<instance_id>` can be found in the EC2 console, and `<private_key_file_path>` is where you saved your private key
 
 # Deploy
 
