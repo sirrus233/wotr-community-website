@@ -405,7 +405,9 @@ function YearSelector({ years, setYear }: YearSelectorProps) {
             </MenuButton>
             <Menu>
                 {years.map((year) => (
-                    <MenuItem onClick={() => setYear(year)}>{year}</MenuItem>
+                    <MenuItem key={year} onClick={() => setYear(year)}>
+                        {year}
+                    </MenuItem>
                 ))}
             </Menu>
         </Dropdown>
