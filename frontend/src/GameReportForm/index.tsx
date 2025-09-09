@@ -416,7 +416,7 @@ function GameReportForm({
             >
                 <SelectNumericOptionInput
                     start={0}
-                    end={18}
+                    end={30}
                     current={formData.corruption.value}
                     onChange={handleInputChange("corruption")}
                     validate={validateField("corruption")}

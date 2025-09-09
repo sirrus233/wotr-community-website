@@ -235,7 +235,7 @@ export default function GameReports({
                 filterType: "inequality",
                 placeholder: "Corruption",
                 min: 0,
-                max: 18,
+                max: 30,
                 current: filters.corruption,
                 appliedCount: isDefined(filters.corruption?.[1]) ? 1 : 0,
                 onChange: (value) =>
