@@ -5,6 +5,7 @@ import Dropdown from "@mui/joy/Dropdown";
 import EditIcon from "@mui/icons-material/EditOutlined";
 import ExpandIcon from "@mui/icons-material/ExpandCircleDown";
 import IconButton from "@mui/joy/IconButton";
+import InfoIcon from "@mui/icons-material/InfoOutlined";
 import Menu from "@mui/joy/Menu";
 import MenuButton from "@mui/joy/MenuButton";
 import MenuItem from "@mui/joy/MenuItem";
@@ -117,11 +118,54 @@ function Rankings({
                 loading={loading}
                 label="Rankings"
                 filters={
-                    <Filters
-                        options={playerStates.slice()}
-                        current={filters}
-                        onChange={setFilters}
-                    />
+                    <Box display="flex" position="relative">
+                        <Filters
+                            options={playerStates.slice()}
+                            current={filters}
+                            onChange={setFilters}
+                        />
+                        <Tooltip
+                            enterTouchDelay={0}
+                            size="sm"
+                            title={
+                                <Box
+                                    display="flex"
+                                    flexDirection="column"
+                                    gap="5px"
+                                    maxWidth="450px"
+                                >
+                                    <Box>
+                                        A player rated {"<"} 700 is active if
+                                        they've played <strong>4+</strong> games
+                                        in the last 12 months.
+                                    </Box>
+                                    <Box>
+                                        A player rated ≥ 700 is active if
+                                        they've played <strong>12+</strong>{" "}
+                                        games in the last 12 months.
+                                    </Box>
+                                    <Box>
+                                        Active statuses are updated every{" "}
+                                        <strong>24 hours</strong>.
+                                    </Box>
+                                </Box>
+                            }
+                        >
+                            <Box
+                                sx={{
+                                    position: "absolute",
+                                    left: "calc(100% + 10px)",
+                                    height: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <InfoIcon />
+                            </Box>
+                        </Tooltip>
+                    </Box>
                 }
                 containerStyle={{
                     maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
