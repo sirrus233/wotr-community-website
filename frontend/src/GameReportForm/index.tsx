@@ -14,6 +14,7 @@ import {
     competitionTypes,
     ErrorMessage,
     expansions,
+    GAME_LIMITS,
     leagues,
     matchTypes,
     MAX_GAME_LOG_SIZE_BYTES,
@@ -415,8 +416,8 @@ function GameReportForm({
                 layoutTheme={layoutTheme}
             >
                 <SelectNumericOptionInput
-                    start={0}
-                    end={30}
+                    start={GAME_LIMITS.corruption.min}
+                    end={GAME_LIMITS.corruption.max}
                     current={formData.corruption.value}
                     onChange={handleInputChange("corruption")}
                     validate={validateField("corruption")}
@@ -464,8 +465,8 @@ function GameReportForm({
                 layoutTheme={layoutTheme}
             >
                 <SelectNumericOptionInput
-                    start={0}
-                    end={7}
+                    start={GAME_LIMITS.initialEyes.min}
+                    end={GAME_LIMITS.initialEyes.max}
                     current={formData.initialEyes.value}
                     onChange={handleInputChange("initialEyes")}
                     validate={validateField("initialEyes")}
@@ -543,8 +544,8 @@ function GameReportForm({
                 layoutTheme={layoutTheme}
             >
                 <SelectNumericOptionInput
-                    start={1}
-                    end={10}
+                    start={GAME_LIMITS.interestRating.min}
+                    end={GAME_LIMITS.interestRating.max}
                     current={formData.interestRating.value}
                     onChange={handleInputChange("interestRating")}
                     validate={validateField("interestRating")}

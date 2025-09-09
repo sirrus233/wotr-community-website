@@ -10,7 +10,7 @@ import ModalDialog from "@mui/joy/ModalDialog";
 import Tooltip from "@mui/joy/Tooltip";
 import freeIconPath from "./assets/ring-emoji.png";
 import shadowIconPath from "./assets/volcano-emoji.png";
-import { ErrorMessage, leagues } from "./constants";
+import { ErrorMessage, GAME_LIMITS, leagues } from "./constants";
 import useMediaQuery from "./hooks/useMediaQuery";
 import { RefreshRequest } from "./hooks/useRequestState";
 import {
@@ -234,8 +234,8 @@ export default function GameReports({
             filter: {
                 filterType: "inequality",
                 placeholder: "Corruption",
-                min: 0,
-                max: 30,
+                min: GAME_LIMITS.corruption.min,
+                max: GAME_LIMITS.corruption.max,
                 current: filters.corruption,
                 appliedCount: isDefined(filters.corruption?.[1]) ? 1 : 0,
                 onChange: (value) =>
@@ -251,8 +251,8 @@ export default function GameReports({
             filter: {
                 filterType: "inequality",
                 placeholder: "Eyes",
-                min: 0,
-                max: 7,
+                min: GAME_LIMITS.initialEyes.min,
+                max: GAME_LIMITS.initialEyes.max,
                 current: filters.initialEyes,
                 appliedCount: isDefined(filters.initialEyes?.[1]) ? 1 : 0,
                 onChange: (value) =>
@@ -269,8 +269,8 @@ export default function GameReports({
             filter: {
                 filterType: "inequality",
                 placeholder: "Rating",
-                min: 1,
-                max: 10,
+                min: GAME_LIMITS.interestRating.min,
+                max: GAME_LIMITS.interestRating.max,
                 current: filters.interestRating,
                 appliedCount: isDefined(filters.interestRating?.[1]) ? 1 : 0,
                 onChange: (value) =>
