@@ -10,7 +10,7 @@ import ModalDialog from "@mui/joy/ModalDialog";
 import Tooltip from "@mui/joy/Tooltip";
 import freeIconPath from "./assets/ring-emoji.png";
 import shadowIconPath from "./assets/volcano-emoji.png";
-import { ErrorMessage, leagues } from "./constants";
+import { ErrorMessage, GAME_LIMITS, leagues } from "./constants";
 import useMediaQuery from "./hooks/useMediaQuery";
 import { RefreshRequest } from "./hooks/useRequestState";
 import {
@@ -201,18 +201,82 @@ export default function GameReports({
             },
         },
         { key: "Expansions" },
-        { key: "Tokens" },
-        { key: "Dwarven Rings" },
-        { key: "Corruption" },
+        {
+            key: "Tokens",
+            width: 130,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Tokens",
+                min: 0,
+                max: 999,
+                current: filters.tokens,
+                appliedCount: isDefined(filters.tokens?.[1]) ? 1 : 0,
+                onChange: (value) => setFilters({ ...filters, tokens: value }),
+            },
+        },
+        {
+            key: "Dwarven Rings",
+            width: 170,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Rings",
+                min: 0,
+                max: 999,
+                current: filters.dwarvenRings,
+                appliedCount: isDefined(filters.dwarvenRings?.[1]) ? 1 : 0,
+                onChange: (value) =>
+                    setFilters({ ...filters, dwarvenRings: value }),
+            },
+        },
+        {
+            key: "Corruption",
+            width: 150,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Corruption",
+                min: GAME_LIMITS.corruption.min,
+                max: GAME_LIMITS.corruption.max,
+                current: filters.corruption,
+                appliedCount: isDefined(filters.corruption?.[1]) ? 1 : 0,
+                onChange: (value) =>
+                    setFilters({ ...filters, corruption: value }),
+            },
+        },
         { key: "Mordor" },
         { key: "Aragorn" },
         { key: "Treebeard" },
-        { key: "Initial Eyes" },
+        {
+            key: "Initial Eyes",
+            width: 150,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Eyes",
+                min: GAME_LIMITS.initialEyes.min,
+                max: GAME_LIMITS.initialEyes.max,
+                current: filters.initialEyes,
+                appliedCount: isDefined(filters.initialEyes?.[1]) ? 1 : 0,
+                onChange: (value) =>
+                    setFilters({ ...filters, initialEyes: value }),
+            },
+        },
         { key: "SP-Captured Settlements" },
         { key: "SPVP" },
         { key: "FP-Captured Settlements" },
         { key: "FPVP" },
-        { key: "Interest Rating" },
+        {
+            key: "Interest Rating",
+            width: 170,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Rating",
+                min: GAME_LIMITS.interestRating.min,
+                max: GAME_LIMITS.interestRating.max,
+                current: filters.interestRating,
+                appliedCount: isDefined(filters.interestRating?.[1]) ? 1 : 0,
+                onChange: (value) =>
+                    setFilters({ ...filters, interestRating: value }),
+            },
+        },
         { key: "Comments" },
         { key: "Game Log" },
     ];

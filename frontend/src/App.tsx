@@ -115,6 +115,11 @@ export default function App() {
                 losers: [],
                 leagues: [],
                 turns: null,
+                tokens: null,
+                dwarvenRings: null,
+                corruption: null,
+                initialEyes: null,
+                interestRating: null,
             },
         },
         sendRequest: (params) => {

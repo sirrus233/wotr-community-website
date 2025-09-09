@@ -134,6 +134,12 @@ export const LEAGUE_START_YEAR = 2025;
 export const MAX_GAME_LOG_SIZE_MB = 1;
 export const MAX_GAME_LOG_SIZE_BYTES = MAX_GAME_LOG_SIZE_MB * 1024 * 1024;
 
+export const GAME_LIMITS = {
+    corruption: { min: 0, max: 30 },
+    initialEyes: { min: 0, max: 7 },
+    interestRating: { min: 1, max: 10 },
+};
+
 export const COUNTRIES_DATA = {
     "Ascension Island": { code: "AC" },
     Andorra: { code: "AD" },

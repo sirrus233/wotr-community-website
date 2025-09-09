@@ -264,6 +264,11 @@ export type GameReportFilters = {
     losers: MenuOption<number>[];
     leagues: MenuOption<string>[];
     turns: InequalityFilter | null;
+    tokens: InequalityFilter | null;
+    dwarvenRings: InequalityFilter | null;
+    corruption: InequalityFilter | null;
+    initialEyes: InequalityFilter | null;
+    interestRating: InequalityFilter | null;
 };
 
 export type GameReportParams = {
