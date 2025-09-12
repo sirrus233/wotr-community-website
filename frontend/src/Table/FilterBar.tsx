@@ -5,6 +5,7 @@ import FilterIconAlt from "@mui/icons-material/FilterAlt";
 import IconButton from "@mui/joy/IconButton";
 import { styled } from "@mui/joy/styles";
 import AutocompleteFilter from "./AutocompleteFilter";
+import BooleanFilter from "./BooleanFilter";
 import InequalityFilter from "./InequalityFilter";
 import sumPriorWidths from "./sumPriorWidths";
 import { MenuOption } from "../types";
@@ -118,6 +119,8 @@ export function Filter({ filter, width }: HeaderWithFilterProps): JSX.Element {
             return <AutocompleteFilter width={width} {...filter} />;
         case "inequality":
             return <InequalityFilter width={width} {...filter} />;
+        case "boolean":
+            return <BooleanFilter width={width} {...filter} />;
         case undefined:
             return <></>;
     }
