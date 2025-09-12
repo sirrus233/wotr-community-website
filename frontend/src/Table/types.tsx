@@ -5,7 +5,7 @@ import { InequalityFilter, MenuOption } from "../types";
 export type Option = string | MenuOption<unknown>;
 
 interface CommonFilterProps {
-    filterType: "autocomplete" | "inequality";
+    filterType: "autocomplete" | "inequality" | "boolean";
     placeholder: string;
     errorMessage?: ErrorMessage;
     appliedCount: number;
@@ -30,9 +30,18 @@ export interface InequalityFilterProps extends CommonFilterProps {
     onChange: (value: InequalityFilter | null) => void;
 }
 
+export interface BooleanFilterProps extends CommonFilterProps {
+    filterType: "boolean";
+    current: boolean | null;
+    trueLabel: string;
+    falseLabel: string;
+    onChange: (value: boolean | null) => void;
+}
+
 type Filter<T extends MenuOption<any> = MenuOption<any>> =
     | AutocompleteProps<T>
-    | InequalityFilterProps;
+    | InequalityFilterProps
+    | BooleanFilterProps;
 
 interface CommonColHeaderData {
     key: string | number;

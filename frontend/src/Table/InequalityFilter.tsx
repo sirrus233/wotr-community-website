@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
-import Box from "@mui/joy/Box";
-import ClearIcon from "@mui/icons-material/CloseRounded";
-import IconButton from "@mui/joy/IconButton";
 import Input from "@mui/joy/Input";
 import Option from "@mui/joy/Option";
 import Select from "@mui/joy/Select";
 import { InequalityFilter, InequalityOperator } from "../types";
 import { isDefined, noNansense } from "../utils";
 import { TABLE_FILTER_HEIGHT } from "./constants";
+import ResetButton from "./ResetButton";
+import { FilterContainer } from "./styledComponents";
 import { InequalityFilterProps } from "./types";
 
 export default function InequalityFilter({
@@ -51,13 +50,11 @@ export default function InequalityFilter({
     };
 
     return (
-        <Box
-            display="flex"
-            alignItems="end"
-            justifyContent="center"
-            height="100%"
-            maxWidth={width}
-            sx={{ "&&": { "*": { margin: 0, marginInline: 0 } }, mx: "5px" }}
+        <FilterContainer
+            sx={{
+                maxWidth: width,
+                "&&": { "*": { margin: 0, marginInline: 0 } },
+            }}
         >
             <Select
                 size="sm"
@@ -95,22 +92,7 @@ export default function InequalityFilter({
                     ) : undefined
                 }
             />
-        </Box>
-    );
-}
-
-function ResetButton(props: { reset: () => void }) {
-    const { reset } = props;
-
-    return (
-        <IconButton
-            size="sm"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={reset}
-            sx={{ minWidth: 0, minHeight: 0, lineHeight: 0, p: "1px" }}
-        >
-            <ClearIcon />
-        </IconButton>
+        </FilterContainer>
     );
 }
 

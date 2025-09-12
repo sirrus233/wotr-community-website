@@ -278,7 +278,19 @@ export default function GameReports({
             },
         },
         { key: "Comments" },
-        { key: "Game Log" },
+        {
+            key: "Game Log",
+            width: 150,
+            filter: {
+                filterType: "boolean",
+                placeholder: "Select",
+                current: filters.hasLog,
+                trueLabel: "Log",
+                falseLabel: "No log",
+                appliedCount: isDefined(filters.hasLog) ? 1 : 0,
+                onChange: (hasLog) => setFilters({ ...filters, hasLog }),
+            },
+        },
     ];
 
     const rows = reports.map(
