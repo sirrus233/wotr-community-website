@@ -120,6 +120,7 @@ export default function App() {
                 corruption: null,
                 initialEyes: null,
                 interestRating: null,
+                hasLog: null,
             },
         },
         sendRequest: (params) => {

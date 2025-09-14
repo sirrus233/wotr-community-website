@@ -269,6 +269,7 @@ export type GameReportFilters = {
     corruption: InequalityFilter | null;
     initialEyes: InequalityFilter | null;
     interestRating: InequalityFilter | null;
+    hasLog: boolean | null;
 };
 
 export type GameReportParams = {
