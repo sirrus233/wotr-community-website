@@ -113,7 +113,8 @@ export default function GameReports({
         isAdmin ? { key: "Edit", width: 58 } : null,
     ].filter(isDefined);
 
-    const switchHeaders: (CornerHeaderData & ColHeaderData)[] = [
+    const switchHeaders: (CornerHeaderData<MenuOption<number>> &
+        ColHeaderData<MenuOption<number>>)[] = [
         { key: "No.", width: 50 },
         {
             key: "Pairing",
@@ -125,7 +126,7 @@ export default function GameReports({
                 options: playerOptions,
                 current: filters.pairing,
                 appliedCount: isPairingFilterValid ? filters.pairing.length : 0,
-                onChange: (values: MenuOption<number>[]) =>
+                onChange: (values) =>
                     setFilters({ ...filters, pairing: values }),
                 errorMessage: isPairingFilterValid
                     ? undefined
@@ -134,7 +135,10 @@ export default function GameReports({
         },
     ];
 
-    const colHeaders: ColHeaderData[] = [
+    const colHeaders: (
+        | ColHeaderData<MenuOption<number>>
+        | ColHeaderData<MenuOption<string>>
+    )[] = [
         { key: "Timestamp" },
         {
             key: "Turn",
@@ -159,7 +163,7 @@ export default function GameReports({
                 options: playerOptions,
                 current: filters.winners,
                 appliedCount: filters.winners.length,
-                onChange: (values: MenuOption<number>[]) =>
+                onChange: (values) =>
                     setFilters({ ...filters, winners: values }),
             },
         },
@@ -173,7 +177,7 @@ export default function GameReports({
                 options: playerOptions,
                 current: filters.losers,
                 appliedCount: filters.losers.length,
-                onChange: (values: MenuOption<number>[]) =>
+                onChange: (values) =>
                     setFilters({ ...filters, losers: values }),
             },
         },
@@ -195,7 +199,7 @@ export default function GameReports({
                 })),
                 current: filters.leagues,
                 appliedCount: filters.leagues.length,
-                onChange: (values: MenuOption<string>[]) => {
+                onChange: (values) => {
                     setFilters({ ...filters, leagues: values });
                 },
             },
