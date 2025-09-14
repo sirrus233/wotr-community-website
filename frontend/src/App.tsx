@@ -121,6 +121,7 @@ export default function App() {
                 initialEyes: null,
                 interestRating: null,
                 hasLog: null,
+                treebeard: null,
             },
         },
         sendRequest: (params) => {

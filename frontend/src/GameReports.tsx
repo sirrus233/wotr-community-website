@@ -244,7 +244,19 @@ export default function GameReports({
         },
         { key: "Mordor" },
         { key: "Aragorn" },
-        { key: "Treebeard" },
+        {
+            key: "Treebeard",
+            width: 150,
+            filter: {
+                filterType: "boolean",
+                placeholder: "Treebeard",
+                current: filters.treebeard,
+                trueLabel: "Mustered",
+                falseLabel: "Not mustered",
+                appliedCount: isDefined(filters.treebeard) ? 1 : 0,
+                onChange: (treebeard) => setFilters({ ...filters, treebeard }),
+            },
+        },
         {
             key: "Initial Eyes",
             width: 150,
