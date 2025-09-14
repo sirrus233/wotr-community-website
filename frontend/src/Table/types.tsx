@@ -19,6 +19,7 @@ export interface AutocompleteProps<Opt extends Option>
     loading: boolean;
     allOption?: Opt;
     emptyOption?: Opt;
+    listboxStyle?: CSSProperties;
     onChange: (value: Opt[]) => void;
 }
 

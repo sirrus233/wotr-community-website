@@ -263,6 +263,7 @@ export type GameReportFilters = {
     winners: MenuOption<number>[];
     losers: MenuOption<number>[];
     leagues: MenuOption<string>[];
+    victory: MenuOption<[Side, Victory]>[];
     turns: InequalityFilter | null;
     tokens: InequalityFilter | null;
     dwarvenRings: InequalityFilter | null;

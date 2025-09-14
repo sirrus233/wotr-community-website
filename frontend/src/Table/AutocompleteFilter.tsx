@@ -3,6 +3,7 @@ import MaterialAutocomplete from "@mui/joy/Autocomplete";
 import Box from "@mui/joy/Box";
 import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
+import { hasKey } from "../utils";
 import { FILTER_ERROR_HEIGHT, TABLE_FILTER_HEIGHT } from "./constants";
 import { FilterContainer } from "./styledComponents";
 import { AutocompleteProps, Option } from "./types";
@@ -16,6 +17,7 @@ export default function AutocompleteFilter<O extends Option>({
     errorMessage,
     allOption,
     emptyOption,
+    listboxStyle,
     onChange,
 }: AutocompleteProps<O> & { width: number }) {
     const [isFocused, setIsFocused] = useState(false);
@@ -104,6 +106,7 @@ export default function AutocompleteFilter<O extends Option>({
                         isOptionEqualToValue={(...args) =>
                             isOptionEqual(...args)
                         }
+                        slotProps={{ listbox: { sx: listboxStyle } }}
                         sx={{
                             background: "white",
                             fontSize: "inherit",
@@ -132,5 +135,20 @@ export default function AutocompleteFilter<O extends Option>({
 function isOptionEqual(a: Option, b: Option) {
     return typeof a === "string" || typeof b === "string"
         ? a === b
+        : Array.isArray(a.id) && Array.isArray(b.id)
+        ? areArraysShallowlyEqual(a.id, b.id)
+        : typeof a.id === "object" && typeof b.id === "object"
+        ? areObjectsShallowlyEqual(a.id, b.id)
         : a.id === b.id;
+}
+
+function areArraysShallowlyEqual(a: unknown[], b: unknown[]): boolean {
+    return a.every((el, i) => el === b[i]) && b.every((el, i) => el === a[i]);
+}
+
+function areObjectsShallowlyEqual(a: object | null, b: object | null): boolean {
+    return a === null || b === null
+        ? a === b
+        : Object.entries(a).every(([k, v]) => hasKey(b, k) && b[k] === v) &&
+              Object.entries(b).every(([k, v]) => hasKey(a, k) && a[k] === v);
 }
