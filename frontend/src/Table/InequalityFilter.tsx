@@ -64,7 +64,7 @@ export default function InequalityFilter({
                     ...commonStyle,
                     width: "fit-content",
                     px: "4px",
-                    mr: "1px",
+                    "&&&": { mr: "1px" },
                 }}
             >
                 {(["EQ", "GT", "GTE", "LT", "LTE"] as const).map((o) => (
