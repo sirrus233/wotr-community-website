@@ -270,6 +270,7 @@ export type GameReportFilters = {
     initialEyes: InequalityFilter | null;
     interestRating: InequalityFilter | null;
     hasLog: boolean | null;
+    treebeard: boolean | null;
 };
 
 export type GameReportParams = {
