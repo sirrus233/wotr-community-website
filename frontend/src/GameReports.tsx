@@ -10,7 +10,13 @@ import ModalDialog from "@mui/joy/ModalDialog";
 import Tooltip from "@mui/joy/Tooltip";
 import freeIconPath from "./assets/ring-emoji.png";
 import shadowIconPath from "./assets/volcano-emoji.png";
-import { ErrorMessage, GAME_LIMITS, leagues } from "./constants";
+import {
+    ErrorMessage,
+    GAME_LIMITS,
+    leagues,
+    sides,
+    victoryTypes,
+} from "./constants";
 import useMediaQuery from "./hooks/useMediaQuery";
 import { RefreshRequest } from "./hooks/useRequestState";
 import {
@@ -138,6 +144,7 @@ export default function GameReports({
     const colHeaders: (
         | ColHeaderData<MenuOption<number>>
         | ColHeaderData<MenuOption<string>>
+        | ColHeaderData<MenuOption<[Side, Victory]>>
     )[] = [
         { key: "Timestamp" },
         {
@@ -182,7 +189,28 @@ export default function GameReports({
             },
         },
         { key: "Game Type" },
-        { key: "Victory Type" },
+        {
+            key: "Victory Type",
+            width: 170,
+            filter: {
+                filterType: "autocomplete",
+                placeholder: "Select type",
+                loading: false,
+                options: sides.flatMap((side) =>
+                    victoryTypes.map(
+                        (victory): { id: [Side, Victory]; label: string } => ({
+                            id: [side, victory],
+                            label: toVictoryTypeLabel(side, victory),
+                        })
+                    )
+                ),
+                current: filters.victory,
+                appliedCount: filters.victory.length,
+                listboxStyle: { fontSize: "12px" },
+                onChange: (values) =>
+                    setFilters({ ...filters, victory: values }),
+            },
+        },
         { key: "Competition Type" },
         {
             key: "League",
@@ -549,6 +577,7 @@ export function serializeReportsParams(params: GameReportParams) {
             losers: toFilterParam(params.filters.losers),
             players: toFilterParam(params.filters.players),
             leagues: toFilterParam(params.filters.leagues),
+            victory: toFilterParam(params.filters.victory),
         }),
     };
 }
@@ -640,6 +669,16 @@ function isGameTypeExpansion(expansion: Expansion) {
     return ["KoME", "WoME", "LoME"].includes(expansion);
 }
 
+function toVictoryTypeLabel(side: Side, victory: Victory): string {
+    return `${side} ${
+        side === "Shadow" && victory === "Ring"
+            ? "Corruption"
+            : victory === "Concession"
+            ? "via Concession"
+            : victory
+    }`;
+}
+
 function summarizeVictoryType(side: Side, victory: Victory) {
     return (
         <Box
@@ -651,13 +690,7 @@ function summarizeVictoryType(side: Side, victory: Victory) {
                 padding: "3px 8px",
             }}
         >
-            {`${side} ${
-                side === "Shadow" && victory === "Ring"
-                    ? "Corruption"
-                    : victory === "Concession"
-                    ? "via Concession"
-                    : victory
-            }`}
+            {toVictoryTypeLabel(side, victory)}
         </Box>
     );
 }
