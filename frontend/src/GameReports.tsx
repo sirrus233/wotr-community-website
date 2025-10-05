@@ -10,7 +10,7 @@ import ModalDialog from "@mui/joy/ModalDialog";
 import Tooltip from "@mui/joy/Tooltip";
 import freeIconPath from "./assets/ring-emoji.png";
 import shadowIconPath from "./assets/volcano-emoji.png";
-import { ErrorMessage, leagues } from "./constants";
+import { ErrorMessage, GAME_LIMITS, leagues } from "./constants";
 import useMediaQuery from "./hooks/useMediaQuery";
 import { RefreshRequest } from "./hooks/useRequestState";
 import {
@@ -130,10 +130,10 @@ export default function GameReports({
             key: "Pairing",
             width: PAIRING_COL_WIDTH,
             filter: {
+                filterType: "autocomplete",
                 placeholder: "Select pairing",
                 loading: loadingPlayers,
                 options: playerOptions,
-                width: PAIRING_COL_WIDTH,
                 current: filters.pairing,
                 appliedCount: isPairingFilterValid ? filters.pairing.length : 0,
                 onChange: (values: MenuOption<number>[]) =>
@@ -147,14 +147,27 @@ export default function GameReports({
 
     const colHeaders: ColHeaderData[] = [
         { key: "Timestamp" },
-        { key: "Turn" },
+        {
+            key: "Turn",
+            width: 120,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Turn",
+                min: 1,
+                max: 999,
+                current: filters.turns,
+                appliedCount: isDefined(filters.turns?.[1]) ? 1 : 0,
+                onChange: (value) => setFilters({ ...filters, turns: value }),
+            },
+        },
         {
             key: "Winner",
+            width: PLAYER_COL_WIDTH,
             filter: {
+                filterType: "autocomplete",
                 placeholder: "Select winner",
                 loading: loadingPlayers,
                 options: playerOptions,
-                width: PLAYER_COL_WIDTH,
                 current: filters.winners,
                 appliedCount: filters.winners.length,
                 onChange: (values: MenuOption<number>[]) =>
@@ -163,11 +176,12 @@ export default function GameReports({
         },
         {
             key: "Loser",
+            width: PLAYER_COL_WIDTH,
             filter: {
+                filterType: "autocomplete",
                 placeholder: "Select loser",
                 loading: loadingPlayers,
                 options: playerOptions,
-                width: PLAYER_COL_WIDTH,
                 current: filters.losers,
                 appliedCount: filters.losers.length,
                 onChange: (values: MenuOption<number>[]) =>
@@ -179,7 +193,9 @@ export default function GameReports({
         { key: "Competition Type" },
         {
             key: "League",
+            width: LEAGUE_COL_WIDTH,
             filter: {
+                filterType: "autocomplete",
                 placeholder: "Select leagues",
                 loading: false,
                 allOption: { id: ALL_OPTION_ID, label: "Any league" },
@@ -188,7 +204,6 @@ export default function GameReports({
                     id: league,
                     label: getLeagueLabel(league),
                 })),
-                width: LEAGUE_COL_WIDTH,
                 current: filters.leagues,
                 appliedCount: filters.leagues.length,
                 onChange: (values: MenuOption<string>[]) => {
@@ -197,13 +212,76 @@ export default function GameReports({
             },
         },
         { key: "Expansions" },
-        { key: "Tokens" },
-        { key: "Dwarven Rings" },
-        { key: "Corruption" },
+        {
+            key: "Tokens",
+            width: 130,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Tokens",
+                min: 0,
+                max: 999,
+                current: filters.tokens,
+                appliedCount: isDefined(filters.tokens?.[1]) ? 1 : 0,
+                onChange: (value) => setFilters({ ...filters, tokens: value }),
+            },
+        },
+        {
+            key: "Dwarven Rings",
+            width: 170,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Rings",
+                min: 0,
+                max: 999,
+                current: filters.dwarvenRings,
+                appliedCount: isDefined(filters.dwarvenRings?.[1]) ? 1 : 0,
+                onChange: (value) =>
+                    setFilters({ ...filters, dwarvenRings: value }),
+            },
+        },
+        {
+            key: "Corruption",
+            width: 150,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Corruption",
+                min: GAME_LIMITS.corruption.min,
+                max: GAME_LIMITS.corruption.max,
+                current: filters.corruption,
+                appliedCount: isDefined(filters.corruption?.[1]) ? 1 : 0,
+                onChange: (value) =>
+                    setFilters({ ...filters, corruption: value }),
+            },
+        },
         { key: "Mordor" },
         { key: "Aragorn" },
-        { key: "Treebeard" },
-        { key: "Initial Eyes" },
+        {
+            key: "Treebeard",
+            width: 150,
+            filter: {
+                filterType: "boolean",
+                placeholder: "Treebeard",
+                current: filters.treebeard,
+                trueLabel: "Mustered",
+                falseLabel: "Not mustered",
+                appliedCount: isDefined(filters.treebeard) ? 1 : 0,
+                onChange: (treebeard) => setFilters({ ...filters, treebeard }),
+            },
+        },
+        {
+            key: "Initial Eyes",
+            width: 150,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Eyes",
+                min: GAME_LIMITS.initialEyes.min,
+                max: GAME_LIMITS.initialEyes.max,
+                current: filters.initialEyes,
+                appliedCount: isDefined(filters.initialEyes?.[1]) ? 1 : 0,
+                onChange: (value) =>
+                    setFilters({ ...filters, initialEyes: value }),
+            },
+        },
         {
             key: "SP-Captured Settlements",
             content: (
@@ -227,9 +305,34 @@ export default function GameReports({
         { key: "SPVP" },
         { key: "FP-Captured Settlements" },
         { key: "FPVP" },
-        { key: "Interest Rating" },
+        {
+            key: "Interest Rating",
+            width: 170,
+            filter: {
+                filterType: "inequality",
+                placeholder: "Rating",
+                min: GAME_LIMITS.interestRating.min,
+                max: GAME_LIMITS.interestRating.max,
+                current: filters.interestRating,
+                appliedCount: isDefined(filters.interestRating?.[1]) ? 1 : 0,
+                onChange: (value) =>
+                    setFilters({ ...filters, interestRating: value }),
+            },
+        },
         { key: "Comments" },
-        { key: "Game Log" },
+        {
+            key: "Game Log",
+            width: 150,
+            filter: {
+                filterType: "boolean",
+                placeholder: "Select",
+                current: filters.hasLog,
+                trueLabel: "Log",
+                falseLabel: "No log",
+                appliedCount: isDefined(filters.hasLog) ? 1 : 0,
+                onChange: (hasLog) => setFilters({ ...filters, hasLog }),
+            },
+        },
     ];
 
     const rows = reports.map(
@@ -472,6 +575,7 @@ export function serializeReportsParams(params: GameReportParams) {
         limit: params.limit,
         offset: getReportsOffset(params.currentPage, params.limit),
         filter: JSON.stringify({
+            ...params.filters,
             pairing: pairing?.length === 1 ? [...pairing, null] : pairing,
             winners: toFilterParam(params.filters.winners),
             losers: toFilterParam(params.filters.losers),

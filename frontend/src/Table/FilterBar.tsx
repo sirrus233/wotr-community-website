@@ -4,7 +4,9 @@ import ExpandIcon from "@mui/icons-material/KeyboardArrowUp";
 import FilterIconAlt from "@mui/icons-material/FilterAlt";
 import IconButton from "@mui/joy/IconButton";
 import { styled } from "@mui/joy/styles";
-import TableFilter from "./TableFilter";
+import AutocompleteFilter from "./AutocompleteFilter";
+import BooleanFilter from "./BooleanFilter";
+import InequalityFilter from "./InequalityFilter";
 import sumPriorWidths from "./sumPriorWidths";
 import { MenuOption } from "../types";
 import { ColHeaderData, CornerHeaderData } from "./types";
@@ -67,18 +69,16 @@ export default function FilterBar<
                                 expanded={areFiltersOpen}
                                 setExpanded={setAreFiltersOpen}
                             />
-                        ) : filter ? (
-                            <TableFilter width={width} {...filter} />
                         ) : (
-                            <></>
+                            <Filter filter={filter} width={width} />
                         )}
                     </CornerFilterSlot>
                 );
             })}
 
-            {colHeaders.map(({ key, filter, style = {} }) => (
+            {colHeaders.map(({ key, filter, width = 0, style = {} }) => (
                 <ColumnFilterSlot key={key} sx={style}>
-                    {filter ? <TableFilter {...filter} /> : <></>}
+                    <Filter filter={filter} width={width} />
                 </ColumnFilterSlot>
             ))}
         </Container>
@@ -106,4 +106,22 @@ export function ExpandButton({ expanded, setExpanded }: ExpandButtonProps) {
             {expanded ? <CollapseIcon /> : <ExpandIcon />}
         </IconButton>
     );
+}
+
+interface HeaderWithFilterProps {
+    filter?: ColHeaderData["filter"] | CornerHeaderData["filter"];
+    width: number;
+}
+
+export function Filter({ filter, width }: HeaderWithFilterProps): JSX.Element {
+    switch (filter?.filterType) {
+        case "autocomplete":
+            return <AutocompleteFilter width={width} {...filter} />;
+        case "inequality":
+            return <InequalityFilter width={width} {...filter} />;
+        case "boolean":
+            return <BooleanFilter width={width} {...filter} />;
+        case undefined:
+            return <></>;
+    }
 }

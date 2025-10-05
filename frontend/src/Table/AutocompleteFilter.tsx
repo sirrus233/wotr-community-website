@@ -3,27 +3,11 @@ import MaterialAutocomplete from "@mui/joy/Autocomplete";
 import Box from "@mui/joy/Box";
 import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
-import { ErrorMessage } from "../constants";
-import { MenuOption } from "../types";
+import { FILTER_ERROR_HEIGHT, TABLE_FILTER_HEIGHT } from "./constants";
+import { FilterContainer } from "./styledComponents";
+import { AutocompleteProps, Option } from "./types";
 
-export const TABLE_FILTER_HEIGHT = "2em";
-export const FILTER_ERROR_HEIGHT = "1.5em";
-
-type Option = string | MenuOption<unknown>;
-
-export interface TableFilterProps<O extends Option> {
-    options: O[];
-    current: O[];
-    placeholder: string;
-    loading: boolean;
-    width: number;
-    errorMessage?: ErrorMessage;
-    allOption?: O;
-    emptyOption?: O;
-    onChange: (value: O[]) => void;
-}
-
-export default function TableFilter<O extends Option>({
+export default function AutocompleteFilter<O extends Option>({
     options,
     current,
     placeholder,
@@ -33,7 +17,7 @@ export default function TableFilter<O extends Option>({
     allOption,
     emptyOption,
     onChange,
-}: TableFilterProps<O>) {
+}: AutocompleteProps<O> & { width: number }) {
     const [isFocused, setIsFocused] = useState(false);
 
     const paddedWidth = `calc(${width}px - 10px)`;
@@ -67,12 +51,12 @@ export default function TableFilter<O extends Option>({
     }
 
     return (
-        <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="end"
-            height="100%"
+        <FilterContainer
+            sx={{
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "end",
+            }}
         >
             <FormControl error={!!errorMessage}>
                 {errorMessage && (
@@ -141,7 +125,7 @@ export default function TableFilter<O extends Option>({
                     />
                 </Box>
             </FormControl>
-        </Box>
+        </FilterContainer>
     );
 }
 

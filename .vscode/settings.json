@@ -71,7 +71,8 @@
         "Umbar",
         "Unranked",
         "waroftheringcommunity",
-        "wotr"
+        "wotr",
+        "wotrcommunity"
     ],
     "editor.tabSize": 4,
     "material-icon-theme.folders.associations": { "infrastructure": "Aws" }
