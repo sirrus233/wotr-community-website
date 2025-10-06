@@ -26,10 +26,7 @@ import {
     Stronghold,
     Victory,
 } from "./types";
-import colors, {
-    FREE_ACCENT_COLOR,
-    SHADOW_PRIMARY_COLOR,
-} from "./styles/colors";
+import { FREE_ACCENT_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
@@ -40,17 +37,16 @@ import {
     displayTime,
     getExpansionLabel,
     getLeagueLabel,
-    getStrongholdLabel,
     isDefined,
     strongholdPoints,
     strongholdSide,
 } from "./utils";
 import TableLayout from "./TableLayout";
 import ExternalLink from "./ExternalLink";
+import FreeCaptures from "./FreeCaptures";
 import GameReportForm from "./GameReportForm";
 import GameReportSettings, { Settings } from "./GameReportSettings";
 import ReportDeleteForm from "./ReportDeleteForm";
-import SettlementBadge from "./SettlementBadge";
 import ShadowCaptures from "./ShadowCaptures";
 import Pagination from "./Pagination";
 import Table from "./Table";
@@ -654,26 +650,6 @@ function GameAccent({ side }: { side: Side }) {
                 alt={alt}
                 style={{ width: "14px", height: "14px" }}
             />
-        </Box>
-    );
-}
-
-function FreeCaptures(props: { report: ProcessedGameReport }) {
-    const { strongholds, expansions } = props.report;
-
-    return (
-        <Box display="flex">
-            {strongholds
-                .filter((sh) => strongholdSide(expansions, sh) === "Shadow")
-                .map(getStrongholdLabel)
-                .map((label) => (
-                    <SettlementBadge
-                        key={label}
-                        style={{ background: colors.shadowPrimary }}
-                    >
-                        {label}
-                    </SettlementBadge>
-                ))}
         </Box>
     );
 }
