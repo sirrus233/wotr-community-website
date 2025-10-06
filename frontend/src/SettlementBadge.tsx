@@ -9,6 +9,13 @@ interface Props {
 export default function SettlementBadge({ children, style }: Props) {
     return (
         <Box
+            boxSizing="border-box"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            whiteSpace="nowrap"
+            overflow="hidden"
+            textOverflow="ellipsis"
             lineHeight="1em"
             px="5px"
             py="3px"

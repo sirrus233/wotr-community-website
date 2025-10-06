@@ -7,6 +7,7 @@ import { ProcessedGameReport, SettlementLayout, Stronghold } from "./types";
 import {
     getStrongholdAbbreviation,
     getStrongholdLabel,
+    isStrongholdInPlay,
     strongholdSide,
 } from "./utils";
 
@@ -24,6 +25,7 @@ const badgeGroups: Badge[][] = [
     [
         { style: { background: colors.north }, stronghold: "Dale" },
         { style: { background: colors.dwarves }, stronghold: "Erebor" },
+        { style: { background: colors.dwarves }, stronghold: "IronHills" },
         { style: { background: colors.elves }, stronghold: "WoodlandRealm" },
     ],
     [
@@ -35,10 +37,11 @@ const badgeGroups: Badge[][] = [
         { style: { background: colors.elves }, stronghold: "Rivendell" },
         { style: { background: colors.north }, stronghold: "Shire" },
         { style: { background: colors.elves }, stronghold: "GreyHavens" },
-    ],
-    [
+        /**
+         * EredLuin switches on and off; keep in last position to keep analysis
+         * views aligned between games
+         */
         { style: { background: colors.dwarves }, stronghold: "EredLuin" },
-        { style: { background: colors.dwarves }, stronghold: "IronHills" },
     ],
 ];
 
@@ -54,7 +57,9 @@ export default function ShadowCaptures({
     isAbbreviated,
 }: Props) {
     const allowedStrongholds: Stronghold[] = strongholds.filter(
-        (stronghold) => strongholdSide(report.expansions, stronghold) === "Free"
+        (stronghold) =>
+            isStrongholdInPlay(report.expansions, stronghold) &&
+            strongholdSide(report.expansions, stronghold) === "Free"
     );
 
     return (
@@ -68,14 +73,15 @@ export default function ShadowCaptures({
                         .map(({ stronghold, style }) => (
                             <SettlementBadge
                                 key={stronghold}
-                                style={
-                                    report.strongholds.includes(stronghold)
-                                        ? {
-                                              ...style,
-                                              border: "1px solid transparent",
-                                          }
-                                        : emptyBadgeStyle(layout)
-                                }
+                                style={{
+                                    minWidth: maybeSetBadgeWidth(
+                                        stronghold,
+                                        isAbbreviated
+                                    ),
+                                    ...(report.strongholds.includes(stronghold)
+                                        ? capturedStyle(style)
+                                        : emptyBadgeStyle(layout)),
+                                }}
                             >
                                 {isAbbreviated
                                     ? getStrongholdAbbreviation(stronghold)
@@ -98,6 +104,10 @@ function direction(layout: SettlementLayout): "row" | "column" {
     }
 }
 
+function capturedStyle(baseStyle: CSSProperties) {
+    return { ...baseStyle, border: "1px solid transparent" };
+}
+
 function emptyBadgeStyle(layout: SettlementLayout): CSSProperties {
     switch (layout) {
         case "Standard":
@@ -110,4 +120,19 @@ function emptyBadgeStyle(layout: SettlementLayout): CSSProperties {
                 border: "1px solid #eee",
             };
     }
+}
+
+/**
+ * Erebor badge slot switches to Iron Hills for FOE; make both badge versions
+ * the same width to keep analysis views aligned between games
+ */
+function maybeSetBadgeWidth(
+    stronghold: Stronghold,
+    isAbbreviated: boolean
+): string | undefined {
+    const ereborBadgeWidth = isAbbreviated ? "25px" : "62px";
+
+    return stronghold === "Erebor" || stronghold === "IronHills"
+        ? ereborBadgeWidth
+        : undefined;
 }
