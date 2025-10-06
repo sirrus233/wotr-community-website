@@ -45,7 +45,10 @@ import TableLayout from "./TableLayout";
 import ExternalLink from "./ExternalLink";
 import FreeCaptures from "./FreeCaptures";
 import GameReportForm from "./GameReportForm";
-import GameReportSettings, { Settings } from "./GameReportSettings";
+import GameReportSettings, {
+    defaultSettings,
+    Settings,
+} from "./GameReportSettings";
 import ReportDeleteForm from "./ReportDeleteForm";
 import ShadowCaptures from "./ShadowCaptures";
 import Pagination from "./Pagination";
@@ -98,10 +101,7 @@ export default function GameReports({
     const [reportEditParams, setReportEditParams] =
         useState<ReportEditParams | null>(null);
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [settings, setSettings] = useState<Settings>({
-        settlementLayout: "Standard",
-        areSettlementsAbbreviated: false,
-    });
+    const [settings, setSettings] = useState<Settings>(defaultSettings);
 
     const belowSmallBreakpoint = useMediaQuery("sm");
 

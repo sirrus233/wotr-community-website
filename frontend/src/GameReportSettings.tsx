@@ -1,20 +1,41 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Box from "@mui/joy/Box";
 import Typography from "@mui/joy/Typography";
 import { settlementLayouts } from "./constants";
 import SingleOptionInput from "./SingleOptionInput";
 import { SettlementLayout } from "./types";
+import { isDefined } from "./utils";
+
+const CACHED_SETTINGS_KEY = "gameReportSettings";
+
+export const defaultSettings: Settings = {
+    settlementLayout: "Standard",
+    areSettlementsAbbreviated: false,
+};
 
 export interface Settings {
     settlementLayout: SettlementLayout;
     areSettlementsAbbreviated: boolean;
 }
 
-export default function GameReportSettings(props: {
+interface Props {
     settings: Settings;
     setSettings: React.Dispatch<React.SetStateAction<Settings>>;
-}) {
-    const { settings, setSettings } = props;
+}
+
+export default function GameReportSettings({ settings, setSettings }: Props) {
+    useEffect(function applyCachedSettings() {
+        setSettings(
+            parseCachedSettings(localStorage.getItem(CACHED_SETTINGS_KEY))
+        );
+    }, []);
+
+    useEffect(
+        function cacheSettings() {
+            localStorage.setItem(CACHED_SETTINGS_KEY, JSON.stringify(settings));
+        },
+        [settings]
+    );
 
     return (
         <Box p="10px">
@@ -64,4 +85,30 @@ export default function GameReportSettings(props: {
             </Box>
         </Box>
     );
+}
+
+function parseCachedSettings(cachedSettings: string | null): Settings {
+    try {
+        if (cachedSettings) {
+            const parsedSettings: Partial<Settings> | null =
+                JSON.parse(cachedSettings);
+
+            if (isDefined(parsedSettings)) {
+                return {
+                    settlementLayout:
+                        settlementLayouts.find(
+                            (s) => s === parsedSettings.settlementLayout
+                        ) ?? defaultSettings.settlementLayout,
+                    areSettlementsAbbreviated:
+                        [true, false].find(
+                            (a) =>
+                                a === parsedSettings.areSettlementsAbbreviated
+                        ) ?? defaultSettings.areSettlementsAbbreviated,
+                };
+            }
+        }
+        return defaultSettings;
+    } catch {
+        return defaultSettings;
+    }
 }
