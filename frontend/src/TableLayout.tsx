@@ -10,7 +10,7 @@ import { TABLE_BTN_HEIGHT_PX, TABLE_ELEMENTS_GAP } from "./styles/sizes";
 import ErrorDisplay from "./ErrorDisplay";
 import LoadingOverlay from "./LoadingOverlay";
 
-interface CommonProps {
+interface Props {
     refresh: () => void;
     error: string | null;
     loading: boolean;
@@ -21,18 +21,11 @@ interface CommonProps {
     filters?: ReactNode;
     containerStyle?: CSSProperties;
     tableStyle?: SxProps;
-}
-
-interface PropsA extends CommonProps {
-    settingsPanel?: never;
-    settingsOpen?: never;
-    toggleSettings?: never;
-}
-
-interface PropsB extends CommonProps {
-    settingsPanel: ReactNode;
-    settingsOpen: boolean;
-    toggleSettings: () => void;
+    settingsProps?: {
+        panel: ReactNode;
+        isOpen: boolean;
+        togglePanel: () => void;
+    };
 }
 
 export default function TableLayout({
@@ -44,12 +37,10 @@ export default function TableLayout({
     table,
     header,
     body,
-    settingsPanel,
-    settingsOpen,
-    toggleSettings,
     containerStyle = {},
     tableStyle = {},
-}: PropsA | PropsB) {
+    settingsProps,
+}: Props) {
     return (
         <Box
             sx={{
@@ -76,24 +67,24 @@ export default function TableLayout({
                     Refresh
                 </Button>
 
-                {settingsPanel && (
+                {settingsProps && (
                     <IconButton
                         variant="solid"
                         color="primary"
-                        onClick={toggleSettings}
+                        onClick={settingsProps.togglePanel}
                     >
                         <SettingsIcon />
                     </IconButton>
                 )}
             </Box>
 
-            {settingsOpen && (
+            {settingsProps && (
                 <Drawer
-                    open={settingsOpen}
-                    onClose={toggleSettings}
+                    open={settingsProps.isOpen}
+                    onClose={settingsProps.togglePanel}
                     anchor="right"
                 >
-                    {settingsPanel}
+                    {settingsProps.panel}
                 </Drawer>
             )}
 

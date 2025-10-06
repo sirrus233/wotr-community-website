@@ -523,14 +523,16 @@ export default function GameReports({
                 error={error}
                 loading={loadingReports}
                 label="Game Reports"
-                toggleSettings={() => setSettingsOpen((prev) => !prev)}
-                settingsOpen={settingsOpen}
-                settingsPanel={
-                    <GameReportSettings
-                        settings={settings}
-                        setSettings={setSettings}
-                    />
-                }
+                settingsProps={{
+                    togglePanel: () => setSettingsOpen((prev) => !prev),
+                    isOpen: settingsOpen,
+                    panel: (
+                        <GameReportSettings
+                            settings={settings}
+                            setSettings={setSettings}
+                        />
+                    ),
+                }}
                 containerStyle={{
                     maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px - ${PAGE_FOOTER_HEIGHT}px)`,
                 }}
