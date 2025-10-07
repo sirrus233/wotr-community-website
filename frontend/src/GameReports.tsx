@@ -37,15 +37,20 @@ import {
     displayTime,
     getExpansionLabel,
     getLeagueLabel,
-    getStrongholdLabel,
     isDefined,
     strongholdPoints,
     strongholdSide,
 } from "./utils";
 import TableLayout from "./TableLayout";
 import ExternalLink from "./ExternalLink";
+import FreeCaptures from "./FreeCaptures";
 import GameReportForm from "./GameReportForm";
+import GameReportSettings, {
+    defaultSettings,
+    Settings,
+} from "./GameReportSettings";
 import ReportDeleteForm from "./ReportDeleteForm";
+import ShadowCaptures from "./ShadowCaptures";
 import Pagination from "./Pagination";
 import Table from "./Table";
 import { ColHeaderData, CornerHeaderData, RowData } from "./Table/types";
@@ -95,6 +100,8 @@ export default function GameReports({
 }: Props) {
     const [reportEditParams, setReportEditParams] =
         useState<ReportEditParams | null>(null);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [settings, setSettings] = useState<Settings>(defaultSettings);
 
     const belowSmallBreakpoint = useMediaQuery("sm");
 
@@ -271,7 +278,26 @@ export default function GameReports({
                     setFilters({ ...filters, initialEyes: value }),
             },
         },
-        { key: "SP-Captured Settlements" },
+        {
+            key: "SP-Captured Settlements",
+            content: (
+                <Box display="flex" alignItems="center" justifyContent="center">
+                    <Box mr="5px">SP-Captured Settlements</Box>
+                    <IconButton
+                        size="sm"
+                        color="primary"
+                        onClick={() => setSettingsOpen(true)}
+                        sx={{
+                            height: "1em",
+                            minHeight: "fit-content",
+                            py: "2px",
+                        }}
+                    >
+                        <ViewIcon />
+                    </IconButton>
+                </Box>
+            ),
+        },
         { key: "SPVP" },
         { key: "FP-Captured Settlements" },
         { key: "FPVP" },
@@ -416,10 +442,12 @@ export default function GameReports({
                 { key: "eyes", content: report.initialEyes },
                 {
                     key: "sp-settlements",
-                    content: summarizeCapturedSettlements(
-                        report.strongholds,
-                        report.expansions,
-                        "Free"
+                    content: (
+                        <ShadowCaptures
+                            report={report}
+                            layout={settings.settlementLayout}
+                            isAbbreviated={settings.areSettlementsAbbreviated}
+                        />
                     ),
                 },
                 {
@@ -432,11 +460,7 @@ export default function GameReports({
                 },
                 {
                     key: "fp-settlements",
-                    content: summarizeCapturedSettlements(
-                        report.strongholds,
-                        report.expansions,
-                        "Shadow"
-                    ),
+                    content: <FreeCaptures report={report} />,
                 },
                 {
                     key: "fpvp",
@@ -499,6 +523,16 @@ export default function GameReports({
                 error={error}
                 loading={loadingReports}
                 label="Game Reports"
+                settingsProps={{
+                    togglePanel: () => setSettingsOpen((prev) => !prev),
+                    isOpen: settingsOpen,
+                    panel: (
+                        <GameReportSettings
+                            settings={settings}
+                            setSettings={setSettings}
+                        />
+                    ),
+                }}
                 containerStyle={{
                     maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px - ${PAGE_FOOTER_HEIGHT}px)`,
                 }}
@@ -662,17 +696,6 @@ function summarizeCompetitionType(match: Match, competition: Competition[]) {
     return [match === "Rated" ? "Ladder" : "Friendly", ...competition]
         .filter(Boolean)
         .join(", ");
-}
-
-function summarizeCapturedSettlements(
-    strongholds: Stronghold[],
-    expansions: Expansion[],
-    side: Side
-) {
-    return strongholds
-        .filter((stronghold) => strongholdSide(expansions, stronghold) === side)
-        .map(getStrongholdLabel)
-        .join(" • ");
 }
 
 function countVictoryPoints(

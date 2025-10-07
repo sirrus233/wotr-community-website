@@ -81,6 +81,61 @@ export function getStrongholdLabel(stronghold: Stronghold): string {
     }
 }
 
+export function getStrongholdAbbreviation(stronghold: Stronghold): string {
+    switch (stronghold) {
+        case "Angmar":
+            return "A";
+        case "BaradDur":
+            return "BD";
+        case "Edoras":
+            return "Ed";
+        case "Erebor":
+            return "E";
+        case "EredLuin":
+            return "EL";
+        case "Dale":
+            return "D";
+        case "DolAmroth":
+            return "DA";
+        case "DolGuldur":
+            return "DG";
+        case "FarHarad":
+            return "FH";
+        case "GreyHavens":
+            return "GH";
+        case "HelmsDeep":
+            return "HD";
+        case "IronHills":
+            return "IH";
+        case "Lorien":
+            return "L";
+        case "MinasMorgul":
+            return "MM";
+        case "MinasTirith":
+            return "MT";
+        case "Morannon":
+            return "Morannon";
+        case "Moria":
+            return "Moria";
+        case "MountGundabad":
+            return "MG";
+        case "Orthanc":
+            return "O";
+        case "Pelargir":
+            return "P";
+        case "Rivendell":
+            return "R";
+        case "Shire":
+            return "Sh";
+        case "SouthRhun":
+            return "SR";
+        case "Umbar":
+            return "Um";
+        case "WoodlandRealm":
+            return "W";
+    }
+}
+
 export function getExpansionLabel(expansion: Expansion): string {
     switch (expansion) {
         case "LoME":

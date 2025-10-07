@@ -5,6 +5,7 @@ import RadioGroup from "@mui/joy/RadioGroup";
 interface SingleOptionInputProps<T> {
     values: Exclude<T, null>[];
     current: T;
+    orientation?: "horizontal" | "vertical";
     getLabel?: (value: Exclude<T, null>) => string;
     onChange: (value: T) => void;
     validate: () => void;
@@ -13,6 +14,7 @@ interface SingleOptionInputProps<T> {
 export default function SingleOptionInput<T>({
     values,
     current,
+    orientation = "horizontal",
     getLabel = String,
     onChange,
     validate,
@@ -30,7 +32,7 @@ export default function SingleOptionInput<T>({
     return (
         <RadioGroup
             value={current}
-            orientation="horizontal"
+            orientation={orientation}
             onChange={handleChange}
         >
             {values.map((value, i) => (
