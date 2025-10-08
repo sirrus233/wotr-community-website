@@ -315,6 +315,14 @@ data InequalityFilter = InequalityFilter Ordering Int deriving (Generic)
 
 instance FromJSON InequalityFilter
 
+data VictoryFilter
+  = VictorySideFilter Side
+  | VictoryKindFilter Victory
+  | VictoryFilter Side Victory
+  deriving (Generic)
+
+instance FromJSON VictoryFilter
+
 -- TODO Unused until competition can be filtered in the DB
 -- data CompetitionFilter = RatedFilter Match | CompetitionFilter Competition deriving (Generic)
 -- instance FromJSON CompetitionFilter
@@ -326,7 +334,7 @@ data GameReportFilterSpec = GameReportFilterSpec
     winners :: Maybe [PlayerId],
     losers :: Maybe [PlayerId],
     turns :: Maybe InequalityFilter,
-    victory :: Maybe (NonEmpty (Side, Victory)),
+    victory :: Maybe VictoryFilter,
     -- TODO competition
     leagues :: Maybe [League],
     -- TODO expansions

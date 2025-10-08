@@ -2,7 +2,6 @@ module Database where
 
 import AppConfig (AppM, Env (..), runAppLogger)
 import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
-import Data.Foldable1 (foldr1)
 import Data.Text qualified as T
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, getCurrentTime, nominalDay)
 import Database.Esqueleto.Experimental
@@ -66,7 +65,7 @@ import Database.Esqueleto.Experimental
     type (:&) (..),
   )
 import Servant (ServerError, throwError)
-import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), TimestampFilter (..))
+import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), TimestampFilter (..), VictoryFilter (..))
 import Types.Auth (SessionId (..), UserId (..))
 import Types.DataField (League, LeagueTier, PlayerName, Year)
 import Types.Database
@@ -171,9 +170,10 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
     loserFilter = toListFilter report GameReportLoserId <$> spec.losers
     turnsFilter = toInequalityFilter report GameReportTurns <$> spec.turns
     victoryFilter =
-      spec.victory
-        <&> foldr1 (||.)
-        . fmap (\(s, v) -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val v)
+      spec.victory <&> \case
+        VictoryKindFilter v -> report ^. GameReportVictory ==. val v
+        VictorySideFilter s -> report ^. GameReportSide ==. val s
+        VictoryFilter s v -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val v
     leagueFilter =
       spec.leagues <&> \case
         [] -> isNothing_ (report ^. GameReportLeague)
