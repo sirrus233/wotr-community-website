@@ -1,6 +1,9 @@
 import React, { CSSProperties, ReactNode } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
+import Drawer from "@mui/joy/Drawer";
+import IconButton from "@mui/joy/IconButton";
+import SettingsIcon from "@mui/icons-material/Settings";
 import Table from "@mui/joy/Table";
 import { SxProps } from "@mui/joy/styles/types";
 import { TABLE_BTN_HEIGHT_PX, TABLE_ELEMENTS_GAP } from "./styles/sizes";
@@ -18,6 +21,11 @@ interface Props {
     filters?: ReactNode;
     containerStyle?: CSSProperties;
     tableStyle?: SxProps;
+    settingsProps?: {
+        panel: ReactNode;
+        isOpen: boolean;
+        togglePanel: () => void;
+    };
 }
 
 export default function TableLayout({
@@ -31,6 +39,7 @@ export default function TableLayout({
     body,
     containerStyle = {},
     tableStyle = {},
+    settingsProps,
 }: Props) {
     return (
         <Box
@@ -48,6 +57,7 @@ export default function TableLayout({
                     alignItems: "center",
                     justifyContent: "center",
                     m: `${TABLE_ELEMENTS_GAP}px 0`,
+                    "button + button": { mx: "5px" },
                 }}
             >
                 <Button
@@ -56,7 +66,27 @@ export default function TableLayout({
                 >
                     Refresh
                 </Button>
+
+                {settingsProps && (
+                    <IconButton
+                        variant="solid"
+                        color="primary"
+                        onClick={settingsProps.togglePanel}
+                    >
+                        <SettingsIcon />
+                    </IconButton>
+                )}
             </Box>
+
+            {settingsProps && (
+                <Drawer
+                    open={settingsProps.isOpen}
+                    onClose={settingsProps.togglePanel}
+                    anchor="right"
+                >
+                    {settingsProps.panel}
+                </Drawer>
+            )}
 
             {filters && (
                 <Box
