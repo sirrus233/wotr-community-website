@@ -317,8 +317,8 @@ instance FromJSON InequalityFilter
 
 data VictoryFilter
   = VictorySideFilter Side
-  | VictoryKindFilter Victory
-  | VictoryFilter Side Victory
+  | VictoryKindFilter (NonEmpty Victory)
+  | VictoryComboFilter (Side, NonEmpty Victory)
   deriving (Generic)
 
 instance FromJSON VictoryFilter
