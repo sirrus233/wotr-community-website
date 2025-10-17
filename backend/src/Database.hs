@@ -2,6 +2,7 @@ module Database where
 
 import AppConfig (AppM, Env (..), runAppLogger)
 import Control.Monad.Logger (LoggingT, MonadLogger, logInfoN)
+import Data.Foldable1 (foldr1)
 import Data.Text qualified as T
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, getCurrentTime, nominalDay)
 import Database.Esqueleto.Experimental
@@ -170,17 +171,15 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
     loserFilter = toListFilter report GameReportLoserId <$> spec.losers
     turnsFilter = toInequalityFilter report GameReportTurns <$> spec.turns
     victoryFilter =
-      spec.victory <&> \(v :| vs) ->
-        foldr
-          ( (||.)
-              . ( \case
-                    VictoryKindFilter k -> report ^. GameReportVictory ==. val k
-                    VictorySideFilter s -> report ^. GameReportSide ==. val s
-                    VictoryComboFilter s k -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val k
-                )
+      spec.victory
+        <&> foldr1
+          (||.)
+        . fmap
+          ( \case
+              VictoryKindFilter k -> report ^. GameReportVictory ==. val k
+              VictorySideFilter s -> report ^. GameReportSide ==. val s
+              VictoryComboFilter s k -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val k
           )
-          (val False)
-          (v : vs)
     leagueFilter =
       spec.leagues <&> \case
         [] -> isNothing_ (report ^. GameReportLeague)
