@@ -172,8 +172,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
     turnsFilter = toInequalityFilter report GameReportTurns <$> spec.turns
     victoryFilter =
       spec.victory
-        <&> foldr1
-          (||.)
+        <&> foldr1 (||.)
         . fmap
           ( \case
               VictoryKindFilter k -> report ^. GameReportVictory ==. val k
