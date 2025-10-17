@@ -28,9 +28,11 @@ import {
     MenuOption,
     ProcessedGameReport,
     ReportEditMode,
+    SerializedVictoryFilter,
     Side,
     Stronghold,
     Victory,
+    VictoryOption,
 } from "./types";
 import { FREE_ACCENT_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
 import {
@@ -151,7 +153,7 @@ export default function GameReports({
     const colHeaders: (
         | ColHeaderData<MenuOption<number>>
         | ColHeaderData<MenuOption<string>>
-        | ColHeaderData<MenuOption<[Side, Victory]>>
+        | ColHeaderData<MenuOption<VictoryOption>>
     )[] = [
         { key: "Timestamp" },
         {
@@ -203,14 +205,18 @@ export default function GameReports({
                 filterType: "autocomplete",
                 placeholder: "Select type",
                 loading: false,
-                options: sides.flatMap((side) =>
-                    victoryTypes.map(
-                        (victory): { id: [Side, Victory]; label: string } => ({
-                            id: [side, victory],
-                            label: toVictoryTypeLabel(side, victory),
-                        })
-                    )
-                ),
+                options: [
+                    ...sides.map((s) => ({ id: s, label: s })),
+                    ...victoryTypes.map((v) => ({ id: v, label: v })),
+                    ...sides.flatMap((s) =>
+                        victoryTypes.map(
+                            (v): { id: [Side, Victory]; label: string } => ({
+                                id: [s, v],
+                                label: toVictoryTypeLabel(s, v),
+                            })
+                        )
+                    ),
+                ],
                 current: filters.victory,
                 appliedCount: filters.victory.length,
                 listboxStyle: { fontSize: "12px" },
@@ -611,9 +617,25 @@ export function serializeReportsParams(params: GameReportParams) {
             losers: toFilterParam(params.filters.losers),
             players: toFilterParam(params.filters.players),
             leagues: toFilterParam(params.filters.leagues),
-            victory: toFilterParam(params.filters.victory),
+            victory: serializeVictoryFilter(params.filters.victory),
         }),
     };
+}
+
+function serializeVictoryFilter(
+    victoryFilter: GameReportFilters["victory"]
+): SerializedVictoryFilter | null {
+    return (
+        toFilterParam(victoryFilter)?.map(
+            (contents): SerializedVictoryFilter[number] => {
+                return typeof contents === "string"
+                    ? contents === "Free" || contents === "Shadow"
+                        ? { tag: "VictorySideFilter", contents }
+                        : { tag: "VictoryKindFilter", contents }
+                    : { tag: "VictoryComboFilter", contents };
+            }
+        ) || null
+    );
 }
 
 interface ContainerProps {
@@ -750,7 +772,7 @@ function isPairingValid(pairing: unknown[]) {
     return pairing.length <= 2;
 }
 
-function toFilterParam(options: MenuOption<unknown>[]): unknown[] | null {
+function toFilterParam<T>(options: MenuOption<T>[]): T[] | null {
     return options.find(({ id }) => id === EMPTY_OPTION_ID)
         ? []
         : nullifyEmpty(options.map(({ id }) => id));

@@ -318,7 +318,7 @@ instance FromJSON InequalityFilter
 data VictoryFilter
   = VictorySideFilter Side
   | VictoryKindFilter Victory
-  | VictoryFilter Side Victory
+  | VictoryComboFilter Side Victory
   deriving (Generic)
 
 instance FromJSON VictoryFilter
@@ -334,7 +334,7 @@ data GameReportFilterSpec = GameReportFilterSpec
     winners :: Maybe [PlayerId],
     losers :: Maybe [PlayerId],
     turns :: Maybe InequalityFilter,
-    victory :: Maybe VictoryFilter,
+    victory :: Maybe (NonEmpty VictoryFilter),
     -- TODO competition
     leagues :: Maybe [League],
     -- TODO expansions

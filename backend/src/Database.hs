@@ -170,10 +170,17 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
     loserFilter = toListFilter report GameReportLoserId <$> spec.losers
     turnsFilter = toInequalityFilter report GameReportTurns <$> spec.turns
     victoryFilter =
-      spec.victory <&> \case
-        VictoryKindFilter v -> report ^. GameReportVictory ==. val v
-        VictorySideFilter s -> report ^. GameReportSide ==. val s
-        VictoryFilter s v -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val v
+      spec.victory <&> \(v :| vs) ->
+        foldr
+          ( (||.)
+              . ( \case
+                    VictoryKindFilter k -> report ^. GameReportVictory ==. val k
+                    VictorySideFilter s -> report ^. GameReportSide ==. val s
+                    VictoryComboFilter s k -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val k
+                )
+          )
+          (val False)
+          (v : vs)
     leagueFilter =
       spec.leagues <&> \case
         [] -> isNothing_ (report ^. GameReportLeague)
