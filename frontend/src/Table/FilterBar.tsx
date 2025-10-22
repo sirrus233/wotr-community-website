@@ -11,6 +11,8 @@ import sumPriorWidths from "./sumPriorWidths";
 import { MenuOption } from "../types";
 import { ColHeaderData, CornerHeaderData } from "./types";
 
+import NullableInequalityFilter from "./NullableInequalityFilter";
+
 const FILTER_BAR_Z_IDX = 3;
 
 export const PINNED_COLS_Z_IDX = FILTER_BAR_Z_IDX - 1;
@@ -119,6 +121,8 @@ export function Filter({ filter, width }: HeaderWithFilterProps): JSX.Element {
             return <AutocompleteFilter width={width} {...filter} />;
         case "inequality":
             return <InequalityFilter width={width} {...filter} />;
+        case "nullableInequality":
+            return <NullableInequalityFilter width={width} {...filter} />;
         case "boolean":
             return <BooleanFilter width={width} {...filter} />;
         case undefined:

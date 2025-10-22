@@ -15,6 +15,7 @@ export default function InequalityFilter({
     max,
     placeholder,
     width,
+    disabled = false,
     onChange,
 }: InequalityFilterProps & { width: number }) {
     const [currentOperator, currentValue = null] = current || [];
@@ -28,16 +29,16 @@ export default function InequalityFilter({
         const didValueChange = currentValue !== inputValue;
         const didOperatorChange = currentOperator !== inputOperator;
 
-        if (didValueChange) {
+        if (didValueChange && !disabled) {
             onChange(
                 isDefined(inputValue)
                     ? translateFilter(inputOperator, inputValue)
                     : null
             );
-        } else if (didOperatorChange && isDefined(inputValue)) {
+        } else if (didOperatorChange && isDefined(inputValue) && !disabled) {
             onChange(translateFilter(inputOperator, inputValue));
         }
-    }, [currentOperator, currentValue, inputOperator, inputValue]);
+    }, [disabled, currentOperator, currentValue, inputOperator, inputValue]);
 
     const commonStyle = {
         background: "white",
@@ -59,6 +60,7 @@ export default function InequalityFilter({
             <Select
                 size="sm"
                 value={inputOperator}
+                disabled={disabled}
                 onChange={(_, o) => setInputOperator(o || "EQ")}
                 sx={{
                     ...commonStyle,
@@ -79,6 +81,7 @@ export default function InequalityFilter({
                 type="number"
                 placeholder={placeholder}
                 value={inputValue === null ? "" : String(inputValue)}
+                disabled={disabled}
                 onChange={(e) =>
                     setInputValue(
                         constrainNumberInput(e.target.value, min, max)
