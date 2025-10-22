@@ -4,7 +4,11 @@ import FilterIcon from "@mui/icons-material/FilterList";
 import IconButton from "@mui/joy/IconButton";
 import { styled } from "@mui/joy/styles";
 import FilterBar, { ExpandButton, PINNED_COLS_Z_IDX } from "./FilterBar";
-import { FILTER_ERROR_HEIGHT, TABLE_FILTER_HEIGHT } from "./constants";
+import {
+    FILTER_ERROR_HEIGHT,
+    NULL_FILTER_HEIGHT,
+    TABLE_FILTER_HEIGHT,
+} from "./constants";
 import {
     TABLE_BORDER_COLOR,
     TABLE_FONT_COLOR,
@@ -99,8 +103,8 @@ export default function Table<
     const filterBarHeight = [...cornerHeaders, ...colHeaders].find(
         (h) => h.filter?.errorMessage
     )
-        ? `calc(${TABLE_FILTER_HEIGHT} + ${FILTER_ERROR_HEIGHT} + 10px)`
-        : `calc(${TABLE_FILTER_HEIGHT} + 10px)`;
+        ? `calc(${TABLE_FILTER_HEIGHT} + ${NULL_FILTER_HEIGHT} + ${FILTER_ERROR_HEIGHT} + 10px)`
+        : `calc(${TABLE_FILTER_HEIGHT} + ${NULL_FILTER_HEIGHT} + 10px)`;
 
     return (
         <Container

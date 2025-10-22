@@ -118,6 +118,8 @@ export default function App() {
                 tokens: null,
                 dwarvenRings: null,
                 corruption: null,
+                mordor: null,
+                aragorn: null,
                 initialEyes: null,
                 interestRating: null,
                 hasLog: null,
