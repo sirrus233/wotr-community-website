@@ -317,7 +317,7 @@ instance FromJSON InequalityFilter
 
 data NullableFilter f = NullFilter | ValueFilter f deriving (Generic)
 
-instance FromJSON (NullableFilter InequalityFilter)
+instance (FromJSON f) => FromJSON (NullableFilter f)
 
 -- TODO Unused until competition can be filtered in the DB
 -- data CompetitionFilter = RatedFilter Match | CompetitionFilter Competition deriving (Generic)
