@@ -323,6 +323,10 @@ data VictoryFilter
 
 instance FromJSON VictoryFilter
 
+data NullableFilter f = NullFilter | ValueFilter f deriving (Generic)
+
+instance (FromJSON f) => FromJSON (NullableFilter f)
+
 -- TODO Unused until competition can be filtered in the DB
 -- data CompetitionFilter = RatedFilter Match | CompetitionFilter Competition deriving (Generic)
 -- instance FromJSON CompetitionFilter
@@ -341,8 +345,8 @@ data GameReportFilterSpec = GameReportFilterSpec
     tokens :: Maybe InequalityFilter,
     dwarvenRings :: Maybe InequalityFilter,
     corruption :: Maybe InequalityFilter,
-    mordor :: Maybe (Maybe InequalityFilter),
-    aragorn :: Maybe (Maybe InequalityFilter),
+    mordor :: Maybe (NullableFilter InequalityFilter),
+    aragorn :: Maybe (NullableFilter InequalityFilter),
     treebeard :: Maybe Bool,
     initialEyes :: Maybe InequalityFilter,
     -- TODO spCaptured

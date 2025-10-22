@@ -250,6 +250,8 @@ export type ValidLeaguePlayerFormData = {
 
 export type ValueOf<T> = T[keyof T];
 
+export type NullFilter = "NullFilter";
+
 export type ApiInequalityOperator = "GT" | "LT" | "EQ";
 
 export type NonApiInequalityOperator = "GTE" | "LTE";
@@ -259,6 +261,8 @@ export type InequalityOperator =
     | NonApiInequalityOperator;
 
 export type InequalityFilter = [ApiInequalityOperator, number];
+
+export type NullableInequalityFilter = InequalityFilter | NullFilter;
 
 export type VictoryOption = Side | Victory | [Side, Victory];
 
@@ -275,9 +279,15 @@ export type GameReportFilters = {
     corruption: InequalityFilter | null;
     initialEyes: InequalityFilter | null;
     interestRating: InequalityFilter | null;
+    mordor: NullableInequalityFilter | null;
+    aragorn: NullableInequalityFilter | null;
     hasLog: boolean | null;
     treebeard: boolean | null;
 };
+
+export type SerializedNullableInequalityFilter =
+    | { tag: NullFilter }
+    | { tag: "ValueFilter"; contents: InequalityFilter };
 
 export type GameReportParams = {
     limit: number;

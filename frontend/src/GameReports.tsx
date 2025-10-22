@@ -26,8 +26,10 @@ import {
     GameReportParams,
     Match,
     MenuOption,
+    NullableInequalityFilter,
     ProcessedGameReport,
     ReportEditMode,
+    SerializedNullableInequalityFilter,
     SerializedVictoryFilter,
     Side,
     Stronghold,
@@ -287,8 +289,34 @@ export default function GameReports({
                     setFilters({ ...filters, corruption: value }),
             },
         },
-        { key: "Mordor" },
-        { key: "Aragorn" },
+        {
+            key: "Mordor",
+            width: 130,
+            filter: {
+                filterType: "nullableInequality",
+                placeholder: "Step",
+                nullLabel: "Not reached",
+                min: 0,
+                max: 5,
+                current: filters.mordor,
+                appliedCount: isDefined(filters.mordor?.[1]) ? 1 : 0,
+                onChange: (value) => setFilters({ ...filters, mordor: value }),
+            },
+        },
+        {
+            key: "Aragorn",
+            width: 140,
+            filter: {
+                filterType: "nullableInequality",
+                placeholder: "Turn",
+                nullLabel: "Not played",
+                min: 1,
+                max: 999,
+                current: filters.aragorn,
+                appliedCount: isDefined(filters.aragorn?.[1]) ? 1 : 0,
+                onChange: (value) => setFilters({ ...filters, aragorn: value }),
+            },
+        },
         {
             key: "Treebeard",
             width: 150,
@@ -617,9 +645,22 @@ export function serializeReportsParams(params: GameReportParams) {
             losers: toFilterParam(params.filters.losers),
             players: toFilterParam(params.filters.players),
             leagues: toFilterParam(params.filters.leagues),
+            mordor: serializeNullableInequalityFilter(params.filters.mordor),
+            aragorn: serializeNullableInequalityFilter(params.filters.aragorn),
             victory: serializeVictoryFilter(params.filters.victory),
         }),
     };
+}
+
+function serializeNullableInequalityFilter(
+    inequalityFilter: NullableInequalityFilter | null
+): SerializedNullableInequalityFilter | null {
+    if (inequalityFilter) {
+        return inequalityFilter === "NullFilter"
+            ? { tag: "NullFilter" }
+            : { tag: "ValueFilter", contents: inequalityFilter };
+    }
+    return null;
 }
 
 function serializeVictoryFilter(

@@ -66,7 +66,7 @@ import Database.Esqueleto.Experimental
     type (:&) (..),
   )
 import Servant (ServerError, throwError)
-import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), TimestampFilter (..), VictoryFilter (..))
+import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), NullableFilter (..), TimestampFilter (..), VictoryFilter (..))
 import Types.Auth (SessionId (..), UserId (..))
 import Types.DataField (League, LeagueTier, PlayerName, Year)
 import Types.Database
@@ -123,14 +123,15 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
       InequalityFilter LT a -> (entity ^. field) <. val a
       InequalityFilter GT a -> (entity ^. field) >. val a
       InequalityFilter EQ a -> (entity ^. field) ==. val a
-    toMaybeInequalityFilter ::
+    toNullableInequalityFilter ::
       (PersistEntity e) =>
-      SqlExpr (Entity e) -> EntityField e (Maybe Int) -> Maybe InequalityFilter -> SqlExpr (Value Bool)
-    toMaybeInequalityFilter entity field = \case
-      Nothing -> isNothing_ (entity ^. field)
-      Just (InequalityFilter LT a) -> (entity ^. field) <. (just . val $ a)
-      Just (InequalityFilter GT a) -> (entity ^. field) >. (just . val $ a)
-      Just (InequalityFilter EQ a) -> (entity ^. field) ==. (just . val $ a)
+      SqlExpr (Entity e) -> EntityField e (Maybe Int) -> NullableFilter InequalityFilter -> SqlExpr (Value Bool)
+    toNullableInequalityFilter entity field = \case
+      NullFilter -> isNothing_ (entity ^. field)
+      ValueFilter i -> case i of
+        InequalityFilter LT a -> (entity ^. field) <. (just . val $ a)
+        InequalityFilter GT a -> (entity ^. field) >. (just . val $ a)
+        InequalityFilter EQ a -> (entity ^. field) ==. (just . val $ a)
     toListFilter ::
       (PersistEntity e, PersistField f) =>
       SqlExpr (Entity e) -> EntityField e f -> [f] -> SqlExpr (Value Bool)
@@ -186,8 +187,8 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
     corruption = toInequalityFilter report GameReportCorruption <$> spec.corruption
-    mordor = toMaybeInequalityFilter report GameReportMordor <$> spec.mordor
-    aragorn = toMaybeInequalityFilter report GameReportAragornTurn <$> spec.aragorn
+    mordor = toNullableInequalityFilter report GameReportMordor <$> spec.mordor
+    aragorn = toNullableInequalityFilter report GameReportAragornTurn <$> spec.aragorn
     treebeard =
       spec.treebeard <&> \case
         True -> (report ^. GameReportTreebeard) ==. (just . val $ True)

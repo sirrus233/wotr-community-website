@@ -1,11 +1,19 @@
 import { CSSProperties, ReactNode } from "react";
 import { ErrorMessage } from "../constants";
-import { InequalityFilter, MenuOption } from "../types";
+import {
+    InequalityFilter,
+    MenuOption,
+    NullableInequalityFilter,
+} from "../types";
 
 export type Option = string | MenuOption<unknown>;
 
 interface CommonFilterProps {
-    filterType: "autocomplete" | "inequality" | "boolean";
+    filterType:
+        | "autocomplete"
+        | "inequality"
+        | "nullableInequality"
+        | "boolean";
     placeholder: string;
     errorMessage?: ErrorMessage;
     appliedCount: number;
@@ -28,7 +36,17 @@ export interface InequalityFilterProps extends CommonFilterProps {
     current: InequalityFilter | null;
     min?: number;
     max?: number;
+    disabled?: boolean;
     onChange: (value: InequalityFilter | null) => void;
+}
+
+export interface NullableInequalityFilterProps extends CommonFilterProps {
+    filterType: "nullableInequality";
+    current: NullableInequalityFilter | null;
+    min?: number;
+    max?: number;
+    nullLabel: string;
+    onChange: (value: NullableInequalityFilter | null) => void;
 }
 
 export interface BooleanFilterProps extends CommonFilterProps {
@@ -42,6 +60,7 @@ export interface BooleanFilterProps extends CommonFilterProps {
 type Filter<T extends MenuOption<any> = MenuOption<any>> =
     | AutocompleteProps<T>
     | InequalityFilterProps
+    | NullableInequalityFilterProps
     | BooleanFilterProps;
 
 interface CommonColHeaderData {
