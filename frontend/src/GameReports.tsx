@@ -143,7 +143,7 @@ export default function GameReports({
                 options: playerOptions,
                 current: filters.pairing,
                 appliedCount: isPairingFilterValid ? filters.pairing.length : 0,
-                onChange: (values) =>
+                onChange: (values: MenuOption<number>[]) =>
                     setFilters({ ...filters, pairing: values }),
                 errorMessage: isPairingFilterValid
                     ? undefined
