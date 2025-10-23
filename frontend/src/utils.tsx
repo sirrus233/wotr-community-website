@@ -277,3 +277,10 @@ export function sum(numbers: number[]) {
 export function fallback<T>(value: T, fallback: T) {
     return isDefined(value) ? value : fallback;
 }
+
+export function hasKey<K extends PropertyKey>(
+    obj: object,
+    key: K
+): obj is Record<K, unknown> {
+    return key in obj;
+}

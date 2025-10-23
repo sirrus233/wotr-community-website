@@ -315,6 +315,14 @@ data InequalityFilter = InequalityFilter Ordering Int deriving (Generic)
 
 instance FromJSON InequalityFilter
 
+data VictoryFilter
+  = VictorySideFilter Side
+  | VictoryKindFilter Victory
+  | VictoryComboFilter Side Victory
+  deriving (Generic)
+
+instance FromJSON VictoryFilter
+
 data NullableFilter f = NullFilter | ValueFilter f deriving (Generic)
 
 instance (FromJSON f) => FromJSON (NullableFilter f)
@@ -330,7 +338,7 @@ data GameReportFilterSpec = GameReportFilterSpec
     winners :: Maybe [PlayerId],
     losers :: Maybe [PlayerId],
     turns :: Maybe InequalityFilter,
-    victory :: Maybe (NonEmpty (Side, Victory)),
+    victory :: Maybe (NonEmpty VictoryFilter),
     -- TODO competition
     leagues :: Maybe [League],
     -- TODO expansions

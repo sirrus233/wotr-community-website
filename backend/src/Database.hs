@@ -66,7 +66,7 @@ import Database.Esqueleto.Experimental
     type (:&) (..),
   )
 import Servant (ServerError, throwError)
-import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), NullableFilter (..), TimestampFilter (..))
+import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), NullableFilter (..), TimestampFilter (..), VictoryFilter (..))
 import Types.Auth (SessionId (..), UserId (..))
 import Types.DataField (League, LeagueTier, PlayerName, Year)
 import Types.Database
@@ -174,7 +174,12 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
     victoryFilter =
       spec.victory
         <&> foldr1 (||.)
-        . fmap (\(s, v) -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val v)
+        . fmap
+          ( \case
+              VictoryKindFilter k -> report ^. GameReportVictory ==. val k
+              VictorySideFilter s -> report ^. GameReportSide ==. val s
+              VictoryComboFilter s k -> (report ^. GameReportSide) ==. val s &&. (report ^. GameReportVictory) ==. val k
+          )
     leagueFilter =
       spec.leagues <&> \case
         [] -> isNothing_ (report ^. GameReportLeague)

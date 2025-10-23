@@ -10,7 +10,13 @@ import ModalDialog from "@mui/joy/ModalDialog";
 import Tooltip from "@mui/joy/Tooltip";
 import freeIconPath from "./assets/ring-emoji.png";
 import shadowIconPath from "./assets/volcano-emoji.png";
-import { ErrorMessage, GAME_LIMITS, leagues } from "./constants";
+import {
+    ErrorMessage,
+    GAME_LIMITS,
+    leagues,
+    sides,
+    victoryTypes,
+} from "./constants";
 import useMediaQuery from "./hooks/useMediaQuery";
 import { RefreshRequest } from "./hooks/useRequestState";
 import {
@@ -24,9 +30,11 @@ import {
     ProcessedGameReport,
     ReportEditMode,
     SerializedNullableInequalityFilter,
+    SerializedVictoryFilter,
     Side,
     Stronghold,
     Victory,
+    VictoryOption,
 } from "./types";
 import { FREE_ACCENT_COLOR, SHADOW_PRIMARY_COLOR } from "./styles/colors";
 import {
@@ -122,7 +130,8 @@ export default function GameReports({
         isAdmin ? { key: "Edit", width: 58 } : null,
     ].filter(isDefined);
 
-    const switchHeaders: (CornerHeaderData & ColHeaderData)[] = [
+    const switchHeaders: (CornerHeaderData<MenuOption<number>> &
+        ColHeaderData<MenuOption<number>>)[] = [
         { key: "No.", width: 50 },
         {
             key: "Pairing",
@@ -134,7 +143,7 @@ export default function GameReports({
                 options: playerOptions,
                 current: filters.pairing,
                 appliedCount: isPairingFilterValid ? filters.pairing.length : 0,
-                onChange: (values: MenuOption<number>[]) =>
+                onChange: (values) =>
                     setFilters({ ...filters, pairing: values }),
                 errorMessage: isPairingFilterValid
                     ? undefined
@@ -143,7 +152,11 @@ export default function GameReports({
         },
     ];
 
-    const colHeaders: ColHeaderData[] = [
+    const colHeaders: (
+        | ColHeaderData<MenuOption<number>>
+        | ColHeaderData<MenuOption<string>>
+        | ColHeaderData<MenuOption<VictoryOption>>
+    )[] = [
         { key: "Timestamp" },
         {
             key: "Turn",
@@ -168,7 +181,7 @@ export default function GameReports({
                 options: playerOptions,
                 current: filters.winners,
                 appliedCount: filters.winners.length,
-                onChange: (values: MenuOption<number>[]) =>
+                onChange: (values) =>
                     setFilters({ ...filters, winners: values }),
             },
         },
@@ -182,12 +195,37 @@ export default function GameReports({
                 options: playerOptions,
                 current: filters.losers,
                 appliedCount: filters.losers.length,
-                onChange: (values: MenuOption<number>[]) =>
+                onChange: (values) =>
                     setFilters({ ...filters, losers: values }),
             },
         },
         { key: "Game Type" },
-        { key: "Victory Type" },
+        {
+            key: "Victory Type",
+            width: 170,
+            filter: {
+                filterType: "autocomplete",
+                placeholder: "Select type",
+                loading: false,
+                options: [
+                    ...sides.map((s) => ({ id: s, label: s })),
+                    ...victoryTypes.map((v) => ({ id: v, label: v })),
+                    ...sides.flatMap((s) =>
+                        victoryTypes.map(
+                            (v): { id: [Side, Victory]; label: string } => ({
+                                id: [s, v],
+                                label: toVictoryTypeLabel(s, v),
+                            })
+                        )
+                    ),
+                ],
+                current: filters.victory,
+                appliedCount: filters.victory.length,
+                listboxStyle: { fontSize: "12px" },
+                onChange: (values) =>
+                    setFilters({ ...filters, victory: values }),
+            },
+        },
         { key: "Competition Type" },
         {
             key: "League",
@@ -204,7 +242,7 @@ export default function GameReports({
                 })),
                 current: filters.leagues,
                 appliedCount: filters.leagues.length,
-                onChange: (values: MenuOption<string>[]) => {
+                onChange: (values) => {
                     setFilters({ ...filters, leagues: values });
                 },
             },
@@ -609,6 +647,7 @@ export function serializeReportsParams(params: GameReportParams) {
             leagues: toFilterParam(params.filters.leagues),
             mordor: serializeNullableInequalityFilter(params.filters.mordor),
             aragorn: serializeNullableInequalityFilter(params.filters.aragorn),
+            victory: serializeVictoryFilter(params.filters.victory),
         }),
     };
 }
@@ -622,6 +661,22 @@ function serializeNullableInequalityFilter(
             : { tag: "ValueFilter", contents: inequalityFilter };
     }
     return null;
+}
+
+function serializeVictoryFilter(
+    victoryFilter: GameReportFilters["victory"]
+): SerializedVictoryFilter | null {
+    return (
+        toFilterParam(victoryFilter)?.map(
+            (contents): SerializedVictoryFilter[number] => {
+                return typeof contents === "string"
+                    ? contents === "Free" || contents === "Shadow"
+                        ? { tag: "VictorySideFilter", contents }
+                        : { tag: "VictoryKindFilter", contents }
+                    : { tag: "VictoryComboFilter", contents };
+            }
+        ) || null
+    );
 }
 
 interface ContainerProps {
@@ -711,6 +766,16 @@ function isGameTypeExpansion(expansion: Expansion) {
     return ["KoME", "WoME", "LoME"].includes(expansion);
 }
 
+function toVictoryTypeLabel(side: Side, victory: Victory): string {
+    return `${side} ${
+        side === "Shadow" && victory === "Ring"
+            ? "Corruption"
+            : victory === "Concession"
+            ? "via Concession"
+            : victory
+    }`;
+}
+
 function summarizeVictoryType(side: Side, victory: Victory) {
     return (
         <Box
@@ -722,13 +787,7 @@ function summarizeVictoryType(side: Side, victory: Victory) {
                 padding: "3px 8px",
             }}
         >
-            {`${side} ${
-                side === "Shadow" && victory === "Ring"
-                    ? "Corruption"
-                    : victory === "Concession"
-                    ? "via Concession"
-                    : victory
-            }`}
+            {toVictoryTypeLabel(side, victory)}
         </Box>
     );
 }
@@ -754,7 +813,7 @@ function isPairingValid(pairing: unknown[]) {
     return pairing.length <= 2;
 }
 
-function toFilterParam(options: MenuOption<unknown>[]): unknown[] | null {
+function toFilterParam<T>(options: MenuOption<T>[]): T[] | null {
     return options.find(({ id }) => id === EMPTY_OPTION_ID)
         ? []
         : nullifyEmpty(options.map(({ id }) => id));

@@ -264,12 +264,15 @@ export type InequalityFilter = [ApiInequalityOperator, number];
 
 export type NullableInequalityFilter = InequalityFilter | NullFilter;
 
+export type VictoryOption = Side | Victory | [Side, Victory];
+
 export type GameReportFilters = {
     pairing: MenuOption<number>[];
     players: MenuOption<number>[];
     winners: MenuOption<number>[];
     losers: MenuOption<number>[];
     leagues: MenuOption<string>[];
+    victory: MenuOption<VictoryOption>[];
     turns: InequalityFilter | null;
     tokens: InequalityFilter | null;
     dwarvenRings: InequalityFilter | null;
@@ -291,3 +294,10 @@ export type GameReportParams = {
     currentPage: number;
     filters: GameReportFilters;
 };
+
+export type SerializedVictoryFilter =
+    | (
+          | { tag: "VictorySideFilter"; contents: Side }
+          | { tag: "VictoryKindFilter"; contents: Victory }
+          | { tag: "VictoryComboFilter"; contents: [Side, Victory] }
+      )[];
