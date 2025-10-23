@@ -209,7 +209,10 @@ export default function GameReports({
                 loading: false,
                 options: [
                     ...sides.map((s) => ({ id: s, label: s })),
-                    ...victoryTypes.map((v) => ({ id: v, label: v })),
+                    ...victoryTypes.map((v) => ({
+                        id: v,
+                        label: toVictoryKindLabel(v),
+                    })),
                     ...sides.flatMap((s) =>
                         victoryTypes.map(
                             (v): { id: [Side, Victory]; label: string } => ({
@@ -764,6 +767,16 @@ function summarizeGameType(expansions: Expansion[]) {
 
 function isGameTypeExpansion(expansion: Expansion) {
     return ["KoME", "WoME", "LoME"].includes(expansion);
+}
+
+function toVictoryKindLabel(victory: Victory): string {
+    switch (victory) {
+        case "Ring":
+            return "Ring/Corruption";
+        case "Military":
+        case "Concession":
+            return victory;
+    }
 }
 
 function toVictoryTypeLabel(side: Side, victory: Victory): string {
