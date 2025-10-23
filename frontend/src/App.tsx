@@ -514,7 +514,7 @@ function Home() {
                 {[
                     {
                         label: "Legacy Ladder (2024)",
-                        href: "https://docs.google.com/spreadsheets/d/1okxuCGH1P9mDT-3Np4IvK-dUhmJHaoxP1-xG5U8CX4U/edit?gid=1355474132#gid=1355474132",
+                        href: "https://docs.google.com/spreadsheets/d/1kPk4X-pkWe2-ORgGqRSwfVuaMlwAsKInOVcQpb7OGbA/edit?usp=drive_link",
                         isDownload: false,
                     },
                     {
