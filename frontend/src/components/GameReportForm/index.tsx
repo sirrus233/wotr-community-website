@@ -26,7 +26,7 @@ import {
     victoryTypes,
 } from "../../constants";
 import { API_BASE_URL } from "../../env";
-import { GAME_FORM_BOLD } from "../../styles/colors";
+import colors from "../../styles/colors";
 import { toErrorMessage } from "../../networkErrorHandlers";
 import {
     GameFormData,
@@ -444,7 +444,7 @@ function GameReportForm({
                         iconStyle: {
                             paddingLeft: "5px",
                             fontSize: "23px",
-                            color: GAME_FORM_BOLD,
+                            color: colors.gameFormBold,
                         },
                     }}
                     error={formData.mordor.error}
