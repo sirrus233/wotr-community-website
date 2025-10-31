@@ -1,29 +1,29 @@
 import React, { useEffect } from "react";
 import Box from "@mui/joy/Box";
 import Typography from "@mui/joy/Typography";
-import { settlementLayouts } from "../constants";
-import SingleOptionInput from "./SingleOptionInput";
-import { SettlementLayout } from "../types";
-import { isDefined } from "../utils";
+import { settlementLayouts } from "../../constants";
+import SingleOptionInput from "../SingleOptionInput";
+import { SettlementLayout } from "../../types";
+import { isDefined } from "../../utils";
 
 const CACHED_SETTINGS_KEY = "gameReportSettings";
 
-export const defaultSettings: Settings = {
+export const defaultSettings: GameReportSettings = {
     settlementLayout: "Standard",
     areSettlementsAbbreviated: false,
 };
 
-export interface Settings {
+export interface GameReportSettings {
     settlementLayout: SettlementLayout;
     areSettlementsAbbreviated: boolean;
 }
 
 interface Props {
-    settings: Settings;
-    setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+    settings: GameReportSettings;
+    setSettings: React.Dispatch<React.SetStateAction<GameReportSettings>>;
 }
 
-export default function GameReportSettings({ settings, setSettings }: Props) {
+export default function Settings({ settings, setSettings }: Props) {
     useEffect(function applyCachedSettings() {
         setSettings(
             parseCachedSettings(localStorage.getItem(CACHED_SETTINGS_KEY))
@@ -87,10 +87,12 @@ export default function GameReportSettings({ settings, setSettings }: Props) {
     );
 }
 
-function parseCachedSettings(cachedSettings: string | null): Settings {
+function parseCachedSettings(
+    cachedSettings: string | null
+): GameReportSettings {
     try {
         if (cachedSettings) {
-            const parsedSettings: Partial<Settings> | null =
+            const parsedSettings: Partial<GameReportSettings> | null =
                 JSON.parse(cachedSettings);
 
             if (isDefined(parsedSettings)) {

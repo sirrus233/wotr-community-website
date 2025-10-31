@@ -1,9 +1,9 @@
 import React from "react";
 import Box from "@mui/joy/Box";
+import colors from "../../styles/colors";
+import { ProcessedGameReport } from "../../types";
+import { getStrongholdLabel, strongholdSide } from "../../utils";
 import SettlementBadge from "./SettlementBadge";
-import colors from "../styles/colors";
-import { ProcessedGameReport } from "../types";
-import { getStrongholdLabel, strongholdSide } from "../utils";
 
 export default function FreeCaptures(props: { report: ProcessedGameReport }) {
     const { strongholds, expansions } = props.report;
