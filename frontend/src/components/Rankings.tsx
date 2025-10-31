@@ -23,7 +23,7 @@ import {
     PlayerState,
     Side,
 } from "../types";
-import { FREE_PRIMARY_COLOR, SHADOW_PRIMARY_COLOR } from "../styles/colors";
+import colors from "../styles/colors";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
@@ -367,8 +367,8 @@ function TableCell({
                           ...style,
                           backgroundColor:
                               side === "Shadow"
-                                  ? SHADOW_PRIMARY_COLOR
-                                  : FREE_PRIMARY_COLOR,
+                                  ? colors.shadowPrimary
+                                  : colors.freePrimary,
                           color: "white",
                           opacity: light ? "60%" : "100%",
                       }
@@ -415,8 +415,8 @@ function TableHeaderCell({
                           ...style,
                           color:
                               side === "Shadow"
-                                  ? SHADOW_PRIMARY_COLOR
-                                  : FREE_PRIMARY_COLOR,
+                                  ? colors.shadowPrimary
+                                  : colors.freePrimary,
                       }
                     : style
             }

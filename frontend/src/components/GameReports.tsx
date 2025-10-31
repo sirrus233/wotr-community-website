@@ -36,7 +36,7 @@ import {
     Victory,
     VictoryOption,
 } from "../types";
-import { FREE_ACCENT_COLOR, SHADOW_PRIMARY_COLOR } from "../styles/colors";
+import colors from "../styles/colors";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
@@ -733,8 +733,8 @@ function CommentText({ children }: ContainerProps) {
 function GameAccent({ side }: { side: Side }) {
     const [color, src, alt] =
         side === "Free"
-            ? [FREE_ACCENT_COLOR, freeIconPath, "FP Icon"]
-            : [SHADOW_PRIMARY_COLOR, shadowIconPath, "SP Icon"];
+            ? [colors.freeAccent, freeIconPath, "FP Icon"]
+            : [colors.shadowPrimary, shadowIconPath, "SP Icon"];
 
     return (
         <Box
@@ -795,7 +795,7 @@ function summarizeVictoryType(side: Side, victory: Victory) {
             style={{
                 color: "white",
                 background:
-                    side === "Free" ? FREE_ACCENT_COLOR : SHADOW_PRIMARY_COLOR,
+                    side === "Free" ? colors.freeAccent : colors.shadowPrimary,
                 borderRadius: "12px",
                 padding: "3px 8px",
             }}
