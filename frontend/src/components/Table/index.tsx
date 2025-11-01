@@ -9,18 +9,14 @@ import {
     NULL_FILTER_HEIGHT,
     TABLE_FILTER_HEIGHT,
 } from "./constants";
-import {
-    TABLE_BORDER_COLOR,
-    TABLE_FONT_COLOR,
-    TABLE_HEADER_COLOR,
-} from "../../styles/colors";
+import colors from "../../styles/colors";
 import sumPriorWidths from "./sumPriorWidths";
 import { MenuOption } from "../../types";
 import { ColHeaderData, CornerHeaderData, RowData } from "./types";
 import { fallback } from "../../utils";
 
-const LIGHT_BORDER = `1px solid ${TABLE_BORDER_COLOR}`;
-const STRONG_BORDER = `2px solid ${TABLE_BORDER_COLOR}`;
+const LIGHT_BORDER = `1px solid ${colors.tableBorder}`;
+const STRONG_BORDER = `2px solid ${colors.tableBorder}`;
 const CELL_PADDING = "5px";
 
 interface ContainerProps {
@@ -34,13 +30,13 @@ const Container = styled("table")<{ ownerState: ContainerProps }>(
         width: "100%",
         height: "100%",
         fontSize: "12px",
-        color: TABLE_FONT_COLOR,
+        color: colors.tableFont,
         borderSpacing: 0,
         whiteSpace: "nowrap",
         textAlign: "center",
         th: {
             position: "sticky",
-            background: TABLE_HEADER_COLOR,
+            background: colors.tableHeader,
             textOverflow: "ellipsis",
             "&:first-of-type": { paddingLeft: CELL_PADDING },
         },
