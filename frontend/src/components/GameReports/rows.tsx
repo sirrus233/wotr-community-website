@@ -5,6 +5,8 @@ import EditIcon from "@mui/icons-material/EditTwoTone";
 import IconButton from "@mui/joy/IconButton";
 import Tooltip from "@mui/joy/Tooltip";
 import ViewIcon from "@mui/icons-material/Visibility";
+import freeIconPath from "../../assets/ring-emoji.png";
+import shadowIconPath from "../../assets/volcano-emoji.png";
 import colors from "../../styles/colors";
 import { GameReportParams, ProcessedGameReport, Side } from "../../types";
 import {
@@ -13,8 +15,6 @@ import {
     getLeagueLabel,
     isDefined,
 } from "../../utils";
-import freeIconPath from "../assets/ring-emoji.png";
-import shadowIconPath from "../assets/volcano-emoji.png";
 import ExternalLink from "../ExternalLink";
 import { RowData } from "../Table/types";
 import { PLAYER_COL_WIDTH } from "./constants";
