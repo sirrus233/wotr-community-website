@@ -79,7 +79,7 @@ export default function FilterBar<
             })}
 
             {colHeaders.map(({ key, filter, width = 0, style = {} }) => (
-                <ColumnFilterSlot key={key} sx={style}>
+                <ColumnFilterSlot key={key} sx={{ height, ...style }}>
                     <Filter filter={filter} width={width} />
                 </ColumnFilterSlot>
             ))}
