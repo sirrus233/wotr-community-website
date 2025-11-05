@@ -1,15 +1,15 @@
 import React, { CSSProperties } from "react";
 import Box from "@mui/joy/Box";
-import { strongholds } from "../constants";
-import SettlementBadge from "./SettlementBadge";
-import colors from "../styles/colors";
-import { ProcessedGameReport, SettlementLayout, Stronghold } from "../types";
+import { strongholds } from "../../constants";
+import colors from "../../styles/colors";
+import { ProcessedGameReport, SettlementLayout, Stronghold } from "../../types";
 import {
     getStrongholdAbbreviation,
     getStrongholdLabel,
     isStrongholdInPlay,
     strongholdSide,
-} from "../utils";
+} from "../../utils";
+import SettlementBadge from "./SettlementBadge";
 
 interface Badge {
     stronghold: Stronghold;

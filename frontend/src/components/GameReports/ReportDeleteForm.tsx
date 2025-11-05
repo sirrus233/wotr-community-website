@@ -1,16 +1,16 @@
 import axios from "axios";
 import React from "react";
-import AdminFormLayout from "./AdminFormLayout";
-import { API_BASE_URL } from "../env";
-import useConditionalActionEffect from "../hooks/useConditionalActionEffect";
-import useFormData, { initializeToDefaults } from "../hooks/useFormData";
-import { toErrorMessage } from "../networkErrorHandlers";
+import AdminFormLayout from "../AdminFormLayout";
+import { API_BASE_URL } from "../../env";
+import useConditionalActionEffect from "../../hooks/useConditionalActionEffect";
+import useFormData, { initializeToDefaults } from "../../hooks/useFormData";
+import { toErrorMessage } from "../../networkErrorHandlers";
 import {
     ProcessedGameReport,
     ReportDeleteFormData,
     ValidReportDeleteFormData,
-} from "../types";
-import { displayTime } from "../utils";
+} from "../../types";
+import { displayTime } from "../../utils";
 
 interface Props {
     report: ProcessedGameReport;
