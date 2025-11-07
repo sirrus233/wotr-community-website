@@ -6,7 +6,7 @@ import IconButton from "@mui/joy/IconButton";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Table from "@mui/joy/Table";
 import { SxProps } from "@mui/joy/styles/types";
-import { TABLE_BTN_HEIGHT_PX, TABLE_ELEMENTS_GAP } from "../styles/sizes";
+import sizes from "../styles/sizes";
 import ErrorDisplay from "./ErrorDisplay";
 import LoadingOverlay from "./LoadingOverlay";
 
@@ -47,7 +47,7 @@ export default function TableLayout({
                 display: "flex",
                 flexDirection: "column",
                 mx: 2,
-                mb: `${TABLE_ELEMENTS_GAP}px`,
+                mb: `${sizes.tableElementsGap}px`,
             }}
         >
             <Box
@@ -56,13 +56,13 @@ export default function TableLayout({
                     width: "100%",
                     alignItems: "center",
                     justifyContent: "center",
-                    m: `${TABLE_ELEMENTS_GAP}px 0`,
+                    m: `${sizes.tableElementsGap}px 0`,
                     "button + button": { mx: "5px" },
                 }}
             >
                 <Button
                     onClick={refresh}
-                    sx={{ height: `${TABLE_BTN_HEIGHT_PX}px` }}
+                    sx={{ height: `${sizes.tableBtnHeight}px` }}
                 >
                     Refresh
                 </Button>
@@ -95,8 +95,8 @@ export default function TableLayout({
                         width: "100%",
                         alignItems: "center",
                         justifyContent: "center",
-                        height: `${TABLE_BTN_HEIGHT_PX}px`,
-                        mb: `${TABLE_ELEMENTS_GAP}px`,
+                        height: `${sizes.tableBtnHeight}px`,
+                        mb: `${sizes.tableElementsGap}px`,
                     }}
                 >
                     {filters}

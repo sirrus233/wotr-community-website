@@ -22,12 +22,7 @@ import {
 } from "../../constants";
 import { RefreshRequest } from "../../hooks/useRequestState";
 import colors from "../../styles/colors";
-import {
-    HEADER_HEIGHT_PX,
-    HEADER_MARGIN_PX,
-    TABLE_BTN_HEIGHT_PX,
-    TABLE_ELEMENTS_GAP,
-} from "../../styles/sizes";
+import sizes from "../../styles/sizes";
 import {
     Country,
     LeaderboardEntry,
@@ -62,10 +57,10 @@ interface Props {
 const HEADER_ROW_HEIGHT = 32;
 
 const TABLE_TOP_POSITION =
-    HEADER_HEIGHT_PX +
-    HEADER_MARGIN_PX +
-    TABLE_BTN_HEIGHT_PX * 2 +
-    TABLE_ELEMENTS_GAP * 3;
+    sizes.headerHeight +
+    sizes.headerMargin +
+    sizes.tableBtnHeight * 2 +
+    sizes.tableElementsGap * 3;
 
 function Rankings({
     entries,
@@ -168,7 +163,7 @@ function Rankings({
                     </Box>
                 }
                 containerStyle={{
-                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
+                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${sizes.tableElementsGap}px)`,
                 }}
                 header={
                     <>

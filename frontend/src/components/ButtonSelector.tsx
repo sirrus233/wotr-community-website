@@ -2,7 +2,7 @@ import React, { CSSProperties } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import ButtonGroup from "@mui/joy/ButtonGroup";
-import { BUTTON_SELECTOR_HEIGHT } from "../styles/sizes";
+import sizes from "../styles/sizes";
 
 type Variant = "outlined" | "plain" | "soft" | "solid";
 
@@ -34,7 +34,7 @@ export default function ButtonSelector<T extends string | number>({
                 ...style,
             }}
         >
-            <ButtonGroup style={{ height: `${BUTTON_SELECTOR_HEIGHT}px` }}>
+            <ButtonGroup style={{ height: `${sizes.buttonSelectorHeight}px` }}>
                 {options.map((option) => (
                     <Button
                         key={option}

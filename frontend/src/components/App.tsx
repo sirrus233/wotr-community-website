@@ -33,7 +33,7 @@ import {
     BelowLarge,
     BelowSmall,
 } from "../styles/breakpoints";
-import { HEADER_HEIGHT_PX, HEADER_MARGIN_PX } from "../styles/sizes";
+import sizes from "../styles/sizes";
 import {
     GameReportParams,
     LeaderboardEntry,
@@ -270,11 +270,11 @@ function Header({ toolsMenuProps }: HeaderProps) {
                 display: "flex",
                 alignItems: "center",
                 width: "100%",
-                height: `${HEADER_HEIGHT_PX}px`,
+                height: `${sizes.headerHeight}px`,
                 position: "sticky",
                 top: 0,
                 zIndex: 1000,
-                margin: `0 0 ${HEADER_MARGIN_PX}px 0`,
+                margin: `0 0 ${sizes.headerMargin}px 0`,
                 padding: "0 10px",
                 boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.5)",
                 color: "white",
