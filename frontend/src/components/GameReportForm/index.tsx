@@ -56,6 +56,7 @@ import getInitialFormData from "./getInitialFormData";
 import useConditionalActionEffect from "../../hooks/useConditionalActionEffect";
 import useGameReportClearEffects from "../../hooks/useGameReportFormEffects";
 import FileUpload from "./FileUpload";
+import { CreateFormContainer, EditFormContainer } from "./styledComponents";
 import VictoryPoints from "./VictoryPoints";
 
 interface Props {
@@ -126,33 +127,10 @@ function GameReportForm({
 
     const layoutTheme = report ? "minimal" : "default";
 
-    const containerStyle = {
-        display: "flex",
-        flexDirection: "column",
-        px: 8,
-        py: 3,
-    };
+    const FormContainer = report ? EditFormContainer : CreateFormContainer;
 
     return (
-        <Sheet
-            sx={
-                report
-                    ? {
-                          ...containerStyle,
-                          gap: 3,
-                          fontSize: "sm",
-                      }
-                    : {
-                          ...containerStyle,
-                          gap: 2,
-                          mx: 10,
-                          my: 4,
-                          borderRadius: "lg",
-                          boxShadow: "lg",
-                          backgroundColor: "lavender",
-                      }
-            }
-        >
+        <FormContainer>
             <h1>
                 {report ? "Edit Game Report" : "War of the Ring Game Report"}
             </h1>
@@ -440,7 +418,14 @@ function GameReportForm({
                 <FormElement
                     label="Where did the Fellowship reach on the Mordor track?"
                     helpProps={{
-                        content: <img src={mordorStepsPath} />,
+                        content: (
+                            <img
+                                src={mordorStepsPath}
+                                alt="Mordor steps 0 through 5"
+                                width="247px"
+                                height="245px"
+                            />
+                        ),
                         iconStyle: {
                             paddingLeft: "5px",
                             fontSize: "23px",
@@ -616,7 +601,7 @@ function GameReportForm({
                     {submitting ? "Submitting..." : "Submit"}
                 </Button>
             </Box>
-        </Sheet>
+        </FormContainer>
     );
 }
 
