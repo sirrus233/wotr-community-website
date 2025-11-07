@@ -6,13 +6,13 @@ import ModalDialog from "@mui/joy/ModalDialog";
 import { ErrorMessage } from "../../constants";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import { RefreshRequest } from "../../hooks/useRequestState";
+import { PageContainer } from "../../styles/styledComponents";
 import {
     GameReportFilters,
     GameReportParams,
     MenuOption,
     ProcessedGameReport,
 } from "../../types";
-import sizes from "../../styles/sizes";
 import GameReportForm from "../GameReportForm";
 import Pagination from "../Pagination";
 import Table from "../Table";
@@ -29,14 +29,6 @@ import {
 } from "./serializers";
 import { ReportEditParams } from "./types";
 import { isPairingValid } from "./validators";
-
-const TABLE_TOP_POSITION =
-    sizes.headerHeight +
-    sizes.headerMargin +
-    sizes.tableBtnHeight +
-    sizes.tableElementsGap * 2;
-
-const PAGE_FOOTER_HEIGHT = 50;
 
 interface Props {
     reports: ProcessedGameReport[];
@@ -90,7 +82,7 @@ export default function GameReports({
     });
 
     return (
-        <Box>
+        <PageContainer>
             {reportEditParams && (
                 <Modal open onClose={() => setReportEditParams(null)}>
                     <ModalDialog>
@@ -133,9 +125,6 @@ export default function GameReports({
                         />
                     ),
                 }}
-                containerStyle={{
-                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${sizes.tableElementsGap}px - ${PAGE_FOOTER_HEIGHT}px)`,
-                }}
                 table={
                     <Table
                         hasFilters
@@ -160,7 +149,7 @@ export default function GameReports({
                 }
             />
 
-            <Box height={`${PAGE_FOOTER_HEIGHT}px`}>
+            <Box height="50px">
                 <Pagination
                     currentPage={currentPage}
                     setCurrentPage={setCurrentPage}
@@ -168,7 +157,7 @@ export default function GameReports({
                     perPageCount={limit}
                 />
             </Box>
-        </Box>
+        </PageContainer>
     );
 }
 

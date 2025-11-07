@@ -12,6 +12,7 @@ import {
 } from "../../constants";
 import { RefreshRequest } from "../../hooks/useRequestState";
 import sizes from "../../styles/sizes";
+import { PageContainer } from "../../styles/styledComponents";
 import { LeagueParams, LeagueStats } from "../../types";
 import {
     getLeagueLabel,
@@ -27,13 +28,6 @@ import { ColHeaderData, RowData } from "../Table/types";
 import TableLayout from "../TableLayout";
 import PlayerForm from "./PlayerForm";
 import { LeagueSelector, SubLeagueSelector } from "./styledComponents";
-
-const TABLE_TOP_POSITION =
-    sizes.headerHeight +
-    sizes.headerMargin +
-    sizes.buttonSelectorHeight * 2 +
-    sizes.tableBtnHeight +
-    sizes.tableElementsGap * 4;
 
 interface Props {
     stats: LeagueStats;
@@ -66,7 +60,7 @@ export default function Leagues({
     );
 
     return (
-        <Box>
+        <PageContainer>
             {leaguePlayerFormOpen && (
                 <Modal open onClose={() => setLeaguePlayerFormOpen(false)}>
                     <ModalDialog maxWidth="200px">
@@ -139,9 +133,6 @@ export default function Leagues({
                 loading={loading}
                 error={error}
                 refresh={refresh}
-                containerStyle={{
-                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${sizes.tableElementsGap}px)`,
-                }}
                 table={
                     <LeagueTable
                         stats={stats}
@@ -153,7 +144,7 @@ export default function Leagues({
                     />
                 }
             />
-        </Box>
+        </PageContainer>
     );
 }
 

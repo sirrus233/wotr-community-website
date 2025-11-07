@@ -6,7 +6,6 @@ export const LeagueSelector = styled(Box)(({ theme }) => ({
     alignItems: "center",
     justifyContent: "center",
     gap: "5px",
-    overflow: "auto",
     [theme.breakpoints.down("md")]: {
         flexDirection: "column",
     },
