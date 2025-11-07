@@ -34,7 +34,7 @@ export default function ButtonSelector<T extends string | number>({
                 ...style,
             }}
         >
-            <ButtonGroup style={{ height: `${sizes.buttonSelectorHeight}px` }}>
+            <ButtonGroup sx={{ height: "36px" }}>
                 {options.map((option) => (
                     <Button
                         key={option}

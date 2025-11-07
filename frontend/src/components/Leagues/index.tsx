@@ -12,6 +12,7 @@ import {
 } from "../../constants";
 import { RefreshRequest } from "../../hooks/useRequestState";
 import sizes from "../../styles/sizes";
+import { PageContainer } from "../../styles/styledComponents";
 import { LeagueParams, LeagueStats } from "../../types";
 import {
     getLeagueLabel,
@@ -26,13 +27,7 @@ import Table from "../Table";
 import { ColHeaderData, RowData } from "../Table/types";
 import TableLayout from "../TableLayout";
 import PlayerForm from "./PlayerForm";
-
-const TABLE_TOP_POSITION =
-    sizes.headerHeight +
-    sizes.headerMargin +
-    sizes.buttonSelectorHeight * 2 +
-    sizes.tableBtnHeight +
-    sizes.tableElementsGap * 4;
+import { LeagueSelector, SubLeagueSelector } from "./styledComponents";
 
 interface Props {
     stats: LeagueStats;
@@ -65,7 +60,7 @@ export default function Leagues({
     );
 
     return (
-        <Box>
+        <PageContainer>
             {leaguePlayerFormOpen && (
                 <Modal open onClose={() => setLeaguePlayerFormOpen(false)}>
                     <ModalDialog maxWidth="200px">
@@ -92,13 +87,8 @@ export default function Leagues({
                 style={{ marginBottom: `${sizes.tableElementsGap}px` }}
             />
 
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                overflow="auto"
-            >
-                <Box display="flex" alignItems="center" mr={1} fontSize="sm">
+            <LeagueSelector>
+                <SubLeagueSelector>
                     Base:
                     <ButtonSelector
                         current={
@@ -117,11 +107,10 @@ export default function Leagues({
                         getLabel={getLeagueTierLabel}
                         variant="outlined"
                         selectedVariant="solid"
-                        style={{ marginLeft: "5px" }}
                     />
-                </Box>
+                </SubLeagueSelector>
 
-                <Box display="flex" alignItems="center" fontSize="sm">
+                <SubLeagueSelector>
                     Expansions:
                     <ButtonSelector
                         current={params.league}
@@ -136,18 +125,14 @@ export default function Leagues({
                         getLabel={getLeagueLabel}
                         variant="outlined"
                         selectedVariant="solid"
-                        style={{ marginLeft: "5px" }}
                     />
-                </Box>
-            </Box>
+                </SubLeagueSelector>
+            </LeagueSelector>
 
             <TableLayout
                 loading={loading}
                 error={error}
                 refresh={refresh}
-                containerStyle={{
-                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${sizes.tableElementsGap}px)`,
-                }}
                 table={
                     <LeagueTable
                         stats={stats}
@@ -159,7 +144,7 @@ export default function Leagues({
                     />
                 }
             />
-        </Box>
+        </PageContainer>
     );
 }
 
