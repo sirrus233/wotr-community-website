@@ -1,18 +1,18 @@
 import axios from "axios";
 import React, { useState } from "react";
 import Alert from "@mui/joy/Alert";
+import { ErrorMessage } from "../../constants";
+import { API_BASE_URL } from "../../env";
+import useConditionalActionEffect from "../../hooks/useConditionalActionEffect";
+import useFormData, { initializeToDefaults } from "../../hooks/useFormData";
+import { toErrorMessage } from "../../networkErrorHandlers";
 import {
     MenuOption,
     PlayerRemapFormData,
     ValidPlayerRemapFormData,
-} from "../types";
-import AdminFormLayout from "./AdminFormLayout";
-import Autocomplete from "./Autocomplete";
-import useConditionalActionEffect from "../hooks/useConditionalActionEffect";
-import useFormData, { initializeToDefaults } from "../hooks/useFormData";
-import { ErrorMessage } from "../constants";
-import { API_BASE_URL } from "../env";
-import { toErrorMessage } from "../networkErrorHandlers";
+} from "../../types";
+import AdminFormLayout from "../AdminFormLayout";
+import Autocomplete from "../Autocomplete";
 
 interface Props {
     pid: number;

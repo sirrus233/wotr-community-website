@@ -16,31 +16,31 @@ import ModalDialog from "@mui/joy/ModalDialog";
 import Tooltip from "@mui/joy/Tooltip";
 import Typography from "@mui/joy/Typography";
 import {
+    COUNTRIES_DATA,
+    LEADERBOARD_START_YEAR,
+    playerStates,
+} from "../../constants";
+import { RefreshRequest } from "../../hooks/useRequestState";
+import colors from "../../styles/colors";
+import {
+    HEADER_HEIGHT_PX,
+    HEADER_MARGIN_PX,
+    TABLE_BTN_HEIGHT_PX,
+    TABLE_ELEMENTS_GAP,
+} from "../../styles/sizes";
+import {
     Country,
     LeaderboardEntry,
     LeaderboardParams,
     PlayerEditMode,
     PlayerState,
     Side,
-} from "../types";
-import colors from "../styles/colors";
-import {
-    HEADER_HEIGHT_PX,
-    HEADER_MARGIN_PX,
-    TABLE_BTN_HEIGHT_PX,
-    TABLE_ELEMENTS_GAP,
-} from "../styles/sizes";
-import Filters from "./Filters";
+} from "../../types";
+import { range, toPercent } from "../../utils";
+import Filters from "../Filters";
+import TableLayout from "../TableLayout";
 import PlayerEditForm from "./PlayerEditForm";
 import PlayerRemapForm from "./PlayerRemapForm";
-import TableLayout from "./TableLayout";
-import { range, toPercent } from "../utils";
-import {
-    COUNTRIES_DATA,
-    LEADERBOARD_START_YEAR,
-    playerStates,
-} from "../constants";
-import { RefreshRequest } from "../hooks/useRequestState";
 
 type PlayerEditParams = {
     pid: number;

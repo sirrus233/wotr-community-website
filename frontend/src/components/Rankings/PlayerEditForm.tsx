@@ -1,14 +1,18 @@
 import axios from "axios";
 import React from "react";
-import { Country, PlayerEditFormData, ValidPlayerEditFormData } from "../types";
-import AdminFormLayout from "./AdminFormLayout";
-import TextInput from "./TextInput";
-import useConditionalActionEffect from "../hooks/useConditionalActionEffect";
-import useFormData, { initializeToDefaults } from "../hooks/useFormData";
-import { toErrorMessage } from "../networkErrorHandlers";
-import Autocomplete from "./Autocomplete";
-import { COUNTRIES_DATA, optionalPlayerEditFields } from "../constants";
-import { API_BASE_URL } from "../env";
+import { COUNTRIES_DATA, optionalPlayerEditFields } from "../../constants";
+import { API_BASE_URL } from "../../env";
+import useConditionalActionEffect from "../../hooks/useConditionalActionEffect";
+import useFormData, { initializeToDefaults } from "../../hooks/useFormData";
+import { toErrorMessage } from "../../networkErrorHandlers";
+import {
+    Country,
+    PlayerEditFormData,
+    ValidPlayerEditFormData,
+} from "../../types";
+import AdminFormLayout from "../AdminFormLayout";
+import Autocomplete from "../Autocomplete";
+import TextInput from "../TextInput";
 
 interface Props {
     pid: number;

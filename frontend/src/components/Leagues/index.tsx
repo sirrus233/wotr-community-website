@@ -5,16 +5,20 @@ import IconButton from "@mui/joy/IconButton";
 import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
-import { expansionLeagues, leagueTiers, LEAGUE_START_YEAR } from "../constants";
-import { RefreshRequest } from "../hooks/useRequestState";
+import {
+    expansionLeagues,
+    leagueTiers,
+    LEAGUE_START_YEAR,
+} from "../../constants";
+import { RefreshRequest } from "../../hooks/useRequestState";
 import {
     HEADER_HEIGHT_PX,
     HEADER_MARGIN_PX,
     TABLE_BTN_HEIGHT_PX,
     TABLE_ELEMENTS_GAP,
     BUTTON_SELECTOR_HEIGHT,
-} from "../styles/sizes";
-import { LeagueParams, LeagueStats } from "../types";
+} from "../../styles/sizes";
+import { LeagueParams, LeagueStats } from "../../types";
 import {
     getLeagueLabel,
     getLeagueTierLabel,
@@ -22,12 +26,12 @@ import {
     noNansense,
     range,
     toPercent,
-} from "../utils";
-import ButtonSelector from "./ButtonSelector";
-import LeaguePlayerForm from "./LeaguePlayerForm";
-import Table from "./Table";
-import { ColHeaderData, RowData } from "./Table/types";
-import TableLayout from "./TableLayout";
+} from "../../utils";
+import ButtonSelector from "../ButtonSelector";
+import Table from "../Table";
+import { ColHeaderData, RowData } from "../Table/types";
+import TableLayout from "../TableLayout";
+import PlayerForm from "./PlayerForm";
 
 const TABLE_TOP_POSITION =
     HEADER_HEIGHT_PX +
@@ -73,7 +77,7 @@ export default function Leagues({
                     <ModalDialog maxWidth="200px">
                         <ModalClose />
 
-                        <LeaguePlayerForm
+                        <PlayerForm
                             league={params.league}
                             tier={params.tier}
                             year={params.year}
