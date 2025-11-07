@@ -5,6 +5,7 @@ import Button from "@mui/joy/Button";
 import ClearIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/joy/IconButton";
 import Typography from "@mui/joy/Typography";
+import { FileInputContainer } from "./styledComponents";
 
 interface Props {
     value: File | null;
@@ -23,7 +24,7 @@ export default function FileUpload({
 }: Props) {
     return (
         <Box>
-            <Box display="flex" alignItems="center" gap={1}>
+            <FileInputContainer>
                 <input
                     id={id}
                     style={{ display: "none" }}
@@ -42,7 +43,10 @@ export default function FileUpload({
                 </label>
 
                 {value && (
-                    <Alert color="success" sx={{ overflow: "hidden" }}>
+                    <Alert
+                        color="success"
+                        sx={{ overflow: "hidden", maxWidth: "100%" }}
+                    >
                         <Box
                             sx={{
                                 display: "block",
@@ -58,7 +62,7 @@ export default function FileUpload({
                         </IconButton>
                     </Alert>
                 )}
-            </Box>
+            </FileInputContainer>
 
             <Typography level="body-xs" mt={1}>
                 {constraintText}

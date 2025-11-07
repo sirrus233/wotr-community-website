@@ -26,6 +26,7 @@ import Table from "../Table";
 import { ColHeaderData, RowData } from "../Table/types";
 import TableLayout from "../TableLayout";
 import PlayerForm from "./PlayerForm";
+import { LeagueSelector, SubLeagueSelector } from "./styledComponents";
 
 const TABLE_TOP_POSITION =
     sizes.headerHeight +
@@ -92,13 +93,8 @@ export default function Leagues({
                 style={{ marginBottom: `${sizes.tableElementsGap}px` }}
             />
 
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                overflow="auto"
-            >
-                <Box display="flex" alignItems="center" mr={1} fontSize="sm">
+            <LeagueSelector>
+                <SubLeagueSelector>
                     Base:
                     <ButtonSelector
                         current={
@@ -117,11 +113,10 @@ export default function Leagues({
                         getLabel={getLeagueTierLabel}
                         variant="outlined"
                         selectedVariant="solid"
-                        style={{ marginLeft: "5px" }}
                     />
-                </Box>
+                </SubLeagueSelector>
 
-                <Box display="flex" alignItems="center" fontSize="sm">
+                <SubLeagueSelector>
                     Expansions:
                     <ButtonSelector
                         current={params.league}
@@ -136,10 +131,9 @@ export default function Leagues({
                         getLabel={getLeagueLabel}
                         variant="outlined"
                         selectedVariant="solid"
-                        style={{ marginLeft: "5px" }}
                     />
-                </Box>
-            </Box>
+                </SubLeagueSelector>
+            </LeagueSelector>
 
             <TableLayout
                 loading={loading}
