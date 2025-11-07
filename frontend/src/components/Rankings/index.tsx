@@ -22,7 +22,7 @@ import {
 } from "../../constants";
 import { RefreshRequest } from "../../hooks/useRequestState";
 import colors from "../../styles/colors";
-import { PageContainer } from "../../styles/styledComponents";
+import sizes from "../../styles/sizes";
 import {
     Country,
     LeaderboardEntry,
@@ -56,6 +56,12 @@ interface Props {
 
 const HEADER_ROW_HEIGHT = 32;
 
+const TABLE_TOP_POSITION =
+    sizes.headerHeight +
+    sizes.headerMargin +
+    sizes.tableBtnHeight * 2 +
+    sizes.tableElementsGap * 3;
+
 function Rankings({
     entries,
     loading,
@@ -77,7 +83,7 @@ function Rankings({
     ).reverse();
 
     return (
-        <PageContainer>
+        <Box>
             {playerEditParams && (
                 <Modal open onClose={() => setPlayerEditParams(null)}>
                     <ModalDialog>
@@ -156,6 +162,9 @@ function Rankings({
                         </Tooltip>
                     </Box>
                 }
+                containerStyle={{
+                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${sizes.tableElementsGap}px)`,
+                }}
                 header={
                     <>
                         <TableHeaderRow>
@@ -326,7 +335,7 @@ function Rankings({
                         </tr>
                     ))}
             />
-        </PageContainer>
+        </Box>
     );
 }
 

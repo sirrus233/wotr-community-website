@@ -1,7 +1,6 @@
 import React from "react";
 import Radio from "@mui/joy/Radio";
 import RadioGroup from "@mui/joy/RadioGroup";
-import useMediaQuery from "../hooks/useMediaQuery";
 
 interface SingleOptionInputProps<T> {
     values: Exclude<T, null>[];
@@ -15,13 +14,11 @@ interface SingleOptionInputProps<T> {
 export default function SingleOptionInput<T>({
     values,
     current,
-    orientation,
+    orientation = "horizontal",
     getLabel = String,
     onChange,
     validate,
 }: SingleOptionInputProps<T>) {
-    const belowSmallBreakpoint = useMediaQuery("sm");
-
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedValue = values.find(
             (value) => String(value) === event.target.value
@@ -35,10 +32,7 @@ export default function SingleOptionInput<T>({
     return (
         <RadioGroup
             value={current}
-            orientation={
-                orientation ||
-                (belowSmallBreakpoint ? "vertical" : "horizontal")
-            }
+            orientation={orientation}
             onChange={handleChange}
         >
             {values.map((value, i) => (

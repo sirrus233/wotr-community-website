@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { CSSProperties, ReactNode } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import Drawer from "@mui/joy/Drawer";
@@ -10,8 +10,6 @@ import sizes from "../styles/sizes";
 import ErrorDisplay from "./ErrorDisplay";
 import LoadingOverlay from "./LoadingOverlay";
 
-const BUTTON_HEIGHT = "36px";
-
 interface Props {
     refresh: () => void;
     error: string | null;
@@ -21,6 +19,7 @@ interface Props {
     header?: ReactNode;
     body?: ReactNode;
     filters?: ReactNode;
+    containerStyle?: CSSProperties;
     tableStyle?: SxProps;
     settingsProps?: {
         panel: ReactNode;
@@ -38,6 +37,7 @@ export default function TableLayout({
     table,
     header,
     body,
+    containerStyle = {},
     tableStyle = {},
     settingsProps,
 }: Props) {
@@ -46,8 +46,6 @@ export default function TableLayout({
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                flex: 1,
-                minHeight: 0,
                 mx: 2,
                 mb: `${sizes.tableElementsGap}px`,
             }}
@@ -62,7 +60,10 @@ export default function TableLayout({
                     "button + button": { mx: "5px" },
                 }}
             >
-                <Button onClick={refresh} sx={{ height: BUTTON_HEIGHT }}>
+                <Button
+                    onClick={refresh}
+                    sx={{ height: `${sizes.tableBtnHeight}px` }}
+                >
                     Refresh
                 </Button>
 
@@ -94,7 +95,7 @@ export default function TableLayout({
                         width: "100%",
                         alignItems: "center",
                         justifyContent: "center",
-                        height: BUTTON_HEIGHT,
+                        height: `${sizes.tableBtnHeight}px`,
                         mb: `${sizes.tableElementsGap}px`,
                     }}
                 >
@@ -110,6 +111,7 @@ export default function TableLayout({
                     boxShadow: "lg",
                     borderRadius: "sm",
                     position: "relative",
+                    ...containerStyle,
                 }}
             >
                 {loading && <LoadingOverlay />}

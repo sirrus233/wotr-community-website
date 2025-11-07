@@ -4,15 +4,11 @@ import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
 import FormLabel from "@mui/joy/FormLabel";
 import Sheet from "@mui/joy/Sheet";
-import { styled, useTheme } from "@mui/joy/styles";
+import { useTheme } from "@mui/joy/styles";
 import { FieldError } from "../types";
 import HelpIcon from "./HelpIcon";
 
 type LayoutTheme = "minimal" | "default";
-
-const LabelArea = styled(Box)({
-    display: "flex",
-});
 
 interface Props {
     children: React.ReactNode;
@@ -43,18 +39,16 @@ export default function FormElement({
 
     const formComponents = (
         <>
-            <LabelArea>
-                <FormLabel
-                    sx={
-                        layoutTheme === "minimal"
-                            ? { pb: 1 }
-                            : { fontSize: 16, pb: 2 }
-                    }
-                >
-                    {label}
-                </FormLabel>
+            <FormLabel
+                sx={
+                    layoutTheme === "minimal"
+                        ? { pb: 1 }
+                        : { fontSize: 16, pb: 2 }
+                }
+            >
+                {label}
                 {helpProps && <HelpIcon {...helpProps} />}
-            </LabelArea>
+            </FormLabel>
             {children}
             {error && (
                 <FormHelperText sx={errorTextStyle}>{error}</FormHelperText>
