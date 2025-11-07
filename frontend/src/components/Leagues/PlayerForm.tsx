@@ -1,20 +1,20 @@
 import axios from "axios";
 import React from "react";
 import Box from "@mui/joy/Box";
-import { ErrorMessage } from "../constants";
-import { API_BASE_URL } from "../env";
-import { toErrorMessage } from "../networkErrorHandlers";
+import { ErrorMessage } from "../../constants";
+import { API_BASE_URL } from "../../env";
+import useConditionalActionEffect from "../../hooks/useConditionalActionEffect";
+import useFormData, { initializeToDefaults } from "../../hooks/useFormData";
+import { toErrorMessage } from "../../networkErrorHandlers";
 import {
     League,
     LeaguePlayerFormData,
     LeagueTier,
     ValidLeaguePlayerFormData,
-} from "../types";
-import useConditionalActionEffect from "../hooks/useConditionalActionEffect";
-import useFormData, { initializeToDefaults } from "../hooks/useFormData";
-import { getLeagueLabel, getLeagueTierLabel } from "../utils";
-import Autocomplete from "./Autocomplete";
-import AdminFormLayout from "./AdminFormLayout";
+} from "../../types";
+import { getLeagueLabel, getLeagueTierLabel } from "../../utils";
+import Autocomplete from "../Autocomplete";
+import AdminFormLayout from "../AdminFormLayout";
 
 interface Props {
     league: League;
@@ -25,7 +25,7 @@ interface Props {
     refresh: () => void;
 }
 
-export default function LeaguePlayerForm({
+export default function PlayerForm({
     league,
     tier,
     year,
