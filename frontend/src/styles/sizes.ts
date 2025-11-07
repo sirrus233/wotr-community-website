@@ -1,5 +1,9 @@
-export const HEADER_HEIGHT_PX = 44;
-export const HEADER_MARGIN_PX = 20;
-export const TABLE_BTN_HEIGHT_PX = 36;
-export const TABLE_ELEMENTS_GAP = 16;
-export const BUTTON_SELECTOR_HEIGHT = 36;
+const sizes = {
+    headerHeight: 44,
+    headerMargin: 20,
+    tableBtnHeight: 36,
+    tableElementsGap: 16,
+    buttonSelectorHeight: 36,
+} as const;
+
+export default sizes;

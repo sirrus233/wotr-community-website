@@ -11,13 +11,7 @@ import {
     LEAGUE_START_YEAR,
 } from "../../constants";
 import { RefreshRequest } from "../../hooks/useRequestState";
-import {
-    HEADER_HEIGHT_PX,
-    HEADER_MARGIN_PX,
-    TABLE_BTN_HEIGHT_PX,
-    TABLE_ELEMENTS_GAP,
-    BUTTON_SELECTOR_HEIGHT,
-} from "../../styles/sizes";
+import sizes from "../../styles/sizes";
 import { LeagueParams, LeagueStats } from "../../types";
 import {
     getLeagueLabel,
@@ -34,11 +28,11 @@ import TableLayout from "../TableLayout";
 import PlayerForm from "./PlayerForm";
 
 const TABLE_TOP_POSITION =
-    HEADER_HEIGHT_PX +
-    HEADER_MARGIN_PX +
-    BUTTON_SELECTOR_HEIGHT * 2 +
-    TABLE_BTN_HEIGHT_PX +
-    TABLE_ELEMENTS_GAP * 4;
+    sizes.headerHeight +
+    sizes.headerMargin +
+    sizes.buttonSelectorHeight * 2 +
+    sizes.tableBtnHeight +
+    sizes.tableElementsGap * 4;
 
 interface Props {
     stats: LeagueStats;
@@ -95,7 +89,7 @@ export default function Leagues({
                 setCurrent={(year) =>
                     setParams((params) => ({ ...params, year }))
                 }
-                style={{ marginBottom: `${TABLE_ELEMENTS_GAP}px` }}
+                style={{ marginBottom: `${sizes.tableElementsGap}px` }}
             />
 
             <Box
@@ -152,7 +146,7 @@ export default function Leagues({
                 error={error}
                 refresh={refresh}
                 containerStyle={{
-                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${TABLE_ELEMENTS_GAP}px)`,
+                    maxHeight: `calc(100vh - ${TABLE_TOP_POSITION}px - ${sizes.tableElementsGap}px)`,
                 }}
                 table={
                     <LeagueTable
