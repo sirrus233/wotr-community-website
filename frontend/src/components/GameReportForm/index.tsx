@@ -47,16 +47,16 @@ import {
 import useFormData from "../../hooks/useFormData";
 import Autocomplete from "../Autocomplete";
 import ErrorDisplay from "../ErrorDisplay";
-import FileUpload from "../FileUpload";
 import FormElement from "../FormElement";
 import MultiOptionInput, { MultiOptionInputItem } from "../MultiOptionInput";
 import SelectNumericOptionInput from "../SelectNumericOptionInput";
 import SingleOptionInput from "../SingleOptionInput";
 import TextInput from "../TextInput";
-import VictoryPoints from "../VictoryPoints";
 import getInitialFormData from "./getInitialFormData";
 import useConditionalActionEffect from "../../hooks/useConditionalActionEffect";
 import useGameReportClearEffects from "../../hooks/useGameReportFormEffects";
+import FileUpload from "./FileUpload";
+import VictoryPoints from "./VictoryPoints";
 
 interface Props {
     report?: ProcessedGameReport;

@@ -1,7 +1,7 @@
 import React from "react";
 import Typography from "@mui/joy/Typography";
-import { Stronghold } from "../types";
-import { strongholdPoints } from "../utils";
+import { Stronghold } from "../../types";
+import { strongholdPoints } from "../../utils";
 
 interface VictoryPointsProps {
     strongholds: Stronghold[];
