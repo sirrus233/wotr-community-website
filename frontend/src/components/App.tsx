@@ -33,6 +33,7 @@ import {
     BelowLarge,
     BelowSmall,
 } from "../styles/breakpoints";
+import "../styles/index.css";
 import sizes from "../styles/sizes";
 import {
     GameReportParams,
