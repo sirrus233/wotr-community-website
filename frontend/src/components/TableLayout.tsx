@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useRef } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import Drawer from "@mui/joy/Drawer";
@@ -41,6 +41,8 @@ export default function TableLayout({
     tableStyle = {},
     settingsProps,
 }: Props) {
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+
     return (
         <Box
             sx={{
@@ -105,6 +107,7 @@ export default function TableLayout({
             {error && <ErrorDisplay message={error} sx={{ pb: 2 }} />}
 
             <Box
+                ref={tableContainerRef}
                 sx={{
                     overflow: loading ? "hidden" : "auto",
                     boxShadow: "lg",
@@ -112,7 +115,11 @@ export default function TableLayout({
                     position: "relative",
                 }}
             >
-                {loading && <LoadingOverlay />}
+                {loading && (
+                    <LoadingOverlay
+                        bounds={tableContainerRef.current?.getBoundingClientRect()}
+                    />
+                )}
 
                 {/* TODO: always pass in custom Table component, then remove this `or` handling */}
                 {table || (
