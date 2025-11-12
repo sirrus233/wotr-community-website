@@ -140,107 +140,98 @@ instance ToField PlayerId where
   toField :: PlayerId -> CSV.Field
   toField = toField . SQL.fromSqlKey
 
-instance ToRecord Player where
-  toRecord :: Player -> CSV.Record
-  toRecord (Player name displayName country isActive) =
-    V.fromList
-      [ toField name,
-        toField displayName,
-        toField (fromMaybe ("" :: Text) country),
-        toField (if isActive then "true" :: Text else "false")
-      ]
+type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 
-instance ToRecord GameReport where
-  toRecord :: GameReport -> CSV.Record
-  toRecord
-    ( GameReport
-        timestamp
-        winnerId
-        loserId
-        side
-        victory
-        match
-        competition
-        league
-        expansions
-        treebeard
-        actionTokens
-        dwarvenRings
-        turns
-        corruption
-        mordor
-        initialEyes
-        aragornTurn
-        strongholds
-        interestRating
-        comment
-        logFile
-      ) =
-      V.fromList
-        [ toField (show timestamp :: Text),
-          toField winnerId,
-          toField loserId,
-          toField (show side :: Text),
-          toField (show victory :: Text),
-          toField (show match :: Text),
-          toField (T.intercalate "," . map show $ competition),
-          toField (maybe ("" :: Text) show league),
-          toField (T.intercalate "," . map show $ expansions),
-          toField (maybe ("" :: Text) (\b -> if b then "true" else "false") treebeard),
-          toField actionTokens,
-          toField dwarvenRings,
-          toField turns,
-          toField corruption,
-          toField (maybe ("" :: Text) show mordor),
-          toField initialEyes,
-          toField (maybe ("" :: Text) show aragornTurn),
-          toField (T.intercalate "," . map show $ strongholds),
-          toField interestRating,
-          toField (fromMaybe ("" :: Text) comment),
-          toField (fromMaybe ("" :: Text) logFile)
-        ]
+type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerStatsYear))
 
-instance ToRecord PlayerStatsYear where
-  toRecord :: PlayerStatsYear -> CSV.Record
-  toRecord (PlayerStatsYear playerId year winsFree winsShadow lossesFree lossesShadow) =
-    V.fromList
-      [ toField playerId,
-        toField year,
-        toField winsFree,
-        toField winsShadow,
-        toField lossesFree,
-        toField lossesShadow
-      ]
+type ReportInsertion = (Entity GameReport, Entity Player, Entity Player)
 
-instance ToRecord PlayerStatsTotal where
-  toRecord :: PlayerStatsTotal -> CSV.Record
-  toRecord (PlayerStatsTotal playerId ratingFree ratingShadow gameCount) =
-    V.fromList
-      [ toField playerId,
-        toField ratingFree,
-        toField ratingShadow,
-        toField gameCount
-      ]
+type LeagueGameSummaryRecord = (Value PlayerId, (Value Text, Value Int, Value Int))
 
-instance ToRecord PlayerStatsInitial where
-  toRecord :: PlayerStatsInitial -> CSV.Record
-  toRecord (PlayerStatsInitial playerId ratingFree ratingShadow gameCount) =
-    V.fromList
-      [ toField playerId,
-        toField ratingFree,
-        toField ratingShadow,
-        toField gameCount
-      ]
+type LeagueGameSummaryMap = Map PlayerId (Text, Int, Int)
 
-instance ToRecord LeaguePlayer where
-  toRecord :: LeaguePlayer -> CSV.Record
-  toRecord (LeaguePlayer league tier year playerId) =
-    V.fromList
-      [ toField (show league :: Text),
-        toField (show tier :: Text),
-        toField year,
-        toField playerId
-      ]
+type LeagueGameStatsRecord = (Value PlayerId, (Value PlayerId, Value Text, Value Int, Value Int))
+
+type LeagueGameStatsMap = Map PlayerId [(PlayerId, Text, Int, Int)]
+
+toPlayerStatsTotal :: PlayerStatsInitial -> PlayerStatsTotal
+toPlayerStatsTotal (PlayerStatsInitial {..}) =
+  PlayerStatsTotal
+    { playerStatsTotalPlayerId = playerStatsInitialPlayerId,
+      playerStatsTotalRatingFree = playerStatsInitialRatingFree,
+      playerStatsTotalRatingShadow = playerStatsInitialRatingShadow,
+      playerStatsTotalGameCount = playerStatsInitialGameCount
+    }
+
+defaultPlayerStatsTotal :: PlayerId -> PlayerStatsTotal
+defaultPlayerStatsTotal pid =
+  PlayerStatsTotal
+    { playerStatsTotalPlayerId = pid,
+      playerStatsTotalRatingFree = 500,
+      playerStatsTotalRatingShadow = 500,
+      playerStatsTotalGameCount = 0
+    }
+
+defaultPlayerStatsYear :: PlayerId -> Year -> PlayerStatsYear
+defaultPlayerStatsYear pid year =
+  PlayerStatsYear
+    { playerStatsYearPlayerId = pid,
+      playerStatsYearYear = year,
+      playerStatsYearWinsFree = 0,
+      playerStatsYearWinsShadow = 0,
+      playerStatsYearLossesFree = 0,
+      playerStatsYearLossesShadow = 0
+    }
+
+updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats
+updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
+  Free ->
+    ( PlayerStatsTotal
+        { playerStatsTotalRatingFree = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
+          ..
+        },
+      PlayerStatsYear
+        { playerStatsYearWinsFree = playerStatsYearWinsFree + 1,
+          ..
+        }
+    )
+  Shadow ->
+    ( PlayerStatsTotal
+        { playerStatsTotalRatingShadow = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
+          ..
+        },
+      PlayerStatsYear
+        { playerStatsYearWinsShadow = playerStatsYearWinsShadow + 1,
+          ..
+        }
+    )
+
+updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats
+updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
+  Free ->
+    ( PlayerStatsTotal
+        { playerStatsTotalRatingFree = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
+          ..
+        },
+      PlayerStatsYear
+        { playerStatsYearLossesFree = playerStatsYearLossesFree + 1,
+          ..
+        }
+    )
+  Shadow ->
+    ( PlayerStatsTotal
+        { playerStatsTotalRatingShadow = rating,
+          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
+          ..
+        },
+      PlayerStatsYear
+        { playerStatsYearLossesShadow = playerStatsYearLossesShadow + 1,
+          ..
+        }
+    )
 
 data ExportPlayer = ExportPlayer
   { exportPlayerId :: PlayerId,
@@ -277,90 +268,12 @@ data ExportGameReport = ExportGameReport
     exportGameReportLoserName :: PlayerName
   }
 
-instance ToRecord ExportGameReport where
-  toRecord :: ExportGameReport -> CSV.Record
-  toRecord
-    ExportGameReport
-      { exportGameReportRecord =
-          GameReport
-            { gameReportTimestamp,
-              gameReportWinnerId,
-              gameReportLoserId,
-              gameReportSide,
-              gameReportVictory,
-              gameReportMatch,
-              gameReportCompetition,
-              gameReportLeague,
-              gameReportExpansions,
-              gameReportTreebeard,
-              gameReportActionTokens,
-              gameReportDwarvenRings,
-              gameReportTurns,
-              gameReportCorruption,
-              gameReportMordor,
-              gameReportInitialEyes,
-              gameReportAragornTurn,
-              gameReportStrongholds,
-              gameReportInterestRating,
-              gameReportComment,
-              gameReportLogFile
-            },
-        ..
-      } =
-      V.fromList
-        [ toField (show gameReportTimestamp :: Text),
-          toField gameReportWinnerId,
-          toField exportGameReportWinnerName,
-          toField gameReportLoserId,
-          toField exportGameReportLoserName,
-          toField (show gameReportSide :: Text),
-          toField (show gameReportVictory :: Text),
-          toField (show gameReportMatch :: Text),
-          toField (T.intercalate "," . map show $ gameReportCompetition),
-          toField (maybe ("" :: Text) show gameReportLeague),
-          toField (T.intercalate "," . map show $ gameReportExpansions),
-          toField (maybe ("" :: Text) (\b -> if b then "true" else "false") gameReportTreebeard),
-          toField gameReportActionTokens,
-          toField gameReportDwarvenRings,
-          toField gameReportTurns,
-          toField gameReportCorruption,
-          toField (maybe ("" :: Text) show gameReportMordor),
-          toField gameReportInitialEyes,
-          toField (maybe ("" :: Text) show gameReportAragornTurn),
-          toField (T.intercalate "," . map show $ gameReportStrongholds),
-          toField gameReportInterestRating,
-          toField (fromMaybe ("" :: Text) gameReportComment),
-          toField (fromMaybe ("" :: Text) gameReportLogFile)
-        ]
-
 instance ToNamedRecord ExportGameReport where
   toNamedRecord :: ExportGameReport -> CSV.NamedRecord
   toNamedRecord
     ExportGameReport
       { exportGameReportRecord =
-          GameReport
-            { gameReportTimestamp,
-              gameReportWinnerId,
-              gameReportLoserId,
-              gameReportSide,
-              gameReportVictory,
-              gameReportMatch,
-              gameReportCompetition,
-              gameReportLeague,
-              gameReportExpansions,
-              gameReportTreebeard,
-              gameReportActionTokens,
-              gameReportDwarvenRings,
-              gameReportTurns,
-              gameReportCorruption,
-              gameReportMordor,
-              gameReportInitialEyes,
-              gameReportAragornTurn,
-              gameReportStrongholds,
-              gameReportInterestRating,
-              gameReportComment,
-              gameReportLogFile
-            },
+          GameReport {..},
         ..
       } =
       CSV.namedRecord
@@ -512,27 +425,6 @@ data ExportPlayerStatsInitial = ExportPlayerStatsInitial
     exportPlayerStatsInitialPlayerName :: PlayerName
   }
 
-instance ToRecord ExportPlayerStatsInitial where
-  toRecord :: ExportPlayerStatsInitial -> CSV.Record
-  toRecord
-    ExportPlayerStatsInitial
-      { exportPlayerStatsInitialRecord =
-          PlayerStatsInitial
-            { playerStatsInitialPlayerId,
-              playerStatsInitialRatingFree,
-              playerStatsInitialRatingShadow,
-              playerStatsInitialGameCount
-            },
-        ..
-      } =
-      V.fromList
-        [ toField playerStatsInitialPlayerId,
-          toField exportPlayerStatsInitialPlayerName,
-          toField playerStatsInitialRatingFree,
-          toField playerStatsInitialRatingShadow,
-          toField playerStatsInitialGameCount
-        ]
-
 instance ToNamedRecord ExportPlayerStatsInitial where
   toNamedRecord :: ExportPlayerStatsInitial -> CSV.NamedRecord
   toNamedRecord
@@ -563,27 +455,6 @@ data ExportLeaguePlayer = ExportLeaguePlayer
     exportLeaguePlayerPlayerName :: PlayerName
   }
 
-instance ToRecord ExportLeaguePlayer where
-  toRecord :: ExportLeaguePlayer -> CSV.Record
-  toRecord
-    ExportLeaguePlayer
-      { exportLeaguePlayerRecord =
-          LeaguePlayer
-            { leaguePlayerLeague,
-              leaguePlayerTier,
-              leaguePlayerYear,
-              leaguePlayerPlayerId
-            },
-        ..
-      } =
-      V.fromList
-        [ toField (show leaguePlayerLeague :: Text),
-          toField (show leaguePlayerTier :: Text),
-          toField leaguePlayerYear,
-          toField leaguePlayerPlayerId,
-          toField exportLeaguePlayerPlayerName
-        ]
-
 instance ToNamedRecord ExportLeaguePlayer where
   toNamedRecord :: ExportLeaguePlayer -> CSV.NamedRecord
   toNamedRecord
@@ -607,96 +478,3 @@ instance ToNamedRecord ExportLeaguePlayer where
 
 leaguePlayerCsvHeader :: Header
 leaguePlayerCsvHeader = CSV.header ["league", "tier", "year", "player_id", "player_name"]
-
-type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
-
-type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerStatsYear))
-
-type ReportInsertion = (Entity GameReport, Entity Player, Entity Player)
-
-type LeagueGameSummaryRecord = (Value PlayerId, (Value Text, Value Int, Value Int))
-
-type LeagueGameSummaryMap = Map PlayerId (Text, Int, Int)
-
-type LeagueGameStatsRecord = (Value PlayerId, (Value PlayerId, Value Text, Value Int, Value Int))
-
-type LeagueGameStatsMap = Map PlayerId [(PlayerId, Text, Int, Int)]
-
-toPlayerStatsTotal :: PlayerStatsInitial -> PlayerStatsTotal
-toPlayerStatsTotal (PlayerStatsInitial {..}) =
-  PlayerStatsTotal
-    { playerStatsTotalPlayerId = playerStatsInitialPlayerId,
-      playerStatsTotalRatingFree = playerStatsInitialRatingFree,
-      playerStatsTotalRatingShadow = playerStatsInitialRatingShadow,
-      playerStatsTotalGameCount = playerStatsInitialGameCount
-    }
-
-defaultPlayerStatsTotal :: PlayerId -> PlayerStatsTotal
-defaultPlayerStatsTotal pid =
-  PlayerStatsTotal
-    { playerStatsTotalPlayerId = pid,
-      playerStatsTotalRatingFree = 500,
-      playerStatsTotalRatingShadow = 500,
-      playerStatsTotalGameCount = 0
-    }
-
-defaultPlayerStatsYear :: PlayerId -> Year -> PlayerStatsYear
-defaultPlayerStatsYear pid year =
-  PlayerStatsYear
-    { playerStatsYearPlayerId = pid,
-      playerStatsYearYear = year,
-      playerStatsYearWinsFree = 0,
-      playerStatsYearWinsShadow = 0,
-      playerStatsYearLossesFree = 0,
-      playerStatsYearLossesShadow = 0
-    }
-
-updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats
-updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
-  Free ->
-    ( PlayerStatsTotal
-        { playerStatsTotalRatingFree = rating,
-          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
-          ..
-        },
-      PlayerStatsYear
-        { playerStatsYearWinsFree = playerStatsYearWinsFree + 1,
-          ..
-        }
-    )
-  Shadow ->
-    ( PlayerStatsTotal
-        { playerStatsTotalRatingShadow = rating,
-          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
-          ..
-        },
-      PlayerStatsYear
-        { playerStatsYearWinsShadow = playerStatsYearWinsShadow + 1,
-          ..
-        }
-    )
-
-updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats
-updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
-  Free ->
-    ( PlayerStatsTotal
-        { playerStatsTotalRatingFree = rating,
-          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
-          ..
-        },
-      PlayerStatsYear
-        { playerStatsYearLossesFree = playerStatsYearLossesFree + 1,
-          ..
-        }
-    )
-  Shadow ->
-    ( PlayerStatsTotal
-        { playerStatsTotalRatingShadow = rating,
-          playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
-          ..
-        },
-      PlayerStatsYear
-        { playerStatsYearLossesShadow = playerStatsYearLossesShadow + 1,
-          ..
-        }
-    )
