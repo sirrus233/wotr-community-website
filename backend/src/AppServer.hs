@@ -21,8 +21,7 @@ import Database
     deleteGameReport,
     deletePlayer,
     getAllGameReports,
-    getAllStatsByYear,
-    getAllStatsTotal,
+    getAllStats,
     getGameReports,
     getLeagueGameStats,
     getLeaguePlayerSummary,
@@ -161,7 +160,7 @@ ratingAdjustment winner loser
 yearOf :: UTCTime -> Year
 yearOf = (\(y, _, _) -> fromIntegral y) . toGregorian . utctDay
 
-readStats :: PlayerId -> Year -> MaybePlayerStats -> PlayerStats
+readStats :: PlayerId -> Maybe Year -> MaybePlayerStats -> PlayerStats
 readStats pid year (mStatsTotal, mStatsYear) = case (mStatsTotal, mStatsYear) of
   (Nothing, Nothing) -> (defaultPlayerStatsTotal_, defaultPlayerStatsYear_)
   (Nothing, Just statsYear) -> (defaultPlayerStatsTotal_, statsYear)
@@ -169,7 +168,7 @@ readStats pid year (mStatsTotal, mStatsYear) = case (mStatsTotal, mStatsYear) of
   (Just statsTotal, Just statsYear) -> (statsTotal, statsYear)
   where
     defaultPlayerStatsTotal_ = defaultPlayerStatsTotal pid
-    defaultPlayerStatsYear_ = defaultPlayerStatsYear pid year
+    defaultPlayerStatsYear_ = defaultPlayerStatsYear pid (fromMaybe 0 year)
 
 readOrError :: (Monad m, MonadLogger m) => Text -> DBAction m (Maybe a) -> DBAction m a
 readOrError errMsg action =
@@ -212,9 +211,9 @@ processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId 
   let (winnerSide, loserSide) = (gameReportSide, other gameReportSide)
 
   (winnerStatsTotal, winnerStatsYear) <-
-    readStats winnerId year <$> readOrError ("Missing stats for " <>: winner) (getPlayerStats winnerId year)
+    readStats winnerId (Just year) <$> readOrError ("Missing stats for " <>: winner) (getPlayerStats winnerId year)
   (loserStatsTotal, loserStatsYear) <-
-    readStats loserId year <$> readOrError ("Missing stats for " <>: loser) (getPlayerStats loserId year)
+    readStats loserId (Just year) <$> readOrError ("Missing stats for " <>: loser) (getPlayerStats loserId year)
 
   let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
   let adjustment = if gameReportMatch == Rated then ratingAdjustment winnerRatingOld loserRatingOld else 0
@@ -337,22 +336,11 @@ getReportsHandler limit offset filterSpec =
       (Just lim, Just off) -> (lim, off)
 
 getLeaderboardHandler :: Maybe Year -> AppM GetLeaderboardResponse
-getLeaderboardHandler (Just year) = do
-  runDb (getAllStatsByYear year)
+getLeaderboardHandler year = do
+  runDb (getAllStats year)
     <&> ( GetLeaderboardResponse
             . sortOn (Down . liftA2 (,) isActive averageRating)
-            . map (fromPlayerStats 0 . (\(player, stats) -> (player, readStats (entityKey player) year stats)))
-        )
-getLeaderboardHandler Nothing = do
-  runDb getAllStatsTotal
-    <&> ( GetLeaderboardResponse
-            . sortOn (Down . liftA2 (,) isActive averageRating)
-            . map
-              ( \(player, (initial, stats)) ->
-                  fromPlayerStats
-                    (maybe 0 playerStatsInitialGameCount initial)
-                    (player, readStats (entityKey player) 0 stats)
-              )
+            . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year stats)))
         )
 
 getLeagueStatsHandler :: League -> LeagueTier -> Year -> AppM LeagueStatsResponse

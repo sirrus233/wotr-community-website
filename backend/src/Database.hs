@@ -209,54 +209,44 @@ getAdminBySessionId sessionId = lift . getBy . UniqueAdminSessionId $ Just sessi
 getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Maybe (Entity Player))
 getPlayerByName = lift . getBy . UniquePlayerName . normalizeName
 
-joinedYearlyPlayerStats ::
-  Year ->
+joinedPlayerStats ::
+  Maybe Year ->
   From (SqlExpr (Entity Player) :& SqlExpr (Maybe (Entity PlayerStatsTotal)) :& SqlExpr (Maybe (Entity PlayerStatsYear)))
-joinedYearlyPlayerStats year =
+joinedPlayerStats mYear =
   table @Player
     `leftJoin` table @PlayerStatsTotal
       `on` (\(player :& totalStats) -> just (player ^. PlayerId) ==. totalStats ?. PlayerStatsTotalPlayerId)
     `leftJoin` table @PlayerStatsYear
       `on` ( \(player :& _ :& yearStats) ->
                just (player ^. PlayerId) ==. yearStats ?. PlayerStatsYearPlayerId
-                 &&. yearStats ?. PlayerStatsYearYear ==. just (val year)
+                 &&. yearFilterClause yearStats
            )
-
-joinedTotalPlayerStats ::
-  From (SqlExpr (Entity Player) :& SqlExpr (Maybe (Entity PlayerStatsInitial)) :& SqlExpr (Maybe (Entity PlayerStatsTotal)) :& SqlExpr (Maybe (Entity PlayerStatsYear)))
-joinedTotalPlayerStats =
-  table @Player
-    `leftJoin` table @PlayerStatsInitial
-      `on` (\(player :& initialStats) -> just (player ^. PlayerId) ==. initialStats ?. PlayerStatsInitialPlayerId)
-    `leftJoin` table @PlayerStatsTotal
-      `on` (\(player :& _ :& totalStats) -> just (player ^. PlayerId) ==. totalStats ?. PlayerStatsTotalPlayerId)
-    `leftJoin` table @PlayerStatsYear
-      `on` (\(player :& _ :& _ :& yearStats) -> just (player ^. PlayerId) ==. yearStats ?. PlayerStatsYearPlayerId)
+  where
+    yearFilterClause stats = case mYear of
+      Just year -> stats ?. PlayerStatsYearYear ==. just (val year)
+      Nothing -> val True
 
 getPlayerStats :: (MonadIO m, MonadLogger m) => PlayerId -> Year -> DBAction m (Maybe MaybePlayerStats)
 getPlayerStats pid year = do
   rows <- lift . selectOne $ do
-    (player :& totalStats :& yearStats) <- from $ joinedYearlyPlayerStats year
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats (Just year)
     where_ (player ^. PlayerId ==. val pid)
     pure (totalStats, yearStats)
   pure $ bimapF (fmap entityVal) (fmap entityVal) rows
 
-getAllStatsByYear :: (MonadIO m, MonadLogger m) => Year -> DBAction m [(Entity Player, MaybePlayerStats)]
-getAllStatsByYear year = do
+getAllStats :: (MonadIO m, MonadLogger m) => Maybe Year -> DBAction m [(Entity Player, MaybePlayerStats)]
+getAllStats mYear@(Just _) = do
   rows <- lift . select $ do
-    (player :& totalStats :& yearStats) <- from $ joinedYearlyPlayerStats year
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats mYear
     pure (player, (totalStats, yearStats))
   pure $ secondF (bimap (fmap entityVal) (fmap entityVal)) rows
-
-getAllStatsTotal :: (MonadIO m, MonadLogger m) => DBAction m [(Entity Player, (Maybe PlayerStatsInitial, MaybePlayerStats))]
-getAllStatsTotal = do
+getAllStats Nothing = do
   rows <- lift . select $ do
-    (player :& initialStats :& totalStats :& yearStats) <- from joinedTotalPlayerStats
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats Nothing
     groupBy (yearStats ?. PlayerStatsYearPlayerId)
     pure
       ( player,
         ( totalStats,
-          initialStats,
           ( yearStats ?. PlayerStatsYearPlayerId,
             just $ val 0,
             sum_ (yearStats ?. PlayerStatsYearWinsFree),
@@ -268,12 +258,10 @@ getAllStatsTotal = do
       )
   pure $
     fmap
-      ( \(p, (t, i, (Value pid, Value year, Value winsFree, Value winsShadow, Value lossesFree, Value lossesShadow))) ->
+      ( \(p, (t, (Value pid, Value year, Value winsFree, Value winsShadow, Value lossesFree, Value lossesShadow))) ->
           ( p,
-            ( fmap entityVal i,
-              ( fmap entityVal t,
-                PlayerStatsYear <$> pid <*> year <*> winsFree <*> winsShadow <*> lossesFree <*> lossesShadow
-              )
+            ( fmap entityVal t,
+              PlayerStatsYear <$> pid <*> year <*> winsFree <*> winsShadow <*> lossesFree <*> lossesShadow
             )
           )
       )

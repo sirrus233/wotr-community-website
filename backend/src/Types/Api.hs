@@ -206,8 +206,8 @@ data LeaderboardEntry = LeaderboardEntry
 
 instance ToJSON LeaderboardEntry
 
-fromPlayerStats :: Int -> (Entity Player, PlayerStats) -> LeaderboardEntry
-fromPlayerStats totalGames (Entity pid p, (t, y)) =
+fromPlayerStats :: (Entity Player, PlayerStats) -> LeaderboardEntry
+fromPlayerStats (Entity pid p, (t, y)) =
   LeaderboardEntry
     { pid,
       name = p.playerDisplayName,
@@ -218,7 +218,7 @@ fromPlayerStats totalGames (Entity pid p, (t, y)) =
       averageRating = (fromIntegral t.playerStatsTotalRatingFree + fromIntegral t.playerStatsTotalRatingShadow) / 2,
       year = y.playerStatsYearYear,
       yearlyGames = case y.playerStatsYearYear of
-        0 -> totalGames
+        0 -> t.playerStatsTotalGameCount
         _ ->
           y.playerStatsYearWinsFree
             + y.playerStatsYearWinsShadow
