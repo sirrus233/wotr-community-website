@@ -193,7 +193,6 @@ data LeaderboardEntry = LeaderboardEntry
     currentRatingFree :: Rating,
     currentRatingShadow :: Rating,
     averageRating :: Double,
-    totalGames :: Int,
     year :: Int,
     yearlyGames :: Int,
     yearlyWinsFree :: Int,
@@ -208,7 +207,7 @@ data LeaderboardEntry = LeaderboardEntry
 instance ToJSON LeaderboardEntry
 
 fromPlayerStats :: Int -> (Entity Player, PlayerStats) -> LeaderboardEntry
-fromPlayerStats initialYearlyGames (Entity pid p, (t, y)) =
+fromPlayerStats totalGames (Entity pid p, (t, y)) =
   LeaderboardEntry
     { pid,
       name = p.playerDisplayName,
@@ -216,16 +215,15 @@ fromPlayerStats initialYearlyGames (Entity pid p, (t, y)) =
       isActive = p.playerIsActive,
       currentRatingFree = t.playerStatsTotalRatingFree,
       currentRatingShadow = t.playerStatsTotalRatingShadow,
-      averageRating =
-        (fromIntegral t.playerStatsTotalRatingFree + fromIntegral t.playerStatsTotalRatingShadow) / 2,
-      totalGames = t.playerStatsTotalGameCount,
+      averageRating = (fromIntegral t.playerStatsTotalRatingFree + fromIntegral t.playerStatsTotalRatingShadow) / 2,
       year = y.playerStatsYearYear,
-      yearlyGames =
-        initialYearlyGames
-          + y.playerStatsYearWinsFree
-          + y.playerStatsYearWinsShadow
-          + y.playerStatsYearLossesFree
-          + y.playerStatsYearLossesShadow,
+      yearlyGames = case y.playerStatsYearYear of
+        0 -> totalGames
+        _ ->
+          y.playerStatsYearWinsFree
+            + y.playerStatsYearWinsShadow
+            + y.playerStatsYearLossesFree
+            + y.playerStatsYearLossesShadow,
       yearlyWinsFree = y.playerStatsYearWinsFree,
       yearlyWinsShadow = y.playerStatsYearWinsShadow,
       yearlyLossesFree = y.playerStatsYearLossesFree,
