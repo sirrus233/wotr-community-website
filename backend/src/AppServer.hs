@@ -368,9 +368,8 @@ getLeagueStatsHandler league tier year = do
 
 exportHandler :: AppM ExportResponse
 exportHandler = do
-  (playerEntities, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers) <- runDb $ do
-    playerEntities <- lift (selectList @Player [] [])
-    let players = entityVal <$> playerEntities
+  (players, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers) <- runDb $ do
+    players <- lift (selectList @Player [] [])
     gameReports <- fmap entityVal <$> lift (selectList @GameReport [] [])
     playerStatsYears <- fmap entityVal <$> lift (selectList @PlayerStatsYear [] [])
     playerStatsTotals <- fmap entityVal <$> lift (selectList @PlayerStatsTotal [] [])
@@ -385,10 +384,10 @@ exportHandler = do
     logInfoN $ "Extracted PlayerStatsInits: " <>: length playerStatsInits
     logInfoN $ "Extracted LeaguePlayers: " <>: length leaguePlayers
 
-    pure (playerEntities, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers)
+    pure (players, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers)
 
-  let exportPlayers = entityVal <$> playerEntities
-      playerNameMap = Map.fromList $ (\(Entity pid player) -> (pid, player.playerDisplayName)) <$> playerEntities
+  let exportPlayers = entityVal <$> players
+      playerNameMap = Map.fromList $ (\(Entity pid player) -> (pid, player.playerDisplayName)) <$> players
       lookupPlayerName pid = Map.findWithDefault "(unknown player)" pid playerNameMap
       exportGameReports =
         gameReports <&> \report@GameReport {..} ->
