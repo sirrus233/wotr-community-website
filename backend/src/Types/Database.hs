@@ -6,7 +6,7 @@ module Types.Database where
 import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
 import Data.Aeson (ToJSONKey (..), ToJSONKeyFunction)
 import Data.Aeson.Types (toJSONKeyText)
-import Data.Csv (ToField (..), ToRecord (..))
+import Data.Csv (Header, ToField (..), ToNamedRecord (..), ToRecord (..), (.=))
 import Data.Csv qualified as CSV
 import Data.Text qualified as T
 import Data.Time (UTCTime)
@@ -241,6 +241,372 @@ instance ToRecord LeaguePlayer where
         toField year,
         toField playerId
       ]
+
+data ExportPlayer = ExportPlayer
+  { exportPlayerId :: PlayerId,
+    exportPlayerRecord :: Player
+  }
+
+instance ToNamedRecord ExportPlayer where
+  toNamedRecord :: ExportPlayer -> CSV.NamedRecord
+  toNamedRecord
+    ExportPlayer
+      { exportPlayerId,
+        exportPlayerRecord =
+          Player
+            { playerName,
+              playerDisplayName,
+              playerCountry,
+              playerIsActive
+            }
+      } =
+      CSV.namedRecord
+        [ "id" .= exportPlayerId,
+          "name" .= playerName,
+          "display_name" .= playerDisplayName,
+          "country" .= fromMaybe ("" :: Text) playerCountry,
+          "is_active" .= if playerIsActive then ("true" :: Text) else "false"
+        ]
+
+playerCsvHeader :: Header
+playerCsvHeader = CSV.header ["id", "name", "display_name", "country", "is_active"]
+
+data ExportGameReport = ExportGameReport
+  { exportGameReportRecord :: GameReport,
+    exportGameReportWinnerName :: PlayerName,
+    exportGameReportLoserName :: PlayerName
+  }
+
+instance ToRecord ExportGameReport where
+  toRecord :: ExportGameReport -> CSV.Record
+  toRecord
+    ExportGameReport
+      { exportGameReportRecord =
+          GameReport
+            { gameReportTimestamp,
+              gameReportWinnerId,
+              gameReportLoserId,
+              gameReportSide,
+              gameReportVictory,
+              gameReportMatch,
+              gameReportCompetition,
+              gameReportLeague,
+              gameReportExpansions,
+              gameReportTreebeard,
+              gameReportActionTokens,
+              gameReportDwarvenRings,
+              gameReportTurns,
+              gameReportCorruption,
+              gameReportMordor,
+              gameReportInitialEyes,
+              gameReportAragornTurn,
+              gameReportStrongholds,
+              gameReportInterestRating,
+              gameReportComment,
+              gameReportLogFile
+            },
+        ..
+      } =
+      V.fromList
+        [ toField (show gameReportTimestamp :: Text),
+          toField gameReportWinnerId,
+          toField exportGameReportWinnerName,
+          toField gameReportLoserId,
+          toField exportGameReportLoserName,
+          toField (show gameReportSide :: Text),
+          toField (show gameReportVictory :: Text),
+          toField (show gameReportMatch :: Text),
+          toField (T.intercalate "," . map show $ gameReportCompetition),
+          toField (maybe ("" :: Text) show gameReportLeague),
+          toField (T.intercalate "," . map show $ gameReportExpansions),
+          toField (maybe ("" :: Text) (\b -> if b then "true" else "false") gameReportTreebeard),
+          toField gameReportActionTokens,
+          toField gameReportDwarvenRings,
+          toField gameReportTurns,
+          toField gameReportCorruption,
+          toField (maybe ("" :: Text) show gameReportMordor),
+          toField gameReportInitialEyes,
+          toField (maybe ("" :: Text) show gameReportAragornTurn),
+          toField (T.intercalate "," . map show $ gameReportStrongholds),
+          toField gameReportInterestRating,
+          toField (fromMaybe ("" :: Text) gameReportComment),
+          toField (fromMaybe ("" :: Text) gameReportLogFile)
+        ]
+
+instance ToNamedRecord ExportGameReport where
+  toNamedRecord :: ExportGameReport -> CSV.NamedRecord
+  toNamedRecord
+    ExportGameReport
+      { exportGameReportRecord =
+          GameReport
+            { gameReportTimestamp,
+              gameReportWinnerId,
+              gameReportLoserId,
+              gameReportSide,
+              gameReportVictory,
+              gameReportMatch,
+              gameReportCompetition,
+              gameReportLeague,
+              gameReportExpansions,
+              gameReportTreebeard,
+              gameReportActionTokens,
+              gameReportDwarvenRings,
+              gameReportTurns,
+              gameReportCorruption,
+              gameReportMordor,
+              gameReportInitialEyes,
+              gameReportAragornTurn,
+              gameReportStrongholds,
+              gameReportInterestRating,
+              gameReportComment,
+              gameReportLogFile
+            },
+        ..
+      } =
+      CSV.namedRecord
+        [ "timestamp" .= T.show gameReportTimestamp,
+          "winner_id" .= gameReportWinnerId,
+          "winner_name" .= exportGameReportWinnerName,
+          "loser_id" .= gameReportLoserId,
+          "loser_name" .= exportGameReportLoserName,
+          "side" .= T.show gameReportSide,
+          "victory" .= T.show gameReportVictory,
+          "match" .= T.show gameReportMatch,
+          "competition" .= T.intercalate "," (map show gameReportCompetition),
+          "league" .= maybe ("" :: Text) show gameReportLeague,
+          "expansions" .= T.intercalate "," (map show gameReportExpansions),
+          "treebeard" .= maybe ("" :: Text) (\b -> if b then "true" else "false") gameReportTreebeard,
+          "action_tokens" .= gameReportActionTokens,
+          "dwarven_rings" .= gameReportDwarvenRings,
+          "turns" .= gameReportTurns,
+          "corruption" .= gameReportCorruption,
+          "mordor" .= maybe ("" :: Text) show gameReportMordor,
+          "initial_eyes" .= gameReportInitialEyes,
+          "aragorn_turn" .= maybe ("" :: Text) show gameReportAragornTurn,
+          "strongholds" .= T.intercalate "," (map show gameReportStrongholds),
+          "interest_rating" .= gameReportInterestRating,
+          "comment" .= fromMaybe ("" :: Text) gameReportComment,
+          "log_file" .= fromMaybe ("" :: Text) gameReportLogFile
+        ]
+
+gameReportCsvHeader :: Header
+gameReportCsvHeader =
+  CSV.header
+    [ "timestamp",
+      "winner_id",
+      "winner_name",
+      "loser_id",
+      "loser_name",
+      "side",
+      "victory",
+      "match",
+      "competition",
+      "league",
+      "expansions",
+      "treebeard",
+      "action_tokens",
+      "dwarven_rings",
+      "turns",
+      "corruption",
+      "mordor",
+      "initial_eyes",
+      "aragorn_turn",
+      "strongholds",
+      "interest_rating",
+      "comment",
+      "log_file"
+    ]
+
+data ExportPlayerStatsYear = ExportPlayerStatsYear
+  { exportPlayerStatsYearRecord :: PlayerStatsYear,
+    exportPlayerStatsYearPlayerName :: PlayerName
+  }
+
+instance ToRecord ExportPlayerStatsYear where
+  toRecord :: ExportPlayerStatsYear -> CSV.Record
+  toRecord
+    ExportPlayerStatsYear
+      { exportPlayerStatsYearRecord =
+          PlayerStatsYear
+            { playerStatsYearPlayerId,
+              playerStatsYearYear,
+              playerStatsYearWinsFree,
+              playerStatsYearWinsShadow,
+              playerStatsYearLossesFree,
+              playerStatsYearLossesShadow
+            },
+        ..
+      } =
+      V.fromList
+        [ toField playerStatsYearPlayerId,
+          toField exportPlayerStatsYearPlayerName,
+          toField playerStatsYearYear,
+          toField playerStatsYearWinsFree,
+          toField playerStatsYearWinsShadow,
+          toField playerStatsYearLossesFree,
+          toField playerStatsYearLossesShadow
+        ]
+
+instance ToNamedRecord ExportPlayerStatsYear where
+  toNamedRecord :: ExportPlayerStatsYear -> CSV.NamedRecord
+  toNamedRecord
+    ExportPlayerStatsYear
+      { exportPlayerStatsYearRecord =
+          PlayerStatsYear
+            { playerStatsYearPlayerId,
+              playerStatsYearYear,
+              playerStatsYearWinsFree,
+              playerStatsYearWinsShadow,
+              playerStatsYearLossesFree,
+              playerStatsYearLossesShadow
+            },
+        ..
+      } =
+      CSV.namedRecord
+        [ "player_id" .= playerStatsYearPlayerId,
+          "player_name" .= exportPlayerStatsYearPlayerName,
+          "year" .= playerStatsYearYear,
+          "wins_free" .= playerStatsYearWinsFree,
+          "wins_shadow" .= playerStatsYearWinsShadow,
+          "losses_free" .= playerStatsYearLossesFree,
+          "losses_shadow" .= playerStatsYearLossesShadow
+        ]
+
+playerStatsYearCsvHeader :: Header
+playerStatsYearCsvHeader =
+  CSV.header
+    ["player_id", "player_name", "year", "wins_free", "wins_shadow", "losses_free", "losses_shadow"]
+
+data ExportPlayerStatsTotal = ExportPlayerStatsTotal
+  { exportPlayerStatsTotalRecord :: PlayerStatsTotal,
+    exportPlayerStatsTotalPlayerName :: PlayerName
+  }
+
+instance ToNamedRecord ExportPlayerStatsTotal where
+  toNamedRecord :: ExportPlayerStatsTotal -> CSV.NamedRecord
+  toNamedRecord
+    ExportPlayerStatsTotal
+      { exportPlayerStatsTotalRecord =
+          PlayerStatsTotal
+            { playerStatsTotalPlayerId,
+              playerStatsTotalRatingFree,
+              playerStatsTotalRatingShadow,
+              playerStatsTotalGameCount
+            },
+        ..
+      } =
+      CSV.namedRecord
+        [ "player_id" .= playerStatsTotalPlayerId,
+          "player_name" .= exportPlayerStatsTotalPlayerName,
+          "rating_free" .= playerStatsTotalRatingFree,
+          "rating_shadow" .= playerStatsTotalRatingShadow,
+          "game_count" .= playerStatsTotalGameCount
+        ]
+
+playerStatsTotalCsvHeader :: Header
+playerStatsTotalCsvHeader =
+  CSV.header ["player_id", "player_name", "rating_free", "rating_shadow", "game_count"]
+
+data ExportPlayerStatsInitial = ExportPlayerStatsInitial
+  { exportPlayerStatsInitialRecord :: PlayerStatsInitial,
+    exportPlayerStatsInitialPlayerName :: PlayerName
+  }
+
+instance ToRecord ExportPlayerStatsInitial where
+  toRecord :: ExportPlayerStatsInitial -> CSV.Record
+  toRecord
+    ExportPlayerStatsInitial
+      { exportPlayerStatsInitialRecord =
+          PlayerStatsInitial
+            { playerStatsInitialPlayerId,
+              playerStatsInitialRatingFree,
+              playerStatsInitialRatingShadow,
+              playerStatsInitialGameCount
+            },
+        ..
+      } =
+      V.fromList
+        [ toField playerStatsInitialPlayerId,
+          toField exportPlayerStatsInitialPlayerName,
+          toField playerStatsInitialRatingFree,
+          toField playerStatsInitialRatingShadow,
+          toField playerStatsInitialGameCount
+        ]
+
+instance ToNamedRecord ExportPlayerStatsInitial where
+  toNamedRecord :: ExportPlayerStatsInitial -> CSV.NamedRecord
+  toNamedRecord
+    ExportPlayerStatsInitial
+      { exportPlayerStatsInitialRecord =
+          PlayerStatsInitial
+            { playerStatsInitialPlayerId,
+              playerStatsInitialRatingFree,
+              playerStatsInitialRatingShadow,
+              playerStatsInitialGameCount
+            },
+        ..
+      } =
+      CSV.namedRecord
+        [ "player_id" .= playerStatsInitialPlayerId,
+          "player_name" .= exportPlayerStatsInitialPlayerName,
+          "rating_free" .= playerStatsInitialRatingFree,
+          "rating_shadow" .= playerStatsInitialRatingShadow,
+          "game_count" .= playerStatsInitialGameCount
+        ]
+
+playerStatsInitialCsvHeader :: Header
+playerStatsInitialCsvHeader =
+  CSV.header ["player_id", "player_name", "rating_free", "rating_shadow", "game_count"]
+
+data ExportLeaguePlayer = ExportLeaguePlayer
+  { exportLeaguePlayerRecord :: LeaguePlayer,
+    exportLeaguePlayerPlayerName :: PlayerName
+  }
+
+instance ToRecord ExportLeaguePlayer where
+  toRecord :: ExportLeaguePlayer -> CSV.Record
+  toRecord
+    ExportLeaguePlayer
+      { exportLeaguePlayerRecord =
+          LeaguePlayer
+            { leaguePlayerLeague,
+              leaguePlayerTier,
+              leaguePlayerYear,
+              leaguePlayerPlayerId
+            },
+        ..
+      } =
+      V.fromList
+        [ toField (show leaguePlayerLeague :: Text),
+          toField (show leaguePlayerTier :: Text),
+          toField leaguePlayerYear,
+          toField leaguePlayerPlayerId,
+          toField exportLeaguePlayerPlayerName
+        ]
+
+instance ToNamedRecord ExportLeaguePlayer where
+  toNamedRecord :: ExportLeaguePlayer -> CSV.NamedRecord
+  toNamedRecord
+    ExportLeaguePlayer
+      { exportLeaguePlayerRecord =
+          LeaguePlayer
+            { leaguePlayerLeague,
+              leaguePlayerTier,
+              leaguePlayerYear,
+              leaguePlayerPlayerId
+            },
+        ..
+      } =
+      CSV.namedRecord
+        [ "league" .= T.show leaguePlayerLeague,
+          "tier" .= T.show leaguePlayerTier,
+          "year" .= leaguePlayerYear,
+          "player_id" .= leaguePlayerPlayerId,
+          "player_name" .= exportLeaguePlayerPlayerName
+        ]
+
+leaguePlayerCsvHeader :: Header
+leaguePlayerCsvHeader = CSV.header ["league", "tier", "year", "player_id", "player_name"]
 
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 
