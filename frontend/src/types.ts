@@ -156,7 +156,7 @@ export interface LeaderboardEntry {
 }
 
 export interface LeaderboardParams {
-    year: number;
+    year: number | null;
 }
 
 export type PlayerEditMode = "edit" | "remap";
