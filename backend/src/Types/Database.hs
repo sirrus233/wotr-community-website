@@ -6,11 +6,10 @@ module Types.Database where
 import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
 import Data.Aeson (ToJSONKey (..), ToJSONKeyFunction)
 import Data.Aeson.Types (toJSONKeyText)
-import Data.Csv (Header, ToField (..), ToNamedRecord (..), ToRecord (..), (.=))
+import Data.Csv (Header, ToField (..), ToNamedRecord (..), (.=))
 import Data.Csv qualified as CSV
 import Data.Text qualified as T
 import Data.Time (UTCTime)
-import Data.Vector qualified as V
 import Database.Esqueleto.Experimental (Entity, Value, rawExecute, runMigrationQuiet, runSqlPool)
 import Database.Esqueleto.Experimental qualified as SQL
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
@@ -233,34 +232,18 @@ updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}
         }
     )
 
-data ExportPlayer = ExportPlayer
-  { exportPlayerId :: PlayerId,
-    exportPlayerRecord :: Player
-  }
-
-instance ToNamedRecord ExportPlayer where
-  toNamedRecord :: ExportPlayer -> CSV.NamedRecord
-  toNamedRecord
-    ExportPlayer
-      { exportPlayerId,
-        exportPlayerRecord =
-          Player
-            { playerName,
-              playerDisplayName,
-              playerCountry,
-              playerIsActive
-            }
-      } =
-      CSV.namedRecord
-        [ "id" .= exportPlayerId,
-          "name" .= playerName,
-          "display_name" .= playerDisplayName,
-          "country" .= fromMaybe ("" :: Text) playerCountry,
-          "is_active" .= if playerIsActive then ("true" :: Text) else "false"
-        ]
+instance ToNamedRecord Player where
+  toNamedRecord :: Player -> CSV.NamedRecord
+  toNamedRecord Player {..} =
+    CSV.namedRecord
+      [ "name" .= playerName,
+        "display_name" .= playerDisplayName,
+        "country" .= fromMaybe ("" :: Text) playerCountry,
+        "is_active" .= if playerIsActive then ("Active" :: Text) else "Inactive"
+      ]
 
 playerCsvHeader :: Header
-playerCsvHeader = CSV.header ["id", "name", "display_name", "country", "is_active"]
+playerCsvHeader = CSV.header ["name", "display_name", "country", "is_active"]
 
 data ExportGameReport = ExportGameReport
   { exportGameReportRecord :: GameReport,
@@ -278,9 +261,7 @@ instance ToNamedRecord ExportGameReport where
       } =
       CSV.namedRecord
         [ "timestamp" .= T.show gameReportTimestamp,
-          "winner_id" .= gameReportWinnerId,
           "winner_name" .= exportGameReportWinnerName,
-          "loser_id" .= gameReportLoserId,
           "loser_name" .= exportGameReportLoserName,
           "side" .= T.show gameReportSide,
           "victory" .= T.show gameReportVictory,
@@ -306,9 +287,7 @@ gameReportCsvHeader :: Header
 gameReportCsvHeader =
   CSV.header
     [ "timestamp",
-      "winner_id",
       "winner_name",
-      "loser_id",
       "loser_name",
       "side",
       "victory",
@@ -335,49 +314,15 @@ data ExportPlayerStatsYear = ExportPlayerStatsYear
     exportPlayerStatsYearPlayerName :: PlayerName
   }
 
-instance ToRecord ExportPlayerStatsYear where
-  toRecord :: ExportPlayerStatsYear -> CSV.Record
-  toRecord
-    ExportPlayerStatsYear
-      { exportPlayerStatsYearRecord =
-          PlayerStatsYear
-            { playerStatsYearPlayerId,
-              playerStatsYearYear,
-              playerStatsYearWinsFree,
-              playerStatsYearWinsShadow,
-              playerStatsYearLossesFree,
-              playerStatsYearLossesShadow
-            },
-        ..
-      } =
-      V.fromList
-        [ toField playerStatsYearPlayerId,
-          toField exportPlayerStatsYearPlayerName,
-          toField playerStatsYearYear,
-          toField playerStatsYearWinsFree,
-          toField playerStatsYearWinsShadow,
-          toField playerStatsYearLossesFree,
-          toField playerStatsYearLossesShadow
-        ]
-
 instance ToNamedRecord ExportPlayerStatsYear where
   toNamedRecord :: ExportPlayerStatsYear -> CSV.NamedRecord
   toNamedRecord
     ExportPlayerStatsYear
-      { exportPlayerStatsYearRecord =
-          PlayerStatsYear
-            { playerStatsYearPlayerId,
-              playerStatsYearYear,
-              playerStatsYearWinsFree,
-              playerStatsYearWinsShadow,
-              playerStatsYearLossesFree,
-              playerStatsYearLossesShadow
-            },
+      { exportPlayerStatsYearRecord = PlayerStatsYear {..},
         ..
       } =
       CSV.namedRecord
-        [ "player_id" .= playerStatsYearPlayerId,
-          "player_name" .= exportPlayerStatsYearPlayerName,
+        [ "player_name" .= exportPlayerStatsYearPlayerName,
           "year" .= playerStatsYearYear,
           "wins_free" .= playerStatsYearWinsFree,
           "wins_shadow" .= playerStatsYearWinsShadow,
@@ -388,7 +333,7 @@ instance ToNamedRecord ExportPlayerStatsYear where
 playerStatsYearCsvHeader :: Header
 playerStatsYearCsvHeader =
   CSV.header
-    ["player_id", "player_name", "year", "wins_free", "wins_shadow", "losses_free", "losses_shadow"]
+    ["player_name", "year", "wins_free", "wins_shadow", "losses_free", "losses_shadow"]
 
 data ExportPlayerStatsTotal = ExportPlayerStatsTotal
   { exportPlayerStatsTotalRecord :: PlayerStatsTotal,
@@ -399,18 +344,11 @@ instance ToNamedRecord ExportPlayerStatsTotal where
   toNamedRecord :: ExportPlayerStatsTotal -> CSV.NamedRecord
   toNamedRecord
     ExportPlayerStatsTotal
-      { exportPlayerStatsTotalRecord =
-          PlayerStatsTotal
-            { playerStatsTotalPlayerId,
-              playerStatsTotalRatingFree,
-              playerStatsTotalRatingShadow,
-              playerStatsTotalGameCount
-            },
+      { exportPlayerStatsTotalRecord = PlayerStatsTotal {..},
         ..
       } =
       CSV.namedRecord
-        [ "player_id" .= playerStatsTotalPlayerId,
-          "player_name" .= exportPlayerStatsTotalPlayerName,
+        [ "player_name" .= exportPlayerStatsTotalPlayerName,
           "rating_free" .= playerStatsTotalRatingFree,
           "rating_shadow" .= playerStatsTotalRatingShadow,
           "game_count" .= playerStatsTotalGameCount
@@ -418,7 +356,7 @@ instance ToNamedRecord ExportPlayerStatsTotal where
 
 playerStatsTotalCsvHeader :: Header
 playerStatsTotalCsvHeader =
-  CSV.header ["player_id", "player_name", "rating_free", "rating_shadow", "game_count"]
+  CSV.header ["player_name", "rating_free", "rating_shadow", "game_count"]
 
 data ExportPlayerStatsInitial = ExportPlayerStatsInitial
   { exportPlayerStatsInitialRecord :: PlayerStatsInitial,
@@ -429,18 +367,11 @@ instance ToNamedRecord ExportPlayerStatsInitial where
   toNamedRecord :: ExportPlayerStatsInitial -> CSV.NamedRecord
   toNamedRecord
     ExportPlayerStatsInitial
-      { exportPlayerStatsInitialRecord =
-          PlayerStatsInitial
-            { playerStatsInitialPlayerId,
-              playerStatsInitialRatingFree,
-              playerStatsInitialRatingShadow,
-              playerStatsInitialGameCount
-            },
+      { exportPlayerStatsInitialRecord = PlayerStatsInitial {..},
         ..
       } =
       CSV.namedRecord
-        [ "player_id" .= playerStatsInitialPlayerId,
-          "player_name" .= exportPlayerStatsInitialPlayerName,
+        [ "player_name" .= exportPlayerStatsInitialPlayerName,
           "rating_free" .= playerStatsInitialRatingFree,
           "rating_shadow" .= playerStatsInitialRatingShadow,
           "game_count" .= playerStatsInitialGameCount
@@ -448,7 +379,7 @@ instance ToNamedRecord ExportPlayerStatsInitial where
 
 playerStatsInitialCsvHeader :: Header
 playerStatsInitialCsvHeader =
-  CSV.header ["player_id", "player_name", "rating_free", "rating_shadow", "game_count"]
+  CSV.header ["player_name", "rating_free", "rating_shadow", "game_count"]
 
 data ExportLeaguePlayer = ExportLeaguePlayer
   { exportLeaguePlayerRecord :: LeaguePlayer,
@@ -459,22 +390,15 @@ instance ToNamedRecord ExportLeaguePlayer where
   toNamedRecord :: ExportLeaguePlayer -> CSV.NamedRecord
   toNamedRecord
     ExportLeaguePlayer
-      { exportLeaguePlayerRecord =
-          LeaguePlayer
-            { leaguePlayerLeague,
-              leaguePlayerTier,
-              leaguePlayerYear,
-              leaguePlayerPlayerId
-            },
+      { exportLeaguePlayerRecord = LeaguePlayer {..},
         ..
       } =
       CSV.namedRecord
         [ "league" .= T.show leaguePlayerLeague,
           "tier" .= T.show leaguePlayerTier,
           "year" .= leaguePlayerYear,
-          "player_id" .= leaguePlayerPlayerId,
           "player_name" .= exportLeaguePlayerPlayerName
         ]
 
 leaguePlayerCsvHeader :: Header
-leaguePlayerCsvHeader = CSV.header ["league", "tier", "year", "player_id", "player_name"]
+leaguePlayerCsvHeader = CSV.header ["league", "tier", "year", "player_name"]

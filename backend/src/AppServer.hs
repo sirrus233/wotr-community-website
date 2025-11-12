@@ -95,7 +95,6 @@ import Types.DataField (League (..), LeagueTier, Match (..), PlayerName, Rating,
 import Types.Database
   ( ExportGameReport (..),
     ExportLeaguePlayer (..),
-    ExportPlayer (..),
     ExportPlayerStatsInitial (..),
     ExportPlayerStatsTotal (..),
     ExportPlayerStatsYear (..),
@@ -388,7 +387,7 @@ exportHandler = do
 
     pure (playerEntities, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers)
 
-  let exportPlayers = (\(Entity pid player) -> ExportPlayer pid player) <$> playerEntities
+  let exportPlayers = entityVal <$> playerEntities
       playerNameMap = Map.fromList $ (\(Entity pid player) -> (pid, player.playerDisplayName)) <$> playerEntities
       lookupPlayerName pid = Map.findWithDefault "(unknown player)" pid playerNameMap
       exportGameReports =
