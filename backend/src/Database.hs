@@ -65,6 +65,7 @@ import Database.Esqueleto.Experimental
     (||.),
     type (:&) (..),
   )
+import Relude.Extra (bimapF, secondF)
 import Servant (ServerError, throwError)
 import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), NullableFilter (..), TimestampFilter (..), VictoryFilter (..))
 import Types.Auth (SessionId (..), UserId (..))
@@ -209,29 +210,62 @@ getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Maybe
 getPlayerByName = lift . getBy . UniquePlayerName . normalizeName
 
 joinedPlayerStats ::
-  Year ->
+  Maybe Year ->
   From (SqlExpr (Entity Player) :& SqlExpr (Maybe (Entity PlayerStatsTotal)) :& SqlExpr (Maybe (Entity PlayerStatsYear)))
-joinedPlayerStats year =
+joinedPlayerStats mYear =
   table @Player
     `leftJoin` table @PlayerStatsTotal
       `on` (\(player :& totalStats) -> just (player ^. PlayerId) ==. totalStats ?. PlayerStatsTotalPlayerId)
     `leftJoin` table @PlayerStatsYear
       `on` ( \(player :& _ :& yearStats) ->
                just (player ^. PlayerId) ==. yearStats ?. PlayerStatsYearPlayerId
-                 &&. (yearStats ?. PlayerStatsYearYear ==. just (val year))
+                 &&. yearClause yearStats
            )
+  where
+    yearClause stats = case mYear of
+      Nothing -> val True
+      Just year -> stats ?. PlayerStatsYearYear ==. just (val year)
 
 getPlayerStats :: (MonadIO m, MonadLogger m) => PlayerId -> Year -> DBAction m (Maybe MaybePlayerStats)
-getPlayerStats pid year = lift . selectOne $ do
-  (player :& totalStats :& yearStats) <- from $ joinedPlayerStats year
-  where_ (player ^. PlayerId ==. val pid)
-  pure (totalStats, yearStats)
+getPlayerStats pid year = do
+  rows <- lift . selectOne $ do
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats (Just year)
+    where_ (player ^. PlayerId ==. val pid)
+    pure (totalStats, yearStats)
+  pure $ bimapF (fmap entityVal) (fmap entityVal) rows
 
-getAllStats :: (MonadIO m, MonadLogger m) => Year -> DBAction m [(Entity Player, MaybePlayerStats)]
-getAllStats year = do
-  lift . select $ do
-    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats year
+getAllStats :: (MonadIO m, MonadLogger m) => Maybe Year -> DBAction m [(Entity Player, MaybePlayerStats)]
+getAllStats mYear@(Just _) = do
+  rows <- lift . select $ do
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats mYear
     pure (player, (totalStats, yearStats))
+  pure $ secondF (bimap (fmap entityVal) (fmap entityVal)) rows
+getAllStats Nothing = do
+  rows <- lift . select $ do
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats Nothing
+    groupBy (yearStats ?. PlayerStatsYearPlayerId)
+    pure
+      ( player,
+        ( totalStats,
+          ( yearStats ?. PlayerStatsYearPlayerId,
+            just $ val 0,
+            sum_ (yearStats ?. PlayerStatsYearWinsFree),
+            sum_ (yearStats ?. PlayerStatsYearWinsShadow),
+            sum_ (yearStats ?. PlayerStatsYearLossesFree),
+            sum_ (yearStats ?. PlayerStatsYearLossesShadow)
+          )
+        )
+      )
+  pure $
+    fmap
+      ( \(p, (t, (Value pid, Value year, Value winsFree, Value winsShadow, Value lossesFree, Value lossesShadow))) ->
+          ( p,
+            ( fmap entityVal t,
+              PlayerStatsYear <$> pid <*> year <*> winsFree <*> winsShadow <*> lossesFree <*> lossesShadow
+            )
+          )
+      )
+      rows
 
 getInitialStats :: (MonadIO m, MonadLogger m) => DBAction m [Entity PlayerStatsInitial]
 getInitialStats = lift . select $ from $ table @PlayerStatsInitial

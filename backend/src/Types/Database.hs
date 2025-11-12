@@ -142,7 +142,7 @@ instance ToField PlayerId where
 
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 
-type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerStatsYear))
+type MaybePlayerStats = (Maybe PlayerStatsTotal, Maybe PlayerStatsYear)
 
 type ReportInsertion = (Entity GameReport, Entity Player, Entity Player)
 
