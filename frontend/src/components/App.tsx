@@ -459,6 +459,16 @@ function Home() {
 
                 {[
                     {
+                        label: "Ladder Rules",
+                        href: "https://docs.google.com/document/d/1zTx0DnMx0a_iIN-uaxLUXmOQnIArrRD22ex1q1LzgmY",
+                        isDownload: false,
+                    },
+                    {
+                        label: "League Rules",
+                        href: "https://docs.google.com/document/d/1T2OIOfU9vlSJQd0xPoivFmHOUTvPOa1jjtaiN2vrHAQ",
+                        isDownload: false,
+                    },
+                    {
                         label: "WotR Almanac",
                         href: "https://tinyurl.com/WOTRAlmanac",
                         isDownload: false,
@@ -471,11 +481,6 @@ function Home() {
                     {
                         label: "WotR Almanac: KoME",
                         href: "https://tinyurl.com/KOMEAlmanac",
-                        isDownload: false,
-                    },
-                    {
-                        label: "League Rules",
-                        href: "https://docs.google.com/document/d/1T2OIOfU9vlSJQd0xPoivFmHOUTvPOa1jjtaiN2vrHAQ",
                         isDownload: false,
                     },
                 ].map(({ label, href, isDownload }) => (
