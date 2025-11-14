@@ -6,11 +6,10 @@ module Types.Database where
 import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
 import Data.Aeson (ToJSONKey (..), ToJSONKeyFunction)
 import Data.Aeson.Types (toJSONKeyText)
-import Data.Csv (ToField (..), ToRecord (..))
+import Data.Csv (Header, ToField (..), ToNamedRecord (..), (.=))
 import Data.Csv qualified as CSV
 import Data.Text qualified as T
 import Data.Time (UTCTime)
-import Data.Vector qualified as V
 import Database.Esqueleto.Experimental (Entity, Value, rawExecute, runMigrationQuiet, runSqlPool)
 import Database.Esqueleto.Experimental qualified as SQL
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
@@ -140,108 +139,6 @@ instance ToField PlayerId where
   toField :: PlayerId -> CSV.Field
   toField = toField . SQL.fromSqlKey
 
-instance ToRecord Player where
-  toRecord :: Player -> CSV.Record
-  toRecord (Player name displayName country isActive) =
-    V.fromList
-      [ toField name,
-        toField displayName,
-        toField (fromMaybe ("" :: Text) country),
-        toField (if isActive then "true" :: Text else "false")
-      ]
-
-instance ToRecord GameReport where
-  toRecord :: GameReport -> CSV.Record
-  toRecord
-    ( GameReport
-        timestamp
-        winnerId
-        loserId
-        side
-        victory
-        match
-        competition
-        league
-        expansions
-        treebeard
-        actionTokens
-        dwarvenRings
-        turns
-        corruption
-        mordor
-        initialEyes
-        aragornTurn
-        strongholds
-        interestRating
-        comment
-        logFile
-      ) =
-      V.fromList
-        [ toField (show timestamp :: Text),
-          toField winnerId,
-          toField loserId,
-          toField (show side :: Text),
-          toField (show victory :: Text),
-          toField (show match :: Text),
-          toField (T.intercalate "," . map show $ competition),
-          toField (maybe ("" :: Text) show league),
-          toField (T.intercalate "," . map show $ expansions),
-          toField (maybe ("" :: Text) (\b -> if b then "true" else "false") treebeard),
-          toField actionTokens,
-          toField dwarvenRings,
-          toField turns,
-          toField corruption,
-          toField (maybe ("" :: Text) show mordor),
-          toField initialEyes,
-          toField (maybe ("" :: Text) show aragornTurn),
-          toField (T.intercalate "," . map show $ strongholds),
-          toField interestRating,
-          toField (fromMaybe ("" :: Text) comment),
-          toField (fromMaybe ("" :: Text) logFile)
-        ]
-
-instance ToRecord PlayerStatsYear where
-  toRecord :: PlayerStatsYear -> CSV.Record
-  toRecord (PlayerStatsYear playerId year winsFree winsShadow lossesFree lossesShadow) =
-    V.fromList
-      [ toField playerId,
-        toField year,
-        toField winsFree,
-        toField winsShadow,
-        toField lossesFree,
-        toField lossesShadow
-      ]
-
-instance ToRecord PlayerStatsTotal where
-  toRecord :: PlayerStatsTotal -> CSV.Record
-  toRecord (PlayerStatsTotal playerId ratingFree ratingShadow gameCount) =
-    V.fromList
-      [ toField playerId,
-        toField ratingFree,
-        toField ratingShadow,
-        toField gameCount
-      ]
-
-instance ToRecord PlayerStatsInitial where
-  toRecord :: PlayerStatsInitial -> CSV.Record
-  toRecord (PlayerStatsInitial playerId ratingFree ratingShadow gameCount) =
-    V.fromList
-      [ toField playerId,
-        toField ratingFree,
-        toField ratingShadow,
-        toField gameCount
-      ]
-
-instance ToRecord LeaguePlayer where
-  toRecord :: LeaguePlayer -> CSV.Record
-  toRecord (LeaguePlayer league tier year playerId) =
-    V.fromList
-      [ toField (show league :: Text),
-        toField (show tier :: Text),
-        toField year,
-        toField playerId
-      ]
-
 type PlayerStats = (PlayerStatsTotal, PlayerStatsYear)
 
 type MaybePlayerStats = (Maybe (Entity PlayerStatsTotal), Maybe (Entity PlayerStatsYear))
@@ -334,3 +231,174 @@ updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}
           ..
         }
     )
+
+instance ToNamedRecord Player where
+  toNamedRecord :: Player -> CSV.NamedRecord
+  toNamedRecord Player {..} =
+    CSV.namedRecord
+      [ "name" .= playerName,
+        "display_name" .= playerDisplayName,
+        "country" .= fromMaybe ("" :: Text) playerCountry,
+        "is_active" .= if playerIsActive then ("Active" :: Text) else "Inactive"
+      ]
+
+playerCsvHeader :: Header
+playerCsvHeader = CSV.header ["name", "display_name", "country", "is_active"]
+
+data ExportGameReport = ExportGameReport
+  { exportGameReportRecord :: GameReport,
+    exportGameReportWinnerName :: PlayerName,
+    exportGameReportLoserName :: PlayerName
+  }
+
+instance ToNamedRecord ExportGameReport where
+  toNamedRecord :: ExportGameReport -> CSV.NamedRecord
+  toNamedRecord
+    ExportGameReport
+      { exportGameReportRecord =
+          GameReport {..},
+        ..
+      } =
+      CSV.namedRecord
+        [ "timestamp" .= T.show gameReportTimestamp,
+          "winner_name" .= exportGameReportWinnerName,
+          "loser_name" .= exportGameReportLoserName,
+          "side" .= T.show gameReportSide,
+          "victory" .= T.show gameReportVictory,
+          "match" .= T.show gameReportMatch,
+          "competition" .= T.intercalate "," (map show gameReportCompetition),
+          "league" .= maybe ("" :: Text) show gameReportLeague,
+          "expansions" .= T.intercalate "," (map show gameReportExpansions),
+          "treebeard" .= maybe ("" :: Text) (\b -> if b then "true" else "false") gameReportTreebeard,
+          "action_tokens" .= gameReportActionTokens,
+          "dwarven_rings" .= gameReportDwarvenRings,
+          "turns" .= gameReportTurns,
+          "corruption" .= gameReportCorruption,
+          "mordor" .= maybe ("" :: Text) show gameReportMordor,
+          "initial_eyes" .= gameReportInitialEyes,
+          "aragorn_turn" .= maybe ("" :: Text) show gameReportAragornTurn,
+          "strongholds" .= T.intercalate "," (map show gameReportStrongholds),
+          "interest_rating" .= gameReportInterestRating,
+          "comment" .= fromMaybe ("" :: Text) gameReportComment,
+          "log_file" .= fromMaybe ("" :: Text) gameReportLogFile
+        ]
+
+gameReportCsvHeader :: Header
+gameReportCsvHeader =
+  CSV.header
+    [ "timestamp",
+      "winner_name",
+      "loser_name",
+      "side",
+      "victory",
+      "match",
+      "competition",
+      "league",
+      "expansions",
+      "treebeard",
+      "action_tokens",
+      "dwarven_rings",
+      "turns",
+      "corruption",
+      "mordor",
+      "initial_eyes",
+      "aragorn_turn",
+      "strongholds",
+      "interest_rating",
+      "comment",
+      "log_file"
+    ]
+
+data ExportPlayerStatsYear = ExportPlayerStatsYear
+  { exportPlayerStatsYearRecord :: PlayerStatsYear,
+    exportPlayerStatsYearPlayerName :: PlayerName
+  }
+
+instance ToNamedRecord ExportPlayerStatsYear where
+  toNamedRecord :: ExportPlayerStatsYear -> CSV.NamedRecord
+  toNamedRecord
+    ExportPlayerStatsYear
+      { exportPlayerStatsYearRecord = PlayerStatsYear {..},
+        ..
+      } =
+      CSV.namedRecord
+        [ "player_name" .= exportPlayerStatsYearPlayerName,
+          "year" .= playerStatsYearYear,
+          "wins_free" .= playerStatsYearWinsFree,
+          "wins_shadow" .= playerStatsYearWinsShadow,
+          "losses_free" .= playerStatsYearLossesFree,
+          "losses_shadow" .= playerStatsYearLossesShadow
+        ]
+
+playerStatsYearCsvHeader :: Header
+playerStatsYearCsvHeader =
+  CSV.header
+    ["player_name", "year", "wins_free", "wins_shadow", "losses_free", "losses_shadow"]
+
+data ExportPlayerStatsTotal = ExportPlayerStatsTotal
+  { exportPlayerStatsTotalRecord :: PlayerStatsTotal,
+    exportPlayerStatsTotalPlayerName :: PlayerName
+  }
+
+instance ToNamedRecord ExportPlayerStatsTotal where
+  toNamedRecord :: ExportPlayerStatsTotal -> CSV.NamedRecord
+  toNamedRecord
+    ExportPlayerStatsTotal
+      { exportPlayerStatsTotalRecord = PlayerStatsTotal {..},
+        ..
+      } =
+      CSV.namedRecord
+        [ "player_name" .= exportPlayerStatsTotalPlayerName,
+          "rating_free" .= playerStatsTotalRatingFree,
+          "rating_shadow" .= playerStatsTotalRatingShadow,
+          "game_count" .= playerStatsTotalGameCount
+        ]
+
+playerStatsTotalCsvHeader :: Header
+playerStatsTotalCsvHeader =
+  CSV.header ["player_name", "rating_free", "rating_shadow", "game_count"]
+
+data ExportPlayerStatsInitial = ExportPlayerStatsInitial
+  { exportPlayerStatsInitialRecord :: PlayerStatsInitial,
+    exportPlayerStatsInitialPlayerName :: PlayerName
+  }
+
+instance ToNamedRecord ExportPlayerStatsInitial where
+  toNamedRecord :: ExportPlayerStatsInitial -> CSV.NamedRecord
+  toNamedRecord
+    ExportPlayerStatsInitial
+      { exportPlayerStatsInitialRecord = PlayerStatsInitial {..},
+        ..
+      } =
+      CSV.namedRecord
+        [ "player_name" .= exportPlayerStatsInitialPlayerName,
+          "rating_free" .= playerStatsInitialRatingFree,
+          "rating_shadow" .= playerStatsInitialRatingShadow,
+          "game_count" .= playerStatsInitialGameCount
+        ]
+
+playerStatsInitialCsvHeader :: Header
+playerStatsInitialCsvHeader =
+  CSV.header ["player_name", "rating_free", "rating_shadow", "game_count"]
+
+data ExportLeaguePlayer = ExportLeaguePlayer
+  { exportLeaguePlayerRecord :: LeaguePlayer,
+    exportLeaguePlayerPlayerName :: PlayerName
+  }
+
+instance ToNamedRecord ExportLeaguePlayer where
+  toNamedRecord :: ExportLeaguePlayer -> CSV.NamedRecord
+  toNamedRecord
+    ExportLeaguePlayer
+      { exportLeaguePlayerRecord = LeaguePlayer {..},
+        ..
+      } =
+      CSV.namedRecord
+        [ "league" .= T.show leaguePlayerLeague,
+          "tier" .= T.show leaguePlayerTier,
+          "year" .= leaguePlayerYear,
+          "player_name" .= exportLeaguePlayerPlayerName
+        ]
+
+leaguePlayerCsvHeader :: Header
+leaguePlayerCsvHeader = CSV.header ["league", "tier", "year", "player_name"]

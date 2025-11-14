@@ -8,7 +8,7 @@ import Auth (fetchGoogleJWKSet, validateToken)
 import Codec.Archive.Zip (addEntryToArchive, emptyArchive, fromArchive, toEntry)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.ByteString.Lazy (toChunks)
-import Data.Csv (encode)
+import Data.Csv (encodeByName)
 import Data.IntMap.Strict qualified as IntMap
 import Data.Map.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
@@ -93,18 +93,29 @@ import Types.Api
 import Types.Auth (AuthenticatedUser (..), ServiceCaller, SessionId (..), SessionIdCookie)
 import Types.DataField (League (..), LeagueTier, Match (..), PlayerName, Rating, Side (..), Year)
 import Types.Database
-  ( GameReport (..),
+  ( ExportGameReport (..),
+    ExportLeaguePlayer (..),
+    ExportPlayerStatsInitial (..),
+    ExportPlayerStatsTotal (..),
+    ExportPlayerStatsYear (..),
+    GameReport (..),
     LeaguePlayer (..),
     MaybePlayerStats,
     Player (..),
     PlayerId,
     PlayerStats,
-    PlayerStatsInitial,
+    PlayerStatsInitial (..),
     PlayerStatsTotal (..),
-    PlayerStatsYear,
+    PlayerStatsYear (..),
     ReportInsertion,
     defaultPlayerStatsTotal,
     defaultPlayerStatsYear,
+    gameReportCsvHeader,
+    leaguePlayerCsvHeader,
+    playerCsvHeader,
+    playerStatsInitialCsvHeader,
+    playerStatsTotalCsvHeader,
+    playerStatsYearCsvHeader,
     updatedPlayerStatsLose,
     updatedPlayerStatsWin,
   )
@@ -358,7 +369,7 @@ getLeagueStatsHandler league tier year = do
 exportHandler :: AppM ExportResponse
 exportHandler = do
   (players, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers) <- runDb $ do
-    players <- fmap entityVal <$> lift (selectList @Player [] [])
+    players <- lift (selectList @Player [] [])
     gameReports <- fmap entityVal <$> lift (selectList @GameReport [] [])
     playerStatsYears <- fmap entityVal <$> lift (selectList @PlayerStatsYear [] [])
     playerStatsTotals <- fmap entityVal <$> lift (selectList @PlayerStatsTotal [] [])
@@ -375,13 +386,48 @@ exportHandler = do
 
     pure (players, gameReports, playerStatsYears, playerStatsTotals, playerStatsInits, leaguePlayers)
 
-  let entries =
-        [ toEntry "players.csv" 0 . encode $ players,
-          toEntry "gameReports.csv" 0 . encode $ gameReports,
-          toEntry "playerStatsYears.csv" 0 . encode $ playerStatsYears,
-          toEntry "playerStatsTotals.csv" 0 . encode $ playerStatsTotals,
-          toEntry "playerStatsInits.csv" 0 . encode $ playerStatsInits,
-          toEntry "leaguePlayers.csv" 0 . encode $ leaguePlayers
+  let exportPlayers = entityVal <$> players
+      playerNameMap = Map.fromList $ (\(Entity pid player) -> (pid, player.playerDisplayName)) <$> players
+      lookupPlayerName pid = Map.findWithDefault "(unknown player)" pid playerNameMap
+      exportGameReports =
+        gameReports <&> \report@GameReport {..} ->
+          ExportGameReport
+            { exportGameReportRecord = report,
+              exportGameReportWinnerName = lookupPlayerName gameReportWinnerId,
+              exportGameReportLoserName = lookupPlayerName gameReportLoserId
+            }
+      exportPlayerStatsYears =
+        playerStatsYears <&> \stats@PlayerStatsYear {..} ->
+          ExportPlayerStatsYear
+            { exportPlayerStatsYearRecord = stats,
+              exportPlayerStatsYearPlayerName = lookupPlayerName playerStatsYearPlayerId
+            }
+      exportPlayerStatsTotals =
+        playerStatsTotals <&> \stats@PlayerStatsTotal {..} ->
+          ExportPlayerStatsTotal
+            { exportPlayerStatsTotalRecord = stats,
+              exportPlayerStatsTotalPlayerName = lookupPlayerName playerStatsTotalPlayerId
+            }
+      exportPlayerStatsInits =
+        playerStatsInits <&> \stats@PlayerStatsInitial {..} ->
+          ExportPlayerStatsInitial
+            { exportPlayerStatsInitialRecord = stats,
+              exportPlayerStatsInitialPlayerName = lookupPlayerName playerStatsInitialPlayerId
+            }
+      exportLeaguePlayers =
+        leaguePlayers <&> \leaguePlayer@LeaguePlayer {..} ->
+          ExportLeaguePlayer
+            { exportLeaguePlayerRecord = leaguePlayer,
+              exportLeaguePlayerPlayerName = lookupPlayerName leaguePlayerPlayerId
+            }
+
+      entries =
+        [ toEntry "players.csv" 0 . encodeByName playerCsvHeader $ exportPlayers,
+          toEntry "gameReports.csv" 0 . encodeByName gameReportCsvHeader $ exportGameReports,
+          toEntry "playerStatsYears.csv" 0 . encodeByName playerStatsYearCsvHeader $ exportPlayerStatsYears,
+          toEntry "playerStatsTotals.csv" 0 . encodeByName playerStatsTotalCsvHeader $ exportPlayerStatsTotals,
+          toEntry "playerStatsInits.csv" 0 . encodeByName playerStatsInitialCsvHeader $ exportPlayerStatsInits,
+          toEntry "leaguePlayers.csv" 0 . encodeByName leaguePlayerCsvHeader $ exportLeaguePlayers
         ]
 
       exportArchive = toChunks . fromArchive . foldr addEntryToArchive emptyArchive $ entries
