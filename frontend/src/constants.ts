@@ -102,6 +102,7 @@ export const serverValidationErrors = [
     "InvalidFPRV",
     "CompetitionMismatch",
     "LeagueExpansionMismatch",
+    "LeagueOutOfSeason",
     "TreebeardExpansionMismatch",
     "TurnsOutOfRange",
     "CorruptionOutOfRange",
@@ -408,4 +409,5 @@ export const COUNTRIES_DATA = {
     Zimbabwe: { code: "ZW" },
     Scotland: { code: "GB-SCT" },
     Wales: { code: "GB-WLS" },
+    England: { code: "GB-ENG" },
 };

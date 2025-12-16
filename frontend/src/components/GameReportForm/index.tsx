@@ -252,7 +252,9 @@ function GameReportForm({
                     layoutTheme={layoutTheme}
                 >
                     <MultiOptionInput
-                        values={competitionTypes.slice()}
+                        values={["Tournament"]}
+                        // TODO Re-enable when League season starts up again
+                        // values={competitionTypes.slice()}
                         current={formData.competition.value}
                         onChange={handleInputChange("competition")}
                         validate={validateField("competition")}
@@ -724,6 +726,8 @@ function validationErrorToMessage(
             return "reported competition type does not match reported league";
         case "LeagueExpansionMismatch":
             return "reported league does not match reported expansions";
+        case "LeagueOutOfSeason":
+            return "the league season has concluded for the year"
         case "TreebeardExpansionMismatch":
             return "reported Treebeard muster does not match reported expansions";
         case "TurnsOutOfRange":
