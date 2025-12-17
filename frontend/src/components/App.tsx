@@ -111,6 +111,7 @@ export default function App() {
             currentPage: 1,
             filters: {
                 pairing: [],
+                timestamp: [null, null],
                 players: [],
                 winners: [],
                 losers: [],

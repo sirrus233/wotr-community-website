@@ -266,8 +266,11 @@ export type NullableInequalityFilter = InequalityFilter | NullFilter;
 
 export type VictoryOption = Side | Victory | [Side, Victory];
 
+export type TimestampFilter = [Date | null, Date | null];
+
 export type GameReportFilters = {
     pairing: MenuOption<number>[];
+    timestamp: TimestampFilter;
     players: MenuOption<number>[];
     winners: MenuOption<number>[];
     losers: MenuOption<number>[];
@@ -301,3 +304,8 @@ export type SerializedVictoryFilter =
           | { tag: "VictoryKindFilter"; contents: Victory }
           | { tag: "VictoryComboFilter"; contents: [Side, Victory] }
       )[];
+
+export type SerializedTimestampFilter =
+    | { tag: "Before"; contents: string }
+    | { tag: "After"; contents: string }
+    | { tag: "Between"; contents: [string, string] };
