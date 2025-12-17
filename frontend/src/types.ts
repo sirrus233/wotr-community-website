@@ -137,13 +137,6 @@ export interface LeaderboardEntry {
     currentRatingFree: number;
     currentRatingShadow: number;
     averageRating: number;
-    totalGames: number;
-    totalWinsFree: number;
-    totalWinsShadow: number;
-    totalLossesFree: number;
-    totalLossesShadow: number;
-    totalWinRateFree: number;
-    totalWinRateShadow: number;
     year: number;
     yearlyGames: number;
     yearlyWinsFree: number;
@@ -155,7 +148,7 @@ export interface LeaderboardEntry {
 }
 
 export interface LeaderboardParams {
-    year: number;
+    year: number | null;
 }
 
 export type PlayerEditMode = "edit" | "remap";
