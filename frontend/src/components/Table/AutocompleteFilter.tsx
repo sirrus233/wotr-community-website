@@ -5,7 +5,7 @@ import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
 import { hasKey } from "../../utils";
 import { FILTER_ERROR_HEIGHT, TABLE_FILTER_HEIGHT } from "./constants";
-import { FilterContainer } from "./styledComponents";
+import { FilterContainerVertical } from "./styledComponents";
 import { AutocompleteProps, Option } from "./types";
 
 export default function AutocompleteFilter<O extends Option>({
@@ -53,13 +53,7 @@ export default function AutocompleteFilter<O extends Option>({
     }
 
     return (
-        <FilterContainer
-            sx={{
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "end",
-            }}
-        >
+        <FilterContainerVertical>
             <FormControl error={!!errorMessage}>
                 {errorMessage && (
                     <FormHelperText
@@ -128,7 +122,7 @@ export default function AutocompleteFilter<O extends Option>({
                     />
                 </Box>
             </FormControl>
-        </FilterContainer>
+        </FilterContainerVertical>
     );
 }
 

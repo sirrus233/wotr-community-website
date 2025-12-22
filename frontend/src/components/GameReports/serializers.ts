@@ -3,6 +3,7 @@ import {
     MenuOption,
     NullableInequalityFilter,
     SerializedNullableInequalityFilter,
+    SerializedTimestampFilter,
     SerializedVictoryFilter,
 } from "../../types";
 import { EMPTY_OPTION_ID } from "./constants";
@@ -32,6 +33,22 @@ export function serializeVictoryFilter(
             }
         ) || null
     );
+}
+
+export function serializeTimestampFilter(
+    timestampFilter: GameReportFilters["timestamp"]
+): SerializedTimestampFilter | null {
+    const [start = null, end = null] = timestampFilter || [];
+
+    if (start && end) {
+        return { tag: "Between", contents: [start.toJSON(), end.toJSON()] };
+    } else if (start) {
+        return { tag: "After", contents: start.toJSON() };
+    } else if (end) {
+        return { tag: "Before", contents: end.toJSON() };
+    }
+
+    return null;
 }
 
 export function getReportsOffset(currentPage: number, perPageCount: number) {
