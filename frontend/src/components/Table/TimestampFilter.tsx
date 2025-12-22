@@ -41,7 +41,7 @@ interface DateFieldProps {
 
 function DateField({ label, value, onChange }: DateFieldProps) {
     return (
-        <FormControlGridRow $columnWidths="35px 1fr">
+        <FormControlGridRow columnWidths={["35px", "1fr"]}>
             <InputLabel>{label}</InputLabel>
             <DateInput
                 type="date"

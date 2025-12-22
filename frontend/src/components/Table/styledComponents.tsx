@@ -22,12 +22,12 @@ export const FilterContainerVertical = styled(FilterContainer)({
     justifyContent: "end",
 });
 
-export const FormControlGridRow = styled(FormControl)<{
-    $columnWidths: string;
-}>(({ $columnWidths }) => ({
+export const FormControlGridRow = styled(FormControl, {
+    shouldForwardProp: (prop) => prop !== "columnWidths",
+})<{ columnWidths: string[] }>(({ columnWidths }) => ({
     display: "grid",
     gap: "5px",
-    gridTemplateColumns: $columnWidths,
+    gridTemplateColumns: columnWidths.join(" "),
 }));
 
 export const DateInput = styled(Input)({
