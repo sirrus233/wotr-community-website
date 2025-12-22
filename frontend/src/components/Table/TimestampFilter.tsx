@@ -1,7 +1,11 @@
 import React from "react";
-import Box from "@mui/joy/Box";
 import { TimestampFilterProps } from "./types";
-import { FilterContainerVertical, StyledDateInput } from "./styledComponents";
+import {
+    DateInput,
+    FilterContainerVertical,
+    FormControlGridRow,
+    InputLabel,
+} from "./styledComponents";
 
 export default function TimestampFilter({
     current,
@@ -11,19 +15,15 @@ export default function TimestampFilter({
     const [start, end] = current;
 
     return (
-        <FilterContainerVertical width={width} sx={{ pt: "2px" }}>
-            <DateInput
-                name="from"
+        <FilterContainerVertical width={width} gap="5px">
+            <DateField
+                label="From:"
                 value={fromTimestamp(start)}
                 onChange={(value) => onChange([toTimestamp(value), end])}
             />
 
-            <Box my="1px" fontSize="10px">
-                ↓
-            </Box>
-
-            <DateInput
-                name="to"
+            <DateField
+                label="To:"
                 value={fromTimestamp(end)}
                 onChange={(value) =>
                     onChange([start, toTimestamp(value, { atEndOfDay: true })])
@@ -33,21 +33,23 @@ export default function TimestampFilter({
     );
 }
 
-interface DateInputProps {
-    name: string;
+interface DateFieldProps {
+    label: string;
     value: string;
     onChange: (value: string) => void;
 }
 
-function DateInput({ name, value, onChange }: DateInputProps) {
+function DateField({ label, value, onChange }: DateFieldProps) {
     return (
-        <StyledDateInput
-            type="date"
-            name={name}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            sx={{ input: { color: !value ? "#888" : undefined } }}
-        />
+        <FormControlGridRow $columnWidths="35px 1fr">
+            <InputLabel>{label}</InputLabel>
+            <DateInput
+                type="date"
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                sx={{ input: { color: !value ? "#888" : undefined } }}
+            />
+        </FormControlGridRow>
     );
 }
 
