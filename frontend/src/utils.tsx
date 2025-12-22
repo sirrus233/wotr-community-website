@@ -244,7 +244,6 @@ export function isStrongholdInPlay(
     }
 }
 
-// TODO: test in different formats
 export function displayTime(timestamp: string) {
     return Intl.DateTimeFormat(undefined, {
         year: "numeric",
