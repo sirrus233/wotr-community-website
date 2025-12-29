@@ -30,6 +30,7 @@ import PlayerForm from "./PlayerForm";
 import { LeagueSelector, SubLeagueSelector } from "./styledComponents";
 
 interface Props {
+    activeYear: number;
     stats: LeagueStats;
     playerNames: string[];
     loading: boolean;
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export default function Leagues({
+    activeYear,
     stats,
     playerNames,
     loading,
@@ -54,10 +56,7 @@ export default function Leagues({
 }: Props) {
     const [leaguePlayerFormOpen, setLeaguePlayerFormOpen] = useState(false);
 
-    const availableYears = range(
-        LEAGUE_START_YEAR,
-        new Date().getFullYear() + 1
-    );
+    const availableYears = range(LEAGUE_START_YEAR, activeYear + 1);
 
     return (
         <PageContainer>
@@ -80,7 +79,7 @@ export default function Leagues({
 
             <ButtonSelector
                 current={params.year}
-                options={availableYears.reverse()}
+                options={availableYears}
                 setCurrent={(year) =>
                     setParams((params) => ({ ...params, year }))
                 }
@@ -135,6 +134,7 @@ export default function Leagues({
                 refresh={refresh}
                 table={
                     <LeagueTable
+                        year={params.year}
                         stats={stats}
                         loading={loading}
                         isAdmin={isAdmin}
@@ -149,6 +149,7 @@ export default function Leagues({
 }
 
 interface LeagueTableProps {
+    year: number;
     stats: LeagueStats;
     loading: boolean;
     isAdmin: boolean;
@@ -156,6 +157,7 @@ interface LeagueTableProps {
 }
 
 function LeagueTable({
+    year,
     stats,
     loading,
     isAdmin,
@@ -177,7 +179,9 @@ function LeagueTable({
                     content: isAdmin ? (
                         <IconButton
                             size="sm"
-                            disabled={loading}
+                            disabled={
+                                loading || year < new Date().getFullYear()
+                            }
                             onClick={openLeaguePlayerForm}
                             variant="solid"
                             color="primary"

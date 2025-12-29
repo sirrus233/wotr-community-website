@@ -60,6 +60,8 @@ const routesData = [
 
 const PAGE_LIMIT = 100;
 
+const activeLeagueYear = oneMonthFromNow().getFullYear();
+
 export default function App() {
     const [
         refreshUserInfo,
@@ -91,7 +93,7 @@ export default function App() {
         initialParams: {
             league: "GeneralLeague",
             tier: "Tier1",
-            year: new Date().getFullYear(),
+            year: activeLeagueYear,
         },
         sendRequest: (params) =>
             axios.get(`${API_BASE_URL}/leagueStats`, { params }),
@@ -238,6 +240,7 @@ export default function App() {
                             path="/leagues"
                             element={
                                 <Leagues
+                                    activeYear={activeLeagueYear}
                                     stats={leagueStats}
                                     playerNames={playerNames}
                                     loading={loadingLeague}
@@ -670,4 +673,11 @@ function Subtitle({ children }: SubtitleProps) {
             {children}
         </Typography>
     );
+}
+
+function oneMonthFromNow() {
+    const date = new Date();
+    const thisMonth = date.getMonth();
+    date.setMonth(thisMonth + 1);
+    return date;
 }

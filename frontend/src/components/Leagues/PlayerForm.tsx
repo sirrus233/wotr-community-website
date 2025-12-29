@@ -1,5 +1,6 @@
 import axios from "axios";
 import React from "react";
+import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
 import { ErrorMessage } from "../../constants";
 import { API_BASE_URL } from "../../env";
@@ -85,6 +86,8 @@ export default function PlayerForm({
                 },
             ]}
         >
+            <YearBoundaryWarning selectedYear={formData.year.value} />
+
             <AutoPopulatedField
                 label="League:"
                 value={getLeagueLabel(formData.league.value)}
@@ -143,4 +146,21 @@ function AutoPopulatedField({ label, value }: AutoPopulatedFieldProps) {
             </Box>
         </Box>
     );
+}
+
+function YearBoundaryWarning(props: { selectedYear: number }) {
+    const { selectedYear } = props;
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    if (currentMonth === 12 && selectedYear <= currentYear) {
+        return (
+            <Alert color="warning" sx={{ textAlign: "center" }}>
+                {`It's almost ${currentYear + 1}. Are you in the right year?`}
+            </Alert>
+        );
+    }
+    return <></>;
 }
