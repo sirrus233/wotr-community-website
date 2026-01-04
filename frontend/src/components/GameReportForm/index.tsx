@@ -498,7 +498,7 @@ function GameReportForm({
                     strongholdOptions={freeStrongholdOptions}
                 />
                 <MultiOptionInput
-                    values={freeStrongholdOptions}
+                    values={orderStrongholds(freeStrongholdOptions)}
                     current={formData.strongholds.value}
                     onChange={handleInputChange("strongholds")}
                     validate={validateField("strongholds")}
@@ -516,7 +516,7 @@ function GameReportForm({
                     strongholdOptions={shadowStrongholdOptions}
                 />
                 <MultiOptionInput
-                    values={shadowStrongholdOptions}
+                    values={orderStrongholds(shadowStrongholdOptions)}
                     current={formData.strongholds.value}
                     onChange={handleInputChange("strongholds")}
                     validate={validateField("strongholds")}
@@ -743,4 +743,40 @@ function validationErrorToMessage(
         case "InvalidStronghold":
             return "invalid stronghold selections for the indicated expansions";
     }
+}
+
+function orderStrongholds(strongholds: Stronghold[]) {
+    const gameFormOrder: Stronghold[] = [
+        "MinasTirith",
+        "Pelargir",
+        "DolAmroth",
+        "Dale",
+        "Erebor",
+        "IronHills",
+        "WoodlandRealm",
+        "HelmsDeep",
+        "Edoras",
+        "Lorien",
+        "Rivendell",
+        "Shire",
+        "GreyHavens",
+        "EredLuin",
+        "Angmar",
+        "MountGundabad",
+        "Orthanc",
+        "Moria",
+        "DolGuldur",
+        "MinasMorgul",
+        "Morannon",
+        "BaradDur",
+        "Umbar",
+        "FarHarad",
+        "SouthRhun",
+    ];
+
+    const indices = new Map(gameFormOrder.map((v, i) => [v, i]));
+
+    return [...strongholds].sort(
+        (a, b) => (indices.get(a) ?? 0) - (indices.get(b) ?? 0)
+    );
 }
