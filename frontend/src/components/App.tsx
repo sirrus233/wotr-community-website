@@ -468,7 +468,7 @@ function Home() {
                     },
                     {
                         label: "League Rules",
-                        href: "https://docs.google.com/document/d/1T2OIOfU9vlSJQd0xPoivFmHOUTvPOa1jjtaiN2vrHAQ",
+                        href: "https://docs.google.com/document/d/1TciOPSVft34LnJfzeIui3E_TnPQDSPjDmrBLPpbo6hM",
                         isDownload: false,
                     },
                     {
