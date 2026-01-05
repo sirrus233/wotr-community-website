@@ -500,6 +500,16 @@ function Home() {
 
                 {[
                     {
+                        label: "File a website request or bug report",
+                        href: "https://github.com/sirrus233/wotr-community-website/issues/new/choose",
+                        isDownload: false,
+                    },
+                    {
+                        label: "Website feature backlog",
+                        href: "https://github.com/sirrus233/wotr-community-website/issues",
+                        isDownload: false,
+                    },
+                    {
                         label: "Java Client & Hamachi Setup",
                         href: "https://www.youtube.com/watch?v=g6xt-xC9dXY",
                         isDownload: false,
