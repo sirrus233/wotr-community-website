@@ -168,7 +168,7 @@ function LeagueTable({
             playerStatsB.summary.points - playerStatsA.summary.points
     );
 
-    const FIXED_HEADERS = ["Win Rate", "Games", "Wins", "Points"];
+    const FIXED_HEADERS = ["Points", "Win Rate", "Games", "Wins"];
 
     return (
         <Table
@@ -212,6 +212,10 @@ function LeagueTable({
                     cells: [
                         { key: playerStats.name },
                         {
+                            key: `${playerId}-points`,
+                            content: playerStats.summary.points.toFixed(1),
+                        },
+                        {
                             key: `${playerId}-winRate`,
                             content: toPercent(
                                 noNansense(
@@ -227,10 +231,6 @@ function LeagueTable({
                         {
                             key: `${playerId}-wins`,
                             content: playerStats.summary.totalWins,
-                        },
-                        {
-                            key: `${playerId}-points`,
-                            content: playerStats.summary.points.toFixed(1),
                         },
                         ...entries.map(([opponentId]) => {
                             const gameStatsForOpponent =
