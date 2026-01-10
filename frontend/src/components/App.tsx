@@ -79,9 +79,11 @@ export default function App() {
         [setLeaderboardParams],
     ] = useRequestState<{ entries: LeaderboardEntry[] }, LeaderboardParams>({
         initialState: { entries: [] },
-        initialParams: { year: new Date().getFullYear() },
-        sendRequest: (params) =>
-            axios.get(`${API_BASE_URL}/leaderboard`, { params }),
+        initialParams: { year: null },
+        sendRequest: ({ year }) =>
+            axios.get(`${API_BASE_URL}/leaderboard`, {
+                params: year == null ? {} : { year },
+            }),
     });
 
     const [
