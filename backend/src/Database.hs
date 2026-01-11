@@ -65,6 +65,7 @@ import Database.Esqueleto.Experimental
     (||.),
     type (:&) (..),
   )
+import Database.Esqueleto.Internal.Internal (unsafeSqlBinOp)
 import Servant (ServerError, throwError)
 import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), NullableFilter (..), TimestampFilter (..), VictoryFilter (..))
 import Types.Auth (SessionId (..), UserId (..))
@@ -110,6 +111,9 @@ runAuthDb dbAction = asks authDbPool >>= (`runDbWithPool` dbAction)
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
 
+unsafeLike :: (Show a, Show b) => SqlExpr (Value [b]) -> SqlExpr (Value a) -> SqlExpr (Value Bool)
+unsafeLike = unsafeSqlBinOp " like "
+
 toFilterExpression ::
   SqlExpr (Entity GameReport) ->
   GameReportFilterSpec ->
@@ -146,6 +150,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
         turnsFilter,
         victoryFilter,
         leagueFilter,
+        expansionsFilter,
         tokensFilter,
         dwarvenRings,
         corruption,
@@ -184,6 +189,12 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
       spec.leagues <&> \case
         [] -> isNothing_ (report ^. GameReportLeague)
         leagues -> toListFilter report GameReportLeague . map Just $ leagues
+    expansionsFilter =
+      spec.expansions <&> \case
+        [] -> report ^. GameReportExpansions ==. val []
+        expansions -> foldr ((&&.) . expansionFilter) (val True) expansions
+          where
+            expansionFilter e = (report ^. GameReportExpansions) `unsafeLike` val ("%" ++ show e ++ "%")
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
     corruption = toInequalityFilter report GameReportCorruption <$> spec.corruption
