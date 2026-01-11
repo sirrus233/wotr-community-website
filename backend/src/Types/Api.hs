@@ -341,7 +341,7 @@ data GameReportFilterSpec = GameReportFilterSpec
     victory :: Maybe (NonEmpty VictoryFilter),
     -- TODO competition
     leagues :: Maybe [League],
-    -- TODO expansions
+    expansions :: Maybe [Expansion],
     tokens :: Maybe InequalityFilter,
     dwarvenRings :: Maybe InequalityFilter,
     corruption :: Maybe InequalityFilter,
