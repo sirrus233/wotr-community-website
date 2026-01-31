@@ -1,6 +1,7 @@
 module Main where
 
 import Amazonka qualified as AWS
+import Amazonka.Auth (AccessKey (..), SecretKey (..), fromKeys)
 import Api (API)
 import AppConfig (Env (..), authDatabaseFile, databaseFile, logFile, logFilter, maxGameLogSizeMB, nt, redisConfig, runAppLogger)
 import AppServer (server)
@@ -91,7 +92,9 @@ main = do
   dbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText databaseFile) defaultConnectionPoolConfig
   authDbPool <- runAppLogger logger $ createSqlitePoolWithConfig (toText authDatabaseFile) defaultConnectionPoolConfig
   redisPool <- connect redisConfig
-  aws <- AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = toAwsLogger logFilter logger, AWS.region = AWS.Oregon}
+  aws <- case appMode of
+    Dev -> fromKeys (AccessKey "ABC") (SecretKey "123") <$> AWS.newEnvNoAuth
+    Prod -> AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = toAwsLogger logFilter logger, AWS.region = AWS.Oregon}
   apiSecret <- fmap encodeUtf8 <$> lookupEnv "SERVICE_API_SECRET"
 
   when doMigrate $ migrateSchema dbPool logger
