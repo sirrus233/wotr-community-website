@@ -250,6 +250,17 @@ export type ValidLeaguePlayerFormData = {
 
 export type ValueOf<T> = T[keyof T];
 
+export type SameElements<
+    T extends readonly string[],
+    U extends readonly string[],
+> = T["length"] extends U["length"]
+    ? Exclude<U[number], T[number]> extends never
+        ? Exclude<T[number], U[number]> extends never
+            ? T
+            : never
+        : never
+    : never;
+
 export type NullFilter = "NullFilter";
 
 export type ApiInequalityOperator = "GT" | "LT" | "EQ";
