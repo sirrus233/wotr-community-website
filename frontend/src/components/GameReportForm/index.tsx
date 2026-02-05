@@ -32,6 +32,7 @@ import {
     GameFormData,
     GameReportPayload,
     ProcessedGameReport,
+    SameElements,
     ServerErrorBody,
     ServerValidationError,
     Stronghold,
@@ -745,8 +746,8 @@ function validationErrorToMessage(
     }
 }
 
-function orderStrongholds(strongholds: Stronghold[]) {
-    const gameFormOrder: Stronghold[] = [
+function orderStrongholds(shs: Stronghold[]) {
+    const gameFormOrder = [
         "MinasTirith",
         "Pelargir",
         "DolAmroth",
@@ -772,11 +773,16 @@ function orderStrongholds(strongholds: Stronghold[]) {
         "Umbar",
         "FarHarad",
         "SouthRhun",
-    ];
+    ] as const;
+
+    gameFormOrder satisfies SameElements<
+        typeof gameFormOrder,
+        typeof strongholds
+    >;
 
     const indices = new Map(gameFormOrder.map((v, i) => [v, i]));
 
-    return [...strongholds].sort(
-        (a, b) => (indices.get(a) ?? 0) - (indices.get(b) ?? 0)
+    return [...shs].sort(
+        (a, b) => (indices.get(a) ?? 0) - (indices.get(b) ?? 0),
     );
 }
