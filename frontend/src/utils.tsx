@@ -245,7 +245,11 @@ export function isStrongholdInPlay(
 }
 
 export function displayTime(timestamp: string) {
-    return Intl.DateTimeFormat("en-GB").format(new Date(Date.parse(timestamp)));
+    return Intl.DateTimeFormat(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).format(new Date(Date.parse(timestamp)));
 }
 
 export function objectKeys<T extends object>(obj: T): Array<keyof T> {
