@@ -8,16 +8,45 @@ import {
     Side,
     Stronghold,
     Victory,
+    SameElements,
 } from "../../types";
-import { strongholdPoints, strongholdSide } from "../../utils";
+import {
+    strongholdPoints,
+    strongholdSide,
+    getExpansionLabel,
+} from "../../utils";
+import { expansions } from "../../constants";
+
+export function formatExpansions(values: readonly Expansion[]): string {
+    const expansionOrder = [
+        "LoME",
+        "WoME",
+        "KoME",
+        "Cities",
+        "FateOfErebor",
+        "Treebeard" /* list expansions here in desired order */,
+    ] as const;
+
+    expansionOrder satisfies SameElements<
+        typeof expansionOrder,
+        typeof expansions
+    >;
+
+    const indices = new Map(expansionOrder.map((v, i) => [v, i]));
+
+    return [...values]
+        .sort((a, b) => (indices.get(a) ?? 0) - (indices.get(b) ?? 0))
+        .map(getExpansionLabel)
+        .join(", ");
+}
 
 export function toVictoryTypeLabel(side: Side, victory: Victory): string {
     return `${side} ${
         side === "Shadow" && victory === "Ring"
             ? "Corruption"
             : victory === "Concession"
-            ? "via Concession"
-            : victory
+              ? "via Concession"
+              : victory
     }`;
 }
 
@@ -34,7 +63,7 @@ export function toVictoryKindLabel(victory: Victory): string {
 export function countVictoryPoints(
     strongholds: Stronghold[],
     expansions: Expansion[],
-    side: Side
+    side: Side,
 ) {
     return strongholds
         .filter((stronghold) => strongholdSide(expansions, stronghold) === side)
@@ -60,7 +89,7 @@ export function summarizeVictoryType(side: Side, victory: Victory) {
 
 export function summarizeCompetitionType(
     match: Match,
-    competition: Competition[]
+    competition: Competition[],
 ) {
     return [match === "Rated" ? "Ladder" : "Friendly", ...competition]
         .filter(Boolean)
