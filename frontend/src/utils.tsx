@@ -2,7 +2,7 @@ import { Expansion, League, LeagueTier, Side, Stronghold } from "./types";
 
 export function strongholdSide(
     expansions: Expansion[],
-    stronghold: Stronghold
+    stronghold: Stronghold,
 ): Side {
     switch (stronghold) {
         case "Erebor":
@@ -209,7 +209,7 @@ export function strongholdPoints(stronghold: Stronghold): 1 | 2 {
 
 export function isStrongholdInPlay(
     expansions: Expansion[],
-    stronghold: Stronghold
+    stronghold: Stronghold,
 ): boolean {
     switch (stronghold) {
         case "EredLuin":
@@ -248,6 +248,11 @@ export function displayTime(timestamp: string) {
     return Intl.DateTimeFormat("en-GB").format(new Date(Date.parse(timestamp)));
 }
 
+export function displayMusterPoints(n: number) {
+    const x = n / 2;
+    return Number.isInteger(x) ? String(x) : x.toFixed(1);
+}
+
 export function objectKeys<T extends object>(obj: T): Array<keyof T> {
     return Object.keys(obj) as Array<keyof T>;
 }
@@ -280,7 +285,7 @@ export function fallback<T>(value: T, fallback: T) {
 
 export function hasKey<K extends PropertyKey>(
     obj: object,
-    key: K
+    key: K,
 ): obj is Record<K, unknown> {
     return key in obj;
 }

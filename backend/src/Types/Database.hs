@@ -65,6 +65,7 @@ share
     treebeard Bool Maybe
     actionTokens Int
     dwarvenRings Int
+    musterPoints Int default=0
     turns Int
     corruption Int
     mordor Int Maybe

@@ -143,12 +143,12 @@ export default function colHeaders({
                         ...sides.flatMap((s) =>
                             victoryTypes.map(
                                 (
-                                    v
+                                    v,
                                 ): { id: [Side, Victory]; label: string } => ({
                                     id: [s, v],
                                     label: toVictoryTypeLabel(s, v),
-                                })
-                            )
+                                }),
+                            ),
                         ),
                     ],
                     current: filters.victory,
@@ -206,6 +206,20 @@ export default function colHeaders({
                     appliedCount: isDefined(filters.dwarvenRings?.[1]) ? 1 : 0,
                     onChange: (value) =>
                         setFilters({ ...filters, dwarvenRings: value }),
+                },
+            },
+            {
+                key: "Muster Points",
+                width: 170,
+                filter: {
+                    filterType: "inequality",
+                    placeholder: "Points",
+                    min: 0,
+                    max: 999,
+                    current: filters.musterPoints,
+                    appliedCount: isDefined(filters.musterPoints?.[1]) ? 1 : 0,
+                    onChange: (value) =>
+                        setFilters({ ...filters, musterPoints: value }),
                 },
             },
             {
