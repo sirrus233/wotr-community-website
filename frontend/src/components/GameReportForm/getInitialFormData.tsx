@@ -4,12 +4,12 @@ import { ErrorMessage } from "../../constants";
 
 export default function getInitialFormData(
     report?: ProcessedGameReport,
-    allowedPlayerNames?: string[]
+    allowedPlayerNames?: string[],
 ): GameFormData {
     return {
         rid: initializeToDefaults(fromMaybeReport(null, report, "rid")),
         timestamp: initializeToDefaults(
-            fromMaybeReport(null, report, "timestamp")
+            fromMaybeReport(null, report, "timestamp"),
         ),
         winner: {
             value: fromMaybeReport(null, report, "winner"),
@@ -37,17 +37,17 @@ export default function getInitialFormData(
         victory: initializeToDefaults(fromMaybeReport(null, report, "victory")),
         match: initializeToDefaults(fromMaybeReport(null, report, "match")),
         competition: initializeToDefaults(
-            fromMaybeReport([], report, "competition")
+            fromMaybeReport([], report, "competition"),
         ),
         league: initializeToDefaults(fromMaybeReport(null, report, "league")),
         usedExpansions: initializeToDefaults(
-            report ? !!report.expansions.length : null
+            report ? !!report.expansions.length : null,
         ),
         expansions: initializeToDefaults(
-            fromMaybeReport([], report, "expansions")
+            fromMaybeReport([], report, "expansions"),
         ),
         treebeard: initializeToDefaults(
-            fromMaybeReport(null, report, "treebeard")
+            fromMaybeReport(null, report, "treebeard"),
         ),
         usedHandicap: initializeToDefaults(
             report
@@ -55,36 +55,39 @@ export default function getInitialFormData(
                       report.actionTokens > 0) ||
                       (typeof report.dwarvenRings === "number" &&
                           report.dwarvenRings > 0)
-                : null
+                : null,
         ),
         actionTokens: initializeToDefaults(
-            fromMaybeReport(0, report, "actionTokens")
+            fromMaybeReport(0, report, "actionTokens"),
         ),
         dwarvenRings: initializeToDefaults(
-            fromMaybeReport(0, report, "dwarvenRings")
+            fromMaybeReport(0, report, "dwarvenRings"),
+        ),
+        musterPoints: initializeToDefaults(
+            fromMaybeReport(0, report, "musterPoints"),
         ),
         turns: initializeToDefaults(fromMaybeReport(null, report, "turns")),
         corruption: initializeToDefaults(
-            fromMaybeReport(null, report, "corruption")
+            fromMaybeReport(null, report, "corruption"),
         ),
         didFellowshipReachMordor: initializeToDefaults(
-            report ? typeof report.mordor === "number" : null
+            report ? typeof report.mordor === "number" : null,
         ),
         mordor: initializeToDefaults(fromMaybeReport(null, report, "mordor")),
         initialEyes: initializeToDefaults(
-            fromMaybeReport(null, report, "initialEyes")
+            fromMaybeReport(null, report, "initialEyes"),
         ),
         wasAragornCrowned: initializeToDefaults(
-            report ? report && !!report.aragornTurn : null
+            report ? report && !!report.aragornTurn : null,
         ),
         aragornTurn: initializeToDefaults(
-            fromMaybeReport(null, report, "aragornTurn")
+            fromMaybeReport(null, report, "aragornTurn"),
         ),
         strongholds: initializeToDefaults(
-            fromMaybeReport([], report, "strongholds")
+            fromMaybeReport([], report, "strongholds"),
         ),
         interestRating: initializeToDefaults(
-            fromMaybeReport(null, report, "interestRating")
+            fromMaybeReport(null, report, "interestRating"),
         ),
         comment: initializeToDefaults(fromMaybeReport(null, report, "comment")),
 
@@ -99,7 +102,7 @@ export default function getInitialFormData(
 function fromMaybeReport<T, K extends keyof ProcessedGameReport>(
     defaultVal: Exclude<T, undefined>,
     report: ProcessedGameReport | undefined,
-    key: K
+    key: K,
 ): T | ProcessedGameReport[K] {
     return report ? report[key] : defaultVal;
 }

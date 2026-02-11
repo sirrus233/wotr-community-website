@@ -63,6 +63,7 @@ export const optionalPayloadFields = [
     "treebeard",
     "actionTokens",
     "dwarvenRings",
+    "musterPoints",
     "mordor",
     "aragornTurn",
     "strongholds",
