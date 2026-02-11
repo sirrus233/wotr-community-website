@@ -249,8 +249,7 @@ export function displayTime(timestamp: string) {
 }
 
 export function displayMusterPoints(n: number) {
-    const x = n / 2;
-    return Number.isInteger(x) ? String(x) : x.toFixed(1);
+    return (n / 2).toFixed(1);
 }
 
 export function objectKeys<T extends object>(obj: T): Array<keyof T> {
