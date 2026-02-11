@@ -11,6 +11,7 @@ import {
 } from "../../constants";
 import {
     GameReportFilters,
+    InequalityFilter,
     MenuOption,
     Side,
     Victory,
@@ -216,10 +217,14 @@ export default function colHeaders({
                     placeholder: "Points",
                     min: 0,
                     max: 999,
-                    current: filters.musterPoints,
+                    step: 0.5,
+                    current: maskMusterPoints(filters.musterPoints),
                     appliedCount: isDefined(filters.musterPoints?.[1]) ? 1 : 0,
                     onChange: (value) =>
-                        setFilters({ ...filters, musterPoints: value }),
+                        setFilters({
+                            ...filters,
+                            musterPoints: unmaskMusterPoints(value),
+                        }),
                 },
             },
             {
@@ -353,4 +358,20 @@ export default function colHeaders({
             },
         ],
     };
+}
+
+function maskMusterPoints(
+    unmaskedFilter: InequalityFilter | null,
+): InequalityFilter | null {
+    if (!unmaskedFilter) return unmaskedFilter;
+    const [operator, num] = unmaskedFilter;
+    return [operator, num / 2];
+}
+
+function unmaskMusterPoints(
+    maskedFilter: InequalityFilter | null,
+): InequalityFilter | null {
+    if (!maskedFilter) return maskedFilter;
+    const [operator, num] = maskedFilter;
+    return [operator, Math.round(num * 2)];
 }

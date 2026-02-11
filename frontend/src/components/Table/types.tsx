@@ -36,6 +36,7 @@ export interface InequalityFilterProps extends CommonFilterProps {
     current: InequalityFilter | null;
     min?: number;
     max?: number;
+    step?: number;
     disabled?: boolean;
     onChange: (value: InequalityFilter | null) => void;
 }
@@ -45,6 +46,7 @@ export interface NullableInequalityFilterProps extends CommonFilterProps {
     current: NullableInequalityFilter | null;
     min?: number;
     max?: number;
+    step?: number;
     nullLabel: string;
     onChange: (value: NullableInequalityFilter | null) => void;
 }
