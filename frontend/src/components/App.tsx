@@ -121,6 +121,7 @@ export default function App() {
                 turns: null,
                 tokens: null,
                 dwarvenRings: null,
+                musterPoints: null,
                 corruption: null,
                 mordor: null,
                 aragorn: null,
@@ -142,7 +143,7 @@ export default function App() {
             (entry): MenuOption<number> => ({
                 label: entry.name,
                 id: entry.pid,
-            })
+            }),
         )
         .sort((a, b) => a.label.localeCompare(b.label));
 

@@ -14,6 +14,7 @@ import {
     getExpansionLabel,
     getLeagueLabel,
     isDefined,
+    displayMusterPoints,
 } from "../../utils";
 import ExternalLink from "../ExternalLink";
 import { RowData } from "../Table/types";
@@ -152,6 +153,12 @@ export default function rows({
                 },
                 { key: "tokens", content: report.actionTokens },
                 { key: "dwarven-rings", content: report.dwarvenRings },
+                {
+                    key: "muster-points",
+                    content:
+                        report.musterPoints &&
+                        displayMusterPoints(report.musterPoints),
+                },
                 { key: "corruption", content: report.corruption },
                 { key: "mordor", content: report.mordor },
                 { key: "aragorn", content: report.aragornTurn },

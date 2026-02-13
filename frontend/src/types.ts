@@ -90,6 +90,7 @@ export interface GameFormData {
     usedHandicap: FieldData<boolean | null>;
     actionTokens: FieldData<number | null>;
     dwarvenRings: FieldData<number | null>;
+    musterPoints: FieldData<number | null>;
     turns: FieldData<number | null>;
     corruption: FieldData<number | null>;
     didFellowshipReachMordor: FieldData<boolean | null>;
@@ -287,6 +288,7 @@ export type GameReportFilters = {
     turns: InequalityFilter | null;
     tokens: InequalityFilter | null;
     dwarvenRings: InequalityFilter | null;
+    musterPoints: InequalityFilter | null;
     corruption: InequalityFilter | null;
     initialEyes: InequalityFilter | null;
     interestRating: InequalityFilter | null;
@@ -306,9 +308,8 @@ export type GameReportParams = {
     filters: GameReportFilters;
 };
 
-export type SerializedVictoryFilter =
-    | (
-          | { tag: "VictorySideFilter"; contents: Side }
-          | { tag: "VictoryKindFilter"; contents: Victory }
-          | { tag: "VictoryComboFilter"; contents: [Side, Victory] }
-      )[];
+export type SerializedVictoryFilter = (
+    | { tag: "VictorySideFilter"; contents: Side }
+    | { tag: "VictoryKindFilter"; contents: Victory }
+    | { tag: "VictoryComboFilter"; contents: [Side, Victory] }
+)[];

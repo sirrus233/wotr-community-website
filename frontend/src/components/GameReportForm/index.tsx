@@ -6,7 +6,6 @@ import Modal from "@mui/joy/Modal";
 import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
-import Sheet from "@mui/joy/Sheet";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import mordorStepsPath from "../../assets/mordor-steps.png";
@@ -44,6 +43,7 @@ import {
     getStrongholdLabel,
     isStrongholdInPlay,
     strongholdSide,
+    displayMusterPoints,
 } from "../../utils";
 import useFormData from "../../hooks/useFormData";
 import Autocomplete from "../Autocomplete";
@@ -117,13 +117,13 @@ function GameReportForm({
     const freeStrongholdOptions: Stronghold[] = strongholds.filter(
         (stronghold) =>
             strongholdSide(selectedExpansions, stronghold) === "Free" &&
-            isStrongholdInPlay(selectedExpansions, stronghold)
+            isStrongholdInPlay(selectedExpansions, stronghold),
     );
 
     const shadowStrongholdOptions: Stronghold[] = strongholds.filter(
         (stronghold) =>
             strongholdSide(selectedExpansions, stronghold) === "Shadow" &&
-            isStrongholdInPlay(selectedExpansions, stronghold)
+            isStrongholdInPlay(selectedExpansions, stronghold),
     );
 
     const layoutTheme = report ? "minimal" : "default";
@@ -164,9 +164,9 @@ function GameReportForm({
                         report
                             ? undefined
                             : !!formData.winner.value &&
-                              !playerNames.includes(formData.winner.value)
-                            ? ErrorMessage.MissingPlayerName
-                            : ""
+                                !playerNames.includes(formData.winner.value)
+                              ? ErrorMessage.MissingPlayerName
+                              : ""
                     }
                     placeholder={`Player Name${
                         report ? "" : " - Please check spelling!"
@@ -188,9 +188,9 @@ function GameReportForm({
                         report
                             ? undefined
                             : !!formData.loser.value &&
-                              !playerNames.includes(formData.loser.value)
-                            ? ErrorMessage.MissingPlayerName
-                            : ""
+                                !playerNames.includes(formData.loser.value)
+                              ? ErrorMessage.MissingPlayerName
+                              : ""
                     }
                     placeholder={`Player Name${
                         report ? "" : " - Please check spelling!"
@@ -372,6 +372,22 @@ function GameReportForm({
                             allowInfinite={true}
                             onChange={handleInputChange("dwarvenRings")}
                             validate={validateField("dwarvenRings")}
+                        />
+                    </FormElement>
+                    <FormElement
+                        label="How many Muster Points?"
+                        error={formData.musterPoints.error}
+                        layoutTheme={layoutTheme}
+                    >
+                        <SelectNumericOptionInput
+                            start={0}
+                            end={20}
+                            current={formData.musterPoints.value}
+                            initializeEmpty={false}
+                            allowInfinite={true}
+                            onChange={handleInputChange("musterPoints")}
+                            validate={validateField("musterPoints")}
+                            display={displayMusterPoints}
                         />
                     </FormElement>
                 </>
@@ -569,7 +585,7 @@ function GameReportForm({
                                         ? null
                                         : "File too large"
                                     : null;
-                            }
+                            },
                         )}
                     />
                 </FormElement>
@@ -622,7 +638,7 @@ async function submit(validatedResult: ValidGameFormData) {
                     ? "application/json"
                     : "multipart/form-data",
             },
-        }
+        },
     );
 }
 
@@ -643,6 +659,7 @@ function toPayload(formData: ValidGameFormData): GameReportPayload | FormData {
             treebeard: formData.treebeard.value,
             actionTokens: formData.actionTokens.value,
             dwarvenRings: formData.dwarvenRings.value,
+            musterPoints: formData.musterPoints.value,
             turns: formData.turns.value,
             corruption: formData.corruption.value,
             mordor: formData.mordor.value,
@@ -684,21 +701,21 @@ function toGameFormErrorMessage(error: ServerErrorBody): string {
 }
 
 function parseValidationResult(
-    serverValidationResult: string
+    serverValidationResult: string,
 ): ServerValidationError[] {
     const parsedResult = serverValidationResult
         .slice(1, serverValidationResult.length - 1)
         .split(",");
 
     return parsedResult.every((error) =>
-        serverValidationErrors.includes(error as ServerValidationError)
+        serverValidationErrors.includes(error as ServerValidationError),
     )
         ? (parsedResult as ServerValidationError[])
         : [];
 }
 
 function validationErrorToMessage(
-    validationError: ServerValidationError
+    validationError: ServerValidationError,
 ): string {
     switch (validationError) {
         case "VictoryConditionConflictSPRV":
