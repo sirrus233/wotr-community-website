@@ -148,6 +148,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
         leagueFilter,
         tokensFilter,
         dwarvenRings,
+        musterPoints,
         corruption,
         mordor,
         aragorn,
@@ -186,6 +187,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
         leagues -> toListFilter report GameReportLeague . map Just $ leagues
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
+    musterPoints = toInequalityFilter report GameReportMusterPoints <$> spec.musterPoints
     corruption = toInequalityFilter report GameReportCorruption <$> spec.corruption
     mordor = toNullableInequalityFilter report GameReportMordor <$> spec.mordor
     aragorn = toNullableInequalityFilter report GameReportAragornTurn <$> spec.aragorn

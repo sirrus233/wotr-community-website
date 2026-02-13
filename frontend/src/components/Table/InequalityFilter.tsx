@@ -15,6 +15,7 @@ export default function InequalityFilter({
     max,
     placeholder,
     width,
+    step = 1,
     disabled = false,
     onChange,
 }: InequalityFilterProps & { width: number }) {
@@ -22,7 +23,7 @@ export default function InequalityFilter({
 
     const [inputValue, setInputValue] = useState<number | null>(currentValue);
     const [inputOperator, setInputOperator] = useState<InequalityOperator>(
-        currentOperator || "EQ"
+        currentOperator || "EQ",
     );
 
     useEffect(() => {
@@ -32,13 +33,20 @@ export default function InequalityFilter({
         if (didValueChange && !disabled) {
             onChange(
                 isDefined(inputValue)
-                    ? translateFilter(inputOperator, inputValue)
-                    : null
+                    ? translateFilter(inputOperator, inputValue, step)
+                    : null,
             );
         } else if (didOperatorChange && isDefined(inputValue) && !disabled) {
-            onChange(translateFilter(inputOperator, inputValue));
+            onChange(translateFilter(inputOperator, inputValue, step));
         }
-    }, [disabled, currentOperator, currentValue, inputOperator, inputValue]);
+    }, [
+        disabled,
+        currentOperator,
+        currentValue,
+        inputOperator,
+        inputValue,
+        step,
+    ]);
 
     const commonStyle = {
         background: "white",
@@ -84,11 +92,11 @@ export default function InequalityFilter({
                 disabled={disabled}
                 onChange={(e) =>
                     setInputValue(
-                        constrainNumberInput(e.target.value, min, max)
+                        constrainNumberInput(e.target.value, min, max),
                     )
                 }
                 sx={{ ...commonStyle, flex: 1 }}
-                slotProps={{ input: { min, max } }}
+                slotProps={{ input: { min, max, step } }}
                 endDecorator={
                     isDefined(inputValue) ? (
                         <ResetButton reset={() => setInputValue(null)} />
@@ -116,13 +124,14 @@ function operatorLabel(operator: InequalityOperator): string {
 
 function translateFilter(
     operator: InequalityOperator,
-    value: number
+    value: number,
+    step: number,
 ): InequalityFilter {
     switch (operator) {
         case "GTE":
-            return ["GT", value - 1];
+            return ["GT", value - step];
         case "LTE":
-            return ["LT", value + 1];
+            return ["LT", value + step];
         default:
             return [operator, value];
     }
@@ -131,7 +140,7 @@ function translateFilter(
 function constrainNumberInput(
     value: string,
     min?: number,
-    max?: number
+    max?: number,
 ): number | null {
     if (value === "") return null;
     const num = noNansense(Number(value));
