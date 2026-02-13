@@ -4,7 +4,7 @@
     "description": "War of the Ring community management website.",
     "main": "index.js",
     "scripts": {
-	"start": "cross-env NODE_ENV=development webpack serve --port 3000",
+        "start": "NODE_ENV=development webpack serve --port 3000",
         "build": "NODE_ENV=production webpack",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
@@ -13,7 +13,6 @@
     "devDependencies": {
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
-        "cross-env": "^10.1.0",
         "css-loader": "^7.1.2",
         "html-webpack-plugin": "^5.6.0",
         "mini-css-extract-plugin": "^2.9.0",
