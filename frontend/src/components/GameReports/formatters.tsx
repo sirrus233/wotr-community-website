@@ -24,7 +24,7 @@ export function formatExpansions(values: readonly Expansion[]): string {
         "KoME",
         "Cities",
         "FateOfErebor",
-        "Treebeard" /* list expansions here in desired order */,
+        "Treebeard",
     ] as const;
 
     expansionOrder satisfies SameElements<
