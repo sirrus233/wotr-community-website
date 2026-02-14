@@ -193,6 +193,8 @@ data LeaderboardEntry = LeaderboardEntry
     currentRatingFree :: Rating,
     currentRatingShadow :: Rating,
     averageRating :: Double,
+    -- | {-# DEPRECATED No longer used, kept for backward compatibility #-}
+    totalGames :: Int,
     year :: Int,
     yearlyGames :: Int,
     yearlyWinsFree :: Int,
@@ -216,6 +218,7 @@ fromPlayerStats (Entity pid p, (t, y)) =
       currentRatingFree = t.playerStatsTotalRatingFree,
       currentRatingShadow = t.playerStatsTotalRatingShadow,
       averageRating = (fromIntegral t.playerStatsTotalRatingFree + fromIntegral t.playerStatsTotalRatingShadow) / 2,
+      totalGames = 0,
       year = y.playerStatsYearYear,
       yearlyGames = case y.playerStatsYearYear of
         0 -> t.playerStatsTotalGameCount
