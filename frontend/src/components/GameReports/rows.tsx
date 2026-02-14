@@ -24,6 +24,7 @@ import {
     summarizeCompetitionType,
     summarizeGameType,
     summarizeVictoryType,
+    formatExpansions,
 } from "./formatters";
 import FreeCaptures from "./FreeCaptures";
 import { ReportEditParams } from "./types";
@@ -148,9 +149,7 @@ export default function rows({
                 },
                 {
                     key: "expansions",
-                    content: report.expansions
-                        .map(getExpansionLabel)
-                        .join(", "),
+                    content: formatExpansions(report.expansions),
                 },
                 { key: "tokens", content: report.actionTokens },
                 { key: "dwarven-rings", content: report.dwarvenRings },
