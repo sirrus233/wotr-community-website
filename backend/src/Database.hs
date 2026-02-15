@@ -79,12 +79,14 @@ import Types.Database
     LeagueGameSummaryRecord,
     LeaguePlayer (..),
     MaybePlayerStats,
+    PeriodKind (..),
     Player (..),
     PlayerId,
-    PlayerStats,
+    PlayerStatsAggregate (..),
     PlayerStatsInitial (..),
     PlayerStatsTotal (..),
     PlayerStatsYear (..),
+    StatAggregationPeriod (..),
     Unique (..),
     toPlayerStatsTotal,
   )
@@ -210,9 +212,9 @@ getPlayerByName :: (MonadIO m, MonadLogger m) => PlayerName -> DBAction m (Maybe
 getPlayerByName = lift . getBy . UniquePlayerName . normalizeName
 
 joinedPlayerStats ::
-  Maybe Year ->
+  StatAggregationPeriod k ->
   From (SqlExpr (Entity Player) :& SqlExpr (Maybe (Entity PlayerStatsTotal)) :& SqlExpr (Maybe (Entity PlayerStatsYear)))
-joinedPlayerStats mYear =
+joinedPlayerStats aggPeriod =
   table @Player
     `leftJoin` table @PlayerStatsTotal
       `on` (\(player :& totalStats) -> just (player ^. PlayerId) ==. totalStats ?. PlayerStatsTotalPlayerId)
@@ -222,34 +224,32 @@ joinedPlayerStats mYear =
                  &&. yearFilterClause yearStats
            )
   where
-    yearFilterClause stats = case mYear of
-      Just year -> stats ?. PlayerStatsYearYear ==. just (val year)
-      Nothing -> val True
+    yearFilterClause stats = case aggPeriod of
+      Annual year -> stats ?. PlayerStatsYearYear ==. just (val year)
+      AllTime -> val True
 
-getPlayerStats :: (MonadIO m, MonadLogger m) => PlayerId -> Year -> DBAction m (Maybe MaybePlayerStats)
+getPlayerStats :: (MonadIO m, MonadLogger m) => PlayerId -> Year -> DBAction m (Maybe (MaybePlayerStats AnnualPeriod))
 getPlayerStats pid year = do
   rows <- lift . selectOne $ do
-    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats (Just year)
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats (Annual year)
     where_ (player ^. PlayerId ==. val pid)
     pure (totalStats, yearStats)
-  pure $ bimapF (fmap entityVal) (fmap entityVal) rows
+  pure $ bimapF (fmap entityVal) (fmap $ AnnualAgg . entityVal) rows
 
-getAllStats :: (MonadIO m, MonadLogger m) => Maybe Year -> DBAction m [(Entity Player, MaybePlayerStats)]
-getAllStats mYear@(Just _) = do
+getAllStats :: (MonadIO m, MonadLogger m) => StatAggregationPeriod k -> DBAction m [(Entity Player, MaybePlayerStats k)]
+getAllStats aggPeriod@(Annual _) = do
   rows <- lift . select $ do
-    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats mYear
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats aggPeriod
     pure (player, (totalStats, yearStats))
-  pure $ secondF (bimap (fmap entityVal) (fmap entityVal)) rows
-getAllStats Nothing = do
+  pure $ secondF (bimap (fmap entityVal) (fmap $ AnnualAgg . entityVal)) rows
+getAllStats AllTime = do
   rows <- lift . select $ do
-    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats Nothing
+    (player :& totalStats :& yearStats) <- from $ joinedPlayerStats AllTime
     groupBy (yearStats ?. PlayerStatsYearPlayerId)
     pure
       ( player,
         ( totalStats,
-          ( yearStats ?. PlayerStatsYearPlayerId,
-            just $ val 0,
-            sum_ (yearStats ?. PlayerStatsYearWinsFree),
+          ( sum_ (yearStats ?. PlayerStatsYearWinsFree),
             sum_ (yearStats ?. PlayerStatsYearWinsShadow),
             sum_ (yearStats ?. PlayerStatsYearLossesFree),
             sum_ (yearStats ?. PlayerStatsYearLossesShadow)
@@ -258,10 +258,10 @@ getAllStats Nothing = do
       )
   pure $
     fmap
-      ( \(p, (t, (Value pid, Value year, Value winsFree, Value winsShadow, Value lossesFree, Value lossesShadow))) ->
+      ( \(p, (t, (Value winsFree, Value winsShadow, Value lossesFree, Value lossesShadow))) ->
           ( p,
             ( fmap entityVal t,
-              PlayerStatsYear <$> pid <*> year <*> winsFree <*> winsShadow <*> lossesFree <*> lossesShadow
+              AllTimeAgg <$> winsFree <*> winsShadow <*> lossesFree <*> lossesShadow
             )
           )
       )
@@ -411,7 +411,7 @@ insertGameReport report = lift $ do
 insertLeaguePlayer :: (MonadIO m, MonadLogger m) => LeaguePlayer -> DBAction m ()
 insertLeaguePlayer = lift . insert_
 
-repsertPlayerStats :: (MonadIO m, MonadLogger m) => PlayerStats -> DBAction m ()
+repsertPlayerStats :: (MonadIO m, MonadLogger m) => (PlayerStatsTotal, PlayerStatsYear) -> DBAction m ()
 repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), yearStats@(PlayerStatsYear {..})) = lift $ do
   repsert (PlayerStatsTotalKey playerStatsTotalPlayerId) totalStats
   repsert (PlayerStatsYearKey playerStatsYearPlayerId playerStatsYearYear) yearStats

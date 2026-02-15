@@ -15,6 +15,7 @@ import Types.Database
     Player (..),
     PlayerId,
     PlayerStats,
+    PlayerStatsAggregate (..),
     PlayerStatsTotal (..),
     PlayerStatsYear (..),
     ReportInsertion,
@@ -208,8 +209,8 @@ data LeaderboardEntry = LeaderboardEntry
 
 instance ToJSON LeaderboardEntry
 
-fromPlayerStats :: (Entity Player, PlayerStats) -> LeaderboardEntry
-fromPlayerStats (Entity pid p, (t, y)) =
+fromPlayerStats :: (Entity Player, PlayerStats k) -> LeaderboardEntry
+fromPlayerStats (Entity pid p, (t, agg)) =
   LeaderboardEntry
     { pid,
       name = p.playerDisplayName,
@@ -219,23 +220,25 @@ fromPlayerStats (Entity pid p, (t, y)) =
       currentRatingShadow = t.playerStatsTotalRatingShadow,
       averageRating = (fromIntegral t.playerStatsTotalRatingFree + fromIntegral t.playerStatsTotalRatingShadow) / 2,
       totalGames = 0,
-      year = y.playerStatsYearYear,
-      yearlyGames = case y.playerStatsYearYear of
-        0 -> t.playerStatsTotalGameCount
-        _ ->
-          y.playerStatsYearWinsFree
-            + y.playerStatsYearWinsShadow
-            + y.playerStatsYearLossesFree
-            + y.playerStatsYearLossesShadow,
-      yearlyWinsFree = y.playerStatsYearWinsFree,
-      yearlyWinsShadow = y.playerStatsYearWinsShadow,
-      yearlyLossesFree = y.playerStatsYearLossesFree,
-      yearlyLossesShadow = y.playerStatsYearLossesShadow,
-      yearlyWinRateFree =
-        fromIntegral y.playerStatsYearWinsFree / fromIntegral (y.playerStatsYearWinsFree + y.playerStatsYearLossesFree),
-      yearlyWinRateShadow =
-        fromIntegral y.playerStatsYearWinsShadow / fromIntegral (y.playerStatsYearWinsShadow + y.playerStatsYearLossesShadow)
+      year = aggYear, -- TODO This should be optional, but defaults 0 for backwards compatibility
+      -- TODO In the same vein, these fields would more accurately be called "aggregateGames", etc.
+      yearlyGames = aggGames,
+      yearlyWinsFree = aggWinsFree,
+      yearlyWinsShadow = aggWinsShadow,
+      yearlyLossesFree = aggLossesFree,
+      yearlyLossesShadow = aggLossesShadow,
+      yearlyWinRateFree = fromIntegral aggWinsFree / fromIntegral (aggWinsFree + aggLossesFree),
+      yearlyWinRateShadow = fromIntegral aggWinsShadow / fromIntegral (aggWinsShadow + aggLossesShadow)
     }
+  where
+    aggYear = case agg of AnnualAgg y -> y.playerStatsYearYear; AllTimeAgg {} -> 0
+    aggGames = case agg of
+      AnnualAgg _ -> aggWinsFree + aggWinsShadow + aggLossesFree + aggLossesShadow
+      AllTimeAgg {} -> t.playerStatsTotalGameCount
+    aggWinsFree = case agg of AnnualAgg y -> y.playerStatsYearWinsFree; AllTimeAgg {..} -> winsFree
+    aggWinsShadow = case agg of AnnualAgg y -> y.playerStatsYearWinsShadow; AllTimeAgg {..} -> winsShadow
+    aggLossesFree = case agg of AnnualAgg y -> y.playerStatsYearLossesFree; AllTimeAgg {..} -> lossesFree
+    aggLossesShadow = case agg of AnnualAgg y -> y.playerStatsYearLossesShadow; AllTimeAgg {..} -> lossesShadow
 
 newtype GetLeaderboardResponse = GetLeaderboardResponse {entries :: [LeaderboardEntry]} deriving (Generic)
 
