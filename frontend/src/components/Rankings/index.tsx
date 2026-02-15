@@ -73,7 +73,7 @@ function Rankings({
 
     const availableYears = range(
         LEADERBOARD_START_YEAR,
-        new Date().getFullYear() + 1
+        new Date().getFullYear() + 1,
     ).reverse();
 
     return (
@@ -248,7 +248,7 @@ function Rankings({
                     .filter(
                         (entry) =>
                             (entry.isActive && filters.includes("Active")) ||
-                            (!entry.isActive && filters.includes("Inactive"))
+                            (!entry.isActive && filters.includes("Inactive")),
                     )
                     .map((entry, i) => (
                         <tr key={entry.pid}>

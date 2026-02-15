@@ -87,7 +87,7 @@ async function submit(validFormData: ValidPlayerEditFormData) {
         toPayload(validFormData),
         {
             headers: { "Content-Type": "application/json" },
-        }
+        },
     );
 }
 

@@ -26,7 +26,7 @@ interface Props {
 export default function Settings({ settings, setSettings }: Props) {
     useEffect(function applyCachedSettings() {
         setSettings(
-            parseCachedSettings(localStorage.getItem(CACHED_SETTINGS_KEY))
+            parseCachedSettings(localStorage.getItem(CACHED_SETTINGS_KEY)),
         );
     }, []);
 
@@ -34,7 +34,7 @@ export default function Settings({ settings, setSettings }: Props) {
         function cacheSettings() {
             localStorage.setItem(CACHED_SETTINGS_KEY, JSON.stringify(settings));
         },
-        [settings]
+        [settings],
     );
 
     return (
@@ -88,7 +88,7 @@ export default function Settings({ settings, setSettings }: Props) {
 }
 
 function parseCachedSettings(
-    cachedSettings: string | null
+    cachedSettings: string | null,
 ): GameReportSettings {
     try {
         if (cachedSettings) {
@@ -99,12 +99,12 @@ function parseCachedSettings(
                 return {
                     settlementLayout:
                         settlementLayouts.find(
-                            (s) => s === parsedSettings.settlementLayout
+                            (s) => s === parsedSettings.settlementLayout,
                         ) ?? defaultSettings.settlementLayout,
                     areSettlementsAbbreviated:
                         [true, false].find(
                             (a) =>
-                                a === parsedSettings.areSettlementsAbbreviated
+                                a === parsedSettings.areSettlementsAbbreviated,
                         ) ?? defaultSettings.areSettlementsAbbreviated,
                 };
             }

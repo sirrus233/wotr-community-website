@@ -70,7 +70,7 @@ export default function AdminFormLayout({
                                 >
                                     {element}
                                 </FormElement>
-                            )
+                            ),
                         )}
                     </Box>
 

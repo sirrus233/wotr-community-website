@@ -10,12 +10,12 @@ export default function useMediaQuery(breakpoint: Breakpoint) {
 
     const handleChange = useCallback(
         (e: MediaQueryListEvent) => setDoesMatch(e.matches),
-        []
+        [],
     );
 
     useEffect(function listenForMediaChange() {
         const mediaQueryList = window.matchMedia(
-            `${theme.breakpoints.down(breakpoint).slice("@media ".length)}`
+            `${theme.breakpoints.down(breakpoint).slice("@media ".length)}`,
         );
         setDoesMatch(mediaQueryList.matches);
         mediaQueryList.addEventListener("change", handleChange);

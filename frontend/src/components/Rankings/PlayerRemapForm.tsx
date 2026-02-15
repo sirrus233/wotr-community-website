@@ -90,7 +90,7 @@ export default function PlayerRemapForm({
                         handleSubmit();
                     } else {
                         setWarningAlert(
-                            `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "${buttonText}" again to continue.`
+                            `Danger: ${name} will cease to exist. ${formData.toPlayer.value?.label} will absorb all of ${name}'s history. ${name}'s history cannot be recovered. If you're sure, press "${buttonText}" again to continue.`,
                         );
                     }
                 }}
@@ -111,7 +111,7 @@ async function submit(validFormData: ValidPlayerRemapFormData) {
         toPayload(validFormData),
         {
             headers: { "Content-Type": "application/json" },
-        }
+        },
     );
 }
 
@@ -121,7 +121,7 @@ type PlayerRemapPayload = {
 };
 
 function toPayload(
-    validFormData: ValidPlayerRemapFormData
+    validFormData: ValidPlayerRemapFormData,
 ): PlayerRemapPayload {
     return {
         fromPid: validFormData.fromPlayer.value.id,
