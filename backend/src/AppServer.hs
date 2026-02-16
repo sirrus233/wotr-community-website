@@ -110,6 +110,7 @@ import Types.Database
     PlayerStatsYear (..),
     ReportInsertion,
     StatAggregationPeriod (..),
+    defaultPlayerStatsAllTime,
     defaultPlayerStatsTotal,
     defaultPlayerStatsYear,
     gameReportCsvHeader,
@@ -172,7 +173,7 @@ readStats pid aggPeriod mStats = case mStats of
     defaultPlayerStatsTotal_ = defaultPlayerStatsTotal pid
     defaultPlayerStatsAgg = case aggPeriod of
       Annual year -> defaultPlayerStatsYear pid year
-      AllTime -> defaultPlayerStatsAgg
+      AllTime -> defaultPlayerStatsAllTime
 
 readOrError :: (Monad m, MonadLogger m) => Text -> DBAction m (Maybe a) -> DBAction m a
 readOrError errMsg action =
