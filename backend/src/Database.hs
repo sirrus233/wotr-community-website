@@ -260,11 +260,7 @@ getAllStats AllTime = do
   pure $
     fmap
       ( \(p, (t, (Value winsFree, Value winsShadow, Value lossesFree, Value lossesShadow))) ->
-          ( p,
-            ( fmap entityVal t,
-              AllTimeAgg <$> winsFree <*> winsShadow <*> lossesFree <*> lossesShadow
-            )
-          )
+          (p, (fmap entityVal t, AllTimeAgg <$> winsFree <*> winsShadow <*> lossesFree <*> lossesShadow))
       )
       rows
 
