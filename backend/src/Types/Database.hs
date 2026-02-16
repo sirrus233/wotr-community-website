@@ -140,7 +140,7 @@ instance ToField PlayerId where
   toField :: PlayerId -> CSV.Field
   toField = toField . SQL.fromSqlKey
 
-data PeriodKind = AnnualPeriod | AllTimePeriod
+type data PeriodKind = AnnualPeriod | AllTimePeriod
 
 data StatAggregationPeriod k where
   Annual :: Year -> StatAggregationPeriod AnnualPeriod
