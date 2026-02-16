@@ -138,6 +138,7 @@ export interface LeaderboardEntry {
     currentRatingFree: number;
     currentRatingShadow: number;
     averageRating: number;
+    totalGames: number;
     year: number;
     yearlyGames: number;
     yearlyWinsFree: number;
