@@ -81,9 +81,7 @@ export default function App() {
         initialState: { entries: [] },
         initialParams: { year: null },
         sendRequest: ({ year }) =>
-            axios.get(`${API_BASE_URL}/leaderboard`, {
-                params: year == null ? {} : { year },
-            }),
+            axios.get(`${API_BASE_URL}/leaderboard`, { params: { year } }),
     });
 
     const [
