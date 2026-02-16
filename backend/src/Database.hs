@@ -82,6 +82,7 @@ import Types.Database
     PeriodKind (..),
     Player (..),
     PlayerId,
+    PlayerStats,
     PlayerStatsAggregate (..),
     PlayerStatsInitial (..),
     PlayerStatsTotal (..),
@@ -411,8 +412,8 @@ insertGameReport report = lift $ do
 insertLeaguePlayer :: (MonadIO m, MonadLogger m) => LeaguePlayer -> DBAction m ()
 insertLeaguePlayer = lift . insert_
 
-repsertPlayerStats :: (MonadIO m, MonadLogger m) => (PlayerStatsTotal, PlayerStatsYear) -> DBAction m ()
-repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), yearStats@(PlayerStatsYear {..})) = lift $ do
+repsertPlayerStats :: (MonadIO m, MonadLogger m) => PlayerStats AnnualPeriod -> DBAction m ()
+repsertPlayerStats (totalStats@(PlayerStatsTotal {..}), AnnualAgg yearStats@PlayerStatsYear {..}) = lift $ do
   repsert (PlayerStatsTotalKey playerStatsTotalPlayerId) totalStats
   repsert (PlayerStatsYearKey playerStatsYearPlayerId playerStatsYearYear) yearStats
 

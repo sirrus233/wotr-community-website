@@ -203,7 +203,7 @@ defaultPlayerStatsAllTime =
       lossesShadow = 0
     }
 
-updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> (PlayerStatsTotal, PlayerStatsYear)
+updatedPlayerStatsWin :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats AnnualPeriod
 updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
     ( PlayerStatsTotal
@@ -211,10 +211,11 @@ updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..})
           playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
-      PlayerStatsYear
-        { playerStatsYearWinsFree = playerStatsYearWinsFree + 1,
-          ..
-        }
+      AnnualAgg $
+        PlayerStatsYear
+          { playerStatsYearWinsFree = playerStatsYearWinsFree + 1,
+            ..
+          }
     )
   Shadow ->
     ( PlayerStatsTotal
@@ -222,13 +223,14 @@ updatedPlayerStatsWin side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..})
           playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
-      PlayerStatsYear
-        { playerStatsYearWinsShadow = playerStatsYearWinsShadow + 1,
-          ..
-        }
+      AnnualAgg $
+        PlayerStatsYear
+          { playerStatsYearWinsShadow = playerStatsYearWinsShadow + 1,
+            ..
+          }
     )
 
-updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> (PlayerStatsTotal, PlayerStatsYear)
+updatedPlayerStatsLose :: Side -> Rating -> PlayerStatsTotal -> PlayerStatsYear -> PlayerStats AnnualPeriod
 updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}) = case side of
   Free ->
     ( PlayerStatsTotal
@@ -236,10 +238,11 @@ updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}
           playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
-      PlayerStatsYear
-        { playerStatsYearLossesFree = playerStatsYearLossesFree + 1,
-          ..
-        }
+      AnnualAgg $
+        PlayerStatsYear
+          { playerStatsYearLossesFree = playerStatsYearLossesFree + 1,
+            ..
+          }
     )
   Shadow ->
     ( PlayerStatsTotal
@@ -247,10 +250,11 @@ updatedPlayerStatsLose side rating (PlayerStatsTotal {..}) (PlayerStatsYear {..}
           playerStatsTotalGameCount = playerStatsTotalGameCount + 1,
           ..
         },
-      PlayerStatsYear
-        { playerStatsYearLossesShadow = playerStatsYearLossesShadow + 1,
-          ..
-        }
+      AnnualAgg $
+        PlayerStatsYear
+          { playerStatsYearLossesShadow = playerStatsYearLossesShadow + 1,
+            ..
+          }
     )
 
 instance ToNamedRecord Player where
