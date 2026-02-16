@@ -348,6 +348,7 @@ getLeaderboardHandler = \case
   Nothing -> go AllTime
   Just year -> go $ Annual year
   where
+    go :: StatAggregationPeriod k -> AppM GetLeaderboardResponse
     go aggPeriod =
       runDb (getAllStats aggPeriod)
         <&> ( GetLeaderboardResponse
