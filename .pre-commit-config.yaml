@@ -1,23 +1,30 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v6.0.0
-  hooks:
-  - id: trailing-whitespace
-  - id: end-of-file-fixer
-  - id: check-yaml
-  - id: check-added-large-files
-- repo: local
-  hooks:
-  - id: cabal-gild
-    name: format cabal files
-    language: system
-    entry: bash -c 'for file in "$@"; do cabal-gild --io "$file"; done' --
-    files: '(^|/)(cabal\.project(\..*)?|[^/]+\.cabal)$'
-  - id: ormolu
-    name: format Haskell sources
-    language: system
-    entry: ormolu
-    args: ["--mode", "inplace"]
-    types: [haskell]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: local
+    hooks:
+      - id: cabal-gild
+        name: format cabal files
+        language: system
+        entry: bash -c 'for file in "$@"; do cabal-gild --io "$file"; done' --
+        files: '(^|/)(cabal\.project(\..*)?|[^/]+\.cabal)$'
+      - id: ormolu
+        name: format Haskell sources
+        language: system
+        entry: ormolu
+        args: ["--mode", "inplace"]
+        types: [haskell]
+      - id: prettier
+        name: prettier
+        language: system
+        entry: npm exec -- prettier
+        args: [--write, --ignore-unknown]
+        types_or:
+          [javascript, jsx, ts, tsx, json, yaml, markdown, css, scss, html]
