@@ -36,6 +36,8 @@ repos:
       - id: xo
         name: xo
         language: system
-        entry: npm exec -- xo
-        args: [--fix]
-        files: \.(?:[cm]?js|jsx|[cm]?ts|tsx)$
+        entry: pre-commit hazmat cd frontend npm exec -- xo --fix --
+        args: []
+        types_or: [javascript, jsx, ts, tsx]
+        files: ^frontend/
+        exclude: ^frontend/node_modules/
