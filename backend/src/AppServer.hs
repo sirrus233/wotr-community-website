@@ -104,10 +104,13 @@ import Types.Database
     Player (..),
     PlayerId,
     PlayerStats,
+    PlayerStatsAggregate (..),
     PlayerStatsInitial (..),
     PlayerStatsTotal (..),
     PlayerStatsYear (..),
     ReportInsertion,
+    StatAggregationPeriod (..),
+    defaultPlayerStatsAllTime,
     defaultPlayerStatsTotal,
     defaultPlayerStatsYear,
     gameReportCsvHeader,
@@ -160,15 +163,17 @@ ratingAdjustment winner loser
 yearOf :: UTCTime -> Year
 yearOf = (\(y, _, _) -> fromIntegral y) . toGregorian . utctDay
 
-readStats :: PlayerId -> Year -> MaybePlayerStats -> PlayerStats
-readStats pid year (mStatsTotal, mStatsYear) = case (mStatsTotal, mStatsYear) of
-  (Nothing, Nothing) -> (defaultPlayerStatsTotal_, defaultPlayerStatsYear_)
-  (Nothing, Just statsYear) -> (defaultPlayerStatsTotal_, entityVal statsYear)
-  (Just statsTotal, Nothing) -> (entityVal statsTotal, defaultPlayerStatsYear_)
-  (Just statsTotal, Just statsYear) -> (entityVal statsTotal, entityVal statsYear)
+readStats :: PlayerId -> StatAggregationPeriod k -> MaybePlayerStats k -> PlayerStats k
+readStats pid aggPeriod mStats = case mStats of
+  (Nothing, Nothing) -> (defaultPlayerStatsTotal_, defaultPlayerStatsAgg)
+  (Nothing, Just statsYear) -> (defaultPlayerStatsTotal_, statsYear)
+  (Just statsTotal, Nothing) -> (statsTotal, defaultPlayerStatsAgg)
+  (Just statsTotal, Just statsYear) -> (statsTotal, statsYear)
   where
     defaultPlayerStatsTotal_ = defaultPlayerStatsTotal pid
-    defaultPlayerStatsYear_ = defaultPlayerStatsYear pid year
+    defaultPlayerStatsAgg = case aggPeriod of
+      Annual year -> defaultPlayerStatsYear pid year
+      AllTime -> defaultPlayerStatsAllTime
 
 readOrError :: (Monad m, MonadLogger m) => Text -> DBAction m (Maybe a) -> DBAction m a
 readOrError errMsg action =
@@ -210,10 +215,13 @@ processReport (report@(Entity _ GameReport {..}), winnerPlayer@(Entity winnerId 
   let year = yearOf gameReportTimestamp
   let (winnerSide, loserSide) = (gameReportSide, other gameReportSide)
 
-  (winnerStatsTotal, winnerStatsYear) <-
-    readStats winnerId year <$> readOrError ("Missing stats for " <>: winner) (getPlayerStats winnerId year)
-  (loserStatsTotal, loserStatsYear) <-
-    readStats loserId year <$> readOrError ("Missing stats for " <>: loser) (getPlayerStats loserId year)
+  (winnerStatsTotal, winnerStatsAgg) <-
+    readStats winnerId (Annual year) <$> readOrError ("Missing stats for " <>: winner) (getPlayerStats winnerId year)
+  (loserStatsTotal, loserStatsAgg) <-
+    readStats loserId (Annual year) <$> readOrError ("Missing stats for " <>: loser) (getPlayerStats loserId year)
+
+  let AnnualAgg winnerStatsYear = winnerStatsAgg
+  let AnnualAgg loserStatsYear = loserStatsAgg
 
   let (winnerRatingOld, loserRatingOld) = (getRating winnerSide winnerStatsTotal, getRating loserSide loserStatsTotal)
   let adjustment = if gameReportMatch == Rated then ratingAdjustment winnerRatingOld loserRatingOld else 0
@@ -255,9 +263,25 @@ leaguePoints2025 league totalWins totalGames stats = baseScore + unplayedMultipl
       | otherwise = winRate
     unplayedGames = fromIntegral . sum . map (\(wins, losses) -> 2 - wins - losses) $ stats
 
+-- Same as 2025 algorithm, but with adjustments to minimum game thresholds
+leaguePoints2026 :: League -> Int -> Int -> [(Int, Int)] -> Double
+leaguePoints2026 league totalWins totalGames stats = baseScore + unplayedMultiplier * unplayedGames
+  where
+    baseScore = 0.1 * fromIntegral totalGames + fromIntegral totalWins
+    winRate = fromIntegral totalWins / fromIntegral totalGames :: Double
+    unplayedMultiplier
+      | (league == GeneralLeague || league == LoMELeague) && totalGames < 12 = 0
+      | (league == GeneralLeague || league == LoMELeague) && totalGames < 18 = 0.5 * winRate
+      | league == GeneralLeague || league == LoMELeague = winRate
+      | totalGames < 8 = 0
+      | totalGames < 12 = 0.5 * winRate
+      | otherwise = winRate
+    unplayedGames = fromIntegral . sum . map (\(wins, losses) -> 2 - wins - losses) $ stats
+
 leaguePoints :: League -> LeagueTier -> Year -> Int -> Int -> [(Int, Int)] -> Double
 leaguePoints league _ year totalWins totalGames stats
   | year == 2025 = leaguePoints2025 league totalWins totalGames stats
+  | year == 2026 = leaguePoints2026 league totalWins totalGames stats
   | otherwise = 0
 
 authGoogleLoginHandler :: IdToken -> AppM GoogleLoginResponse
@@ -320,14 +344,17 @@ getReportsHandler limit offset filterSpec =
       (Just lim, Just off) -> (lim, off)
 
 getLeaderboardHandler :: Maybe Year -> AppM GetLeaderboardResponse
-getLeaderboardHandler year = do
-  currentYear <- liftIO $ yearOf <$> getCurrentTime
-  let year' = fromMaybe currentYear year
-  runDb (getAllStats year')
-    <&> ( GetLeaderboardResponse
-            . sortOn (Down . liftA2 (,) isActive averageRating)
-            . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) year' stats)))
-        )
+getLeaderboardHandler = \case
+  Nothing -> go AllTime
+  Just year -> go $ Annual year
+  where
+    go :: StatAggregationPeriod k -> AppM GetLeaderboardResponse
+    go aggPeriod =
+      runDb (getAllStats aggPeriod)
+        <&> ( GetLeaderboardResponse
+                . sortOn (Down . liftA2 (,) isActive averageRating)
+                . map (fromPlayerStats . (\(player, stats) -> (player, readStats (entityKey player) aggPeriod stats)))
+            )
 
 getLeagueStatsHandler :: League -> LeagueTier -> Year -> AppM LeagueStatsResponse
 getLeagueStatsHandler league tier year = do

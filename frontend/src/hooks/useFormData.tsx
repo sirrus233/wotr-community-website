@@ -15,8 +15,8 @@ type Helpers<F> = {
     handleInputChange: <K extends keyof F>(
         field: K,
         validateBeforeAccept?: (
-            value: ConstrainedFormData<F>[K]["value"]
-        ) => FieldError
+            value: ConstrainedFormData<F>[K]["value"],
+        ) => FieldError,
     ) => (value: ConstrainedFormData<F>[K]["value"]) => void;
     validateField: <K extends keyof F>(field: K) => () => void;
     handleSubmit: () => Promise<void>;
@@ -55,8 +55,8 @@ export default function useFormData<F, V extends F>({
     const handleInputChange = <K extends keyof ConstrainedFormData<F>>(
         field: K,
         validateBeforeAccept?: (
-            value: ConstrainedFormData<F>[K]["value"]
-        ) => FieldError
+            value: ConstrainedFormData<F>[K]["value"],
+        ) => FieldError,
     ) => {
         return (value: ConstrainedFormData<F>[K]["value"]) => {
             if (validateBeforeAccept) {
@@ -77,7 +77,7 @@ export default function useFormData<F, V extends F>({
     };
 
     const validateField = <K extends keyof ConstrainedFormData<F>>(
-        field: K
+        field: K,
     ) => {
         return () => {
             setFormData((prevData) => {
@@ -111,13 +111,13 @@ export default function useFormData<F, V extends F>({
                         setFormData((prevData) => ({
                             ...prevData,
                             [field]: { ...prevData[field], error },
-                        }))
+                        })),
                     );
                 }
 
                 return updates;
             },
-            []
+            [],
         );
 
         if (!stateUpdates.length) {
@@ -184,7 +184,7 @@ export function initializeToDefaults<T>(initialValue: T): FieldData<T> {
 function isFieldMissing<F>(
     field: keyof ConstrainedFormData<F>,
     formData: ConstrainedFormData<F>,
-    optionalFields: string[]
+    optionalFields: string[],
 ) {
     const { value } = formData[field];
     const isRequired = optionalFields.every((opF) => opF !== field);

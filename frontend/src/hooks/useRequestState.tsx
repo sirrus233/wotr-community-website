@@ -10,7 +10,7 @@ interface RefreshRequestOptions {
 
 export type RequestWithState<P = undefined> = (
     params: P,
-    onError?: OnError
+    onError?: OnError,
 ) => void;
 
 export type RefreshRequest = (options?: RefreshRequestOptions) => void;
@@ -21,7 +21,7 @@ type Setters<T, P> = [
     React.Dispatch<React.SetStateAction<P>>,
     React.Dispatch<React.SetStateAction<T>>,
     React.Dispatch<React.SetStateAction<boolean>>,
-    React.Dispatch<React.SetStateAction<ErrorMessage | null>>
+    React.Dispatch<React.SetStateAction<ErrorMessage | null>>,
 ];
 
 interface Response {
@@ -49,7 +49,7 @@ export default function useRequestState<T, P = undefined>({
         onError = (err) => {
             logNetworkError(err);
             setError(ErrorMessage.Default);
-        }
+        },
     ) => {
         setLoading(true);
         setError(null);

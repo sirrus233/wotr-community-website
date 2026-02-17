@@ -14,6 +14,7 @@ import {
     getExpansionLabel,
     getLeagueLabel,
     isDefined,
+    displayMusterPoints,
 } from "../../utils";
 import ExternalLink from "../ExternalLink";
 import { RowData } from "../Table/types";
@@ -23,6 +24,7 @@ import {
     summarizeCompetitionType,
     summarizeGameType,
     summarizeVictoryType,
+    formatExpansions,
 } from "./formatters";
 import FreeCaptures from "./FreeCaptures";
 import { ReportEditParams } from "./types";
@@ -138,7 +140,7 @@ export default function rows({
                     key: "competition-type",
                     content: summarizeCompetitionType(
                         report.match,
-                        report.competition
+                        report.competition,
                     ),
                 },
                 {
@@ -147,12 +149,16 @@ export default function rows({
                 },
                 {
                     key: "expansions",
-                    content: report.expansions
-                        .map(getExpansionLabel)
-                        .join(", "),
+                    content: formatExpansions(report.expansions),
                 },
                 { key: "tokens", content: report.actionTokens },
                 { key: "dwarven-rings", content: report.dwarvenRings },
+                {
+                    key: "muster-points",
+                    content:
+                        report.musterPoints &&
+                        displayMusterPoints(report.musterPoints),
+                },
                 { key: "corruption", content: report.corruption },
                 { key: "mordor", content: report.mordor },
                 { key: "aragorn", content: report.aragornTurn },
@@ -173,7 +179,7 @@ export default function rows({
                     content: countVictoryPoints(
                         report.strongholds,
                         report.expansions,
-                        "Free"
+                        "Free",
                     ),
                 },
                 {
@@ -185,7 +191,7 @@ export default function rows({
                     content: countVictoryPoints(
                         report.strongholds,
                         report.expansions,
-                        "Shadow"
+                        "Shadow",
                     ),
                 },
                 { key: "interest", content: report.interestRating },
@@ -204,7 +210,7 @@ export default function rows({
                     ),
                 },
             ].filter(isDefined),
-        })
+        }),
     );
 }
 

@@ -11,6 +11,7 @@ import {
 } from "../../constants";
 import {
     GameReportFilters,
+    InequalityFilter,
     MenuOption,
     Side,
     Victory,
@@ -153,12 +154,12 @@ export default function colHeaders({
                         ...sides.flatMap((s) =>
                             victoryTypes.map(
                                 (
-                                    v
+                                    v,
                                 ): { id: [Side, Victory]; label: string } => ({
                                     id: [s, v],
                                     label: toVictoryTypeLabel(s, v),
-                                })
-                            )
+                                }),
+                            ),
                         ),
                     ],
                     current: filters.victory,
@@ -216,6 +217,24 @@ export default function colHeaders({
                     appliedCount: isDefined(filters.dwarvenRings?.[1]) ? 1 : 0,
                     onChange: (value) =>
                         setFilters({ ...filters, dwarvenRings: value }),
+                },
+            },
+            {
+                key: "Muster Points",
+                width: 170,
+                filter: {
+                    filterType: "inequality",
+                    placeholder: "Points",
+                    min: 0,
+                    max: 999,
+                    step: 0.5,
+                    current: maskMusterPoints(filters.musterPoints),
+                    appliedCount: isDefined(filters.musterPoints?.[1]) ? 1 : 0,
+                    onChange: (value) =>
+                        setFilters({
+                            ...filters,
+                            musterPoints: unmaskMusterPoints(value),
+                        }),
                 },
             },
             {
@@ -349,4 +368,20 @@ export default function colHeaders({
             },
         ],
     };
+}
+
+function maskMusterPoints(
+    unmaskedFilter: InequalityFilter | null,
+): InequalityFilter | null {
+    if (!unmaskedFilter) return unmaskedFilter;
+    const [operator, num] = unmaskedFilter;
+    return [operator, num / 2];
+}
+
+function unmaskMusterPoints(
+    maskedFilter: InequalityFilter | null,
+): InequalityFilter | null {
+    if (!maskedFilter) return maskedFilter;
+    const [operator, num] = maskedFilter;
+    return [operator, Math.round(num * 2)];
 }

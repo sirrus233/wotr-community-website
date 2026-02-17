@@ -9,7 +9,7 @@ import {
 import { EMPTY_OPTION_ID } from "./constants";
 
 export function serializeNullableInequalityFilter(
-    inequalityFilter: NullableInequalityFilter | null
+    inequalityFilter: NullableInequalityFilter | null,
 ): SerializedNullableInequalityFilter | null {
     if (inequalityFilter) {
         return inequalityFilter === "NullFilter"
@@ -20,7 +20,7 @@ export function serializeNullableInequalityFilter(
 }
 
 export function serializeVictoryFilter(
-    victoryFilter: GameReportFilters["victory"]
+    victoryFilter: GameReportFilters["victory"],
 ): SerializedVictoryFilter | null {
     return (
         toFilterParam(victoryFilter)?.map(
@@ -30,7 +30,7 @@ export function serializeVictoryFilter(
                         ? { tag: "VictorySideFilter", contents }
                         : { tag: "VictoryKindFilter", contents }
                     : { tag: "VictoryComboFilter", contents };
-            }
+            },
         ) || null
     );
 }

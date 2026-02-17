@@ -90,6 +90,7 @@ export interface GameFormData {
     usedHandicap: FieldData<boolean | null>;
     actionTokens: FieldData<number | null>;
     dwarvenRings: FieldData<number | null>;
+    musterPoints: FieldData<number | null>;
     turns: FieldData<number | null>;
     corruption: FieldData<number | null>;
     didFellowshipReachMordor: FieldData<boolean | null>;
@@ -138,12 +139,6 @@ export interface LeaderboardEntry {
     currentRatingShadow: number;
     averageRating: number;
     totalGames: number;
-    totalWinsFree: number;
-    totalWinsShadow: number;
-    totalLossesFree: number;
-    totalLossesShadow: number;
-    totalWinRateFree: number;
-    totalWinRateShadow: number;
     year: number;
     yearlyGames: number;
     yearlyWinsFree: number;
@@ -155,7 +150,7 @@ export interface LeaderboardEntry {
 }
 
 export interface LeaderboardParams {
-    year: number;
+    year: number | null;
 }
 
 export type PlayerEditMode = "edit" | "remap";
@@ -250,6 +245,17 @@ export type ValidLeaguePlayerFormData = {
 
 export type ValueOf<T> = T[keyof T];
 
+export type SameElements<
+    T extends readonly string[],
+    U extends readonly string[],
+> = T["length"] extends U["length"]
+    ? Exclude<U[number], T[number]> extends never
+        ? Exclude<T[number], U[number]> extends never
+            ? T
+            : never
+        : never
+    : never;
+
 export type NullFilter = "NullFilter";
 
 export type ApiInequalityOperator = "GT" | "LT" | "EQ";
@@ -279,6 +285,7 @@ export type GameReportFilters = {
     turns: InequalityFilter | null;
     tokens: InequalityFilter | null;
     dwarvenRings: InequalityFilter | null;
+    musterPoints: InequalityFilter | null;
     corruption: InequalityFilter | null;
     initialEyes: InequalityFilter | null;
     interestRating: InequalityFilter | null;
@@ -298,12 +305,11 @@ export type GameReportParams = {
     filters: GameReportFilters;
 };
 
-export type SerializedVictoryFilter =
-    | (
-          | { tag: "VictorySideFilter"; contents: Side }
-          | { tag: "VictoryKindFilter"; contents: Victory }
-          | { tag: "VictoryComboFilter"; contents: [Side, Victory] }
-      )[];
+export type SerializedVictoryFilter = (
+    | { tag: "VictorySideFilter"; contents: Side }
+    | { tag: "VictoryKindFilter"; contents: Victory }
+    | { tag: "VictoryComboFilter"; contents: [Side, Victory] }
+)[];
 
 export type SerializedTimestampFilter =
     | { tag: "Before"; contents: string }

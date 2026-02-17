@@ -21,8 +21,9 @@ interface CommonFilterProps {
     appliedCount: number;
 }
 
-export interface AutocompleteProps<Opt extends Option>
-    extends CommonFilterProps {
+export interface AutocompleteProps<
+    Opt extends Option,
+> extends CommonFilterProps {
     filterType: "autocomplete";
     options: Opt[];
     current: Opt[];
@@ -38,6 +39,7 @@ export interface InequalityFilterProps extends CommonFilterProps {
     current: InequalityFilter | null;
     min?: number;
     max?: number;
+    step?: number;
     disabled?: boolean;
     onChange: (value: InequalityFilter | null) => void;
 }
@@ -47,6 +49,7 @@ export interface NullableInequalityFilterProps extends CommonFilterProps {
     current: NullableInequalityFilter | null;
     min?: number;
     max?: number;
+    step?: number;
     nullLabel: string;
     onChange: (value: NullableInequalityFilter | null) => void;
 }
@@ -84,8 +87,9 @@ interface ColHeaderDataA extends CommonColHeaderData {
     width?: number;
 }
 
-interface ColHeaderDataB<T extends MenuOption<any> = MenuOption<any>>
-    extends CommonColHeaderData {
+interface ColHeaderDataB<
+    T extends MenuOption<any> = MenuOption<any>,
+> extends CommonColHeaderData {
     filter: Filter<T>;
     width: number;
 }

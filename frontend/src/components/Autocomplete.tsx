@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
 import MaterialAutocomplete from "@mui/joy/Autocomplete";
@@ -32,13 +32,15 @@ export default function Autocomplete<O extends string | MenuOption<unknown>>({
     const [displayedAlertText, setDisplayedAlertText] =
         useState<ReactNode>(null);
 
+    const inputRef = useRef<HTMLInputElement>(null);
+
     useEffect(
         function clearAlertText() {
             if (!alertText && displayedAlertText) {
                 setDisplayedAlertText(null);
             }
         },
-        [alertText, displayedAlertText]
+        [alertText, displayedAlertText],
     );
 
     const alert = (
@@ -64,6 +66,7 @@ export default function Autocomplete<O extends string | MenuOption<unknown>>({
                 }
                 value={current}
                 placeholder={placeholder}
+                slotProps={{ input: { ref: inputRef } }}
                 onInputChange={(_, value) => {
                     onInputValueChange(value);
                     setLocalInputValue(value);
@@ -72,7 +75,7 @@ export default function Autocomplete<O extends string | MenuOption<unknown>>({
                         (option) =>
                             option === value ||
                             (typeof option !== "string" &&
-                                option.label === value)
+                                option.label === value),
                     );
 
                     onChange(selected || null);
@@ -81,6 +84,17 @@ export default function Autocomplete<O extends string | MenuOption<unknown>>({
                     validate();
                     setDisplayedAlertText(alertText);
                     if (!current) setLocalInputValue("");
+
+                    /**
+                     * force a manual blur due to:
+                     * https://github.com/mui/material-ui/issues/47661
+                     */
+                    if (
+                        inputRef.current &&
+                        document.activeElement === inputRef.current
+                    ) {
+                        inputRef.current.blur();
+                    }
                 }}
                 disabled={loading}
                 startDecorator={

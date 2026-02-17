@@ -60,6 +60,8 @@ const routesData = [
 
 const PAGE_LIMIT = 100;
 
+const activeLeagueYear = oneMonthFromNow().getFullYear();
+
 export default function App() {
     const [
         refreshUserInfo,
@@ -77,7 +79,7 @@ export default function App() {
         [setLeaderboardParams],
     ] = useRequestState<{ entries: LeaderboardEntry[] }, LeaderboardParams>({
         initialState: { entries: [] },
-        initialParams: { year: new Date().getFullYear() },
+        initialParams: { year: null },
         sendRequest: (params) =>
             axios.get(`${API_BASE_URL}/leaderboard`, { params }),
     });
@@ -91,7 +93,7 @@ export default function App() {
         initialParams: {
             league: "GeneralLeague",
             tier: "Tier1",
-            year: new Date().getFullYear(),
+            year: activeLeagueYear,
         },
         sendRequest: (params) =>
             axios.get(`${API_BASE_URL}/leagueStats`, { params }),
@@ -120,6 +122,7 @@ export default function App() {
                 turns: null,
                 tokens: null,
                 dwarvenRings: null,
+                musterPoints: null,
                 corruption: null,
                 mordor: null,
                 aragorn: null,
@@ -141,7 +144,7 @@ export default function App() {
             (entry): MenuOption<number> => ({
                 label: entry.name,
                 id: entry.pid,
-            })
+            }),
         )
         .sort((a, b) => a.label.localeCompare(b.label));
 
@@ -239,6 +242,7 @@ export default function App() {
                             path="/leagues"
                             element={
                                 <Leagues
+                                    activeYear={activeLeagueYear}
                                     stats={leagueStats}
                                     playerNames={playerNames}
                                     loading={loadingLeague}
@@ -466,7 +470,7 @@ function Home() {
                     },
                     {
                         label: "League Rules",
-                        href: "https://docs.google.com/document/d/1T2OIOfU9vlSJQd0xPoivFmHOUTvPOa1jjtaiN2vrHAQ",
+                        href: "https://docs.google.com/document/d/1TciOPSVft34LnJfzeIui3E_TnPQDSPjDmrBLPpbo6hM",
                         isDownload: false,
                     },
                     {
@@ -497,6 +501,16 @@ function Home() {
                 <Subtitle>Technical Support</Subtitle>
 
                 {[
+                    {
+                        label: "File a website request or bug report",
+                        href: "https://github.com/sirrus233/wotr-community-website/issues/new/choose",
+                        isDownload: false,
+                    },
+                    {
+                        label: "Website feature backlog",
+                        href: "https://github.com/sirrus233/wotr-community-website/issues",
+                        isDownload: false,
+                    },
                     {
                         label: "Java Client & Hamachi Setup",
                         href: "https://www.youtube.com/watch?v=g6xt-xC9dXY",
@@ -671,4 +685,11 @@ function Subtitle({ children }: SubtitleProps) {
             {children}
         </Typography>
     );
+}
+
+function oneMonthFromNow() {
+    const date = new Date();
+    const thisMonth = date.getMonth();
+    date.setMonth(thisMonth + 1);
+    return date;
 }

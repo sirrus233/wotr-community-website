@@ -98,7 +98,7 @@ export default function GameReports({
                                 <GameReportForm
                                     report={reportEditParams}
                                     playerNames={playerOptions.map(
-                                        ({ label }) => label
+                                        ({ label }) => label,
                                     )}
                                     loadingPlayers={loadingPlayers}
                                     refreshGameReports={refresh}

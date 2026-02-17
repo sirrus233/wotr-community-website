@@ -12,6 +12,7 @@ interface SelectNumericOptionInputProps {
     allowInfinite?: boolean;
     onChange: (value: number | null) => void;
     validate: () => void;
+    display?: (x: any) => string;
 }
 
 export default function SelectNumericOptionInput({
@@ -22,6 +23,7 @@ export default function SelectNumericOptionInput({
     allowInfinite = false,
     onChange,
     validate,
+    display = String,
 }: SelectNumericOptionInputProps) {
     const values: number[] = initializeEmpty ? [NULL_MASK] : [];
     for (let i = start; i <= end; i++) {
@@ -41,7 +43,7 @@ export default function SelectNumericOptionInput({
                 } else if (value === INFINITE) {
                     return "Unlimited!";
                 } else {
-                    return String(value);
+                    return display(value);
                 }
             }}
             onChange={(val) => onChange(unmaskNull(val))}

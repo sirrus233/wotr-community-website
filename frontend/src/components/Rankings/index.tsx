@@ -70,10 +70,12 @@ function Rankings({
         useState<PlayerEditParams | null>(null);
 
     const { year } = params;
+    const statsLabel = year ?? "All Time";
+    const statsHeaderLabel = year ? `Yearly Stats ${year}` : "All Time Stats";
 
     const availableYears = range(
         LEADERBOARD_START_YEAR,
-        new Date().getFullYear() + 1
+        new Date().getFullYear() + 1,
     ).reverse();
 
     return (
@@ -183,9 +185,6 @@ function Rankings({
                             <TableHeaderCell level={0} side="Free" rowSpan={3}>
                                 Free Rating
                             </TableHeaderCell>
-                            <TableHeaderCell level={0} rowSpan={3}>
-                                Games
-                            </TableHeaderCell>
                             <TableHeaderCell level={0} colSpan={7}>
                                 <Box
                                     sx={{
@@ -194,7 +193,7 @@ function Rankings({
                                         justifyContent: "center",
                                     }}
                                 >
-                                    Yearly Stats {year}
+                                    {statsHeaderLabel}
                                     <YearSelector
                                         years={availableYears}
                                         setYear={(year) => setParams({ year })}
@@ -206,7 +205,7 @@ function Rankings({
                         <TableHeaderRow>
                             {/* Base */}
                             <TableHeaderCell level={1} rowSpan={2}>
-                                Games {year}
+                                Games {statsLabel}
                             </TableHeaderCell>
                             <TableHeaderCell level={1} side="Free" colSpan={3}>
                                 FP
@@ -248,7 +247,7 @@ function Rankings({
                     .filter(
                         (entry) =>
                             (entry.isActive && filters.includes("Active")) ||
-                            (!entry.isActive && filters.includes("Inactive"))
+                            (!entry.isActive && filters.includes("Inactive")),
                     )
                     .map((entry, i) => (
                         <tr key={entry.pid}>
@@ -303,8 +302,9 @@ function Rankings({
                             <TableCell side="Free">
                                 {entry.currentRatingFree}
                             </TableCell>
-                            <TableCell>{entry.totalGames}</TableCell>
-                            <TableCell>{entry.yearlyGames}</TableCell>
+                            <TableCell>
+                                {entry.yearlyGames}
+                            </TableCell>
                             <TableCell side="Free" light>
                                 {entry.yearlyWinsFree}
                             </TableCell>
@@ -414,7 +414,7 @@ function TableHeaderCell({
 
 interface YearSelectorProps {
     years: number[];
-    setYear: (year: number) => void;
+    setYear: (year: number | null) => void;
 }
 
 function YearSelector({ years, setYear }: YearSelectorProps) {
@@ -434,6 +434,7 @@ function YearSelector({ years, setYear }: YearSelectorProps) {
                 <ExpandIcon />
             </MenuButton>
             <Menu>
+                <MenuItem onClick={() => setYear(null)}>All Time</MenuItem>
                 {years.map((year) => (
                     <MenuItem key={year} onClick={() => setYear(year)}>
                         {year}

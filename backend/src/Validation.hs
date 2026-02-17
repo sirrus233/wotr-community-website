@@ -22,7 +22,6 @@ data ReportError
   | InvalidFPRV
   | CompetitionMismatch
   | LeagueExpansionMismatch
-  | LeagueOutOfSeason
   | TreebeardExpansionMismatch
   | TurnsOutOfRange
   | CorruptionOutOfRange
@@ -139,11 +138,6 @@ validateLeague report = case report.league of
   Just SuperLeague | LoME `elem` report.expansions && WoME `elem` report.expansions -> Success report
   _ -> Failure [LeagueExpansionMismatch]
 
-validateLeague' :: RawGameReport -> Validation [ReportError] RawGameReport
-validateLeague' report = case report.league of
-  Nothing -> Success report
-  _ -> Failure [LeagueOutOfSeason]
-
 validateTreebeard :: RawGameReport -> Validation [ReportError] RawGameReport
 validateTreebeard report
   | isJust report.treebeard == Treebeard `elem` report.expansions = Success report
@@ -185,7 +179,7 @@ validateReport :: RawGameReport -> Validation [ReportError] RawGameReport
 validateReport report =
   validateVictory report
     <* validateCompetition report
-    <* validateLeague' report
+    <* validateLeague report
     <* validateTreebeard report
     <* validateTurns report
     <* validateCorruption report

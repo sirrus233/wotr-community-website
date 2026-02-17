@@ -15,6 +15,7 @@ import Types.Database
     Player (..),
     PlayerId,
     PlayerStats,
+    PlayerStatsAggregate (..),
     PlayerStatsTotal (..),
     PlayerStatsYear (..),
     ReportInsertion,
@@ -66,6 +67,7 @@ data RawGameReport = RawGameReport
     treebeard :: Maybe Bool,
     actionTokens :: Int,
     dwarvenRings :: Int,
+    musterPoints :: Int,
     turns :: Int,
     corruption :: Int,
     mordor :: Maybe Int,
@@ -94,6 +96,7 @@ toGameReport timestamp winnerId loserId logFile r =
       gameReportTreebeard = r.treebeard,
       gameReportActionTokens = r.actionTokens,
       gameReportDwarvenRings = r.dwarvenRings,
+      gameReportMusterPoints = r.musterPoints,
       gameReportTurns = r.turns,
       gameReportCorruption = r.corruption,
       gameReportMordor = r.mordor,
@@ -121,6 +124,7 @@ data ProcessedGameReport = ProcessedGameReport
     treebeard :: Maybe Bool,
     actionTokens :: Int,
     dwarvenRings :: Int,
+    musterPoints :: Int,
     turns :: Int,
     corruption :: Int,
     mordor :: Maybe Int,
@@ -153,6 +157,7 @@ fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
       treebeard = r.gameReportTreebeard,
       actionTokens = r.gameReportActionTokens,
       dwarvenRings = r.gameReportDwarvenRings,
+      musterPoints = r.gameReportMusterPoints,
       turns = r.gameReportTurns,
       corruption = r.gameReportCorruption,
       mordor = r.gameReportMordor,
@@ -189,6 +194,7 @@ data LeaderboardEntry = LeaderboardEntry
     currentRatingFree :: Rating,
     currentRatingShadow :: Rating,
     averageRating :: Double,
+    -- | {-# DEPRECATED No longer used, kept for backward compatibility #-}
     totalGames :: Int,
     year :: Int,
     yearlyGames :: Int,
@@ -203,8 +209,8 @@ data LeaderboardEntry = LeaderboardEntry
 
 instance ToJSON LeaderboardEntry
 
-fromPlayerStats :: (Entity Player, PlayerStats) -> LeaderboardEntry
-fromPlayerStats (Entity pid p, (t, y)) =
+fromPlayerStats :: (Entity Player, PlayerStats k) -> LeaderboardEntry
+fromPlayerStats (Entity pid p, (t, agg)) =
   LeaderboardEntry
     { pid,
       name = p.playerDisplayName,
@@ -212,21 +218,27 @@ fromPlayerStats (Entity pid p, (t, y)) =
       isActive = p.playerIsActive,
       currentRatingFree = t.playerStatsTotalRatingFree,
       currentRatingShadow = t.playerStatsTotalRatingShadow,
-      averageRating =
-        (fromIntegral t.playerStatsTotalRatingFree + fromIntegral t.playerStatsTotalRatingShadow) / 2,
-      totalGames = t.playerStatsTotalGameCount,
-      year = y.playerStatsYearYear,
-      yearlyGames =
-        y.playerStatsYearWinsFree + y.playerStatsYearWinsShadow + y.playerStatsYearLossesFree + y.playerStatsYearLossesShadow,
-      yearlyWinsFree = y.playerStatsYearWinsFree,
-      yearlyWinsShadow = y.playerStatsYearWinsShadow,
-      yearlyLossesFree = y.playerStatsYearLossesFree,
-      yearlyLossesShadow = y.playerStatsYearLossesShadow,
-      yearlyWinRateFree =
-        fromIntegral y.playerStatsYearWinsFree / fromIntegral (y.playerStatsYearWinsFree + y.playerStatsYearLossesFree),
-      yearlyWinRateShadow =
-        fromIntegral y.playerStatsYearWinsShadow / fromIntegral (y.playerStatsYearWinsShadow + y.playerStatsYearLossesShadow)
+      averageRating = (fromIntegral t.playerStatsTotalRatingFree + fromIntegral t.playerStatsTotalRatingShadow) / 2,
+      totalGames = 0,
+      year = aggYear, -- TODO This should be optional, but defaults 0 for backwards compatibility
+      -- TODO In the same vein, these fields would more accurately be called "aggregateGames", etc.
+      yearlyGames = aggGames,
+      yearlyWinsFree = aggWinsFree,
+      yearlyWinsShadow = aggWinsShadow,
+      yearlyLossesFree = aggLossesFree,
+      yearlyLossesShadow = aggLossesShadow,
+      yearlyWinRateFree = fromIntegral aggWinsFree / fromIntegral (aggWinsFree + aggLossesFree),
+      yearlyWinRateShadow = fromIntegral aggWinsShadow / fromIntegral (aggWinsShadow + aggLossesShadow)
     }
+  where
+    aggYear = case agg of AnnualAgg y -> y.playerStatsYearYear; AllTimeAgg {} -> 0
+    aggGames = case agg of
+      AnnualAgg _ -> aggWinsFree + aggWinsShadow + aggLossesFree + aggLossesShadow
+      AllTimeAgg {} -> t.playerStatsTotalGameCount
+    aggWinsFree = case agg of AnnualAgg y -> y.playerStatsYearWinsFree; AllTimeAgg {..} -> winsFree
+    aggWinsShadow = case agg of AnnualAgg y -> y.playerStatsYearWinsShadow; AllTimeAgg {..} -> winsShadow
+    aggLossesFree = case agg of AnnualAgg y -> y.playerStatsYearLossesFree; AllTimeAgg {..} -> lossesFree
+    aggLossesShadow = case agg of AnnualAgg y -> y.playerStatsYearLossesShadow; AllTimeAgg {..} -> lossesShadow
 
 newtype GetLeaderboardResponse = GetLeaderboardResponse {entries :: [LeaderboardEntry]} deriving (Generic)
 
@@ -344,6 +356,7 @@ data GameReportFilterSpec = GameReportFilterSpec
     -- TODO expansions
     tokens :: Maybe InequalityFilter,
     dwarvenRings :: Maybe InequalityFilter,
+    musterPoints :: Maybe InequalityFilter,
     corruption :: Maybe InequalityFilter,
     mordor :: Maybe (NullableFilter InequalityFilter),
     aragorn :: Maybe (NullableFilter InequalityFilter),

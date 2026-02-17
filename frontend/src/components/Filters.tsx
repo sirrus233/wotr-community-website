@@ -12,7 +12,7 @@ interface Props<T> {
 export default function Filters<T>({ options, current, onChange }: Props<T>) {
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedValue = options.find(
-            (value) => String(value) === event.target.value
+            (value) => String(value) === event.target.value,
         );
         if (selectedValue !== undefined) {
             if (event.target.checked) {
