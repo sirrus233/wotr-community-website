@@ -39,5 +39,4 @@ repos:
         entry: pre-commit hazmat cd frontend npm exec -- xo --fix --
         args: []
         types_or: [javascript, jsx, ts, tsx]
-        files: ^frontend/
         exclude: ^frontend/node_modules/
