@@ -33,3 +33,13 @@ Each directory has its own README with more details:
 - Infrastructure: run the CDK workflow from `infrastructure/` (`npm run build && npx cdk diff/deploy`) using the `wotrcommunity` AWS profile in `us-west-2`.
 
 Always refer back to the per-project READMEs for the detailed steps, environment variables, and troubleshooting tips.
+
+## Contributing
+
+We ❤️ external contributions! The easiest way to help is to:
+
+1. Fork this repository and create a feature branch in your fork.
+2. Hack on the change locally (see the per-project READMEs above).
+3. Open a pull request against `main` with a clear description and screenshots/logs where helpful.
+
+If you're looking for ideas, browse the [Issues tab](https://github.com/sirrus233/wotr-community-website/issues) and leave a comment on anything you want to pick up so we can coordinate. Not sure where to start? Feel free to open an issue describing the problem or improvement you have in mind and we're happy to help scope it down.
