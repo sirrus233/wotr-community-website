@@ -27,6 +27,7 @@ npm start
 - Starts `webpack-dev-server` on `http://localhost:3000`.
 - Requests to the API are pointed at `http://localhost:8080` in dev mode (see `src/env/dev.ts`). Production builds point at `https://api.waroftheringcommunity.net:8080`.
 - `webpack-dev-server` automatically opens the site in your browser and supports client-side routing via `historyApiFallback`.
+- New changes should be picked up immediately on save via hot reloading.
 
 ## Building for production
 
