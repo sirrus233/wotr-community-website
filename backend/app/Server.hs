@@ -80,6 +80,7 @@ runProd env settings = do
 
 main :: IO ()
 main = do
+  let x = (2 :: Int) + 2
   args <- getArgs
   let appMode = if "dev" `elem` args then Dev else Prod
   let doMigrate = "migrate" `elem` args
