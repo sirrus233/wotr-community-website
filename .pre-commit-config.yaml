@@ -11,7 +11,7 @@ repos:
 - repo: local
   hooks:
   - id: cabal-gild
-    name: formats .cabal files
+    name: format .cabal files
     always_run: true
     verbose: true
     stages: [pre-commit]
