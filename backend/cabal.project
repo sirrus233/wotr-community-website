@@ -1,21 +1,25 @@
 packages: .
-
 allow-newer: amazonka:base
+
 package amazonka
   ghc-options: -XDuplicateRecordFields
 
 allow-newer: amazonka-core:base
+
 package amazonka-core
   ghc-options: -XDuplicateRecordFields
 
 allow-newer: amazonka-s3:base
+
 package amazonka-s3
   ghc-options: -XDuplicateRecordFields
 
 allow-newer: amazonka-sts:base
+
 package amazonka-sts
   ghc-options: -XDuplicateRecordFields
 
 allow-newer: amazonka-sso:base
+
 package amazonka-sso
   ghc-options: -XDuplicateRecordFields

@@ -57,7 +57,7 @@ ssh "$SERVER_USER@$SERVER_HOST" <<EOF
   sudo yum install -y certbot
   sudo certbot certonly --standalone -d $SERVER_HOST -m $SSL_EMAIL --agree-tos --non-interactive
   sudo systemctl enable --now certbot-renew.timer
-  
+
   echo "Setting system permissions..."
   sudo groupadd -f ssl-cert
   sudo usermod -a -G ssl-cert ec2-user
@@ -65,7 +65,7 @@ ssh "$SERVER_USER@$SERVER_HOST" <<EOF
   sudo chgrp -R ssl-cert "/etc/letsencrypt/archive"
   sudo chmod -R 750 "/etc/letsencrypt/live"
   sudo chmod -R 750 "/etc/letsencrypt/archive"
-  
+
   echo "Generating server startup service file..."
   cat <<END_UNIT | sudo tee $SERVER_SERVICE_FILE
 [Unit]
