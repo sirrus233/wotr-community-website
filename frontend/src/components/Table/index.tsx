@@ -43,7 +43,7 @@ const Container = styled("table")<{ ownerState: ContainerProps }>(
         [`tr th:nth-of-type(${pinnedColCount})`]: {
             borderRight: LIGHT_BORDER,
         },
-    })
+    }),
 );
 
 const TableHeader = styled("th")({
@@ -75,7 +75,7 @@ const BodyCell = styled("td")({
 
 interface Props<
     CorH extends CornerHeaderData<MenuOption<any>>,
-    ColH extends ColHeaderData<MenuOption<any>>
+    ColH extends ColHeaderData<MenuOption<any>>,
 > {
     cornerHeaders: CorH[];
     colHeaders: ColH[];
@@ -86,7 +86,7 @@ interface Props<
 
 export default function Table<
     CorH extends CornerHeaderData<MenuOption<any>>,
-    ColH extends ColHeaderData<MenuOption<any>>
+    ColH extends ColHeaderData<MenuOption<any>>,
 >({
     cornerHeaders,
     colHeaders,
@@ -97,7 +97,7 @@ export default function Table<
     const [areFiltersOpen, setAreFiltersOpen] = useState(false);
 
     const filterBarHeight = [...cornerHeaders, ...colHeaders].find(
-        (h) => h.filter?.errorMessage
+        (h) => h.filter?.errorMessage,
     )
         ? `calc(${TABLE_FILTER_HEIGHT} + ${NULL_FILTER_HEIGHT} + ${FILTER_ERROR_HEIGHT} + 10px)`
         : `calc(${TABLE_FILTER_HEIGHT} + ${NULL_FILTER_HEIGHT} + 10px)`;
@@ -124,7 +124,7 @@ export default function Table<
                         (
                             { key, content, span, filter, width, style = {} },
                             i,
-                            cHs
+                            cHs,
                         ) => (
                             <CornerHeader
                                 scope="col"
@@ -157,7 +157,7 @@ export default function Table<
                                     fallback(content, key)
                                 )}
                             </CornerHeader>
-                        )
+                        ),
                     )}
 
                     {colHeaders.map(
@@ -186,7 +186,7 @@ export default function Table<
                                     fallback(content, key)
                                 )}
                             </ColHeader>
-                        )
+                        ),
                     )}
                 </tr>
             </thead>
@@ -216,7 +216,7 @@ export default function Table<
                                 >
                                     {cell.content}
                                 </BodyCell>
-                            )
+                            ),
                         )}
                     </tr>
                 ))}

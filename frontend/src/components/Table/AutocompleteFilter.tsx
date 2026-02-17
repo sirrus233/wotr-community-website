@@ -25,7 +25,7 @@ export default function AutocompleteFilter<O extends Option>({
     const paddedWidth = `calc(${width}px - 10px)`;
 
     const specialOptions = [allOption, emptyOption].filter(
-        (o) => o !== undefined
+        (o) => o !== undefined,
     );
 
     const isAllOption = (option: Option) =>
@@ -136,10 +136,10 @@ function isOptionEqual(a: Option, b: Option) {
     return typeof a === "string" || typeof b === "string"
         ? a === b
         : Array.isArray(a.id) && Array.isArray(b.id)
-        ? areArraysShallowlyEqual(a.id, b.id)
-        : typeof a.id === "object" && typeof b.id === "object"
-        ? areObjectsShallowlyEqual(a.id, b.id)
-        : a.id === b.id;
+          ? areArraysShallowlyEqual(a.id, b.id)
+          : typeof a.id === "object" && typeof b.id === "object"
+            ? areObjectsShallowlyEqual(a.id, b.id)
+            : a.id === b.id;
 }
 
 function areArraysShallowlyEqual(a: unknown[], b: unknown[]): boolean {

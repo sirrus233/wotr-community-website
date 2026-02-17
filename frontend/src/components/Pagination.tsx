@@ -27,7 +27,7 @@ export default function Pagination({
         currentPage,
         pageCount,
         slots,
-        minSpanEachSide
+        minSpanEachSide,
     );
 
     return (
@@ -96,7 +96,7 @@ function toPageRanges(
     current: number,
     final: number,
     slots: number,
-    minSpanEachSide: number
+    minSpanEachSide: number,
 ): number[][] {
     const oneSidedSpan = slots - minSpanEachSide;
     const endThreshold = final - oneSidedSpan + 1;

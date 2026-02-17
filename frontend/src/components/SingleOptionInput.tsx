@@ -24,7 +24,7 @@ export default function SingleOptionInput<T>({
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedValue = values.find(
-            (value) => String(value) === event.target.value
+            (value) => String(value) === event.target.value,
         );
         if (selectedValue !== undefined) {
             onChange(selectedValue);

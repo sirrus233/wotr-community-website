@@ -113,7 +113,7 @@ export default function ToolsMenu({
             .post(`${API_BASE_URL}/logout`)
             .catch(onLogoutEndpointError)
             .then(() =>
-                refreshUserInfo({ onError: onUserInfoErrorAfterLogout })
+                refreshUserInfo({ onError: onUserInfoErrorAfterLogout }),
             )
             .finally(() => setLoadingUserInfo(false));
     };
