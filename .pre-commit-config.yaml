@@ -18,3 +18,9 @@ repos:
     language: system
     pass_filenames: false
     entry: bash -c "find . -not -path '**/dist-newstyle/**' -and \\( -name '*.cabal' -or -name 'cabal*.project*' \\) -exec cabal-gild --io {} \\;"
+  - id: ormolu
+    name: format Haskell sources
+    language: system
+    entry: ormolu
+    args: ["--mode", "inplace"]
+    types: [haskell]
