@@ -23,8 +23,6 @@ TypeScript is compiled to `dist/` when you run `npm run build`.
 | Command | Purpose |
 | --- | --- |
 | `npm run build` | Type-check and compile the CDK app to JavaScript. |
-| `npm run watch` | Rebuild on file changes. |
-| `npm run test` | Run the Jest unit tests (currently minimal). |
 | `npx cdk synth --profile wotrcommunity` | Emit the CloudFormation template. |
 | `npx cdk diff --profile wotrcommunity` | Compare the current template to the deployed stack. |
 | `npx cdk deploy --profile wotrcommunity` | Deploy the stack (prompts for IAM/security-sensitive changes). |
