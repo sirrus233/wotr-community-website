@@ -11,16 +11,21 @@ repos:
   - repo: local
     hooks:
       - id: cabal-gild
-        name: format cabal files
+        name: cabal-gild
         language: system
         entry: bash -c 'for file in "$@"; do cabal-gild --io "$file"; done' --
         files: '(^|/)(cabal\.project(\..*)?|[^/]+\.cabal)$'
       - id: ormolu
-        name: format Haskell sources
+        name: ormolu
         language: system
         entry: ormolu
         args: ["--mode", "inplace"]
         types: [haskell]
+      - id: hlint
+        name: hlint
+        language: system
+        entry: hlint
+        files: \.l?hs$
       - id: prettier
         name: prettier
         language: system
@@ -28,3 +33,9 @@ repos:
         args: [--write, --ignore-unknown]
         types_or:
           [javascript, jsx, ts, tsx, json, yaml, markdown, css, scss, html]
+      - id: xo
+        name: xo
+        language: system
+        entry: npm exec -- xo
+        args: [--fix]
+        files: \.(?:[cm]?js|jsx|[cm]?ts|tsx)$
