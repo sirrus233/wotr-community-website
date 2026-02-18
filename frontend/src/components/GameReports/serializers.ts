@@ -36,7 +36,7 @@ export function serializeVictoryFilter(
 }
 
 export function serializeTimestampFilter(
-    timestampFilter: GameReportFilters["timestamp"]
+    timestampFilter: GameReportFilters["timestamp"],
 ): SerializedTimestampFilter | null {
     const [start = null, end = null] = timestampFilter || [];
 
