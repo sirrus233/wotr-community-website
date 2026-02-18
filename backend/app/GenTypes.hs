@@ -1,6 +1,14 @@
 import Api qualified
+import Control.Lens ((^.))
+import Data.Char (toUpper)
+import Data.Text qualified as T
 import Servant ((:<|>))
-import Servant.TypeScript (writeTypeScriptLibrary)
+import Servant.Foreign (FunctionName (..), Req, reqFuncName)
+import Servant.TypeScript
+  ( ServantTypeScriptOptions (..),
+    defaultServantTypeScriptOptions,
+    writeTypeScriptLibrary',
+  )
 
 type TypeScriptableAPI =
   Api.UserInfoAPI
@@ -17,4 +25,27 @@ type TypeScriptableAPI =
     :<|> Api.AdminAddLeaguePlayerAPI
 
 main :: IO ()
-main = writeTypeScriptLibrary (Proxy :: Proxy TypeScriptableAPI) "../frontend/src/generated/"
+main = writeTypeScriptLibrary' tsOptions (Proxy :: Proxy TypeScriptableAPI) "../frontend/src/generated/"
+
+tsOptions :: ServantTypeScriptOptions
+tsOptions =
+  defaultServantTypeScriptOptions
+    { getFunctionName = prettyFunctionName
+    }
+
+prettyFunctionName :: Req T.Text -> T.Text
+prettyFunctionName req =
+  case unFunctionName (req ^. reqFuncName) of
+    [] -> error "Unexpected empty function name components"
+    method : segments ->
+      T.concat (method : fmap (capitalize . camelFromSnake) segments)
+  where
+    camelFromSnake :: T.Text -> T.Text
+    camelFromSnake =
+      T.concat . fmap capitalize . T.splitOn "_"
+
+    capitalize :: T.Text -> T.Text
+    capitalize t =
+      case T.uncons t of
+        Nothing -> t
+        Just (h, rest) -> T.cons (toUpper h) rest

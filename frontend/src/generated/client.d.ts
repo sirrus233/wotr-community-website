@@ -255,4 +255,4 @@ type Victory = "Ring" | "Military" | "Concession";
 
 type VictoryFilter = IVictorySideFilter | IVictoryKindFilter | IVictoryComboFilter;
 
-export type ApiInequalityOperator = "GT" | "LT" | "EQ";
+type ApiInequalityOperator = "GT" | "LT" | "EQ";

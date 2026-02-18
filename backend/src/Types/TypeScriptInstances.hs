@@ -17,7 +17,7 @@ instance TypeScript Ordering where
   getTypeScriptType _ = "ApiInequalityOperator"
   getTypeScriptDeclarations _ =
     [ TSRawDeclaration
-        "export type ApiInequalityOperator = \"GT\" | \"LT\" | \"EQ\";"
+        "type ApiInequalityOperator = \"GT\" | \"LT\" | \"EQ\";"
     ]
 
 instance TypeScript NoContent where

@@ -1,7 +1,7 @@
 import queryString from "query-string";
 
 
-export function postAddleagueplayer(league?: League, tier?: LeagueTier, year?: number, playerId?: number, playerName?: string, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
+export function postAddLeaguePlayer(league?: League, tier?: LeagueTier, year?: number, playerId?: number, playerName?: string, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
   let options: RequestInit = {
     credentials: "same-origin" as RequestCredentials,
     method: "POST",
@@ -20,7 +20,7 @@ export function postAddleagueplayer(league?: League, tier?: LeagueTier, year?: n
   });
 }
 
-export function postDeletereport(body: DeleteReportRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
+export function postDeleteReport(body: DeleteReportRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
   let options: RequestInit = {
     credentials: "same-origin" as RequestCredentials,
     method: "POST",
@@ -41,7 +41,7 @@ export function postDeletereport(body: DeleteReportRequest, fetchFn?: (input: Re
   });
 }
 
-export function postModifyreport(body: ModifyReportRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
+export function postModifyReport(body: ModifyReportRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
   let options: RequestInit = {
     credentials: "same-origin" as RequestCredentials,
     method: "POST",
@@ -62,7 +62,7 @@ export function postModifyreport(body: ModifyReportRequest, fetchFn?: (input: Re
   });
 }
 
-export function postRemapplayer(body: RemapPlayerRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<RemapPlayerResponse> {
+export function postRemapPlayer(body: RemapPlayerRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<RemapPlayerResponse> {
   let options: RequestInit = {
     credentials: "same-origin" as RequestCredentials,
     method: "POST",
@@ -83,7 +83,7 @@ export function postRemapplayer(body: RemapPlayerRequest, fetchFn?: (input: Requ
   });
 }
 
-export function postEditplayer(body: EditPlayerRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
+export function postEditPlayer(body: EditPlayerRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
   let options: RequestInit = {
     credentials: "same-origin" as RequestCredentials,
     method: "POST",
@@ -123,7 +123,7 @@ export function postLogout(fetchFn?: (input: RequestInfo, init?: RequestInit) =>
   });
 }
 
-export function postUpdateactivestatus(fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
+export function postUpdateActiveStatus(fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<void> {
   let options: RequestInit = {
     credentials: "same-origin" as RequestCredentials,
     method: "POST",
@@ -142,7 +142,7 @@ export function postUpdateactivestatus(fetchFn?: (input: RequestInfo, init?: Req
   });
 }
 
-export function getLeaguestats(league?: League, tier?: LeagueTier, year?: number, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<{[k in number]?: LeaguePlayerStats}> {
+export function getLeagueStats(league?: League, tier?: LeagueTier, year?: number, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<{[k in number]?: LeaguePlayerStats}> {
   let options: RequestInit = {
     credentials: "same-origin" as RequestCredentials,
     method: "GET",
@@ -199,7 +199,7 @@ export function getReports(limit?: number, offset?: number, filter?: GameReportF
   });
 }
 
-export function postSubmitreport(body: SubmitReportRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<SubmitGameReportResponse> {
+export function postSubmitReport(body: SubmitReportRequest, fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<SubmitGameReportResponse> {
   let options: RequestInit = {
     credentials: "same-origin" as RequestCredentials,
     method: "POST",
@@ -220,7 +220,7 @@ export function postSubmitreport(body: SubmitReportRequest, fetchFn?: (input: Re
   });
 }
 
-export function getUserinfo(fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<UserInfoResponse> {
+export function getUserInfo(fetchFn?: (input: RequestInfo, init?: RequestInit) => Promise<Response>): Promise<UserInfoResponse> {
   let options: RequestInit = {
     credentials: "same-origin" as RequestCredentials,
     method: "GET",
