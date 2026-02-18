@@ -4,7 +4,8 @@
 module Types.Database where
 
 import Control.Monad.Logger (LogLevel (..), ToLogStr (..))
-import Data.Aeson (ToJSONKey (..), ToJSONKeyFunction)
+import Data.Aeson (FromJSONKey (..), FromJSONKeyFunction (..), ToJSONKey (..), ToJSONKeyFunction)
+import Data.Aeson.TypeScript.TH (TypeScript (..))
 import Data.Aeson.Types (toJSONKeyText)
 import Data.Csv (Header, ToField (..), ToNamedRecord (..), (.=))
 import Data.Csv qualified as CSV
@@ -132,13 +133,25 @@ migrateSchema dbPool logger = do
 
   foldMapM ((`runSqlPool` dbPool) . (`rawExecute` [])) index_statements
 
+instance TypeScript PlayerId where
+  getTypeScriptType _ = "number"
+
 instance ToJSONKey PlayerId where
   toJSONKey :: ToJSONKeyFunction PlayerId
   toJSONKey = toJSONKeyText (show . SQL.fromSqlKey)
 
+instance FromJSONKey PlayerId where
+  fromJSONKey :: FromJSONKeyFunction PlayerId
+  fromJSONKey =
+    FromJSONKeyTextParser $ \t ->
+      maybe (fail "Invalid PlayerId") (pure . SQL.toSqlKey) (readMaybe . toString $ t)
+
 instance ToField PlayerId where
   toField :: PlayerId -> CSV.Field
   toField = toField . SQL.fromSqlKey
+
+instance TypeScript GameReportId where
+  getTypeScriptType _ = "number"
 
 type data PeriodKind = AnnualPeriod | AllTimePeriod
 

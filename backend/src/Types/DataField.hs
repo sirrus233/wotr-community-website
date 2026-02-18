@@ -1,6 +1,9 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Types.DataField where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (defaultOptions)
+import Data.Aeson.TypeScript.TH (deriveJSONAndTypeScript)
 import Data.Text qualified as T
 import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlType (..))
 import Database.Persist.Sql (PersistFieldSql (..))
@@ -40,9 +43,7 @@ instance PersistField Side where
 instance PersistFieldSql Side where
   sqlType _ = SqlString
 
-instance ToJSON Side
-
-instance FromJSON Side
+$(deriveJSONAndTypeScript defaultOptions ''Side)
 
 data Victory = Ring | Military | Concession deriving (Eq, Generic, Read, Show)
 
@@ -53,9 +54,7 @@ instance PersistField Victory where
 instance PersistFieldSql Victory where
   sqlType _ = SqlString
 
-instance ToJSON Victory
-
-instance FromJSON Victory
+$(deriveJSONAndTypeScript defaultOptions ''Victory)
 
 data Match = Rated | Unrated deriving (Eq, Generic, Read, Show)
 
@@ -66,9 +65,7 @@ instance PersistField Match where
 instance PersistFieldSql Match where
   sqlType _ = SqlString
 
-instance ToJSON Match
-
-instance FromJSON Match
+$(deriveJSONAndTypeScript defaultOptions ''Match)
 
 data Competition = League | Tournament deriving (Eq, Generic, Read, Show)
 
@@ -79,9 +76,7 @@ instance PersistField [Competition] where
 instance PersistFieldSql [Competition] where
   sqlType _ = SqlString
 
-instance ToJSON Competition
-
-instance FromJSON Competition
+$(deriveJSONAndTypeScript defaultOptions ''Competition)
 
 data League = GeneralLeague | LoMELeague | WoMELeague | SuperLeague | TTSLeague deriving (Eq, Generic, Ord, Read, Show)
 
@@ -92,9 +87,7 @@ instance PersistField League where
 instance PersistFieldSql League where
   sqlType _ = SqlString
 
-instance ToJSON League
-
-instance FromJSON League
+$(deriveJSONAndTypeScript defaultOptions ''League)
 
 instance FromHttpApiData League where
   parseQueryParam :: Text -> Either Text League
@@ -113,9 +106,7 @@ instance PersistField LeagueTier where
 instance PersistFieldSql LeagueTier where
   sqlType _ = SqlString
 
-instance ToJSON LeagueTier
-
-instance FromJSON LeagueTier
+$(deriveJSONAndTypeScript defaultOptions ''LeagueTier)
 
 data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | Treebeard deriving (Eq, Generic, Read, Show)
 
@@ -126,9 +117,7 @@ instance PersistField [Expansion] where
 instance PersistFieldSql [Expansion] where
   sqlType _ = SqlString
 
-instance ToJSON Expansion
-
-instance FromJSON Expansion
+$(deriveJSONAndTypeScript defaultOptions ''Expansion)
 
 data Stronghold
   = Rivendell
@@ -165,6 +154,4 @@ instance PersistField [Stronghold] where
 instance PersistFieldSql [Stronghold] where
   sqlType _ = SqlString
 
-instance ToJSON Stronghold
-
-instance FromJSON Stronghold
+$(deriveJSONAndTypeScript defaultOptions ''Stronghold)
