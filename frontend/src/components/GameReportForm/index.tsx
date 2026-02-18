@@ -756,6 +756,8 @@ function validationErrorToMessage(
             return "invalid interest rating selection";
         case "InvalidStronghold":
             return "invalid stronghold selections for the indicated expansions";
+        case "WinnerAndLoserSame":
+            return "winner and loser are the same player";
     }
 }
 

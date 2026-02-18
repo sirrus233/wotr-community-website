@@ -8,6 +8,7 @@ import Data.Validation (Validation (..))
 import Servant (ServerError (..), err422, throwError)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Side (..), Stronghold (..), Victory (..))
+import Database (normalizeName)
 
 data ReportError
   = VictoryConditionConflictSPRV
@@ -29,6 +30,7 @@ data ReportError
   | InitialEyesOutOfRange
   | InterestRatingOutOfRange
   | InvalidStronghold
+  | WinnerAndLoserSame
   deriving (Show)
 
 vpValue :: Stronghold -> Int
@@ -175,6 +177,13 @@ validateStrongholds report
   | IronHills `elem` report.strongholds && FateOfErebor `notElem` report.expansions = Failure [InvalidStronghold]
   | otherwise = Success report
 
+validatePlayers :: RawGameReport -> Validation [ReportError] RawGameReport
+validatePlayers report
+  | normalizeName (winner report) /= normalizeName (loser report)
+      = Success report
+  | otherwise
+      = Failure [WinnerAndLoserSame]
+
 validateReport :: RawGameReport -> Validation [ReportError] RawGameReport
 validateReport report =
   validateVictory report
@@ -187,6 +196,7 @@ validateReport report =
     <* validateInitialEyes report
     <* validateInterestRating report
     <* validateStrongholds report
+    <* validatePlayers report
 
 validateLogFile :: FilePath -> AppM ()
 validateLogFile fp = do
