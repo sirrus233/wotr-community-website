@@ -18,11 +18,11 @@ export default function useGameReportClearEffects({
 }: Args) {
     const useControlledClearEffect = <
         K extends keyof GameFormData,
-        V extends ValueOf<GameFormData>["value"]
+        V extends ValueOf<GameFormData>["value"],
     >(
         controlField: V,
         clearField: K,
-        controlCondition?: (value: V) => boolean
+        controlCondition?: (value: V) => boolean,
     ) => {
         const condition = controlCondition
             ? controlCondition(controlField)
@@ -39,7 +39,7 @@ export default function useGameReportClearEffects({
 
     const useStrongholdDeselectEffect = (
         deselectedStronghold: Stronghold,
-        controlCondition: boolean
+        controlCondition: boolean,
     ) => {
         useEffect(() => {
             if (!controlCondition) {
@@ -48,7 +48,7 @@ export default function useGameReportClearEffects({
                     strongholds: {
                         ...formData.strongholds,
                         value: formData.strongholds.value.filter(
-                            (stronghold) => stronghold !== deselectedStronghold
+                            (stronghold) => stronghold !== deselectedStronghold,
                         ),
                     },
                 }));
@@ -60,28 +60,28 @@ export default function useGameReportClearEffects({
         function resetForm() {
             if (successMessage) setFormData(initialFormData);
         },
-        [successMessage]
+        [successMessage],
     );
 
     useControlledClearEffect(
         formData.match.value,
         "competition",
-        (match) => match === "Rated"
+        (match) => match === "Rated",
     );
     useControlledClearEffect(
         formData.match.value,
         "league",
-        (match) => match === "Rated"
+        (match) => match === "Rated",
     );
     useControlledClearEffect(
         formData.competition.value,
         "league",
-        (competition) => competition.includes("League")
+        (competition) => competition.includes("League"),
     );
     useControlledClearEffect(
         formData.expansions.value,
         "treebeard",
-        (expansions) => expansions.includes("Treebeard")
+        (expansions) => expansions.includes("Treebeard"),
     );
     useControlledClearEffect(formData.usedExpansions.value, "expansions");
     useControlledClearEffect(formData.usedExpansions.value, "treebeard");
@@ -93,7 +93,7 @@ export default function useGameReportClearEffects({
     strongholds.filter(isStrongholdConditional).map((stronghold) => {
         useStrongholdDeselectEffect(
             stronghold,
-            isStrongholdInPlay(formData.expansions.value, stronghold)
+            isStrongholdInPlay(formData.expansions.value, stronghold),
         );
     });
 }

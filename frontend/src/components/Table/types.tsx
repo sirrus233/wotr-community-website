@@ -19,8 +19,9 @@ interface CommonFilterProps {
     appliedCount: number;
 }
 
-export interface AutocompleteProps<Opt extends Option>
-    extends CommonFilterProps {
+export interface AutocompleteProps<
+    Opt extends Option,
+> extends CommonFilterProps {
     filterType: "autocomplete";
     options: Opt[];
     current: Opt[];
@@ -77,8 +78,9 @@ interface ColHeaderDataA extends CommonColHeaderData {
     width?: number;
 }
 
-interface ColHeaderDataB<T extends MenuOption<any> = MenuOption<any>>
-    extends CommonColHeaderData {
+interface ColHeaderDataB<
+    T extends MenuOption<any> = MenuOption<any>,
+> extends CommonColHeaderData {
     filter: Filter<T>;
     width: number;
 }

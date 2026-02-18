@@ -50,7 +50,7 @@ export function isServerError(error: unknown): error is ServerErrorBody {
 }
 
 function isRequestError(
-    error: unknown
+    error: unknown,
 ): error is { request: unknown; config: unknown } {
     return isRegularObject(error) && "request" in error && "config" in error;
 }

@@ -59,7 +59,7 @@ export default function ShadowCaptures({
     const allowedStrongholds: Stronghold[] = strongholds.filter(
         (stronghold) =>
             isStrongholdInPlay(report.expansions, stronghold) &&
-            strongholdSide(report.expansions, stronghold) === "Free"
+            strongholdSide(report.expansions, stronghold) === "Free",
     );
 
     return (
@@ -68,7 +68,7 @@ export default function ShadowCaptures({
                 <Box key={i} display="flex" flexDirection={direction(layout)}>
                     {badges
                         .filter(({ stronghold }) =>
-                            allowedStrongholds.includes(stronghold)
+                            allowedStrongholds.includes(stronghold),
                         )
                         .map(({ stronghold, style }) => (
                             <SettlementBadge
@@ -76,7 +76,7 @@ export default function ShadowCaptures({
                                 style={{
                                     minWidth: maybeSetBadgeWidth(
                                         stronghold,
-                                        isAbbreviated
+                                        isAbbreviated,
                                     ),
                                     ...(report.strongholds.includes(stronghold)
                                         ? capturedStyle(style)
@@ -128,7 +128,7 @@ function emptyBadgeStyle(layout: SettlementLayout): CSSProperties {
  */
 function maybeSetBadgeWidth(
     stronghold: Stronghold,
-    isAbbreviated: boolean
+    isAbbreviated: boolean,
 ): string | undefined {
     const ereborBadgeWidth = isAbbreviated ? "25px" : "62px";
 

@@ -40,7 +40,7 @@ export default function Autocomplete<O extends string | MenuOption<unknown>>({
                 setDisplayedAlertText(null);
             }
         },
-        [alertText, displayedAlertText]
+        [alertText, displayedAlertText],
     );
 
     const alert = (
@@ -75,7 +75,7 @@ export default function Autocomplete<O extends string | MenuOption<unknown>>({
                         (option) =>
                             option === value ||
                             (typeof option !== "string" &&
-                                option.label === value)
+                                option.label === value),
                     );
 
                     onChange(selected || null);
