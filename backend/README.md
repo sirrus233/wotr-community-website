@@ -26,7 +26,7 @@ cabal build
 ## Running locally
 
 ```bash
-cabal run server -- dev migrate   # First run – applies DB migrations
+cabal run server -- dev migrate   # First run – or when database schema changes - applies DB migrations
 cabal run server -- dev           # Subsequent runs
 ```
 
@@ -79,6 +79,8 @@ Review these scripts before making changes as they assume an environment consist
 
 ## Troubleshooting
 
+- If the language server fails to resolve dependencies, ensure your IDE has its project root set as the `backend/` directory. Opening from this repo's top-level directory will not work.
+- When adding new dependencies or facing other language server problems, try restarting Haskell LSP Server
 - `cabal clean && cabal build` fixes most build cache issues.
 - `ghcup tui` highlights outdated GHC/cabal/HLS versions; install the recommended ones if builds fail due to mismatched toolchains.
 - Database locked? Stop the server (`Ctrl+C`), make sure no other process is holding the SQLite file, and rerun with `cabal run server -- dev`.
