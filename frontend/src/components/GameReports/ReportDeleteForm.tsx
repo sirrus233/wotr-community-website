@@ -52,6 +52,6 @@ async function submit({ rid }: ValidReportDeleteFormData) {
     return await axios.post(
         `${API_BASE_URL}/deleteReport`,
         { rid: rid.value },
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "application/json" } },
     );
 }

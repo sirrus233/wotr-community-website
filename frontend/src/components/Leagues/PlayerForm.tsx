@@ -121,7 +121,7 @@ type LeaguePlayerQueryParams = {
 };
 
 function toQueryParams(
-    formData: ValidLeaguePlayerFormData
+    formData: ValidLeaguePlayerFormData,
 ): LeaguePlayerQueryParams {
     return {
         league: formData.league.value,

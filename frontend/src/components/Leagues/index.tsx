@@ -165,7 +165,7 @@ function LeagueTable({
 }: LeagueTableProps) {
     const entries = Object.entries(stats).sort(
         ([, playerStatsA], [, playerStatsB]) =>
-            playerStatsB.summary.points - playerStatsA.summary.points
+            playerStatsB.summary.points - playerStatsA.summary.points,
     );
 
     const FIXED_HEADERS = ["Points", "Win Rate", "Games", "Wins"];
@@ -197,13 +197,13 @@ function LeagueTable({
                 ...FIXED_HEADERS.map(
                     (headerLabel): ColHeaderData => ({
                         key: headerLabel,
-                    })
+                    }),
                 ),
                 ...entries.map(
                     ([playerId, playerStats]): ColHeaderData => ({
                         key: playerId,
                         content: playerStats.name,
-                    })
+                    }),
                 ),
             ]}
             rows={entries.map(
@@ -220,8 +220,8 @@ function LeagueTable({
                             content: toPercent(
                                 noNansense(
                                     playerStats.summary.totalWins /
-                                        playerStats.summary.totalGames
-                                )
+                                        playerStats.summary.totalGames,
+                                ),
                             ),
                         },
                         {
@@ -259,7 +259,7 @@ function LeagueTable({
                             };
                         }),
                     ],
-                })
+                }),
             )}
         />
     );

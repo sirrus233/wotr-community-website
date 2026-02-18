@@ -34,7 +34,7 @@ const CornerFilterSlot = styled(ColumnFilterSlot)({
 
 interface Props<
     CorH extends CornerHeaderData<MenuOption<any>>,
-    ColH extends ColHeaderData<MenuOption<any>>
+    ColH extends ColHeaderData<MenuOption<any>>,
 > {
     cornerHeaders: CorH[];
     colHeaders: ColH[];
@@ -45,7 +45,7 @@ interface Props<
 
 export default function FilterBar<
     CorH extends CornerHeaderData<MenuOption<any>>,
-    ColH extends ColHeaderData<MenuOption<any>>
+    ColH extends ColHeaderData<MenuOption<any>>,
 >({
     cornerHeaders,
     colHeaders,
