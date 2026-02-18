@@ -38,8 +38,10 @@ export function serializeVictoryFilter(
 export function serializeTimestampFilter(
     timestampFilter: GameReportFilters["timestamp"],
 ): SerializedTimestampFilter | null {
+    // dates are entered in user's local time
     const [start = null, end = null] = timestampFilter || [];
 
+    // Date.toJSON serializes to a UTC timestamp, matching how timestamps are stored in db
     if (start && end) {
         return { tag: "Between", contents: [start.toJSON(), end.toJSON()] };
     } else if (start) {

@@ -244,12 +244,19 @@ export function isStrongholdInPlay(
     }
 }
 
-export function displayTime(timestamp: string) {
+/**
+ * Converts UTC timestamp to local time and format
+ *
+ * @param timestamp - UTC timestamp
+ * @returns Formatted local time string in local format
+ */
+export function displayTime(timestamp: string): string {
+    // `undefined` locale falls back to the local runtime's default
     return Intl.DateTimeFormat(undefined, {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-    }).format(new Date(Date.parse(timestamp)));
+    }).format(new Date(Date.parse(timestamp))); // converts UTC timestamp to local time
 }
 
 export function displayMusterPoints(n: number) {
