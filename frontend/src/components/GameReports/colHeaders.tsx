@@ -84,7 +84,17 @@ export default function colHeaders({
         ],
 
         standardHeaders: [
-            { key: "Timestamp" },
+            {
+                key: "Timestamp",
+                width: 160,
+                filter: {
+                    filterType: "timestamp",
+                    current: filters.timestamp,
+                    appliedCount: filters.timestamp.filter(Boolean).length,
+                    onChange: (value) =>
+                        setFilters({ ...filters, timestamp: value }),
+                },
+            },
             {
                 key: "Turn",
                 width: 120,
