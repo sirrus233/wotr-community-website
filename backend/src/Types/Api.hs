@@ -1,6 +1,9 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Types.Api where
 
-import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict, eitherDecodeStrictText)
+import Data.Aeson (FromJSON, ToJSON, defaultOptions, eitherDecodeStrict, eitherDecodeStrictText)
+import Data.Aeson.TypeScript.TH (deriveJSONAndTypeScript, deriveTypeScript)
 import Data.ByteString (StrictByteString)
 import Data.Time (UTCTime)
 import Database.Esqueleto.Experimental (Entity (..))
@@ -20,6 +23,7 @@ import Types.Database
     PlayerStatsYear (..),
     ReportInsertion,
   )
+import Types.TypeScriptInstances ()
 import Web.Cookie (SetCookie)
 
 type S3Url = Text
@@ -35,25 +39,7 @@ type GoogleLoginResponse = Headers '[Header "Set-Cookie" SetCookie] NoContent
 
 newtype UserInfoResponse = UserInfoResponse {isAdmin :: Bool} deriving (Generic)
 
-instance ToJSON UserInfoResponse
-
-data SubmitReportRequest = SubmitReportRequest
-  { report :: RawGameReport,
-    logFile :: Maybe (FileData Tmp)
-  }
-  deriving (Generic)
-
-instance FromMultipart Tmp SubmitReportRequest where
-  fromMultipart :: MultipartData Tmp -> Either String SubmitReportRequest
-  fromMultipart multipartData = do
-    rawJson <- lookupInput "report" multipartData
-    report <- case eitherDecodeStrict (encodeUtf8 rawJson) of
-      Left err -> Left $ "Error parsing RawGameReport JSON: " <> err
-      Right a -> Right a
-    logFile <- case lookupFile "logFile" multipartData of
-      Left _ -> Right Nothing
-      Right f -> Right . Just $ f
-    pure $ SubmitReportRequest {..}
+$(deriveJSONAndTypeScript defaultOptions ''UserInfoResponse)
 
 data RawGameReport = RawGameReport
   { winner :: PlayerName,
@@ -79,7 +65,27 @@ data RawGameReport = RawGameReport
   }
   deriving (Generic, Show)
 
-instance FromJSON RawGameReport
+$(deriveJSONAndTypeScript defaultOptions ''RawGameReport)
+
+data SubmitReportRequest = SubmitReportRequest
+  { report :: RawGameReport,
+    logFile :: Maybe (FileData Tmp)
+  }
+  deriving (Generic)
+
+$(deriveTypeScript defaultOptions ''SubmitReportRequest)
+
+instance FromMultipart Tmp SubmitReportRequest where
+  fromMultipart :: MultipartData Tmp -> Either String SubmitReportRequest
+  fromMultipart multipartData = do
+    rawJson <- lookupInput "report" multipartData
+    report <- case eitherDecodeStrict (encodeUtf8 rawJson) of
+      Left err -> Left $ "Error parsing RawGameReport JSON: " <> err
+      Right a -> Right a
+    logFile <- case lookupFile "logFile" multipartData of
+      Left _ -> Right Nothing
+      Right f -> Right . Just $ f
+    pure $ SubmitReportRequest {..}
 
 toGameReport :: UTCTime -> PlayerId -> PlayerId -> Maybe S3Url -> RawGameReport -> GameReport
 toGameReport timestamp winnerId loserId logFile r =
@@ -137,7 +143,7 @@ data ProcessedGameReport = ProcessedGameReport
   }
   deriving (Generic)
 
-instance ToJSON ProcessedGameReport
+$(deriveJSONAndTypeScript defaultOptions ''ProcessedGameReport)
 
 fromGameReport :: ReportInsertion -> ProcessedGameReport
 fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
@@ -176,7 +182,7 @@ data SubmitGameReportResponse = SubmitGameReportResponse
   }
   deriving (Generic)
 
-instance ToJSON SubmitGameReportResponse
+$(deriveJSONAndTypeScript defaultOptions ''SubmitGameReportResponse)
 
 data GetReportsResponse = GetReportsResponse
   { reports :: [ProcessedGameReport],
@@ -184,7 +190,7 @@ data GetReportsResponse = GetReportsResponse
   }
   deriving (Generic)
 
-instance ToJSON GetReportsResponse
+$(deriveJSONAndTypeScript defaultOptions ''GetReportsResponse)
 
 data LeaderboardEntry = LeaderboardEntry
   { pid :: PlayerId,
@@ -207,7 +213,7 @@ data LeaderboardEntry = LeaderboardEntry
   }
   deriving (Generic)
 
-instance ToJSON LeaderboardEntry
+$(deriveJSONAndTypeScript defaultOptions ''LeaderboardEntry)
 
 fromPlayerStats :: (Entity Player, PlayerStats k) -> LeaderboardEntry
 fromPlayerStats (Entity pid p, (t, agg)) =
@@ -242,7 +248,7 @@ fromPlayerStats (Entity pid p, (t, agg)) =
 
 newtype GetLeaderboardResponse = GetLeaderboardResponse {entries :: [LeaderboardEntry]} deriving (Generic)
 
-instance ToJSON GetLeaderboardResponse
+$(deriveJSONAndTypeScript defaultOptions ''GetLeaderboardResponse)
 
 data EditPlayerRequest = EditPlayerRequest
   { pid :: PlayerId,
@@ -251,7 +257,7 @@ data EditPlayerRequest = EditPlayerRequest
   }
   deriving (Generic)
 
-instance FromJSON EditPlayerRequest
+$(deriveJSONAndTypeScript defaultOptions ''EditPlayerRequest)
 
 data RemapPlayerRequest = RemapPlayerRequest
   { fromPid :: PlayerId,
@@ -259,14 +265,14 @@ data RemapPlayerRequest = RemapPlayerRequest
   }
   deriving (Generic)
 
-instance FromJSON RemapPlayerRequest
+$(deriveJSONAndTypeScript defaultOptions ''RemapPlayerRequest)
 
 newtype RemapPlayerResponse = RemapPlayerResponse
   { name :: PlayerName
   }
   deriving (Generic)
 
-instance ToJSON RemapPlayerResponse
+$(deriveJSONAndTypeScript defaultOptions ''RemapPlayerResponse)
 
 data ModifyReportRequest = ModifyReportRequest
   { rid :: GameReportId,
@@ -275,23 +281,14 @@ data ModifyReportRequest = ModifyReportRequest
   }
   deriving (Generic)
 
-instance FromJSON ModifyReportRequest
+$(deriveJSONAndTypeScript defaultOptions ''ModifyReportRequest)
 
 newtype DeleteReportRequest = DeleteReportRequest
   { rid :: GameReportId
   }
   deriving (Generic)
 
-instance FromJSON DeleteReportRequest
-
-data LeaguePlayerStats = LeaguePlayerStats
-  { name :: Text,
-    summary :: LeaguePlayerStatsSummary,
-    gameStatsByOpponent :: Map PlayerId LeagueGameStats
-  }
-  deriving (Generic)
-
-instance ToJSON LeaguePlayerStats
+$(deriveJSONAndTypeScript defaultOptions ''DeleteReportRequest)
 
 data LeaguePlayerStatsSummary = LeaguePlayerStatsSummary
   { totalWins :: Int,
@@ -300,7 +297,7 @@ data LeaguePlayerStatsSummary = LeaguePlayerStatsSummary
   }
   deriving (Generic)
 
-instance ToJSON LeaguePlayerStatsSummary
+$(deriveJSONAndTypeScript defaultOptions ''LeaguePlayerStatsSummary)
 
 data LeagueGameStats = LeagueGameStats
   { opponent :: Text,
@@ -309,7 +306,16 @@ data LeagueGameStats = LeagueGameStats
   }
   deriving (Generic)
 
-instance ToJSON LeagueGameStats
+$(deriveJSONAndTypeScript defaultOptions ''LeagueGameStats)
+
+data LeaguePlayerStats = LeaguePlayerStats
+  { name :: Text,
+    summary :: LeaguePlayerStatsSummary,
+    gameStatsByOpponent :: Map PlayerId LeagueGameStats
+  }
+  deriving (Generic)
+
+$(deriveJSONAndTypeScript defaultOptions ''LeaguePlayerStats)
 
 type LeagueStatsResponse = Map PlayerId LeaguePlayerStats
 
@@ -321,11 +327,11 @@ type ExportResponse = (Headers '[Header "Content-Disposition" String]) (SourceIO
 
 data TimestampFilter = Before UTCTime | After UTCTime | Between UTCTime UTCTime deriving (Generic)
 
-instance FromJSON TimestampFilter
+$(deriveJSONAndTypeScript defaultOptions ''TimestampFilter)
 
 data InequalityFilter = InequalityFilter Ordering Int deriving (Generic)
 
-instance FromJSON InequalityFilter
+$(deriveJSONAndTypeScript defaultOptions ''InequalityFilter)
 
 data VictoryFilter
   = VictorySideFilter Side
@@ -333,11 +339,15 @@ data VictoryFilter
   | VictoryComboFilter Side Victory
   deriving (Generic)
 
-instance FromJSON VictoryFilter
+$(deriveJSONAndTypeScript defaultOptions ''VictoryFilter)
 
 data NullableFilter f = NullFilter | ValueFilter f deriving (Generic)
 
 instance (FromJSON f) => FromJSON (NullableFilter f)
+
+instance (ToJSON f) => ToJSON (NullableFilter f)
+
+$(deriveTypeScript defaultOptions ''NullableFilter)
 
 -- TODO Unused until competition can be filtered in the DB
 -- data CompetitionFilter = RatedFilter Match | CompetitionFilter Competition deriving (Generic)
@@ -371,7 +381,7 @@ data GameReportFilterSpec = GameReportFilterSpec
   }
   deriving (Generic)
 
-instance FromJSON GameReportFilterSpec
+$(deriveJSONAndTypeScript defaultOptions ''GameReportFilterSpec)
 
 instance FromHttpApiData GameReportFilterSpec where
   parseQueryParam :: Text -> Either Text GameReportFilterSpec
