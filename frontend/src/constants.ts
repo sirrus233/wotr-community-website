@@ -110,6 +110,7 @@ export const serverValidationErrors = [
     "InitialEyesOutOfRange",
     "InterestRatingOutOfRange",
     "InvalidStronghold",
+    "WinnerAndLoserSame",
 ] as const;
 
 export const playerStates = ["Active", "Inactive"] as const;
