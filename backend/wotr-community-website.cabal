@@ -15,6 +15,11 @@ common warnings
 
 common extensions
   ghc-options: -threaded
+  mixins:
+    base hiding (Prelude),
+    relude (Relude as Prelude),
+    relude,
+
   default-extensions:
     DuplicateRecordFields
     OverloadedRecordDot
