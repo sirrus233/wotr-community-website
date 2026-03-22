@@ -4,6 +4,7 @@ import {
     InequalityFilter,
     MenuOption,
     NullableInequalityFilter,
+    TimestampFilter,
 } from "../../types";
 
 export type Option = string | MenuOption<unknown>;
@@ -13,8 +14,9 @@ interface CommonFilterProps {
         | "autocomplete"
         | "inequality"
         | "nullableInequality"
-        | "boolean";
-    placeholder: string;
+        | "boolean"
+        | "timestamp";
+    placeholder?: string;
     errorMessage?: ErrorMessage;
     appliedCount: number;
 }
@@ -60,11 +62,18 @@ export interface BooleanFilterProps extends CommonFilterProps {
     onChange: (value: boolean | null) => void;
 }
 
+export interface TimestampFilterProps extends CommonFilterProps {
+    filterType: "timestamp";
+    current: TimestampFilter;
+    onChange: (value: TimestampFilter) => void;
+}
+
 type Filter<T extends MenuOption<any> = MenuOption<any>> =
     | AutocompleteProps<T>
     | InequalityFilterProps
     | NullableInequalityFilterProps
-    | BooleanFilterProps;
+    | BooleanFilterProps
+    | TimestampFilterProps;
 
 interface CommonColHeaderData {
     key: string | number;

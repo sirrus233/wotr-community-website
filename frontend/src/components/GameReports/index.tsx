@@ -24,6 +24,7 @@ import Settings, { defaultSettings, GameReportSettings } from "./Settings";
 import {
     getReportsOffset,
     serializeNullableInequalityFilter,
+    serializeTimestampFilter,
     serializeVictoryFilter,
     toFilterParam,
 } from "./serializers";
@@ -179,6 +180,7 @@ export function serializeReportsParams(params: GameReportParams) {
             mordor: serializeNullableInequalityFilter(params.filters.mordor),
             aragorn: serializeNullableInequalityFilter(params.filters.aragorn),
             victory: serializeVictoryFilter(params.filters.victory),
+            timestamp: serializeTimestampFilter(params.filters.timestamp),
         }),
     };
 }
