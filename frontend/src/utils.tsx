@@ -146,6 +146,8 @@ export function getExpansionLabel(expansion: Expansion): string {
             return expansion;
         case "FateOfErebor":
             return "Fate of Erebor";
+        case "ReturnOfTheKing":
+            return "RotK";
     }
 }
 

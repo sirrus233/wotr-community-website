@@ -82,7 +82,7 @@ main :: IO ()
 main = do
   args <- getArgs
   let appMode = if "dev" `elem` args then Dev else Prod
-  let doMigrate = "migrate" `elem` args
+  let skipMigrate = "skipMigrate" `elem` args
 
   setEnv "AWS_PROFILE" "wotrcommunity"
   createDirectoryIfMissing True . takeDirectory $ databaseFile
@@ -97,7 +97,7 @@ main = do
     Prod -> AWS.newEnv AWS.discover >>= \awsEnv -> pure $ awsEnv {AWS.logger = toAwsLogger logFilter logger, AWS.region = AWS.Oregon}
   apiSecret <- fmap encodeUtf8 <$> lookupEnv "SERVICE_API_SECRET"
 
-  when doMigrate $ migrateSchema dbPool logger
+  unless skipMigrate $ migrateSchema dbPool logger
 
   let env = Env {dbPool, authDbPool, redisPool, logger, aws, apiSecret}
   let settings = setPort 8080 . setOnException (logException env.logger) $ defaultSettings

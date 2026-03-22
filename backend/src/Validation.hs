@@ -4,7 +4,7 @@ import AppConfig (AppM)
 import Control.Monad.Logger (logErrorN)
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeLatin1)
-import Data.Validation (Validation (..))
+import Data.Validation (Validation (..), validate)
 import Servant (ServerError (..), err422, throwError)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Side (..), Stronghold (..), Victory (..))
@@ -29,6 +29,8 @@ data ReportError
   | InitialEyesOutOfRange
   | InterestRatingOutOfRange
   | InvalidStronghold
+  | InvalidRotkAragorn
+  | InvalidRotkEyes
   deriving (Show)
 
 vpValue :: Stronghold -> Int
@@ -175,6 +177,16 @@ validateStrongholds report
   | IronHills `elem` report.strongholds && FateOfErebor `notElem` report.expansions = Failure [InvalidStronghold]
   | otherwise = Success report
 
+validateReturnOfTheKing :: RawGameReport -> Validation [ReportError] RawGameReport
+validateReturnOfTheKing report
+  | ReturnOfTheKing `elem` report.expansions =
+      validate [InvalidRotkAragorn] aragornRule report
+        <* validate [InvalidRotkEyes] eyesRule report
+  | otherwise = Success report
+  where
+    aragornRule r = if r.aragornTurn == Just 1 then Just r else Nothing
+    eyesRule r = if r.initialEyes == 3 then Just r else Nothing
+
 validateReport :: RawGameReport -> Validation [ReportError] RawGameReport
 validateReport report =
   validateVictory report
@@ -187,6 +199,7 @@ validateReport report =
     <* validateInitialEyes report
     <* validateInterestRating report
     <* validateStrongholds report
+    <* validateReturnOfTheKing report
 
 validateLogFile :: FilePath -> AppM ()
 validateLogFile fp = do

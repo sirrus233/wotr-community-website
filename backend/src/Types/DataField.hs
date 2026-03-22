@@ -117,7 +117,7 @@ instance ToJSON LeagueTier
 
 instance FromJSON LeagueTier
 
-data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | Treebeard deriving (Eq, Generic, Read, Show)
+data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | ReturnOfTheKing | Treebeard deriving (Eq, Generic, Read, Show)
 
 instance PersistField [Expansion] where
   toPersistValue = defaultListToPersistValue

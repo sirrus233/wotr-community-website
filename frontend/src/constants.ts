@@ -23,6 +23,7 @@ export const expansions = [
     "KoME",
     "Cities",
     "FateOfErebor",
+    "ReturnOfTheKing",
     "Treebeard",
 ] as const;
 
@@ -110,6 +111,8 @@ export const serverValidationErrors = [
     "InitialEyesOutOfRange",
     "InterestRatingOutOfRange",
     "InvalidStronghold",
+    "InvalidRotkAragorn",
+    "InvalidRotkEyes",
 ] as const;
 
 export const playerStates = ["Active", "Inactive"] as const;
