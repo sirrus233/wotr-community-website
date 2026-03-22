@@ -24,6 +24,7 @@ export function formatExpansions(values: readonly Expansion[]): string {
         "KoME",
         "Cities",
         "FateOfErebor",
+        "ReturnOfTheKing",
         "Treebeard",
     ] as const;
 

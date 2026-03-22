@@ -23,6 +23,7 @@ export const expansions = [
     "KoME",
     "Cities",
     "FateOfErebor",
+    "ReturnOfTheKing",
     "Treebeard",
 ] as const;
 
