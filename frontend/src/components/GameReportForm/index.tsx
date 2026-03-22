@@ -756,6 +756,10 @@ function validationErrorToMessage(
             return "invalid interest rating selection";
         case "InvalidStronghold":
             return "invalid stronghold selections for the indicated expansions";
+        case "InvalidRotkAragorn":
+            return "when playing RotK, Aragorn must be crowned on turn 1";
+        case "InvalidRotkEyes":
+            return "when playing RotK, Shadow must allocate 3 eyes on turn 1";
     }
 }
 
