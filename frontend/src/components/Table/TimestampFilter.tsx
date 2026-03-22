@@ -18,15 +18,15 @@ export default function TimestampFilter({
         <FilterContainerVertical width={width} gap="5px">
             <DateField
                 label="From:"
-                value={fromTimestamp(start)}
-                onChange={(value) => onChange([toTimestamp(value), end])}
+                value={dateToString(start)}
+                onChange={(value) => onChange([stringToDate(value), end])}
             />
 
             <DateField
                 label="To:"
-                value={fromTimestamp(end)}
+                value={dateToString(end)}
                 onChange={(value) =>
-                    onChange([start, toTimestamp(value, { atEndOfDay: true })])
+                    onChange([start, advanceToEndOfDay(stringToDate(value))])
                 }
             />
         </FilterContainerVertical>
@@ -53,10 +53,7 @@ function DateField({ label, value, onChange }: DateFieldProps) {
     );
 }
 
-function toTimestamp(
-    dateString: string,
-    { atEndOfDay = false } = {}
-): Date | null {
+function stringToDate(dateString: string): Date | null {
     if (dateString) {
         const [year, month, day] = dateString.split("-").map(Number);
 
@@ -64,18 +61,10 @@ function toTimestamp(
         localDate.setMonth(month - 1);
         localDate.setDate(day);
         localDate.setFullYear(year);
-
-        if (atEndOfDay) {
-            localDate.setHours(23);
-            localDate.setMinutes(59);
-            localDate.setSeconds(59);
-            localDate.setMilliseconds(99);
-        } else {
-            localDate.setHours(0);
-            localDate.setMinutes(0);
-            localDate.setSeconds(0);
-            localDate.setMilliseconds(0);
-        }
+        localDate.setHours(0);
+        localDate.setMinutes(0);
+        localDate.setSeconds(0);
+        localDate.setMilliseconds(0);
 
         return localDate;
     }
@@ -83,7 +72,7 @@ function toTimestamp(
     return null;
 }
 
-function fromTimestamp(date: Date | null): string {
+function dateToString(date: Date | null): string {
     if (date) {
         return [
             String(date.getFullYear()).padStart(4, "0"),
@@ -93,4 +82,14 @@ function fromTimestamp(date: Date | null): string {
     }
 
     return "";
+}
+
+function advanceToEndOfDay(date: Date | null) {
+    if (date) {
+        date.setHours(23);
+        date.setMinutes(59);
+        date.setSeconds(59);
+        date.setMilliseconds(999);
+    }
+    return date;
 }
