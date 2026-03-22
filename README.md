@@ -15,12 +15,20 @@ Each directory has its own README with more details:
 
 ## General prerequisites
 
+### Repo setup
+
+1. Install [pre-commit](https://pre-commit.com/#install).
+2. From the repo root run `pre-commit install` so git will run the hooks before every commit.
+3. (Optional) Run `pre-commit run --all-files` once to make sure your environment has all of the hook dependencies.
+
 ### For General Development
+
 - Latest Node.js and npm (install via [nvm](https://github.com/nvm-sh/nvm), [Volta](https://volta.sh/), or your system's package manager).
 - Haskell toolchain via [ghcup](https://www.haskell.org/ghcup/) with GHC `9.12.2`, cabal `3.14.2`, and Haskell Language Server.
 - `sqlite3` CLI plus an optional GUI such as [DB Browser for SQLite](https://sqlitebrowser.org/).
 
 ### For Cutting New Releases/Deployments
+
 - AWS Profile named `wotrcommunity` configured with access keys for your IAM user
 - Docker (for building backend release binaries) and AWS CLI v2 configured with the `wotrcommunity` profile+credentials, plus the AWS Session Manager plugin.
 
