@@ -19,7 +19,7 @@ module.exports = {
                 __dirname,
                 "src",
                 "env",
-                isDev ? "dev.ts" : "prod.ts"
+                isDev ? "dev.ts" : "prod.ts",
             ),
         },
         extensions: [".ts", ".tsx", ".js", ".json"],

@@ -302,9 +302,7 @@ function Rankings({
                             <TableCell side="Free">
                                 {entry.currentRatingFree}
                             </TableCell>
-                            <TableCell>
-                                {entry.yearlyGames}
-                            </TableCell>
+                            <TableCell>{entry.yearlyGames}</TableCell>
                             <TableCell side="Free" light>
                                 {entry.yearlyWinsFree}
                             </TableCell>
