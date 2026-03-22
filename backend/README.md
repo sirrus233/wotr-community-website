@@ -8,7 +8,7 @@ Stateless Servant API that receives game reports, persists them in SQLite, and i
   - GHC `9.12.2` (`ghcup install ghc 9.12.2 && ghcup set ghc 9.12.2`)
   - cabal `3.14.2` (`ghcup install cabal 3.14.2`)
   - Haskell Language Server (for IDE support)
-  - Our project *does not* use Stack, so it is not required
+  - Our project _does not_ use Stack, so it is not required
 - `sqlite3` CLI plus (optionally) [DB Browser for SQLite](https://sqlitebrowser.org/dl/).
 - Docker Desktop / `docker buildx` (release builds copy binaries out of a container).
 - AWS CLI v2 configured with the `wotrcommunity` profile, IAM permissions for EC2/SSM/S3, and the [SSM Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html).
@@ -26,8 +26,8 @@ cabal build
 ## Running locally
 
 ```bash
-cabal run server -- dev migrate   # First run – or when database schema changes - applies DB migrations
-cabal run server -- dev           # Subsequent runs
+cabal run server -- dev
+cabal run server -- dev skipMigrate   # Skip applying new changes to the database schema
 ```
 
 - The API listens on `http://localhost:8080`.
