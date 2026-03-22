@@ -67,7 +67,9 @@ export default function PlayerEditForm({ pid, name, country, refresh }: Props) {
                     error: formData.country.error,
                     element: (
                         <Autocomplete
-                            options={Object.keys(COUNTRIES_DATA) as Country[]}
+                            options={
+                                Object.keys(COUNTRIES_DATA).sort() as Country[]
+                            }
                             current={formData.country.value}
                             loading={false}
                             placeholder="Country"
