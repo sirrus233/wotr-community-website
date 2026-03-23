@@ -87,6 +87,7 @@ export default function useGameReportClearEffects({
     useControlledClearEffect(formData.usedExpansions.value, "treebeard");
     useControlledClearEffect(formData.usedHandicap.value, "actionTokens");
     useControlledClearEffect(formData.usedHandicap.value, "dwarvenRings");
+    useControlledClearEffect(formData.usedHandicap.value, "musterPoints");
     useControlledClearEffect(formData.didFellowshipReachMordor.value, "mordor");
     useControlledClearEffect(formData.wasAragornCrowned.value, "aragornTurn");
 
