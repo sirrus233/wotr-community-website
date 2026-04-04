@@ -2,7 +2,7 @@ module Types.DataField where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Text qualified as T
-import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlType (..))
+import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlString, SqlType (..))
 import Database.Persist.Sql (PersistFieldSql (..))
 import Servant (FromHttpApiData (..))
 
@@ -125,6 +125,8 @@ instance PersistField [Expansion] where
 
 instance PersistFieldSql [Expansion] where
   sqlType _ = SqlString
+
+instance {-# OVERLAPPING #-} SqlString [Expansion]
 
 instance ToJSON Expansion
 

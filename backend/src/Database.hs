@@ -14,9 +14,11 @@ import Database.Esqueleto.Experimental
     PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
+    SqlString,
     Value (..),
     asc,
     case_,
+    castString,
     coalesceDefault,
     countRows,
     delete,
@@ -30,6 +32,7 @@ import Database.Esqueleto.Experimental
     isNothing_,
     just,
     leftJoin,
+    like,
     limit,
     not_,
     offset,
@@ -65,7 +68,6 @@ import Database.Esqueleto.Experimental
     (||.),
     type (:&) (..),
   )
-import Database.Esqueleto.Internal.Internal (unsafeSqlBinOp)
 import Relude.Extra (bimapF, secondF)
 import Servant (ServerError, throwError)
 import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), NullableFilter (..), TimestampFilter (..), VictoryFilter (..))
@@ -115,8 +117,8 @@ runAuthDb dbAction = asks authDbPool >>= (`runDbWithPool` dbAction)
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
 
-unsafeLike :: (Show a, Show b) => SqlExpr (Value [b]) -> SqlExpr (Value a) -> SqlExpr (Value Bool)
-unsafeLike = unsafeSqlBinOp " like "
+contains_ :: (SqlString [s], Show a) => SqlExpr (Value [s]) -> a -> SqlExpr (Value Bool)
+contains_ listExpr item = castString listExpr `like` val (concat ["%", show item, "%"])
 
 toFilterExpression ::
   SqlExpr (Entity GameReport) ->
@@ -197,9 +199,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
     expansionsFilter =
       spec.expansions <&> \case
         [] -> report ^. GameReportExpansions ==. val []
-        expansions -> foldr ((&&.) . expansionFilter) (val True) expansions
-          where
-            expansionFilter e = (report ^. GameReportExpansions) `unsafeLike` val ("%" ++ show e ++ "%")
+        expansions -> foldr ((&&.) . contains_ (report ^. GameReportExpansions)) (val True) expansions
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
     musterPoints = toInequalityFilter report GameReportMusterPoints <$> spec.musterPoints
