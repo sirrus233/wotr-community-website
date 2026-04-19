@@ -199,7 +199,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
     expansionsFilter =
       spec.expansions <&> \case
         [] -> report ^. GameReportExpansions ==. val []
-        expansions -> foldr ((&&.) . contains_ (report ^. GameReportExpansions)) (val True) expansions
+        expansions -> foldr ((||.) . contains_ (report ^. GameReportExpansions)) (val False) expansions
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
     musterPoints = toInequalityFilter report GameReportMusterPoints <$> spec.musterPoints
