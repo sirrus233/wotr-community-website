@@ -146,6 +146,10 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
       (PersistEntity e, PersistField f) =>
       SqlExpr (Entity e) -> EntityField e f -> [f] -> SqlExpr (Value Bool)
     toListFilter entity field = ((entity ^. field) `in_`) . valList
+    toContainsFilter ::
+      (PersistEntity e, PersistField [f], SqlString [f], Show f) =>
+      SqlExpr (Entity e) -> EntityField e [f] -> [f] -> SqlExpr (Value Bool)
+    toContainsFilter entity field = foldr ((||.) . contains_ (entity ^. field)) (val False)
     filterList :: [Maybe (SqlExpr (Value Bool))]
     filterList =
       [ playerFilter,
@@ -199,7 +203,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
     expansionsFilter =
       spec.expansions <&> \case
         [] -> report ^. GameReportExpansions ==. val []
-        expansions -> foldr ((||.) . contains_ (report ^. GameReportExpansions)) (val False) expansions
+        expansions -> toContainsFilter report GameReportExpansions expansions
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
     musterPoints = toInequalityFilter report GameReportMusterPoints <$> spec.musterPoints
