@@ -181,6 +181,7 @@ export function serializeReportsParams(params: GameReportParams) {
             aragorn: serializeNullableInequalityFilter(params.filters.aragorn),
             victory: serializeVictoryFilter(params.filters.victory),
             timestamp: serializeTimestampFilter(params.filters.timestamp),
+            expansions: toFilterParam(params.filters.expansions),
         }),
     };
 }
