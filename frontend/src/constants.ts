@@ -9,6 +9,7 @@ export const competitionTypes = ["League", "Tournament"] as const;
 export const expansionLeagues = [
     "LoMELeague",
     "WoMELeague",
+    "RotKLeague",
     "SuperLeague",
     "TTSLeague",
 ] as const;

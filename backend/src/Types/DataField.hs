@@ -83,7 +83,8 @@ instance ToJSON Competition
 
 instance FromJSON Competition
 
-data League = GeneralLeague | LoMELeague | WoMELeague | SuperLeague | TTSLeague deriving (Eq, Generic, Ord, Read, Show)
+data League = GeneralLeague | LoMELeague | WoMELeague | RotKLeague | SuperLeague | TTSLeague
+  deriving (Eq, Generic, Ord, Read, Show)
 
 instance PersistField League where
   toPersistValue = defaultToPersistValue
