@@ -159,6 +159,8 @@ export function getLeagueLabel(league: League): string {
             return "LoME";
         case "WoMELeague":
             return "WoME";
+        case "RotKLeague":
+            return "RotK";
         case "SuperLeague":
             return "Super";
         case "TTSLeague":
