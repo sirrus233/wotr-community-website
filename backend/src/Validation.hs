@@ -137,7 +137,7 @@ validateLeague report = case report.league of
   Just GeneralLeague -> Success report
   Just LoMELeague | LoME `elem` report.expansions -> Success report
   Just WoMELeague | WoME `elem` report.expansions -> Success report
-  Just RotKLeague | RotK `elem` report.expansions -> Success report
+  Just RotKLeague | ReturnOfTheKing `elem` report.expansions -> Success report
   Just SuperLeague | LoME `elem` report.expansions && WoME `elem` report.expansions -> Success report
   _ -> Failure [LeagueExpansionMismatch]
 
