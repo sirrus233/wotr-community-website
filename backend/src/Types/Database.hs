@@ -61,7 +61,7 @@ share
     match Match
     competition [Competition]
     league League Maybe
-    expansions [Expansion]
+    expansions (Identity [Expansion])
     treebeard Bool Maybe
     actionTokens Int
     dwarvenRings Int
@@ -293,7 +293,7 @@ instance ToNamedRecord ExportGameReport where
           "match" .= T.show gameReportMatch,
           "competition" .= T.intercalate "," (map show gameReportCompetition),
           "league" .= maybe ("" :: Text) show gameReportLeague,
-          "expansions" .= T.intercalate "," (map show gameReportExpansions),
+          "expansions" .= T.intercalate "," (map show (runIdentity gameReportExpansions)),
           "treebeard" .= maybe ("" :: Text) (\b -> if b then "true" else "false") gameReportTreebeard,
           "action_tokens" .= gameReportActionTokens,
           "dwarven_rings" .= gameReportDwarvenRings,
