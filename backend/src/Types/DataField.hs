@@ -12,6 +12,9 @@ defaultToPersistValue a = PersistText (show a)
 defaultListToPersistValue :: (Show a) => [a] -> PersistValue
 defaultListToPersistValue as = PersistText (T.intercalate "," . map show $ as)
 
+defaultIdentityListToPersistValue :: (Show a) => Identity [a] -> PersistValue
+defaultIdentityListToPersistValue (Identity as) = defaultListToPersistValue as
+
 defaultFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text a
 defaultFromPersistValue v = case v of
   PersistText t -> maybeToRight "Unreadable text field." (readMaybe . toString $ t)
@@ -23,6 +26,9 @@ defaultListFromPersistValue v = case v of
   PersistText t ->
     maybeToRight "Unreadable value in semantic list text field." (traverse (readMaybe . toString) . T.splitOn "," $ t)
   _ -> Left "Unexpected non-text SQL value."
+
+defaultIdentityListFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text (Identity [a])
+defaultIdentityListFromPersistValue v = Identity <$> defaultListFromPersistValue v
 
 type PlayerName = Text
 
@@ -119,14 +125,14 @@ instance FromJSON LeagueTier
 
 data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | ReturnOfTheKing | Treebeard deriving (Eq, Generic, Read, Show)
 
-instance PersistField [Expansion] where
-  toPersistValue = defaultListToPersistValue
-  fromPersistValue = defaultListFromPersistValue
+instance PersistField (Identity [Expansion]) where
+  toPersistValue = defaultIdentityListToPersistValue
+  fromPersistValue = defaultIdentityListFromPersistValue
 
-instance PersistFieldSql [Expansion] where
+instance PersistFieldSql (Identity [Expansion]) where
   sqlType _ = SqlString
 
-instance {-# OVERLAPPING #-} SqlString [Expansion]
+instance SqlString (Identity [Expansion])
 
 instance ToJSON Expansion
 

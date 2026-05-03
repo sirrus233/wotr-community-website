@@ -117,8 +117,8 @@ runAuthDb dbAction = asks authDbPool >>= (`runDbWithPool` dbAction)
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
 
-contains_ :: (SqlString [s], Show a) => SqlExpr (Value [s]) -> a -> SqlExpr (Value Bool)
-contains_ listExpr item = castString listExpr `like` val (concat ["%", show item, "%"])
+contains_ :: (SqlString s, Show a) => SqlExpr (Value s) -> a -> SqlExpr (Value Bool)
+contains_ sqlStr item = castString sqlStr `like` val (concat ["%", show item, "%"])
 
 toFilterExpression ::
   SqlExpr (Entity GameReport) ->
@@ -147,8 +147,8 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
       SqlExpr (Entity e) -> EntityField e f -> [f] -> SqlExpr (Value Bool)
     toListFilter entity field = ((entity ^. field) `in_`) . valList
     toContainsFilter ::
-      (PersistEntity e, PersistField [f], SqlString [f], Show f) =>
-      SqlExpr (Entity e) -> EntityField e [f] -> [f] -> SqlExpr (Value Bool)
+      (PersistEntity e, PersistField (Identity [f]), SqlString (Identity [f]), Show f) =>
+      SqlExpr (Entity e) -> EntityField e (Identity [f]) -> [f] -> SqlExpr (Value Bool)
     toContainsFilter entity field = foldr ((||.) . contains_ (entity ^. field)) (val False)
     filterList :: [Maybe (SqlExpr (Value Bool))]
     filterList =
@@ -202,7 +202,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
         leagues -> toListFilter report GameReportLeague . map Just $ leagues
     expansionsFilter =
       spec.expansions <&> \case
-        [] -> report ^. GameReportExpansions ==. val []
+        [] -> (report ^. GameReportExpansions) ==. val (Identity [])
         expansions -> toContainsFilter report GameReportExpansions expansions
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
