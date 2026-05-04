@@ -59,6 +59,7 @@ import useGameReportClearEffects from "../../hooks/useGameReportFormEffects";
 import FileUpload from "./FileUpload";
 import { CreateFormContainer, EditFormContainer } from "./styledComponents";
 import VictoryPoints from "./VictoryPoints";
+import { Link } from "react-router-dom";
 
 interface Props {
     report?: ProcessedGameReport;
@@ -146,6 +147,9 @@ function GameReportForm({
                 <ModalDialog>
                     <ModalClose />
                     <Typography mt={2}>{successMessage}</Typography>
+                    <Button component={Link} to="/game-reports">
+                        View Game
+                    </Button>
                 </ModalDialog>
             </Modal>
 
