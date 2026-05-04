@@ -119,6 +119,7 @@ export default function App() {
                 losers: [],
                 leagues: [],
                 victory: [],
+                expansions: [],
                 turns: null,
                 tokens: null,
                 dwarvenRings: null,
