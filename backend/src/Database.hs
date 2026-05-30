@@ -72,7 +72,7 @@ import Relude.Extra (bimapF, secondF)
 import Servant (ServerError, throwError)
 import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), NullableFilter (..), TimestampFilter (..), VictoryFilter (..))
 import Types.Auth (SessionId (..), UserId (..))
-import Types.DataField (League, LeagueTier, PlayerName, Year)
+import Types.DataField (League, LeagueTier, ListField (..), PlayerName, Year)
 import Types.Database
   ( Admin,
     EntityField (..),
@@ -147,8 +147,8 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
       SqlExpr (Entity e) -> EntityField e f -> [f] -> SqlExpr (Value Bool)
     toListFilter entity field = ((entity ^. field) `in_`) . valList
     toContainsFilter ::
-      (PersistEntity e, PersistField (Identity [f]), SqlString (Identity [f]), Show f) =>
-      SqlExpr (Entity e) -> EntityField e (Identity [f]) -> [f] -> SqlExpr (Value Bool)
+      (PersistEntity e, PersistField (ListField f), SqlString (ListField f), Show f) =>
+      SqlExpr (Entity e) -> EntityField e (ListField f) -> [f] -> SqlExpr (Value Bool)
     toContainsFilter entity field = foldr ((||.) . contains_ (entity ^. field)) (val False)
     filterList :: [Maybe (SqlExpr (Value Bool))]
     filterList =
@@ -202,7 +202,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
         leagues -> toListFilter report GameReportLeague . map Just $ leagues
     expansionsFilter =
       spec.expansions <&> \case
-        [] -> (report ^. GameReportExpansions) ==. val (Identity [])
+        [] -> (report ^. GameReportExpansions) ==. val (ListField [])
         expansions -> toContainsFilter report GameReportExpansions expansions
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings

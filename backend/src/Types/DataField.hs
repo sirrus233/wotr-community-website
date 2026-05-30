@@ -12,8 +12,8 @@ defaultToPersistValue a = PersistText (show a)
 defaultListToPersistValue :: (Show a) => [a] -> PersistValue
 defaultListToPersistValue as = PersistText (T.intercalate "," . map show $ as)
 
-defaultIdentityListToPersistValue :: (Show a) => Identity [a] -> PersistValue
-defaultIdentityListToPersistValue (Identity as) = defaultListToPersistValue as
+defaultListFieldToPersistValue :: (Show a) => ListField a -> PersistValue
+defaultListFieldToPersistValue (ListField as) = defaultListToPersistValue as
 
 defaultFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text a
 defaultFromPersistValue v = case v of
@@ -27,14 +27,19 @@ defaultListFromPersistValue v = case v of
     maybeToRight "Unreadable value in semantic list text field." (traverse (readMaybe . toString) . T.splitOn "," $ t)
   _ -> Left "Unexpected non-text SQL value."
 
-defaultIdentityListFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text (Identity [a])
-defaultIdentityListFromPersistValue v = Identity <$> defaultListFromPersistValue v
+defaultListFieldFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text (ListField a)
+defaultListFieldFromPersistValue v = ListField <$> defaultListFromPersistValue v
+
+fromListField :: ListField a -> [a]
+fromListField (ListField as) = as
 
 type PlayerName = Text
 
 type Rating = Int
 
 type Year = Int
+
+newtype ListField a = ListField [a] deriving (Eq, Generic, Read, Show)
 
 data Side = Free | Shadow deriving (Eq, Generic, Read, Show)
 
@@ -125,14 +130,14 @@ instance FromJSON LeagueTier
 
 data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | ReturnOfTheKing | Treebeard deriving (Eq, Generic, Read, Show)
 
-instance PersistField (Identity [Expansion]) where
-  toPersistValue = defaultIdentityListToPersistValue
-  fromPersistValue = defaultIdentityListFromPersistValue
+instance PersistField (ListField Expansion) where
+  toPersistValue = defaultListFieldToPersistValue
+  fromPersistValue = defaultListFieldFromPersistValue
 
-instance PersistFieldSql (Identity [Expansion]) where
+instance PersistFieldSql (ListField Expansion) where
   sqlType _ = SqlString
 
-instance SqlString (Identity [Expansion])
+instance SqlString (ListField Expansion)
 
 instance ToJSON Expansion
 
