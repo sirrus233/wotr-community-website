@@ -147,9 +147,11 @@ function GameReportForm({
                 <ModalDialog>
                     <ModalClose />
                     <Typography mt={2}>{successMessage}</Typography>
-                    <Button component={Link} to="/game-reports">
-                        View Game
-                    </Button>
+                    {!report && (
+                        <Button component={Link} to="/game-reports">
+                            View Game
+                        </Button>
+                    )}
                 </ModalDialog>
             </Modal>
 
