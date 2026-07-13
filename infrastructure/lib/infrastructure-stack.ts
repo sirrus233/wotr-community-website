@@ -50,6 +50,21 @@ export class InfrastructureStack extends cdk.Stack {
                 ),
                 viewerProtocolPolicy:
                     cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
+                    this,
+                    "ResponseHeadersPolicy",
+                    {
+                        customHeadersBehavior: {
+                            customHeaders: [
+                                {
+                                    header: "Cache-Control",
+                                    value: "no-cache",
+                                    override: true,
+                                },
+                            ],
+                        },
+                    }
+                ),
             },
             errorResponses: [
                 {

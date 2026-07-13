@@ -10,7 +10,7 @@ module.exports = {
     entry: "./src/index.tsx",
     output: {
         path: path.resolve(__dirname + "/dist"),
-        filename: "bundle.js",
+        filename: "bundle.[contenthash].js",
     },
     target: "web",
     resolve: {
@@ -19,7 +19,7 @@ module.exports = {
                 __dirname,
                 "src",
                 "env",
-                isDev ? "dev.ts" : "prod.ts"
+                isDev ? "dev.ts" : "prod.ts",
             ),
         },
         extensions: [".ts", ".tsx", ".js", ".json"],
@@ -57,6 +57,8 @@ module.exports = {
             template: "./public/index.html",
             favicon: "./public/favicon.ico",
         }),
-        new MiniCssExtractPlugin(),
+        new MiniCssExtractPlugin({
+            filename: "[name].[contenthash].css",
+        }),
     ],
 };
