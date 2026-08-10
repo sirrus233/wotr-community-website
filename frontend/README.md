@@ -6,8 +6,8 @@ Single-page app built with React, MUI Joy, and Webpack. The bundle is deployed t
 
 - Latest Node and npm.
 - Recommended editor extensions:
-  - Prettier (format-on-save)
-  - ESLint/TypeScript language features (bundled with VS Code)
+    - Prettier (format-on-save)
+    - ESLint/TypeScript language features (bundled with VS Code)
 
 ## Install dependencies
 

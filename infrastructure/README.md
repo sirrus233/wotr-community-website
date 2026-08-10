@@ -20,11 +20,11 @@ TypeScript is compiled to `dist/` when you run `npm run build`.
 
 ## Useful commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm run build` | Type-check and compile the CDK app to JavaScript. |
-| `npx cdk synth --profile wotrcommunity` | Emit the CloudFormation template. |
-| `npx cdk diff --profile wotrcommunity` | Compare the current template to the deployed stack. |
+| Command                                  | Purpose                                                        |
+| ---------------------------------------- | -------------------------------------------------------------- |
+| `npm run build`                          | Type-check and compile the CDK app to JavaScript.              |
+| `npx cdk synth --profile wotrcommunity`  | Emit the CloudFormation template.                              |
+| `npx cdk diff --profile wotrcommunity`   | Compare the current template to the deployed stack.            |
 | `npx cdk deploy --profile wotrcommunity` | Deploy the stack (prompts for IAM/security-sensitive changes). |
 
 Set the region explicitly if your default profile is in a different region: `CDK_DEFAULT_REGION=us-west-2 npx cdk deploy …`.

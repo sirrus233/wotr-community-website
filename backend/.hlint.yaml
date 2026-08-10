@@ -1,15 +1,15 @@
 - arguments:
-  - "-XConstraintKinds"
-  - "-XDeriveGeneric"
-  - "-XGeneralizedNewtypeDeriving"
-  - "-XLambdaCase"
-  - "-XOverloadedStrings"
-  - "-XRecordWildCards"
-  - "-XScopedTypeVariables"
-  - "-XStandaloneDeriving"
-  - "-XTupleSections"
-  - "-XTypeApplications"
-  - "-XViewPatterns"
+    - "-XConstraintKinds"
+    - "-XDeriveGeneric"
+    - "-XGeneralizedNewtypeDeriving"
+    - "-XLambdaCase"
+    - "-XOverloadedStrings"
+    - "-XRecordWildCards"
+    - "-XScopedTypeVariables"
+    - "-XStandaloneDeriving"
+    - "-XTupleSections"
+    - "-XTypeApplications"
+    - "-XViewPatterns"
 - ignore:
     name: Use head
 - ignore:
@@ -1797,7 +1797,7 @@
     lhs: Data.Function.on
     name: "Use 'on' from Relude"
     note: "'on' is already exported from Relude"
-    rhs: 'on'
+    rhs: "on"
 - warn:
     lhs: Data.Bifunctor.Bifunctor
     name: "Use 'Bifunctor' from Relude"
