@@ -14,9 +14,11 @@ import Database.Esqueleto.Experimental
     PersistStoreWrite (..),
     SqlExpr,
     SqlPersistT,
+    SqlString,
     Value (..),
     asc,
     case_,
+    castString,
     coalesceDefault,
     countRows,
     delete,
@@ -30,6 +32,7 @@ import Database.Esqueleto.Experimental
     isNothing_,
     just,
     leftJoin,
+    like,
     limit,
     not_,
     offset,
@@ -69,7 +72,7 @@ import Relude.Extra (bimapF, secondF)
 import Servant (ServerError, throwError)
 import Types.Api (GameReportFilterSpec (..), InequalityFilter (..), NullableFilter (..), TimestampFilter (..), VictoryFilter (..))
 import Types.Auth (SessionId (..), UserId (..))
-import Types.DataField (League, LeagueTier, PlayerName, Year)
+import Types.DataField (League, LeagueTier, ListField (..), PlayerName, Year)
 import Types.Database
   ( Admin,
     EntityField (..),
@@ -114,6 +117,9 @@ runAuthDb dbAction = asks authDbPool >>= (`runDbWithPool` dbAction)
 normalizeName :: Text -> Text
 normalizeName = T.toLower . T.strip
 
+contains_ :: (SqlString s, Show a) => SqlExpr (Value s) -> a -> SqlExpr (Value Bool)
+contains_ sqlStr item = castString sqlStr `like` val (concat ["%", show item, "%"])
+
 toFilterExpression ::
   SqlExpr (Entity GameReport) ->
   GameReportFilterSpec ->
@@ -140,6 +146,10 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
       (PersistEntity e, PersistField f) =>
       SqlExpr (Entity e) -> EntityField e f -> [f] -> SqlExpr (Value Bool)
     toListFilter entity field = ((entity ^. field) `in_`) . valList
+    toContainsFilter ::
+      (PersistEntity e, PersistField (ListField f), SqlString (ListField f), Show f) =>
+      SqlExpr (Entity e) -> EntityField e (ListField f) -> [f] -> SqlExpr (Value Bool)
+    toContainsFilter entity field = foldr ((||.) . contains_ (entity ^. field)) (val False)
     filterList :: [Maybe (SqlExpr (Value Bool))]
     filterList =
       [ playerFilter,
@@ -150,6 +160,7 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
         turnsFilter,
         victoryFilter,
         leagueFilter,
+        expansionsFilter,
         tokensFilter,
         dwarvenRings,
         musterPoints,
@@ -189,6 +200,10 @@ toFilterExpression report spec = foldr ((&&.) . fromMaybe (val True)) (val True)
       spec.leagues <&> \case
         [] -> isNothing_ (report ^. GameReportLeague)
         leagues -> toListFilter report GameReportLeague . map Just $ leagues
+    expansionsFilter =
+      spec.expansions <&> \case
+        [] -> (report ^. GameReportExpansions) ==. val (ListField [])
+        expansions -> toContainsFilter report GameReportExpansions expansions
     tokensFilter = toInequalityFilter report GameReportActionTokens <$> spec.tokens
     dwarvenRings = toInequalityFilter report GameReportDwarvenRings <$> spec.dwarvenRings
     musterPoints = toInequalityFilter report GameReportMusterPoints <$> spec.musterPoints
