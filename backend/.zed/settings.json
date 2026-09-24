@@ -8,9 +8,9 @@
       "initialization_options": {
         "haskell": {
           "cabalFormattingProvider": "cabal-gild",
-          "formattingProvider": "ormolu",
-        },
-      },
-    },
-  },
+          "formattingProvider": "ormolu"
+        }
+      }
+    }
+  }
 }
