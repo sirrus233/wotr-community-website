@@ -49,6 +49,9 @@ export default function getInitialFormData(
         treebeard: initializeToDefaults(
             fromMaybeReport(null, report, "treebeard"),
         ),
+        sovereigns: initializeToDefaults(
+            fromMaybeReport(null, report, "sovereigns"),
+        ),
         usedHandicap: initializeToDefaults(
             report
                 ? (typeof report.actionTokens === "number" &&

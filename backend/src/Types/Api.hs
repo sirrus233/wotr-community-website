@@ -7,7 +7,7 @@ import Database.Esqueleto.Experimental (Entity (..))
 import Relude.Extra (lookupDefault)
 import Servant (FromHttpApiData (..), Header, Headers, MimeUnrender (..), NoContent, PlainText, SourceIO)
 import Servant.Multipart (FileData (..), FromMultipart (..), MultipartData (..), Tmp, lookupFile, lookupInput)
-import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
+import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Sovereigns, Stronghold, Victory)
 import Types.Database
   ( GameReport (..),
     GameReportId,
@@ -65,6 +65,7 @@ data RawGameReport = RawGameReport
     league :: Maybe League,
     expansions :: [Expansion],
     treebeard :: Maybe Bool,
+    sovereigns :: Maybe Sovereigns,
     actionTokens :: Int,
     dwarvenRings :: Int,
     musterPoints :: Int,
@@ -94,6 +95,7 @@ toGameReport timestamp winnerId loserId logFile r =
       gameReportLeague = r.league,
       gameReportExpansions = r.expansions,
       gameReportTreebeard = r.treebeard,
+      gameReportSovereigns = r.sovereigns,
       gameReportActionTokens = r.actionTokens,
       gameReportDwarvenRings = r.dwarvenRings,
       gameReportMusterPoints = r.musterPoints,
@@ -122,6 +124,7 @@ data ProcessedGameReport = ProcessedGameReport
     league :: Maybe League,
     expansions :: [Expansion],
     treebeard :: Maybe Bool,
+    sovereigns :: Maybe Sovereigns,
     actionTokens :: Int,
     dwarvenRings :: Int,
     musterPoints :: Int,
@@ -155,6 +158,7 @@ fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
       league = r.gameReportLeague,
       expansions = r.gameReportExpansions,
       treebeard = r.gameReportTreebeard,
+      sovereigns = r.gameReportSovereigns,
       actionTokens = r.gameReportActionTokens,
       dwarvenRings = r.gameReportDwarvenRings,
       musterPoints = r.gameReportMusterPoints,
