@@ -83,8 +83,14 @@ export default function useGameReportClearEffects({
         "treebeard",
         (expansions) => expansions.includes("Treebeard"),
     );
+    useControlledClearEffect(
+        formData.expansions.value,
+        "sovereigns",
+        (expansions) => expansions.includes("KoME"),
+    );
     useControlledClearEffect(formData.usedExpansions.value, "expansions");
     useControlledClearEffect(formData.usedExpansions.value, "treebeard");
+    useControlledClearEffect(formData.usedExpansions.value, "sovereigns");
     useControlledClearEffect(formData.usedHandicap.value, "actionTokens");
     useControlledClearEffect(formData.usedHandicap.value, "dwarvenRings");
     useControlledClearEffect(formData.usedHandicap.value, "musterPoints");

@@ -23,6 +23,7 @@ import Types.DataField
     PlayerName,
     Rating,
     Side (..),
+    Sovereigns,
     Stronghold,
     Victory,
     Year,
@@ -63,6 +64,7 @@ share
     league League Maybe
     expansions [Expansion]
     treebeard Bool Maybe
+    sovereigns Sovereigns Maybe
     actionTokens Int
     dwarvenRings Int
     musterPoints Int default=0

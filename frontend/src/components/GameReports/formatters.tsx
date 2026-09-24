@@ -6,6 +6,7 @@ import {
     Expansion,
     Match,
     Side,
+    Sovereigns,
     Stronghold,
     Victory,
     SameElements,
@@ -14,6 +15,7 @@ import {
     strongholdPoints,
     strongholdSide,
     getExpansionLabel,
+    toTitleCase,
 } from "../../utils";
 import { expansions } from "../../constants";
 
@@ -101,6 +103,17 @@ export function summarizeGameType(expansions: Expansion[]) {
     return expansions.some(isGameTypeExpansion)
         ? expansions.filter(isGameTypeExpansion).join("+")
         : "Base";
+}
+
+export function summarizeSovereigns(sovereigns: Sovereigns | null) {
+    return sovereigns
+        ? Object.entries(sovereigns)
+              .map(
+                  ([sovereign, state]) =>
+                      `${toTitleCase(sovereign)}: ${state.status}${state.died ? ", died" : ""}`,
+              )
+              .join(" • ")
+        : sovereigns;
 }
 
 function isGameTypeExpansion(expansion: Expansion) {

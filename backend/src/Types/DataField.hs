@@ -1,6 +1,7 @@
 module Types.DataField where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, decode, encode)
+import Data.ByteString qualified as BL
 import Data.Text qualified as T
 import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlType (..))
 import Database.Persist.Sql (PersistFieldSql (..))
@@ -11,6 +12,16 @@ defaultToPersistValue a = PersistText (show a)
 
 defaultListToPersistValue :: (Show a) => [a] -> PersistValue
 defaultListToPersistValue as = PersistText (T.intercalate "," . map show $ as)
+
+defaultJsonToPersistValue :: (ToJSON a) => a -> PersistValue
+defaultJsonToPersistValue = PersistText . decodeUtf8 . BL.toStrict . encode
+
+defaultJsonFromPersistValue :: (FromJSON a) => PersistValue -> Either Text a
+defaultJsonFromPersistValue v = case v of
+  PersistText t -> case decode (BL.fromStrict (encodeUtf8 t)) of
+    Just j -> Right j
+    Nothing -> Left "Invalid JSON."
+  _ -> Left "Unexpected non-text SQL value."
 
 defaultFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text a
 defaultFromPersistValue v = case v of
@@ -130,6 +141,42 @@ instance PersistFieldSql [Expansion] where
 instance ToJSON Expansion
 
 instance FromJSON Expansion
+
+data SovereignStatus = Awakened | Corrupted | Neither deriving (Eq, Generic, Read, Show)
+
+data SovereignState = SovereignState
+  { status :: SovereignStatus,
+    died :: Bool
+  }
+  deriving (Generic, Read, Show)
+
+data Sovereigns = Sovereigns
+  { thranduil :: SovereignState,
+    brand :: SovereignState,
+    dain :: SovereignState,
+    denethor :: SovereignState,
+    theoden :: SovereignState
+  }
+  deriving (Generic, Read, Show)
+
+instance PersistField Sovereigns where
+  toPersistValue = defaultJsonToPersistValue
+  fromPersistValue = defaultJsonFromPersistValue
+
+instance PersistFieldSql Sovereigns where
+  sqlType _ = SqlOther "jsonb"
+
+instance ToJSON SovereignStatus
+
+instance FromJSON SovereignStatus
+
+instance ToJSON SovereignState
+
+instance FromJSON SovereignState
+
+instance ToJSON Sovereigns
+
+instance FromJSON Sovereigns
 
 data Stronghold
   = Rivendell

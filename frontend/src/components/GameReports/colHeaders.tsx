@@ -295,6 +295,7 @@ export default function colHeaders({
                         setFilters({ ...filters, treebeard }),
                 },
             },
+            { key: "Sovereigns" },
             {
                 key: "Initial Eyes",
                 width: 150,
