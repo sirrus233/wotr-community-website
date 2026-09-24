@@ -29,7 +29,7 @@ repos:
       - id: prettier
         name: prettier
         language: system
-        entry: npm exec -- prettier
+        entry: frontend/node_modules/.bin/prettier
         args: [--write, --ignore-unknown]
         types_or:
           [javascript, jsx, ts, tsx, json, yaml, markdown, css, scss, html]
