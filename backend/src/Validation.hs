@@ -4,6 +4,7 @@ import AppConfig (AppM)
 import Control.Monad.Logger (logErrorN)
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeLatin1)
+import Data.Time (UTCTime (UTCTime), fromGregorian)
 import Data.Validation (Validation (..), validate)
 import Servant (ServerError (..), err422, throwError)
 import Types.Api (RawGameReport (..))
@@ -23,6 +24,8 @@ data ReportError
   | CompetitionMismatch
   | LeagueExpansionMismatch
   | TreebeardExpansionMismatch
+  | SovereignsMissing
+  | SovereignsExpansionMismatch
   | TurnsOutOfRange
   | CorruptionOutOfRange
   | MordorOutOfRange
@@ -59,6 +62,9 @@ vpValue MinasMorgul = 2
 vpValue Umbar = 2
 vpValue FarHarad = 1
 vpValue SouthRhun = 1
+
+sovereignsCollectionStart :: UTCTime
+sovereignsCollectionStart = UTCTime (fromGregorian 2026 9 30) 0
 
 strongholdSide :: [Expansion] -> Stronghold -> Side
 strongholdSide expansions stronghold
@@ -146,6 +152,16 @@ validateTreebeard report
   | isJust report.treebeard == Treebeard `elem` report.expansions = Success report
   | otherwise = Failure [TreebeardExpansionMismatch]
 
+validateSovereigns :: RawGameReport -> UTCTime -> Validation [ReportError] RawGameReport
+validateSovereigns report timestamp =
+  case report.sovereigns of
+    Nothing
+      | KoME `elem` report.expansions && timestamp >= sovereignsCollectionStart ->
+          Failure [SovereignsMissing]
+    Nothing -> Success report
+    Just _ | KoME `elem` report.expansions -> Success report
+    Just _ -> Failure [SovereignsExpansionMismatch]
+
 validateTurns :: RawGameReport -> Validation [ReportError] RawGameReport
 validateTurns report
   | report.turns >= 1 = Success report
@@ -188,12 +204,13 @@ validateReturnOfTheKing report
     aragornRule r = if r.aragornTurn == Just 1 then Just r else Nothing
     eyesRule r = if r.initialEyes == 3 then Just r else Nothing
 
-validateReport :: RawGameReport -> Validation [ReportError] RawGameReport
-validateReport report =
+validateReport :: RawGameReport -> UTCTime -> Validation [ReportError] RawGameReport
+validateReport report timestamp =
   validateVictory report
     <* validateCompetition report
     <* validateLeague report
     <* validateTreebeard report
+    <* validateSovereigns report timestamp
     <* validateTurns report
     <* validateCorruption report
     <* validateMordor report

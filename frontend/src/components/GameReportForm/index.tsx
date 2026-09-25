@@ -57,6 +57,7 @@ import getInitialFormData from "./getInitialFormData";
 import useConditionalActionEffect from "../../hooks/useConditionalActionEffect";
 import useGameReportClearEffects from "../../hooks/useGameReportFormEffects";
 import FileUpload from "./FileUpload";
+import SovereignsFormFragment from "./SovereignsFormFragment";
 import { CreateFormContainer, EditFormContainer } from "./styledComponents";
 import VictoryPoints from "./VictoryPoints";
 import { Link } from "react-router-dom";
@@ -332,6 +333,22 @@ function GameReportForm({
                             getLabel={(v) => (v ? "Yes" : "No")}
                             onChange={handleInputChange("treebeard")}
                             validate={validateField("treebeard")}
+                        />
+                    </FormElement>
+                )}
+            {formData.usedExpansions.value &&
+                formData.expansions.value.includes("KoME") && (
+                    <FormElement
+                        label={"What was the state of each Sovereign?"}
+                        error={formData.sovereigns.error}
+                        layoutTheme={layoutTheme}
+                        hasSingleControl={false}
+                    >
+                        <SovereignsFormFragment
+                            current={formData.sovereigns.value}
+                            reportTimestamp={formData.timestamp.value}
+                            onChange={handleInputChange("sovereigns")}
+                            validate={validateField("sovereigns")}
                         />
                     </FormElement>
                 )}
@@ -663,6 +680,7 @@ function toPayload(formData: ValidGameFormData): GameReportPayload | FormData {
             league: formData.league.value,
             expansions: formData.expansions.value,
             treebeard: formData.treebeard.value,
+            sovereigns: formData.sovereigns.value,
             actionTokens: formData.actionTokens.value,
             dwarvenRings: formData.dwarvenRings.value,
             musterPoints: formData.musterPoints.value,
@@ -750,6 +768,10 @@ function validationErrorToMessage(
             return "reported league does not match reported expansions";
         case "TreebeardExpansionMismatch":
             return "reported Treebeard muster does not match reported expansions";
+        case "SovereignsMissing":
+            return "Sovereigns must be reported for KoME games";
+        case "SovereignsExpansionMismatch":
+            return "Sovereigns may not be reported for non-KoME games";
         case "TurnsOutOfRange":
             return "invalid ending game turn selection";
         case "CorruptionOutOfRange":

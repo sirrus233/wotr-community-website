@@ -23,6 +23,7 @@ import {
     countVictoryPoints,
     summarizeCompetitionType,
     summarizeGameType,
+    summarizeSovereigns,
     summarizeVictoryType,
     formatExpansions,
 } from "./formatters";
@@ -163,6 +164,17 @@ export default function rows({
                 { key: "mordor", content: report.mordor },
                 { key: "aragorn", content: report.aragornTurn },
                 { key: "treebeard", content: report.treebeard && "✓" },
+                {
+                    key: "sovereigns",
+                    content: (
+                        <Box
+                            width={report.sovereigns ? "350px" : undefined}
+                            whiteSpace="wrap"
+                        >
+                            {summarizeSovereigns(report.sovereigns)}
+                        </Box>
+                    ),
+                },
                 { key: "eyes", content: report.initialEyes },
                 {
                     key: "sp-settlements",
