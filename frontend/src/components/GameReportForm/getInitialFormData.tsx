@@ -54,7 +54,9 @@ export default function getInitialFormData(
                 ? (typeof report.actionTokens === "number" &&
                       report.actionTokens > 0) ||
                       (typeof report.dwarvenRings === "number" &&
-                          report.dwarvenRings > 0)
+                          report.dwarvenRings > 0) ||
+                      (typeof report.musterPoints === "number" &&
+                          report.musterPoints > 0)
                 : null,
         ),
         actionTokens: initializeToDefaults(
