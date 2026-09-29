@@ -23,6 +23,7 @@ import Types.DataField
     PlayerName,
     Rating,
     Side (..),
+    Sovereigns,
     Stronghold,
     Victory,
     Year,
@@ -63,6 +64,7 @@ share
     league League Maybe
     expansions [Expansion]
     treebeard Bool Maybe
+    sovereigns Sovereigns Maybe
     actionTokens Int
     dwarvenRings Int
     musterPoints Int default=0
@@ -295,6 +297,7 @@ instance ToNamedRecord ExportGameReport where
           "league" .= maybe ("" :: Text) show gameReportLeague,
           "expansions" .= T.intercalate "," (map show gameReportExpansions),
           "treebeard" .= maybe ("" :: Text) (\b -> if b then "true" else "false") gameReportTreebeard,
+          "sovereigns" .= maybe ("" :: Text) show gameReportSovereigns,
           "action_tokens" .= gameReportActionTokens,
           "dwarven_rings" .= gameReportDwarvenRings,
           "muster_points" .= (fromIntegral gameReportMusterPoints / 2 :: Double),
@@ -322,6 +325,7 @@ gameReportCsvHeader =
       "league",
       "expansions",
       "treebeard",
+      "sovereigns",
       "action_tokens",
       "dwarven_rings",
       "muster_points",

@@ -1,3 +1,5 @@
+import { Sovereigns } from "./types";
+
 export const sides = ["Free", "Shadow"] as const;
 
 export const victoryTypes = ["Ring", "Military", "Concession"] as const;
@@ -56,6 +58,16 @@ export const strongholds = [
     "Erebor",
 ] as const;
 
+export const sovereigns = [
+    "thranduil",
+    "brand",
+    "dain",
+    "denethor",
+    "theoden",
+] as const;
+
+export const sovereignStatuses = ["Awakened", "Corrupted", "Neither"] as const;
+
 export const optionalFormFields = ["rid", "timestamp", "logFile"] as const;
 
 export const optionalPayloadFields = [
@@ -63,6 +75,7 @@ export const optionalPayloadFields = [
     "league",
     "expansions",
     "treebeard",
+    "sovereigns",
     "actionTokens",
     "dwarvenRings",
     "musterPoints",
@@ -106,6 +119,8 @@ export const serverValidationErrors = [
     "CompetitionMismatch",
     "LeagueExpansionMismatch",
     "TreebeardExpansionMismatch",
+    "SovereignsMissing",
+    "SovereignsExpansionMismatch",
     "TurnsOutOfRange",
     "CorruptionOutOfRange",
     "MordorOutOfRange",
@@ -123,6 +138,14 @@ export const settlementLayouts = [
     "Vertical Analysis",
     "Horizontal Analysis",
 ] as const;
+
+export const defaultSovereignStates: Sovereigns = {
+    thranduil: { status: "Neither", died: false },
+    brand: { status: "Neither", died: false },
+    dain: { status: "Neither", died: false },
+    denethor: { status: "Neither", died: false },
+    theoden: { status: "Neither", died: false },
+};
 
 export enum ErrorMessage {
     Default = "Something went wrong. Please contact an admin for assistance.",
@@ -144,6 +167,9 @@ export const LEADERBOARD_START_YEAR = 2023;
 export const LEAGUE_START_YEAR = 2025;
 export const MAX_GAME_LOG_SIZE_MB = 1;
 export const MAX_GAME_LOG_SIZE_BYTES = MAX_GAME_LOG_SIZE_MB * 1024 * 1024;
+
+// October 1st, 2026 UTC in ms
+export const SOVEREIGN_COLLECTION_START_DATE_MS = Date.UTC(2026, 9, 1);
 
 export const GAME_LIMITS = {
     corruption: { min: 0, max: 30 },

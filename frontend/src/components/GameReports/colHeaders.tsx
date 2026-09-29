@@ -1,7 +1,4 @@
 import React from "react";
-import Box from "@mui/joy/Box";
-import IconButton from "@mui/joy/IconButton";
-import ViewIcon from "@mui/icons-material/Visibility";
 import {
     ErrorMessage,
     GAME_LIMITS,
@@ -19,6 +16,7 @@ import {
 } from "../../types";
 import { getLeagueLabel, isDefined } from "../../utils";
 import { ColHeaderData, CornerHeaderData } from "../Table/types";
+import ColHeaderWithSettingsBtn from "./ColHeaderWithSettingsBtn";
 import { ALL_OPTION_ID, EMPTY_OPTION_ID, PLAYER_COL_WIDTH } from "./constants";
 import { toVictoryKindLabel, toVictoryTypeLabel } from "./formatters";
 import { isPairingValid } from "./validators";
@@ -296,6 +294,14 @@ export default function colHeaders({
                 },
             },
             {
+                key: "Sovereigns",
+                content: (
+                    <ColHeaderWithSettingsBtn setSettingsOpen={setSettingsOpen}>
+                        Sovereigns
+                    </ColHeaderWithSettingsBtn>
+                ),
+            },
+            {
                 key: "Initial Eyes",
                 width: 150,
                 filter: {
@@ -312,25 +318,9 @@ export default function colHeaders({
             {
                 key: "SP-Captured Settlements",
                 content: (
-                    <Box
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                    >
-                        <Box mr="5px">SP-Captured Settlements</Box>
-                        <IconButton
-                            size="sm"
-                            color="primary"
-                            onClick={() => setSettingsOpen(true)}
-                            sx={{
-                                height: "1em",
-                                minHeight: "fit-content",
-                                py: "2px",
-                            }}
-                        >
-                            <ViewIcon />
-                        </IconButton>
-                    </Box>
+                    <ColHeaderWithSettingsBtn setSettingsOpen={setSettingsOpen}>
+                        SP-Captured Settlements
+                    </ColHeaderWithSettingsBtn>
                 ),
             },
             { key: "SPVP" },
