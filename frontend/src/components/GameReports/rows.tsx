@@ -18,7 +18,7 @@ import {
 } from "../../utils";
 import ExternalLink from "../ExternalLink";
 import { RowData } from "../Table/types";
-import { PLAYER_COL_WIDTH } from "./constants";
+import { EXPANSIONS_COL_WIDTH, PLAYER_COL_WIDTH } from "./constants";
 import {
     countVictoryPoints,
     summarizeCompetitionType,
@@ -149,7 +149,11 @@ export default function rows({
                 },
                 {
                     key: "expansions",
-                    content: formatExpansions(report.expansions),
+                    content: (
+                        <FixedWidthText width={EXPANSIONS_COL_WIDTH}>
+                            {formatExpansions(report.expansions)}
+                        </FixedWidthText>
+                    ),
                 },
                 { key: "tokens", content: report.actionTokens },
                 { key: "dwarven-rings", content: report.dwarvenRings },

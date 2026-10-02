@@ -7,7 +7,7 @@ import Database.Esqueleto.Experimental (Entity (..))
 import Relude.Extra (lookupDefault)
 import Servant (FromHttpApiData (..), Header, Headers, MimeUnrender (..), NoContent, PlainText, SourceIO)
 import Servant.Multipart (FileData (..), FromMultipart (..), MultipartData (..), Tmp, lookupFile, lookupInput)
-import Types.DataField (Competition, Expansion, League, Match, PlayerName, Rating, Side, Stronghold, Victory)
+import Types.DataField (Competition, Expansion, League, ListField (..), Match, PlayerName, Rating, Side, Stronghold, Victory, fromListField)
 import Types.Database
   ( GameReport (..),
     GameReportId,
@@ -92,7 +92,7 @@ toGameReport timestamp winnerId loserId logFile r =
       gameReportMatch = r.match,
       gameReportCompetition = r.competition,
       gameReportLeague = r.league,
-      gameReportExpansions = r.expansions,
+      gameReportExpansions = ListField r.expansions,
       gameReportTreebeard = r.treebeard,
       gameReportActionTokens = r.actionTokens,
       gameReportDwarvenRings = r.dwarvenRings,
@@ -153,7 +153,7 @@ fromGameReport (Entity rid r, Entity _ winner, Entity _ loser) =
       match = r.gameReportMatch,
       competition = r.gameReportCompetition,
       league = r.gameReportLeague,
-      expansions = r.gameReportExpansions,
+      expansions = fromListField r.gameReportExpansions,
       treebeard = r.gameReportTreebeard,
       actionTokens = r.gameReportActionTokens,
       dwarvenRings = r.gameReportDwarvenRings,
@@ -353,7 +353,7 @@ data GameReportFilterSpec = GameReportFilterSpec
     victory :: Maybe (NonEmpty VictoryFilter),
     -- TODO competition
     leagues :: Maybe [League],
-    -- TODO expansions
+    expansions :: Maybe [Expansion],
     tokens :: Maybe InequalityFilter,
     dwarvenRings :: Maybe InequalityFilter,
     musterPoints :: Maybe InequalityFilter,

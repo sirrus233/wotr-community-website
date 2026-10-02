@@ -4,6 +4,7 @@ import IconButton from "@mui/joy/IconButton";
 import ViewIcon from "@mui/icons-material/Visibility";
 import {
     ErrorMessage,
+    expansions,
     GAME_LIMITS,
     leagues,
     sides,
@@ -17,9 +18,14 @@ import {
     Victory,
     VictoryOption,
 } from "../../types";
-import { getLeagueLabel, isDefined } from "../../utils";
+import { getExpansionLabel, getLeagueLabel, isDefined } from "../../utils";
 import { ColHeaderData, CornerHeaderData } from "../Table/types";
-import { ALL_OPTION_ID, EMPTY_OPTION_ID, PLAYER_COL_WIDTH } from "./constants";
+import {
+    ALL_OPTION_ID,
+    EMPTY_OPTION_ID,
+    EXPANSIONS_COL_WIDTH,
+    PLAYER_COL_WIDTH,
+} from "./constants";
 import { toVictoryKindLabel, toVictoryTypeLabel } from "./formatters";
 import { isPairingValid } from "./validators";
 
@@ -190,7 +196,26 @@ export default function colHeaders({
                     },
                 },
             },
-            { key: "Expansions" },
+            {
+                key: "Expansions",
+                width: EXPANSIONS_COL_WIDTH,
+                filter: {
+                    filterType: "autocomplete",
+                    placeholder: "Select expansions",
+                    loading: false,
+                    allOption: { id: ALL_OPTION_ID, label: "Any expansion" },
+                    emptyOption: { id: EMPTY_OPTION_ID, label: "No expansion" },
+                    options: expansions.map((expansion) => ({
+                        id: expansion,
+                        label: getExpansionLabel(expansion),
+                    })),
+                    current: filters.expansions,
+                    appliedCount: filters.expansions.length,
+                    onChange: (values) => {
+                        setFilters({ ...filters, expansions: values });
+                    },
+                },
+            },
             {
                 key: "Tokens",
                 width: 130,

@@ -2,7 +2,7 @@ module Types.DataField where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Text qualified as T
-import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlType (..))
+import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlString, SqlType (..))
 import Database.Persist.Sql (PersistFieldSql (..))
 import Servant (FromHttpApiData (..))
 
@@ -11,6 +11,9 @@ defaultToPersistValue a = PersistText (show a)
 
 defaultListToPersistValue :: (Show a) => [a] -> PersistValue
 defaultListToPersistValue as = PersistText (T.intercalate "," . map show $ as)
+
+defaultListFieldToPersistValue :: (Show a) => ListField a -> PersistValue
+defaultListFieldToPersistValue (ListField as) = defaultListToPersistValue as
 
 defaultFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text a
 defaultFromPersistValue v = case v of
@@ -24,11 +27,19 @@ defaultListFromPersistValue v = case v of
     maybeToRight "Unreadable value in semantic list text field." (traverse (readMaybe . toString) . T.splitOn "," $ t)
   _ -> Left "Unexpected non-text SQL value."
 
+defaultListFieldFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text (ListField a)
+defaultListFieldFromPersistValue v = ListField <$> defaultListFromPersistValue v
+
+fromListField :: ListField a -> [a]
+fromListField (ListField as) = as
+
 type PlayerName = Text
 
 type Rating = Int
 
 type Year = Int
+
+newtype ListField a = ListField [a] deriving (Eq, Generic, Read, Show)
 
 data Side = Free | Shadow deriving (Eq, Generic, Read, Show)
 
@@ -120,12 +131,14 @@ instance FromJSON LeagueTier
 
 data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | ReturnOfTheKing | Treebeard deriving (Eq, Generic, Read, Show)
 
-instance PersistField [Expansion] where
-  toPersistValue = defaultListToPersistValue
-  fromPersistValue = defaultListFromPersistValue
+instance PersistField (ListField Expansion) where
+  toPersistValue = defaultListFieldToPersistValue
+  fromPersistValue = defaultListFieldFromPersistValue
 
-instance PersistFieldSql [Expansion] where
+instance PersistFieldSql (ListField Expansion) where
   sqlType _ = SqlString
+
+instance SqlString (ListField Expansion)
 
 instance ToJSON Expansion
 
