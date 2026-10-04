@@ -19,13 +19,6 @@ defaultListFieldToPersistValue (ListField as) = defaultListToPersistValue as
 defaultJsonToPersistValue :: (ToJSON a) => a -> PersistValue
 defaultJsonToPersistValue = PersistText . toStrict . encodeToLazyText
 
-defaultJsonFromPersistValue :: (FromJSON a) => PersistValue -> Either Text a
-defaultJsonFromPersistValue v = case v of
-  PersistText t -> case decodeStrictText t of
-    Just j -> Right j
-    Nothing -> Left "Invalid JSON."
-  _ -> Left "Unexpected non-text SQL value."
-
 defaultFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text a
 defaultFromPersistValue v = case v of
   PersistText t -> maybeToRight "Unreadable text field." (readMaybe . toString $ t)
@@ -40,6 +33,13 @@ defaultListFromPersistValue v = case v of
 
 defaultListFieldFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text (ListField a)
 defaultListFieldFromPersistValue v = ListField <$> defaultListFromPersistValue v
+
+defaultJsonFromPersistValue :: (FromJSON a) => PersistValue -> Either Text a
+defaultJsonFromPersistValue v = case v of
+  PersistText t -> case decodeStrictText t of
+    Just j -> Right j
+    Nothing -> Left "Invalid JSON."
+  _ -> Left "Unexpected non-text SQL value."
 
 fromListField :: ListField a -> [a]
 fromListField (ListField as) = as
