@@ -63,9 +63,6 @@ vpValue Umbar = 2
 vpValue FarHarad = 1
 vpValue SouthRhun = 1
 
-sovereignsCollectionStart :: UTCTime
-sovereignsCollectionStart = UTCTime (fromGregorian 2026 10 1) 0
-
 strongholdSide :: [Expansion] -> Stronghold -> Side
 strongholdSide expansions stronghold
   | FateOfErebor `elem` expansions && stronghold == Erebor = Shadow
@@ -161,6 +158,9 @@ validateSovereigns report timestamp =
     Nothing -> Success report
     Just _ | KoME `elem` report.expansions -> Success report
     Just _ -> Failure [SovereignsExpansionMismatch]
+  where
+    sovereignsCollectionStart :: UTCTime
+    sovereignsCollectionStart = UTCTime (fromGregorian 2026 10 1) 0
 
 validateTurns :: RawGameReport -> Validation [ReportError] RawGameReport
 validateTurns report
