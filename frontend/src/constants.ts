@@ -160,6 +160,7 @@ export enum ErrorMessage {
     LoginError = "Failed to sign in. Non-administrators can't sign in. If you're an administrator, please request support on Discord.",
     LogoutError = "Failed to sign out. Please contact an admin for assistance.",
     ExportError = "Failed to export data. Please contact an admin for assistance.",
+    MissingTimestamp = "A timestamp is required.",
 }
 
 export const INFINITE = 100;

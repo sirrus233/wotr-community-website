@@ -487,22 +487,19 @@ adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
   pure $ RemapPlayerResponse player.playerDisplayName
 
 adminModifyReportHandler :: ModifyReportRequest -> AppM NoContent
-adminModifyReportHandler ModifyReportRequest {rid, timestamp, report} = runDb $ do
-  oldReport <- readOrError ("Cannot find report " <>: rid) $ lift . get $ rid
-  let newTimestamp = fromMaybe oldReport.gameReportTimestamp timestamp
+adminModifyReportHandler ModifyReportRequest {rid, timestamp, report} = case validateReport report timestamp of
+  Failure errors -> throwError $ err422 {errBody = show errors}
+  Success _ -> runDb $ do
+    oldReport <- readOrError ("Cannot find report " <>: rid) $ lift . get $ rid
+    Entity newWinnerId _ <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner
+    Entity newLoserId _ <- readOrError ("Cannot find player " <>: report.loser) $ getPlayerByName report.loser
 
-  case validateReport report newTimestamp of
-    Failure errors -> throwError $ err422 {errBody = show errors}
-    Success _ -> do
-      Entity newWinnerId _ <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner
-      Entity newLoserId _ <- readOrError ("Cannot find player " <>: report.loser) $ getPlayerByName report.loser
+    let newReport = toGameReport timestamp newWinnerId newLoserId oldReport.gameReportLogFile report
+    lift $ replace rid newReport
 
-      let newReport = toGameReport newTimestamp newWinnerId newLoserId oldReport.gameReportLogFile report
-      lift $ replace rid newReport
+    when (mustReprocess oldReport newReport) reprocessReports
 
-      when (mustReprocess oldReport newReport) reprocessReports
-
-      pure NoContent
+    pure NoContent
   where
     mustReprocess :: GameReport -> GameReport -> Bool
     mustReprocess old new

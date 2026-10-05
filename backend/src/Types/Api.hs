@@ -274,7 +274,7 @@ instance ToJSON RemapPlayerResponse
 
 data ModifyReportRequest = ModifyReportRequest
   { rid :: GameReportId,
-    timestamp :: Maybe UTCTime,
+    timestamp :: UTCTime,
     report :: RawGameReport
   }
   deriving (Generic)
