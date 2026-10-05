@@ -16,6 +16,7 @@ export default function ColHeaderWithSettingsBtn({
         <FlexBox alignItems="center" justifyContent="center">
             <FlexBox mr="5px">{children}</FlexBox>
             <IconButton
+                aria-label="Open settings"
                 size="sm"
                 color="primary"
                 sx={{ height: "1em", minHeight: "fit-content", py: "2px" }}
