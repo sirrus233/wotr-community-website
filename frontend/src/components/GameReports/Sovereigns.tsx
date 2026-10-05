@@ -27,7 +27,8 @@ export default function Sovereigns({
                 <Badge
                     key={sovereign}
                     sx={{
-                        [HEIGHT_CSS_VAR]: `calc(${hasStatus ? 2 : 1}lh + 6px)`,
+                        fontSize: hasStatus ? "0.88em" : "1em",
+                        [HEIGHT_CSS_VAR]: `calc(${hasStatus ? 1.5 : 1}lh + 6px)`,
                         [WIDTH_CSS_VAR]: `${isAbbreviated ? "30px" : "70px"}`,
                         height: `var(${HEIGHT_CSS_VAR})`,
                         width: `var(${WIDTH_CSS_VAR})`,
