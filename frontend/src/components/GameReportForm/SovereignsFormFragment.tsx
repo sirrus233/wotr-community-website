@@ -6,8 +6,9 @@ import {
     sovereigns,
     sovereignStatuses,
 } from "../../constants";
+import colors from "../../styles/colors";
 import { Column, FlexBox } from "../../styles/styledComponents";
-import { Sovereigns } from "../../types";
+import { Sovereign, Sovereigns } from "../../types";
 import { displayTime, toTitleCase } from "../../utils";
 import BooleanInput from "../BooleanInput";
 import FormElement from "../FormElement";
@@ -51,7 +52,7 @@ export default function SovereignsFormFragment({
     );
 
     return isRequired || isElected ? (
-        <FlexBox sx={{ flexWrap: "wrap", gap: 1 }}>
+        <FlexBox sx={{ flexWrap: "wrap", gap: "10px" }}>
             {sovereigns.map((sovereign) => {
                 const sovereignLabel = toTitleCase(sovereign);
 
@@ -62,6 +63,10 @@ export default function SovereignsFormFragment({
                         hasSingleControl={false}
                         layoutTheme="card"
                         sx={{ label: { fontWeight: "bold" } }}
+                        containerSx={{
+                            boxShadow: `${toSovereignColor(sovereign)} 1px 1px 2px 1px`,
+                            bgcolor: "transparent",
+                        }}
                     >
                         <Column gap={2} sx={{ label: { fontWeight: "unset" } }}>
                             <FormElement
@@ -123,4 +128,19 @@ export default function SovereignsFormFragment({
             <Button onClick={() => setIsElected(true)}>Report anyway?</Button>
         </FlexBox>
     );
+}
+
+function toSovereignColor(sovereign: Sovereign): string {
+    switch (sovereign) {
+        case "thranduil":
+            return colors.elves;
+        case "brand":
+            return colors.north;
+        case "dain":
+            return colors.dwarves;
+        case "denethor":
+            return colors.gondor;
+        case "theoden":
+            return colors.rohan;
+    }
 }

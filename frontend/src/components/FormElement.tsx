@@ -28,6 +28,7 @@ interface Props {
     layoutTheme?: LayoutTheme;
     labelHidden?: boolean;
     sx?: SxProps;
+    containerSx?: SxProps;
 }
 
 export default function FormElement({
@@ -39,6 +40,7 @@ export default function FormElement({
     layoutTheme = "default",
     labelHidden = false,
     sx,
+    containerSx,
 }: Props) {
     const theme = useTheme();
 
@@ -66,7 +68,7 @@ export default function FormElement({
     );
 
     return (
-        <Container layoutTheme={layoutTheme}>
+        <Container layoutTheme={layoutTheme} sx={containerSx}>
             {hasSingleControl ? (
                 <FormControl error={!!error} sx={sx}>
                     {formComponents}
@@ -81,24 +83,29 @@ export default function FormElement({
 interface ContainerProps {
     children: ReactNode;
     layoutTheme?: LayoutTheme;
+    sx?: SxProps;
 }
 
 function Container({
     children,
     layoutTheme = "default",
+    sx,
 }: ContainerProps): JSX.Element {
     switch (layoutTheme) {
         case "minimal":
-            return <Box>{children}</Box>;
+            return <Box sx={sx}>{children}</Box>;
         case "card":
             return (
-                <Card variant="soft" size="sm">
+                <Card variant="soft" size="sm" sx={sx}>
                     {children}
                 </Card>
             );
         case "default":
             return (
-                <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
+                <Sheet
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: "lg", ...sx }}
+                >
                     {children}
                 </Sheet>
             );
