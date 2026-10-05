@@ -17,6 +17,7 @@ import SingleOptionInput from "../SingleOptionInput";
 interface Props {
     current: Sovereigns | null;
     reportTimestamp: string | null;
+    isNewReport: boolean;
     onChange: (value: Sovereigns | null) => void;
     validate: () => void;
 }
@@ -24,6 +25,7 @@ interface Props {
 export default function SovereignsFormFragment({
     current,
     reportTimestamp,
+    isNewReport,
     onChange,
     validate,
 }: Props) {
@@ -37,11 +39,10 @@ export default function SovereignsFormFragment({
 
     const isRequired = useMemo(
         () =>
-            !!(
-                new Date(reportTimestamp || Date.now()).getTime() >=
-                SOVEREIGN_COLLECTION_START_DATE_MS
-            ),
-        [reportTimestamp],
+            isNewReport ||
+            new Date(reportTimestamp || Date.now()).getTime() >=
+                SOVEREIGN_COLLECTION_START_DATE_MS,
+        [reportTimestamp, isNewReport],
     );
 
     useEffect(

@@ -347,6 +347,7 @@ function GameReportForm({
                         <SovereignsFormFragment
                             current={formData.sovereigns.value}
                             reportTimestamp={formData.timestamp.value}
+                            isNewReport={!formData.rid.value}
                             onChange={handleInputChange("sovereigns")}
                             validate={validateField("sovereigns")}
                         />
