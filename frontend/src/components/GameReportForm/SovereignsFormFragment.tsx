@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import Button from "@mui/joy/Button";
 import {
     defaultSovereignStates,
     SOVEREIGN_COLLECTION_START_DATE_MS,
@@ -15,23 +16,25 @@ import SingleOptionInput from "../SingleOptionInput";
 interface Props {
     current: Sovereigns | null;
     reportTimestamp: string | null;
-    onChange: (value: Sovereigns) => void;
+    onChange: (value: Sovereigns | null) => void;
     validate: () => void;
 }
 
 export default function SovereignsFormFragment({
-    current: _current,
+    current,
     reportTimestamp,
     onChange,
     validate,
 }: Props) {
-    const current = _current || defaultSovereignStates;
+    const currentMasked = current || defaultSovereignStates;
 
     const collectionStartIso = new Date(
         SOVEREIGN_COLLECTION_START_DATE_MS,
     ).toISOString();
 
-    const hasCollectionStarted = useMemo(
+    const [isElected, setIsElected] = useState(!!current);
+
+    const isRequired = useMemo(
         () =>
             !!(
                 new Date(reportTimestamp || Date.now()).getTime() >=
@@ -42,12 +45,12 @@ export default function SovereignsFormFragment({
 
     useEffect(
         function initializeFormData() {
-            if (hasCollectionStarted) onChange(current);
+            onChange(isRequired || isElected ? currentMasked : null);
         },
-        [hasCollectionStarted],
+        [isRequired, isElected],
     );
 
-    return hasCollectionStarted ? (
+    return isRequired || isElected ? (
         <FlexBox sx={{ flexWrap: "wrap", gap: 1 }}>
             {sovereigns.map((sovereign) => {
                 const sovereignLabel = toTitleCase(sovereign);
@@ -69,13 +72,13 @@ export default function SovereignsFormFragment({
                                 <SingleOptionInput
                                     orientation="vertical"
                                     values={sovereignStatuses.slice()}
-                                    current={current[sovereign].status}
+                                    current={currentMasked[sovereign].status}
                                     validate={validate}
                                     onChange={(status) =>
                                         onChange({
-                                            ...current,
+                                            ...currentMasked,
                                             [sovereign]: {
-                                                ...current[sovereign],
+                                                ...currentMasked[sovereign],
                                                 status,
                                             },
                                         })
@@ -90,13 +93,13 @@ export default function SovereignsFormFragment({
                                 <BooleanInput
                                     label="Died"
                                     labelReversed
-                                    current={current[sovereign].died}
+                                    current={currentMasked[sovereign].died}
                                     validate={validate}
                                     onChange={(died) =>
                                         onChange({
-                                            ...current,
+                                            ...currentMasked,
                                             [sovereign]: {
-                                                ...current[sovereign],
+                                                ...currentMasked[sovereign],
                                                 died,
                                             },
                                         })
@@ -109,11 +112,15 @@ export default function SovereignsFormFragment({
             })}
         </FlexBox>
     ) : (
-        <em>
-            {`N/A. Not reported for games prior to ${displayTime(
-                collectionStartIso,
-                { tz: "UTC", withTzDisplayed: true },
-            )} (${displayTime(collectionStartIso, { withTzDisplayed: true })})`}
-        </em>
+        <FlexBox sx={{ gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+            <em>
+                {`N/A. Reporting not required for games prior to ${displayTime(
+                    collectionStartIso,
+                    { tz: "UTC", withTzDisplayed: true },
+                )} (${displayTime(collectionStartIso, { withTzDisplayed: true })})`}
+            </em>
+
+            <Button onClick={() => setIsElected(true)}>Report anyway?</Button>
+        </FlexBox>
     );
 }
