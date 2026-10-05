@@ -6,6 +6,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding (decodeLatin1)
 import Data.Time (UTCTime (UTCTime), fromGregorian)
 import Data.Validation (Validation (..), validate)
+import Prettyprinter
 import Servant (ServerError (..), err422, throwError)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Side (..), Stronghold (..), Victory (..))
@@ -36,7 +37,10 @@ data ReportError
   | InvalidRotkEyes
   deriving (Show)
 
-newtype Error a = Error a deriving (Show)
+instance Pretty ReportError where
+  pretty = \case
+    SovereignsMissing -> "Sovereigns missing. Your version of the website may be out of date. Please hard-refresh your browser (Mac: Cmd + Shift + R) (Windows: Ctrl + Shift + R) and try again"
+    err -> show err
 
 vpValue :: Stronghold -> Int
 vpValue Rivendell = 2
@@ -226,11 +230,3 @@ validateLogFile fp = do
   where
     headerSearchSpan = 5
     logFileHeader = "<auto> silent null"
-
-cleanErrors :: [ReportError] -> [Error Text]
-cleanErrors =
-  map
-    ( \case
-        SovereignsMissing -> Error "Sovereigns missing. Your version of the website may be out of date. Please hard-refresh your browser (Mac: Cmd + Shift + R) (Windows: Ctrl + Shift + R) and try again"
-        err -> Error (show err)
-    )

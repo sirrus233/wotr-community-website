@@ -49,6 +49,7 @@ common dependencies
     monad-logger ^>=0.3.40,
     persistent ^>=2.14.6.3,
     persistent-sqlite ^>=2.13.3.0,
+    prettyprinter ^>=1.7.1,
     relude ^>=1.2.2.0,
     servant ^>=0.20.2,
     servant-multipart ^>=0.12.1,
