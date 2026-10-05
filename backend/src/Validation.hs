@@ -150,14 +150,10 @@ validateTreebeard report
   | otherwise = Failure [TreebeardExpansionMismatch]
 
 validateSovereigns :: RawGameReport -> UTCTime -> Validation [ReportError] RawGameReport
-validateSovereigns report timestamp =
-  case report.sovereigns of
-    Nothing
-      | KoME `elem` report.expansions && timestamp >= sovereignsCollectionStart ->
-          Failure [SovereignsMissing]
-    Nothing -> Success report
-    Just _ | KoME `elem` report.expansions -> Success report
-    Just _ -> Failure [SovereignsExpansionMismatch]
+validateSovereigns report@RawGameReport {expansions, sovereigns} timestamp
+  | isNothing sovereigns && KoME `elem` report.expansions && timestamp >= sovereignsCollectionStart = Failure [SovereignsMissing]
+  | isJust sovereigns && KoME `notElem` expansions = Failure [SovereignsExpansionMismatch]
+  | otherwise = Success report
   where
     sovereignsCollectionStart :: UTCTime
     sovereignsCollectionStart = UTCTime (fromGregorian 2026 10 1) 0
