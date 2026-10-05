@@ -122,7 +122,7 @@ import Types.Database
     updatedPlayerStatsLose,
     updatedPlayerStatsWin,
   )
-import Validation (validateLogFile, validateReport)
+import Validation (cleanErrors, validateLogFile, validateReport)
 import Web.Cookie (SetCookie (..), defaultSetCookie, sameSiteStrict)
 import Prelude hiding (get, on)
 
@@ -320,7 +320,7 @@ submitReportHandler (SubmitReportRequest rawReport logFileData) = do
   whenJust logFileData (validateLogFile . fdPayload)
 
   case validateReport rawReport timestamp of
-    Failure errors -> throwError $ err422 {errBody = show errors}
+    Failure errors -> throwError $ err422 {errBody = show (cleanErrors errors)}
     Success (RawGameReport {..}) -> runDb $ do
       logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
       let (freePlayer, shadowPlayer) = case side of Free -> (winner, loser); Shadow -> (loser, winner)
@@ -488,7 +488,7 @@ adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
 
 adminModifyReportHandler :: ModifyReportRequest -> AppM NoContent
 adminModifyReportHandler ModifyReportRequest {rid, timestamp, report} = case validateReport report timestamp of
-  Failure errors -> throwError $ err422 {errBody = show errors}
+  Failure errors -> throwError $ err422 {errBody = show (cleanErrors errors)}
   Success _ -> runDb $ do
     oldReport <- readOrError ("Cannot find report " <>: rid) $ lift . get $ rid
     Entity newWinnerId _ <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner

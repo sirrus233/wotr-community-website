@@ -36,6 +36,8 @@ data ReportError
   | InvalidRotkEyes
   deriving (Show)
 
+newtype Error a = Error a deriving (Show)
+
 vpValue :: Stronghold -> Int
 vpValue Rivendell = 2
 vpValue GreyHavens = 2
@@ -224,3 +226,11 @@ validateLogFile fp = do
   where
     headerSearchSpan = 5
     logFileHeader = "<auto> silent null"
+
+cleanErrors :: [ReportError] -> [Error Text]
+cleanErrors =
+  map
+    ( \case
+        SovereignsMissing -> Error "Sovereigns missing. Your version of the website may be out of date. Please hard-refresh your browser (Mac: Cmd + Shift + R) (Windows: Ctrl + Shift + R) and try again"
+        err -> Error (show err)
+    )
