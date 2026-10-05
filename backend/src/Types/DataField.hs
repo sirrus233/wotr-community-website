@@ -35,11 +35,8 @@ defaultListFieldFromPersistValue :: (Read a, Typeable a) => PersistValue -> Eith
 defaultListFieldFromPersistValue v = ListField <$> defaultListFromPersistValue v
 
 defaultJsonFromPersistValue :: (FromJSON a) => PersistValue -> Either Text a
-defaultJsonFromPersistValue v = case v of
-  PersistText t -> case decodeStrictText t of
-    Just j -> Right j
-    Nothing -> Left "Invalid JSON."
-  _ -> Left "Unexpected non-text SQL value."
+defaultJsonFromPersistValue (PersistText t) = maybeToRight "Invalid JSON." (decodeStrictText t)
+defaultJsonFromPersistValue _ = Left "Unexpected non-text SQL value."
 
 fromListField :: ListField a -> [a]
 fromListField (ListField as) = as
