@@ -162,7 +162,7 @@ validateSovereigns report@RawGameReport {expansions, sovereigns} timestamp
   | otherwise = Success report
   where
     sovereignsCollectionStart :: UTCTime
-    sovereignsCollectionStart = UTCTime (fromGregorian 2026 10 1) 0
+    sovereignsCollectionStart = UTCTime (fromGregorian 2026 10 9) 0
 
 validateTurns :: RawGameReport -> Validation [ReportError] RawGameReport
 validateTurns report

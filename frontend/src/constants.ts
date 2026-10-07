@@ -169,8 +169,8 @@ export const LEAGUE_START_YEAR = 2025;
 export const MAX_GAME_LOG_SIZE_MB = 1;
 export const MAX_GAME_LOG_SIZE_BYTES = MAX_GAME_LOG_SIZE_MB * 1024 * 1024;
 
-// October 1st, 2026 UTC in ms
-export const SOVEREIGN_COLLECTION_START_DATE_MS = Date.UTC(2026, 9, 1);
+// October 9th, 2026 UTC in ms
+export const SOVEREIGN_COLLECTION_START_DATE_MS = Date.UTC(2026, 9, 9);
 
 export const GAME_LIMITS = {
     corruption: { min: 0, max: 30 },
