@@ -6,7 +6,7 @@ import Data.Csv (FromRecord)
 import Data.Text qualified as T
 import Data.Time (TimeOfDay (..), UTCTime (..), fromGregorian, timeOfDayToTime)
 import Types.Api (RawGameReport (..))
-import Types.DataField (Competition (..), Expansion (..), League (..), Match (..), PlayerName, Side (..), Stronghold (..), Victory (..))
+import Types.DataField (Competition (..), Expansion (..), League (..), Match (..), PlayerName, Side (..), Sovereigns (..), Stronghold (..), Victory (..))
 
 type PlayerBanList = [PlayerName]
 
@@ -147,6 +147,7 @@ data ParsedGameReport = ParsedGameReport
     league :: Maybe League,
     expansions :: [Expansion],
     treebeard :: Maybe Bool,
+    sovereigns :: Maybe Sovereigns,
     actionTokens :: Int,
     dwarvenRings :: Int,
     musterPoints :: Int,
@@ -174,6 +175,7 @@ toParsedGameReport awsEnv report =
       league,
       expansions,
       treebeard,
+      sovereigns,
       actionTokens,
       dwarvenRings,
       musterPoints = 0,
@@ -282,6 +284,7 @@ toParsedGameReport awsEnv report =
       (Just "No", _) -> Nothing
       (Nothing, _) -> Nothing
       _ -> error $ "Invalid treebeard: " <> show (report.treebeard, report.tree)
+    sovereigns = Nothing
     actionTokens = case report.tokens of
       "Nope!" -> 0
       "One Action Token" -> 1

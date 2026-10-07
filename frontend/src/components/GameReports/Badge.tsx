@@ -1,12 +1,13 @@
-import React, { CSSProperties, ReactNode } from "react";
+import React, { ReactNode } from "react";
 import Box from "@mui/joy/Box";
+import { SxProps } from "@mui/joy/styles/types";
 
 interface Props {
     children: ReactNode;
-    style?: CSSProperties;
+    sx?: SxProps;
 }
 
-export default function SettlementBadge({ children, style }: Props) {
+export default function Badge({ children, sx }: Props) {
     return (
         <Box
             boxSizing="border-box"
@@ -22,7 +23,7 @@ export default function SettlementBadge({ children, style }: Props) {
             m="1px"
             borderRadius="5px"
             color="white"
-            sx={style}
+            sx={sx}
         >
             {children}
         </Box>

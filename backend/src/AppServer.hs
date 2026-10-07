@@ -46,6 +46,7 @@ import Database.Esqueleto.Experimental (Entity (..), PersistStoreRead (..), Pers
 import Database.Persist (selectList)
 import Logging ((<>:))
 import Network.HTTP.Client.Conduit (newManager)
+import Prettyprinter
 import Relude.Extra (groupBy, lookupDefault)
 import Servant
   ( AuthProtect,
@@ -315,15 +316,14 @@ userInfoHandler = pure $ UserInfoResponse {isAdmin = True} -- True by default if
 
 submitReportHandler :: SubmitReportRequest -> AppM SubmitGameReportResponse
 submitReportHandler (SubmitReportRequest rawReport logFileData) = do
+  timestamp <- liftIO getCurrentTime
   awsEnv <- asks aws
-
   whenJust logFileData (validateLogFile . fdPayload)
 
-  case validateReport rawReport of
-    Failure errors -> throwError $ err422 {errBody = show errors}
+  case validateReport rawReport timestamp of
+    Failure errors -> throwError $ err422 {errBody = show $ map pretty errors}
     Success (RawGameReport {..}) -> runDb $ do
       logInfoN $ "Processing game between " <> winner <> " and " <> loser <> "."
-      timestamp <- liftIO getCurrentTime
       let (freePlayer, shadowPlayer) = case side of Free -> (winner, loser); Shadow -> (loser, winner)
       let key = toS3Key timestamp freePlayer shadowPlayer
       let s3Path = toS3Url awsEnv.region key <$ logFileData
@@ -488,15 +488,14 @@ adminRemapPlayerHandler RemapPlayerRequest {fromPid, toPid} = runDb $ do
   pure $ RemapPlayerResponse player.playerDisplayName
 
 adminModifyReportHandler :: ModifyReportRequest -> AppM NoContent
-adminModifyReportHandler ModifyReportRequest {rid, timestamp, report} = case validateReport report of
-  Failure errors -> throwError $ err422 {errBody = show errors}
+adminModifyReportHandler ModifyReportRequest {rid, timestamp, report} = case validateReport report timestamp of
+  Failure errors -> throwError $ err422 {errBody = show $ map pretty errors}
   Success _ -> runDb $ do
     oldReport <- readOrError ("Cannot find report " <>: rid) $ lift . get $ rid
     Entity newWinnerId _ <- readOrError ("Cannot find player " <>: report.winner) $ getPlayerByName report.winner
     Entity newLoserId _ <- readOrError ("Cannot find player " <>: report.loser) $ getPlayerByName report.loser
-    let newTimestamp = fromMaybe oldReport.gameReportTimestamp timestamp
 
-    let newReport = toGameReport newTimestamp newWinnerId newLoserId oldReport.gameReportLogFile report
+    let newReport = toGameReport timestamp newWinnerId newLoserId oldReport.gameReportLogFile report
     lift $ replace rid newReport
 
     when (mustReprocess oldReport newReport) reprocessReports

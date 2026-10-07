@@ -1,14 +1,16 @@
 import React, { CSSProperties, ReactNode } from "react";
 import Box from "@mui/joy/Box";
+import Card from "@mui/joy/Card";
 import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
 import FormLabel from "@mui/joy/FormLabel";
 import Sheet from "@mui/joy/Sheet";
 import { styled, useTheme } from "@mui/joy/styles";
+import { SxProps } from "@mui/joy/styles/types";
 import { FieldError } from "../types";
 import HelpIcon from "./HelpIcon";
 
-type LayoutTheme = "minimal" | "default";
+type LayoutTheme = "card" | "minimal" | "default";
 
 const LabelArea = styled(Box)({
     display: "flex",
@@ -24,6 +26,9 @@ interface Props {
     };
     hasSingleControl?: boolean;
     layoutTheme?: LayoutTheme;
+    labelHidden?: boolean;
+    sx?: SxProps;
+    containerSx?: SxProps;
 }
 
 export default function FormElement({
@@ -33,6 +38,9 @@ export default function FormElement({
     helpProps,
     hasSingleControl = true,
     layoutTheme = "default",
+    labelHidden = false,
+    sx,
+    containerSx,
 }: Props) {
     const theme = useTheme();
 
@@ -45,11 +53,8 @@ export default function FormElement({
         <>
             <LabelArea>
                 <FormLabel
-                    sx={
-                        layoutTheme === "minimal"
-                            ? { pb: 1 }
-                            : { fontSize: 16, pb: 2 }
-                    }
+                    className={labelHidden ? "visually-hidden" : undefined}
+                    sx={styleLabel(layoutTheme)}
                 >
                     {label}
                 </FormLabel>
@@ -63,11 +68,13 @@ export default function FormElement({
     );
 
     return (
-        <Container layoutTheme={layoutTheme}>
+        <Container layoutTheme={layoutTheme} sx={containerSx}>
             {hasSingleControl ? (
-                <FormControl error={!!error}>{formComponents}</FormControl>
+                <FormControl error={!!error} sx={sx}>
+                    {formComponents}
+                </FormControl>
             ) : (
-                <Box>{formComponents}</Box>
+                <Box sx={sx}>{formComponents}</Box>
             )}
         </Container>
     );
@@ -76,14 +83,41 @@ export default function FormElement({
 interface ContainerProps {
     children: ReactNode;
     layoutTheme?: LayoutTheme;
+    sx?: SxProps;
 }
 
-function Container({ children, layoutTheme = "default" }: ContainerProps) {
-    return layoutTheme === "minimal" ? (
-        <Box>{children}</Box>
-    ) : (
-        <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
-            {children}
-        </Sheet>
-    );
+function Container({
+    children,
+    layoutTheme = "default",
+    sx,
+}: ContainerProps): JSX.Element {
+    switch (layoutTheme) {
+        case "minimal":
+            return <Box sx={sx}>{children}</Box>;
+        case "card":
+            return (
+                <Card variant="soft" size="sm" sx={sx}>
+                    {children}
+                </Card>
+            );
+        case "default":
+            return (
+                <Sheet
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: "lg", ...sx }}
+                >
+                    {children}
+                </Sheet>
+            );
+    }
+}
+
+function styleLabel(layoutTheme: LayoutTheme): SxProps {
+    switch (layoutTheme) {
+        case "minimal":
+        case "card":
+            return { fontSize: "inherit", pb: 1 };
+        case "default":
+            return { fontSize: 16, pb: 2 };
+    }
 }

@@ -49,7 +49,7 @@ migrate legacyEntries reports = runDb $ do
   traverse_ insertLegacyEntry . filter (\entry -> entry.player `notElem` banList) $ legacyEntries
 
   forM_ (map (\r -> (r.timestamp, toRawGameReport r, r.log)) reports) $ \(timestamp, report, s3Url) -> do
-    case validateReport report of
+    case validateReport report timestamp of
       Failure errs -> case errs of
         [NoVictoryConditionMet] -> insertReport_ timestamp (report {victory = Concession}) s3Url
         _ -> throwError $ err500 {errBody = "Unrecognized failure: " <>: errs <> " for report: " <>: report}
