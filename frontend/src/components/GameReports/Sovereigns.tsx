@@ -80,7 +80,7 @@ function DiagonalLine({ direction }: { direction: "left" | "right" }) {
                 borderTop: "1px solid black",
                 [direction]: 0,
                 transformOrigin: `top ${direction}`,
-                transform: `rotate(atan(var(${HEIGHT_CSS_VAR}) / calc(${direction === "left" ? 1 : -1} * var(${WIDTH_CSS_VAR}))))`,
+                transform: `rotate(calc(${direction === "left" ? 1 : -1} * atan2(var(${HEIGHT_CSS_VAR}), var(${WIDTH_CSS_VAR}))))`,
             }}
         />
     );
