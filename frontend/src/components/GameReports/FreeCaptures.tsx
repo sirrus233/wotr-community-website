@@ -3,7 +3,7 @@ import Box from "@mui/joy/Box";
 import colors from "../../styles/colors";
 import { ProcessedGameReport } from "../../types";
 import { getStrongholdLabel, strongholdSide } from "../../utils";
-import SettlementBadge from "./SettlementBadge";
+import Badge from "./Badge";
 
 export default function FreeCaptures(props: { report: ProcessedGameReport }) {
     const { strongholds, expansions } = props.report;
@@ -14,12 +14,12 @@ export default function FreeCaptures(props: { report: ProcessedGameReport }) {
                 .filter((sh) => strongholdSide(expansions, sh) === "Shadow")
                 .map(getStrongholdLabel)
                 .map((label) => (
-                    <SettlementBadge
+                    <Badge
                         key={label}
-                        style={{ background: colors.shadowPrimary }}
+                        sx={{ background: colors.shadowPrimary }}
                     >
                         {label}
-                    </SettlementBadge>
+                    </Badge>
                 ))}
         </Box>
     );

@@ -19,13 +19,16 @@ import Types.DataField
     Expansion,
     League,
     LeagueTier,
+    ListField (..),
     Match,
     PlayerName,
     Rating,
     Side (..),
+    Sovereigns,
     Stronghold,
     Victory,
     Year,
+    fromListField,
   )
 
 share
@@ -61,8 +64,9 @@ share
     match Match
     competition [Competition]
     league League Maybe
-    expansions [Expansion]
+    expansions (ListField Expansion)
     treebeard Bool Maybe
+    sovereigns Sovereigns Maybe
     actionTokens Int
     dwarvenRings Int
     musterPoints Int default=0
@@ -293,11 +297,12 @@ instance ToNamedRecord ExportGameReport where
           "match" .= T.show gameReportMatch,
           "competition" .= T.intercalate "," (map show gameReportCompetition),
           "league" .= maybe ("" :: Text) show gameReportLeague,
-          "expansions" .= T.intercalate "," (map show gameReportExpansions),
+          "expansions" .= T.intercalate "," (map show (fromListField gameReportExpansions)),
           "treebeard" .= maybe ("" :: Text) (\b -> if b then "true" else "false") gameReportTreebeard,
+          "sovereigns" .= maybe ("" :: Text) show gameReportSovereigns,
           "action_tokens" .= gameReportActionTokens,
           "dwarven_rings" .= gameReportDwarvenRings,
-          "muster_points" .= gameReportMusterPoints,
+          "muster_points" .= (fromIntegral gameReportMusterPoints / 2 :: Double),
           "turns" .= gameReportTurns,
           "corruption" .= gameReportCorruption,
           "mordor" .= maybe ("" :: Text) show gameReportMordor,
@@ -322,6 +327,7 @@ gameReportCsvHeader =
       "league",
       "expansions",
       "treebeard",
+      "sovereigns",
       "action_tokens",
       "dwarven_rings",
       "muster_points",

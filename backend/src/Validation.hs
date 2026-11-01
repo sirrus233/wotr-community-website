@@ -4,7 +4,9 @@ import AppConfig (AppM)
 import Control.Monad.Logger (logErrorN)
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeLatin1)
-import Data.Validation (Validation (..))
+import Data.Time (UTCTime (UTCTime), fromGregorian)
+import Data.Validation (Validation (..), validate)
+import Prettyprinter
 import Servant (ServerError (..), err422, throwError)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Side (..), Stronghold (..), Victory (..))
@@ -24,6 +26,8 @@ data ReportError
   | CompetitionMismatch
   | LeagueExpansionMismatch
   | TreebeardExpansionMismatch
+  | SovereignsMissing
+  | SovereignsExpansionMismatch
   | TurnsOutOfRange
   | CorruptionOutOfRange
   | MordorOutOfRange
@@ -31,7 +35,14 @@ data ReportError
   | InterestRatingOutOfRange
   | InvalidStronghold
   | WinnerAndLoserSame
+  | InvalidRotkAragorn
+  | InvalidRotkEyes
   deriving (Show)
+
+instance Pretty ReportError where
+  pretty = \case
+    SovereignsMissing -> "Sovereigns missing. Your version of the website may be out of date. Please hard-refresh your browser (Mac: Cmd + Shift + R) (Windows: Ctrl + Shift + R) and try again"
+    err -> show err
 
 vpValue :: Stronghold -> Int
 vpValue Rivendell = 2
@@ -137,6 +148,7 @@ validateLeague report = case report.league of
   Just GeneralLeague -> Success report
   Just LoMELeague | LoME `elem` report.expansions -> Success report
   Just WoMELeague | WoME `elem` report.expansions -> Success report
+  Just RotKLeague | ReturnOfTheKing `elem` report.expansions -> Success report
   Just SuperLeague | LoME `elem` report.expansions && WoME `elem` report.expansions -> Success report
   _ -> Failure [LeagueExpansionMismatch]
 
@@ -144,6 +156,15 @@ validateTreebeard :: RawGameReport -> Validation [ReportError] RawGameReport
 validateTreebeard report
   | isJust report.treebeard == Treebeard `elem` report.expansions = Success report
   | otherwise = Failure [TreebeardExpansionMismatch]
+
+validateSovereigns :: RawGameReport -> UTCTime -> Validation [ReportError] RawGameReport
+validateSovereigns report@RawGameReport {expansions, sovereigns} timestamp
+  | isNothing sovereigns && KoME `elem` report.expansions && timestamp >= sovereignsCollectionStart = Failure [SovereignsMissing]
+  | isJust sovereigns && KoME `notElem` expansions = Failure [SovereignsExpansionMismatch]
+  | otherwise = Success report
+  where
+    sovereignsCollectionStart :: UTCTime
+    sovereignsCollectionStart = UTCTime (fromGregorian 2026 10 9) 0
 
 validateTurns :: RawGameReport -> Validation [ReportError] RawGameReport
 validateTurns report
@@ -179,17 +200,26 @@ validateStrongholds report
 
 validatePlayers :: RawGameReport -> Validation [ReportError] RawGameReport
 validatePlayers report
-  | normalizeName (winner report) /= normalizeName (loser report)
-      = Success report
-  | otherwise
-      = Failure [WinnerAndLoserSame]
+  | normalizeName (winner report) /= normalizeName (loser report) = Success report
+  | otherwise = Failure [WinnerAndLoserSame]
 
-validateReport :: RawGameReport -> Validation [ReportError] RawGameReport
-validateReport report =
+validateReturnOfTheKing :: RawGameReport -> Validation [ReportError] RawGameReport
+validateReturnOfTheKing report
+  | ReturnOfTheKing `elem` report.expansions =
+      validate [InvalidRotkAragorn] aragornRule report
+        <* validate [InvalidRotkEyes] eyesRule report
+  | otherwise = Success report
+  where
+    aragornRule r = if r.aragornTurn == Just 1 then Just r else Nothing
+    eyesRule r = if r.initialEyes == 3 then Just r else Nothing
+
+validateReport :: RawGameReport -> UTCTime -> Validation [ReportError] RawGameReport
+validateReport report timestamp =
   validateVictory report
     <* validateCompetition report
     <* validateLeague report
     <* validateTreebeard report
+    <* validateSovereigns report timestamp
     <* validateTurns report
     <* validateCorruption report
     <* validateMordor report
@@ -197,6 +227,7 @@ validateReport report =
     <* validateInterestRating report
     <* validateStrongholds report
     <* validatePlayers report
+    <* validateReturnOfTheKing report
 
 validateLogFile :: FilePath -> AppM ()
 validateLogFile fp = do

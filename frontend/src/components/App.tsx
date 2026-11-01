@@ -113,11 +113,13 @@ export default function App() {
             currentPage: 1,
             filters: {
                 pairing: [],
+                timestamp: [null, null],
                 players: [],
                 winners: [],
                 losers: [],
                 leagues: [],
                 victory: [],
+                expansions: [],
                 turns: null,
                 tokens: null,
                 dwarvenRings: null,
@@ -441,7 +443,7 @@ function Home() {
                 {[
                     {
                         label: "Game Client",
-                        href: "https://www.dropbox.com/s/vc0q5twum8iol2b/WOTR-GANDALF2.zip?dl=0",
+                        href: "https://github.com/Weyoun5/WOTR-GANDALF-KOME/releases/download/v1.12.1/WOTR-KoME.zip",
                         isDownload: false,
                     },
                     {

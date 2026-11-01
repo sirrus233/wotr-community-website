@@ -1,9 +1,7 @@
 import React from "react";
-import Box from "@mui/joy/Box";
-import IconButton from "@mui/joy/IconButton";
-import ViewIcon from "@mui/icons-material/Visibility";
 import {
     ErrorMessage,
+    expansions,
     GAME_LIMITS,
     leagues,
     sides,
@@ -17,9 +15,15 @@ import {
     Victory,
     VictoryOption,
 } from "../../types";
-import { getLeagueLabel, isDefined } from "../../utils";
+import { getExpansionLabel, getLeagueLabel, isDefined } from "../../utils";
 import { ColHeaderData, CornerHeaderData } from "../Table/types";
-import { ALL_OPTION_ID, EMPTY_OPTION_ID, PLAYER_COL_WIDTH } from "./constants";
+import ColHeaderWithSettingsBtn from "./ColHeaderWithSettingsBtn";
+import {
+    ALL_OPTION_ID,
+    EMPTY_OPTION_ID,
+    EXPANSIONS_COL_WIDTH,
+    PLAYER_COL_WIDTH,
+} from "./constants";
 import { toVictoryKindLabel, toVictoryTypeLabel } from "./formatters";
 import { isPairingValid } from "./validators";
 
@@ -84,7 +88,17 @@ export default function colHeaders({
         ],
 
         standardHeaders: [
-            { key: "Timestamp" },
+            {
+                key: "Timestamp",
+                width: 160,
+                filter: {
+                    filterType: "timestamp",
+                    current: filters.timestamp,
+                    appliedCount: filters.timestamp.filter(Boolean).length,
+                    onChange: (value) =>
+                        setFilters({ ...filters, timestamp: value }),
+                },
+            },
             {
                 key: "Turn",
                 width: 120,
@@ -180,7 +194,26 @@ export default function colHeaders({
                     },
                 },
             },
-            { key: "Expansions" },
+            {
+                key: "Expansions",
+                width: EXPANSIONS_COL_WIDTH,
+                filter: {
+                    filterType: "autocomplete",
+                    placeholder: "Select expansions",
+                    loading: false,
+                    allOption: { id: ALL_OPTION_ID, label: "Any expansion" },
+                    emptyOption: { id: EMPTY_OPTION_ID, label: "No expansion" },
+                    options: expansions.map((expansion) => ({
+                        id: expansion,
+                        label: getExpansionLabel(expansion),
+                    })),
+                    current: filters.expansions,
+                    appliedCount: filters.expansions.length,
+                    onChange: (values) => {
+                        setFilters({ ...filters, expansions: values });
+                    },
+                },
+            },
             {
                 key: "Tokens",
                 width: 130,
@@ -286,6 +319,14 @@ export default function colHeaders({
                 },
             },
             {
+                key: "Sovereigns",
+                content: (
+                    <ColHeaderWithSettingsBtn setSettingsOpen={setSettingsOpen}>
+                        Sovereigns
+                    </ColHeaderWithSettingsBtn>
+                ),
+            },
+            {
                 key: "Initial Eyes",
                 width: 150,
                 filter: {
@@ -302,25 +343,9 @@ export default function colHeaders({
             {
                 key: "SP-Captured Settlements",
                 content: (
-                    <Box
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                    >
-                        <Box mr="5px">SP-Captured Settlements</Box>
-                        <IconButton
-                            size="sm"
-                            color="primary"
-                            onClick={() => setSettingsOpen(true)}
-                            sx={{
-                                height: "1em",
-                                minHeight: "fit-content",
-                                py: "2px",
-                            }}
-                        >
-                            <ViewIcon />
-                        </IconButton>
-                    </Box>
+                    <ColHeaderWithSettingsBtn setSettingsOpen={setSettingsOpen}>
+                        SP-Captured Settlements
+                    </ColHeaderWithSettingsBtn>
                 ),
             },
             { key: "SPVP" },

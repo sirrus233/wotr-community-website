@@ -1,8 +1,9 @@
 module Types.DataField where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, decodeStrictText)
+import Data.Aeson.Text (encodeToLazyText)
 import Data.Text qualified as T
-import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlType (..))
+import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql, PersistValue (..), SqlString, SqlType (..))
 import Database.Persist.Sql (PersistFieldSql (..))
 import Servant (FromHttpApiData (..))
 
@@ -11,6 +12,12 @@ defaultToPersistValue a = PersistText (show a)
 
 defaultListToPersistValue :: (Show a) => [a] -> PersistValue
 defaultListToPersistValue as = PersistText (T.intercalate "," . map show $ as)
+
+defaultListFieldToPersistValue :: (Show a) => ListField a -> PersistValue
+defaultListFieldToPersistValue (ListField as) = defaultListToPersistValue as
+
+defaultJsonToPersistValue :: (ToJSON a) => a -> PersistValue
+defaultJsonToPersistValue = PersistText . toStrict . encodeToLazyText
 
 defaultFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text a
 defaultFromPersistValue v = case v of
@@ -24,11 +31,23 @@ defaultListFromPersistValue v = case v of
     maybeToRight "Unreadable value in semantic list text field." (traverse (readMaybe . toString) . T.splitOn "," $ t)
   _ -> Left "Unexpected non-text SQL value."
 
+defaultListFieldFromPersistValue :: (Read a, Typeable a) => PersistValue -> Either Text (ListField a)
+defaultListFieldFromPersistValue v = ListField <$> defaultListFromPersistValue v
+
+defaultJsonFromPersistValue :: (FromJSON a) => PersistValue -> Either Text a
+defaultJsonFromPersistValue (PersistText t) = maybeToRight "Invalid JSON." (decodeStrictText t)
+defaultJsonFromPersistValue _ = Left "Unexpected non-text SQL value."
+
+fromListField :: ListField a -> [a]
+fromListField (ListField as) = as
+
 type PlayerName = Text
 
 type Rating = Int
 
 type Year = Int
+
+newtype ListField a = ListField [a] deriving (Eq, Generic, Read, Show)
 
 data Side = Free | Shadow deriving (Eq, Generic, Read, Show)
 
@@ -83,7 +102,8 @@ instance ToJSON Competition
 
 instance FromJSON Competition
 
-data League = GeneralLeague | LoMELeague | WoMELeague | SuperLeague | TTSLeague deriving (Eq, Generic, Ord, Read, Show)
+data League = GeneralLeague | LoMELeague | WoMELeague | RotKLeague | SuperLeague | TTSLeague
+  deriving (Eq, Generic, Ord, Read, Show)
 
 instance PersistField League where
   toPersistValue = defaultToPersistValue
@@ -117,18 +137,56 @@ instance ToJSON LeagueTier
 
 instance FromJSON LeagueTier
 
-data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | Treebeard deriving (Eq, Generic, Read, Show)
+data Expansion = LoME | WoME | KoME | Cities | FateOfErebor | ReturnOfTheKing | Treebeard deriving (Eq, Generic, Read, Show)
 
-instance PersistField [Expansion] where
-  toPersistValue = defaultListToPersistValue
-  fromPersistValue = defaultListFromPersistValue
+instance PersistField (ListField Expansion) where
+  toPersistValue = defaultListFieldToPersistValue
+  fromPersistValue = defaultListFieldFromPersistValue
 
-instance PersistFieldSql [Expansion] where
+instance PersistFieldSql (ListField Expansion) where
   sqlType _ = SqlString
+
+instance SqlString (ListField Expansion)
 
 instance ToJSON Expansion
 
 instance FromJSON Expansion
+
+data SovereignStatus = Awakened | Corrupted | Neither deriving (Eq, Generic, Read, Show)
+
+instance ToJSON SovereignStatus
+
+instance FromJSON SovereignStatus
+
+data SovereignState = SovereignState
+  { status :: SovereignStatus,
+    died :: Bool
+  }
+  deriving (Generic, Read, Show)
+
+instance ToJSON SovereignState
+
+instance FromJSON SovereignState
+
+data Sovereigns = Sovereigns
+  { thranduil :: SovereignState,
+    brand :: SovereignState,
+    dain :: SovereignState,
+    denethor :: SovereignState,
+    theoden :: SovereignState
+  }
+  deriving (Generic, Read, Show)
+
+instance PersistField Sovereigns where
+  toPersistValue = defaultJsonToPersistValue
+  fromPersistValue = defaultJsonFromPersistValue
+
+instance PersistFieldSql Sovereigns where
+  sqlType _ = SqlOther "jsonb"
+
+instance ToJSON Sovereigns
+
+instance FromJSON Sovereigns
 
 data Stronghold
   = Rivendell

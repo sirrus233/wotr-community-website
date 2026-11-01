@@ -9,7 +9,7 @@ import {
     isStrongholdInPlay,
     strongholdSide,
 } from "../../utils";
-import SettlementBadge from "./SettlementBadge";
+import Badge from "./Badge";
 
 interface Badge {
     stronghold: Stronghold;
@@ -71,9 +71,9 @@ export default function ShadowCaptures({
                             allowedStrongholds.includes(stronghold),
                         )
                         .map(({ stronghold, style }) => (
-                            <SettlementBadge
+                            <Badge
                                 key={stronghold}
-                                style={{
+                                sx={{
                                     minWidth: maybeSetBadgeWidth(
                                         stronghold,
                                         isAbbreviated,
@@ -86,7 +86,7 @@ export default function ShadowCaptures({
                                 {isAbbreviated
                                     ? getStrongholdAbbreviation(stronghold)
                                     : getStrongholdLabel(stronghold)}
-                            </SettlementBadge>
+                            </Badge>
                         ))}
                 </Box>
             ))}

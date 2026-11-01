@@ -7,11 +7,11 @@ import { styled } from "@mui/joy/styles";
 import AutocompleteFilter from "./AutocompleteFilter";
 import BooleanFilter from "./BooleanFilter";
 import InequalityFilter from "./InequalityFilter";
+import NullableInequalityFilter from "./NullableInequalityFilter";
 import sumPriorWidths from "./sumPriorWidths";
+import TimestampFilter from "./TimestampFilter";
 import { MenuOption } from "../../types";
 import { ColHeaderData, CornerHeaderData } from "./types";
-
-import NullableInequalityFilter from "./NullableInequalityFilter";
 
 const FILTER_BAR_Z_IDX = 3;
 
@@ -125,6 +125,8 @@ export function Filter({ filter, width }: HeaderWithFilterProps): JSX.Element {
             return <NullableInequalityFilter width={width} {...filter} />;
         case "boolean":
             return <BooleanFilter width={width} {...filter} />;
+        case "timestamp":
+            return <TimestampFilter width={width} {...filter} />;
         case undefined:
             return <></>;
     }

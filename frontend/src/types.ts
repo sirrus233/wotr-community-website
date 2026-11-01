@@ -12,6 +12,8 @@ import {
     serverValidationErrors,
     settlementLayouts,
     sides,
+    sovereigns,
+    sovereignStatuses,
     strongholds,
     victoryTypes,
 } from "./constants";
@@ -31,6 +33,15 @@ export type League = (typeof leagues)[number];
 export type LeagueTier = (typeof leagueTiers)[number];
 
 export type Stronghold = (typeof strongholds)[number];
+
+export type Sovereign = (typeof sovereigns)[number];
+
+export type SovereignStatus = (typeof sovereignStatuses)[number];
+
+export type Sovereigns = Record<
+    Sovereign,
+    { status: SovereignStatus; died: boolean }
+>;
 
 export type OptionalField = (typeof optionalFields)[number];
 
@@ -87,6 +98,7 @@ export interface GameFormData {
     usedExpansions: FieldData<boolean | null>;
     expansions: FieldData<Expansion[]>;
     treebeard: FieldData<boolean | null>;
+    sovereigns: FieldData<Sovereigns | null>;
     usedHandicap: FieldData<boolean | null>;
     actionTokens: FieldData<number | null>;
     dwarvenRings: FieldData<number | null>;
@@ -272,13 +284,17 @@ export type NullableInequalityFilter = InequalityFilter | NullFilter;
 
 export type VictoryOption = Side | Victory | [Side, Victory];
 
+export type TimestampFilter = [Date | null, Date | null];
+
 export type GameReportFilters = {
     pairing: MenuOption<number>[];
+    timestamp: TimestampFilter;
     players: MenuOption<number>[];
     winners: MenuOption<number>[];
     losers: MenuOption<number>[];
     leagues: MenuOption<string>[];
     victory: MenuOption<VictoryOption>[];
+    expansions: MenuOption<string>[];
     turns: InequalityFilter | null;
     tokens: InequalityFilter | null;
     dwarvenRings: InequalityFilter | null;
@@ -307,3 +323,8 @@ export type SerializedVictoryFilter = (
     | { tag: "VictoryKindFilter"; contents: Victory }
     | { tag: "VictoryComboFilter"; contents: [Side, Victory] }
 )[];
+
+export type SerializedTimestampFilter =
+    | { tag: "Before"; contents: string }
+    | { tag: "After"; contents: string }
+    | { tag: "Between"; contents: [string, string] };

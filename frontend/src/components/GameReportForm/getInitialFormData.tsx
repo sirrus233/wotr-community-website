@@ -8,9 +8,15 @@ export default function getInitialFormData(
 ): GameFormData {
     return {
         rid: initializeToDefaults(fromMaybeReport(null, report, "rid")),
-        timestamp: initializeToDefaults(
-            fromMaybeReport(null, report, "timestamp"),
-        ),
+        timestamp: {
+            value: fromMaybeReport(null, report, "timestamp"),
+            error: null,
+            validate: function _() {
+                return report && !this.value
+                    ? ErrorMessage.MissingTimestamp
+                    : null;
+            },
+        },
         winner: {
             value: fromMaybeReport(null, report, "winner"),
             error: null,
@@ -49,12 +55,17 @@ export default function getInitialFormData(
         treebeard: initializeToDefaults(
             fromMaybeReport(null, report, "treebeard"),
         ),
+        sovereigns: initializeToDefaults(
+            fromMaybeReport(null, report, "sovereigns"),
+        ),
         usedHandicap: initializeToDefaults(
             report
                 ? (typeof report.actionTokens === "number" &&
                       report.actionTokens > 0) ||
                       (typeof report.dwarvenRings === "number" &&
-                          report.dwarvenRings > 0)
+                          report.dwarvenRings > 0) ||
+                      (typeof report.musterPoints === "number" &&
+                          report.musterPoints > 0)
                 : null,
         ),
         actionTokens: initializeToDefaults(

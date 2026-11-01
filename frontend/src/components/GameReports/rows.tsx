@@ -18,7 +18,7 @@ import {
 } from "../../utils";
 import ExternalLink from "../ExternalLink";
 import { RowData } from "../Table/types";
-import { PLAYER_COL_WIDTH } from "./constants";
+import { EXPANSIONS_COL_WIDTH, PLAYER_COL_WIDTH } from "./constants";
 import {
     countVictoryPoints,
     summarizeCompetitionType,
@@ -31,6 +31,7 @@ import { ReportEditParams } from "./types";
 import { getReportsOffset } from "./serializers";
 import { GameReportSettings } from "./Settings";
 import ShadowCaptures from "./ShadowCaptures";
+import Sovereigns from "./Sovereigns";
 
 interface Args {
     isAdmin: boolean;
@@ -149,7 +150,11 @@ export default function rows({
                 },
                 {
                     key: "expansions",
-                    content: formatExpansions(report.expansions),
+                    content: (
+                        <FixedWidthText width={EXPANSIONS_COL_WIDTH}>
+                            {formatExpansions(report.expansions)}
+                        </FixedWidthText>
+                    ),
                 },
                 { key: "tokens", content: report.actionTokens },
                 { key: "dwarven-rings", content: report.dwarvenRings },
@@ -163,6 +168,16 @@ export default function rows({
                 { key: "mordor", content: report.mordor },
                 { key: "aragorn", content: report.aragornTurn },
                 { key: "treebeard", content: report.treebeard && "✓" },
+                {
+                    key: "sovereigns",
+                    content: report.sovereigns && (
+                        <Sovereigns
+                            reportedSovereigns={report.sovereigns}
+                            hasStatus={settings.hasSovereignStatusLabel}
+                            isAbbreviated={settings.areSovereignsAbbreviated}
+                        />
+                    ),
+                },
                 { key: "eyes", content: report.initialEyes },
                 {
                     key: "sp-settlements",

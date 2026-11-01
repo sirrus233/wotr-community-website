@@ -11,6 +11,9 @@ const colors = {
     dwarves: "rgba(133, 14, 2, 0.8)",
     elves: "rgba(10, 152, 64, 0.8)",
     rohan: "rgba(8, 92, 42, 0.8)",
+    sovereignNeither: "#888",
+    sovereignCorrupted: "#6c6c6c",
+    sovereignAwakened: "#bfa100",
 } as const;
 
 export default colors;

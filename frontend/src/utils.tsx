@@ -146,6 +146,8 @@ export function getExpansionLabel(expansion: Expansion): string {
             return expansion;
         case "FateOfErebor":
             return "Fate of Erebor";
+        case "ReturnOfTheKing":
+            return "RotK";
     }
 }
 
@@ -157,6 +159,8 @@ export function getLeagueLabel(league: League): string {
             return "LoME";
         case "WoMELeague":
             return "WoME";
+        case "RotKLeague":
+            return "RotK";
         case "SuperLeague":
             return "Super";
         case "TTSLeague":
@@ -244,8 +248,28 @@ export function isStrongholdInPlay(
     }
 }
 
-export function displayTime(timestamp: string) {
-    return Intl.DateTimeFormat("en-GB").format(new Date(Date.parse(timestamp)));
+/**
+ * Converts a UTC timestamp to the specified time zone (local by default) and
+ * displays it in the local format
+ *
+ * @param timestampUtc - UTC timestamp string
+ * @param options.tz - Time zone to convert to; defaults to the local time zone
+ * @param options.withTzDisplayed - Include time zone in the formatted string
+ * @returns Formatted time string in the local format and specified time zone
+ */
+export function displayTime(
+    timestampUtc: string,
+    options: { tz?: string; withTzDisplayed?: boolean } = {},
+): string {
+    const { tz, withTzDisplayed = false } = options;
+    // `undefined` locale falls back to the local runtime's default
+    return Intl.DateTimeFormat(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: tz || undefined,
+        timeZoneName: withTzDisplayed ? "short" : undefined,
+    }).format(new Date(Date.parse(timestampUtc))); // converts UTC timestamp to local time
 }
 
 export function displayMusterPoints(n: number) {
@@ -287,4 +311,14 @@ export function hasKey<K extends PropertyKey>(
     key: K,
 ): obj is Record<K, unknown> {
     return key in obj;
+}
+
+export function toTitleCase(str: string): string {
+    return str
+        .split(" ")
+        .map(
+            (word) =>
+                word.slice(0, 1).toUpperCase() + word.slice(1).toLowerCase(),
+        )
+        .join(" ");
 }
