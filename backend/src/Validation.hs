@@ -10,6 +10,7 @@ import Prettyprinter
 import Servant (ServerError (..), err422, throwError)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Side (..), Stronghold (..), Victory (..))
+import Database (normalizeName)
 
 data ReportError
   = VictoryConditionConflictSPRV
@@ -33,6 +34,7 @@ data ReportError
   | InitialEyesOutOfRange
   | InterestRatingOutOfRange
   | InvalidStronghold
+  | WinnerAndLoserSame
   | InvalidRotkAragorn
   | InvalidRotkEyes
   deriving (Show)
@@ -196,6 +198,11 @@ validateStrongholds report
   | IronHills `elem` report.strongholds && FateOfErebor `notElem` report.expansions = Failure [InvalidStronghold]
   | otherwise = Success report
 
+validatePlayers :: RawGameReport -> Validation [ReportError] RawGameReport
+validatePlayers report
+  | normalizeName (winner report) /= normalizeName (loser report) = Success report
+  | otherwise = Failure [WinnerAndLoserSame]
+
 validateReturnOfTheKing :: RawGameReport -> Validation [ReportError] RawGameReport
 validateReturnOfTheKing report
   | ReturnOfTheKing `elem` report.expansions =
@@ -219,6 +226,7 @@ validateReport report timestamp =
     <* validateInitialEyes report
     <* validateInterestRating report
     <* validateStrongholds report
+    <* validatePlayers report
     <* validateReturnOfTheKing report
 
 validateLogFile :: FilePath -> AppM ()

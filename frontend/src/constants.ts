@@ -127,6 +127,7 @@ export const serverValidationErrors = [
     "InitialEyesOutOfRange",
     "InterestRatingOutOfRange",
     "InvalidStronghold",
+    "WinnerAndLoserSame",
     "InvalidRotkAragorn",
     "InvalidRotkEyes",
 ] as const;
