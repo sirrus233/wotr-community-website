@@ -5,7 +5,7 @@ import AppConfig (AppM, Env (..), authDatabaseFile, databaseFile, logFilter, red
 import AppServer (insertReport_, reprocessReports)
 import Control.Monad.Logger (LogLevel (..), MonadLogger)
 import Data.Csv (FromRecord, HasHeader (..), decode)
-import Data.Validation (Validation (..))
+import Data.Either.Validation (Validation (..))
 import Data.Vector qualified as V
 import Database (DBAction, insertInitialStats, insertPlayerIfNotExists, repsertPlayerStats, runDb)
 import Database.Esqueleto.Experimental (Entity (..), defaultConnectionPoolConfig)
