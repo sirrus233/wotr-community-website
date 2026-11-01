@@ -2,15 +2,15 @@ module Validation where
 
 import AppConfig (AppM)
 import Control.Monad.Logger (logErrorN)
+import Data.Either.Validation (Validation (..))
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeLatin1)
 import Data.Time (UTCTime (UTCTime), fromGregorian)
-import Data.Validation (Validation (..), validate)
+import Database (normalizeName)
 import Prettyprinter
 import Servant (ServerError (..), err422, throwError)
 import Types.Api (RawGameReport (..))
 import Types.DataField (Competition (..), Expansion (..), League (..), Side (..), Stronghold (..), Victory (..))
-import Database (normalizeName)
 
 data ReportError
   = VictoryConditionConflictSPRV
@@ -205,13 +205,11 @@ validatePlayers report
 
 validateReturnOfTheKing :: RawGameReport -> Validation [ReportError] RawGameReport
 validateReturnOfTheKing report
-  | ReturnOfTheKing `elem` report.expansions =
-      validate [InvalidRotkAragorn] aragornRule report
-        <* validate [InvalidRotkEyes] eyesRule report
+  | ReturnOfTheKing `elem` report.expansions = aragornRule report <* eyesRule report
   | otherwise = Success report
   where
-    aragornRule r = if r.aragornTurn == Just 1 then Just r else Nothing
-    eyesRule r = if r.initialEyes == 3 then Just r else Nothing
+    aragornRule r = if r.aragornTurn == Just 1 then Success r else Failure [InvalidRotkAragorn]
+    eyesRule r = if r.initialEyes == 3 then Success r else Failure [InvalidRotkEyes]
 
 validateReport :: RawGameReport -> UTCTime -> Validation [ReportError] RawGameReport
 validateReport report timestamp =

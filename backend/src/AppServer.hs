@@ -9,12 +9,12 @@ import Codec.Archive.Zip (addEntryToArchive, emptyArchive, fromArchive, toEntry)
 import Control.Monad.Logger (MonadLogger, logErrorN, logInfoN)
 import Data.ByteString.Lazy (toChunks)
 import Data.Csv (encodeByName)
+import Data.Either.Validation (Validation (..))
 import Data.IntMap.Strict qualified as IntMap
 import Data.Map.Strict qualified as Map
 import Data.Time (UTCTime (..), defaultTimeLocale, formatTime, getCurrentTime, toGregorian)
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
-import Data.Validation (Validation (..))
 import Database
   ( DBAction,
     SortOrder (..),
